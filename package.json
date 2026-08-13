@@ -1,0 +1,20 @@
+{
+  "name": "lld-agent",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Detailed Design (ASPICE SWE.3) generation agent: C code -> LLD -> Polarion",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w packages/core && npm run build -w packages/cli",
+    "analyze": "npm run analyze -w packages/cli"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "typescript": "^7.0.2"
+  }
+}

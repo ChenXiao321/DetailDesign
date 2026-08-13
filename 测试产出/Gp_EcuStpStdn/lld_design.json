@@ -1,0 +1,2219 @@
+{
+  "module": "Gp_EcuStpShdn",
+  "analyzedAt": "2026-08-12T09:42:09.066Z",
+  "files": [
+    {
+      "path": "ConfTemplate\\Gp_EcuStpShdn_Callout.c",
+      "role": "callout",
+      "includes": [
+        "Gp_EcuStpShdn_Callout.h",
+        "Gp_EcuStpShdn_MemMap.h"
+      ]
+    },
+    {
+      "path": "ConfTemplate\\Gp_EcuStpShdn_Callout.h",
+      "role": "callout",
+      "includes": [
+        "Gp_EcuStpShdn_Types.h",
+        "Gp_EcuStpShdn_MemMap.h"
+      ]
+    },
+    {
+      "path": "ConfTemplate\\Gp_EcuStpShdn_Cfg.c",
+      "role": "config",
+      "includes": [
+        "Gp_EcuStpShdn_CfgData.h"
+      ]
+    },
+    {
+      "path": "ConfTemplate\\Gp_EcuStpShdn_Cfg.h",
+      "role": "config",
+      "includes": [
+        "Std_Types.h",
+        "McalLib.h",
+        "Gp_TstApp.h",
+        "Gp_RstM.h"
+      ]
+    },
+    {
+      "path": "ConfTemplate\\Gp_EcuStpShdn_CfgData.h",
+      "role": "config",
+      "includes": [
+        "Gp_EcuStpShdn_Types.h",
+        "Gp_EcuStpShdn_MemMap.h"
+      ]
+    },
+    {
+      "path": "ConfTemplate\\Gp_EcuStpShdn_Memmap.h",
+      "role": "memmap",
+      "includes": []
+    },
+    {
+      "path": "Gp_EcuStpShdn.c",
+      "role": "source",
+      "includes": [
+        "Gp_EcuStpShdn_Callout.h",
+        "Gp_EcuStpShdn.h",
+        "Gp_EcuStpShdn_MemMap.h"
+      ]
+    },
+    {
+      "path": "Gp_EcuStpShdn.h",
+      "role": "header",
+      "includes": [
+        "Gp_EcuStpShdn_CfgData.h",
+        "Gp_EcuStpShdn_MemMap.h"
+      ]
+    },
+    {
+      "path": "Gp_EcuStpShdn_Types.h",
+      "role": "types",
+      "includes": [
+        "Gp_EcuStpShdn_Cfg.h"
+      ]
+    }
+  ],
+  "providedFunctions": [
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_SetSafeState",
+      "name": "Gp_EcuStpShdn_SetSafeState",
+      "signature": "void Gp_EcuStpShdn_SetSafeState(void)",
+      "returnType": "void",
+      "parameters": [],
+      "isStatic": false,
+      "file": "Gp_EcuStpShdn.c",
+      "lineStart": 377,
+      "lineEnd": 380,
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_SetSafeState",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "void",
+        "description": "Gp_EcuStpShdn set safe state."
+      },
+      "calls": [],
+      "calledBy": [],
+      "globalsAccessed": [
+        "Gp_EcuStpShdn_bufMstLocalImpl_ltst"
+      ],
+      "conditionalFlags": [],
+      "bodyText": "{\n    Gp_EcuStpShdn_bufMstLocalImpl_ltst.SafeState_b = TRUE;\n}",
+      "bodyHash": "1a0f22a68a314b11",
+      "sigHash": "ed66befbc2076a1d",
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.3.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_SetSafeState",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "设置主核本地缓冲区中的安全状态标志（SafeState_b = TRUE）。当系统经历多次非预期复位后，由 Gp_RstM 或 ASW 调用本接口请求进入安全状态。该标志在 Gp_EcuStpShdn_Startup 阶段二中被检查：一旦置位，程序在安全状态下初始化 SBC，并通过 Gp_EcuStpShdn_CalloutSafeState 进入安全状态处理；该标志同时在 Gp_EcuStpShdn_Mainfunction 中被检查，用于抑制 MCU 运行时测试。本函数无参数、无返回值。",
+        "flowchart": "flowchart TD\n    A([\"开始\"]) --> B[\"SafeState_b 置 TRUE<br>（写主核本地缓冲区）\"]\n    B --> Z([\"结束\"])",
+        "flowchartFormat": "mermaid",
+        "llmModel": "claude-sample",
+        "generatedAt": "2026-08-13T02:35:01.397Z"
+      }
+    },
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_SetTryPwrShdn",
+      "name": "Gp_EcuStpShdn_SetTryPwrShdn",
+      "signature": "void Gp_EcuStpShdn_SetTryPwrShdn(void)",
+      "returnType": "void",
+      "parameters": [],
+      "isStatic": false,
+      "file": "Gp_EcuStpShdn.c",
+      "lineStart": 393,
+      "lineEnd": 396,
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_SetTryPwrShdn",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "void",
+        "description": "Gp_EcuStpShdn set try power shutdown."
+      },
+      "calls": [],
+      "calledBy": [],
+      "globalsAccessed": [
+        "Gp_EcuStpShdn_bufMstLocalImpl_ltst"
+      ],
+      "conditionalFlags": [],
+      "bodyText": "{\n    Gp_EcuStpShdn_bufMstLocalImpl_ltst.TryPwrShdn_b = TRUE;\n}",
+      "bodyHash": "a1b77face62e9bc7",
+      "sigHash": "a8a5783ab6e1c170",
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.3.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_SetTryPwrShdn",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "设置主核本地缓冲区中的尝试断电标志（TryPwrShdn_b = TRUE）。当检测到断电请求时由 Gp_RstM 调用本接口。该标志在 Gp_EcuStpShdn_Startup 阶段二中被检查：一旦置位，立即调用 Gp_EcuStpShdn_CalloutPwrShdnInStpPhase 执行启动阶段断电，程序不预期返回。本函数无参数、无返回值。",
+        "flowchart": "flowchart TD\n    A([\"开始\"]) --> B[\"TryPwrShdn_b 置 TRUE<br>（写主核本地缓冲区）\"]\n    B --> Z([\"结束\"])",
+        "flowchartFormat": "mermaid",
+        "llmModel": "claude-sample",
+        "generatedAt": "2026-08-13T02:35:01.397Z"
+      }
+    },
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_GetSafeState",
+      "name": "Gp_EcuStpShdn_GetSafeState",
+      "signature": "boolean Gp_EcuStpShdn_GetSafeState(void)",
+      "returnType": "boolean",
+      "parameters": [],
+      "isStatic": false,
+      "file": "Gp_EcuStpShdn.c",
+      "lineStart": 409,
+      "lineEnd": 416,
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_GetSafeState",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "boolean - TRUE/FASLE",
+        "description": "Gp_EcuStpShdn get safe state."
+      },
+      "calls": [],
+      "calledBy": [],
+      "globalsAccessed": [
+        "Gp_EcuStpShdn_bufMstLocalImpl_ltst"
+      ],
+      "conditionalFlags": [],
+      "bodyText": "{\n    boolean SafeState_b = FALSE;\n\n    SafeState_b = Gp_EcuStpShdn_bufMstLocalImpl_ltst.SafeState_b;\n\n    return (SafeState_b);\n}",
+      "bodyHash": "ba1fa11f9c5c36c0",
+      "sigHash": "a92fd30ccf33a0f2",
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.3.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_GetSafeState",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "返回主核本地缓冲区中的当前安全状态标志（SafeState_b）。本接口提供给 ASW，用于查询 ECU 是否已进入安全状态（例如多次非预期复位之后）。返回值：TRUE 表示安全状态标志已置位，否则返回 FALSE。",
+        "flowchart": "flowchart TD\n    A([\"开始\"]) --> B[\"读取 SafeState_b<br>（主核本地缓冲区）\"]\n    B --> C[\"返回该值\"]\n    C --> Z([\"结束\"])",
+        "flowchartFormat": "mermaid",
+        "llmModel": "claude-sample",
+        "generatedAt": "2026-08-13T02:35:01.397Z"
+      }
+    },
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_TrapRecov",
+      "name": "Gp_EcuStpShdn_TrapRecov",
+      "signature": "void Gp_EcuStpShdn_TrapRecov(uint8 OsStatus_u8)",
+      "returnType": "void",
+      "parameters": [
+        {
+          "type": "uint8",
+          "name": "OsStatus_u8",
+          "pointerDepth": 0
+        }
+      ],
+      "isStatic": false,
+      "file": "Gp_EcuStpShdn.c",
+      "lineStart": 428,
+      "lineEnd": 431,
+      "comment": {
+        "paramsIn": [
+          {
+            "raw": "uint8 OsStatus_u8 - OS status",
+            "description": "OS status",
+            "name": "OsStatus_u8",
+            "type": "uint8"
+          }
+        ],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_TrapRecov",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "void",
+        "description": "Gp_EcuStpShdn trap recovery."
+      },
+      "calls": [
+        "Gp_EcuStpShdn_CalloutTrapRecov"
+      ],
+      "calledBy": [],
+      "globalsAccessed": [],
+      "conditionalFlags": [],
+      "bodyText": "{\n    Gp_EcuStpShdn_CalloutTrapRecov(OsStatus_u8);\n}",
+      "bodyHash": "5d99b560217eb2a8",
+      "sigHash": "743c41963c7dafe3",
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.3.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_TrapRecov",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "Trap 恢复接口。将 OS 状态码（OsStatus_u8）透传给 Gp_EcuStpShdn_CalloutTrapRecov，具体的恢复行为由集成方在 Callout 函数中实现。本函数预期在系统发生 Trap 时由 Trap 处理程序调用。",
+        "flowchart": "flowchart TD\n    A([\"开始\"]) --> B[\"透传 OsStatus_u8<br>调用 CalloutTrapRecov\"]\n    B --> Z([\"结束\"])",
+        "flowchartFormat": "mermaid",
+        "llmModel": "claude-sample",
+        "generatedAt": "2026-08-13T02:35:01.397Z"
+      }
+    },
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_OsErrRecov",
+      "name": "Gp_EcuStpShdn_OsErrRecov",
+      "signature": "void Gp_EcuStpShdn_OsErrRecov(uint8 OsStatus_u8)",
+      "returnType": "void",
+      "parameters": [
+        {
+          "type": "uint8",
+          "name": "OsStatus_u8",
+          "pointerDepth": 0
+        }
+      ],
+      "isStatic": false,
+      "file": "Gp_EcuStpShdn.c",
+      "lineStart": 444,
+      "lineEnd": 447,
+      "comment": {
+        "paramsIn": [
+          {
+            "raw": "uint8 OsStatus_u8 - OS status",
+            "description": "OS status",
+            "name": "OsStatus_u8",
+            "type": "uint8"
+          }
+        ],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_OsErrRecov",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "void",
+        "description": "Gp_EcuStpShdn OS error recovery."
+      },
+      "calls": [
+        "Gp_EcuStpShdn_CalloutOsErrRecov"
+      ],
+      "calledBy": [],
+      "globalsAccessed": [],
+      "conditionalFlags": [],
+      "bodyText": "{\n    Gp_EcuStpShdn_CalloutOsErrRecov(OsStatus_u8);\n}",
+      "bodyHash": "b49e151128dc0d3b",
+      "sigHash": "77a98bd0648e625a",
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.3.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_OsErrRecov",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "OS 错误恢复接口。将 OS 状态码（OsStatus_u8）透传给 Gp_EcuStpShdn_CalloutOsErrRecov，具体的恢复行为由集成方在 Callout 函数中实现。本函数预期在 OS 发生错误时由 OS 错误钩子调用。",
+        "flowchart": "flowchart TD\n    A([\"开始\"]) --> B[\"透传 OsStatus_u8<br>调用 CalloutOsErrRecov\"]\n    B --> Z([\"结束\"])",
+        "flowchartFormat": "mermaid",
+        "llmModel": "claude-sample",
+        "generatedAt": "2026-08-13T02:35:01.397Z"
+      }
+    },
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_PwrShdnInShdnPhase",
+      "name": "Gp_EcuStpShdn_PwrShdnInShdnPhase",
+      "signature": "void Gp_EcuStpShdn_PwrShdnInShdnPhase(void)",
+      "returnType": "void",
+      "parameters": [],
+      "isStatic": false,
+      "file": "Gp_EcuStpShdn.c",
+      "lineStart": 462,
+      "lineEnd": 465,
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_PwrShdnInShdnPhase",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "void",
+        "description": "Gp_EcuStpShdn power shut down in shutdown phase.\nthis function will invoke callout function in shut down phase.\nthis function should be invoke by core0 only."
+      },
+      "calls": [
+        "Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase"
+      ],
+      "calledBy": [],
+      "globalsAccessed": [],
+      "conditionalFlags": [],
+      "bodyText": "{\n    Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase();\n}",
+      "bodyHash": "d397d8793c1185c6",
+      "sigHash": "4be05919dd197aa6",
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.3.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_PwrShdnInShdnPhase",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "在关闭阶段调用 Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase，执行 ECU 断电序列。本函数仅允许 Core0 调用。无参数、无返回值。",
+        "flowchart": "flowchart TD\n    A([\"开始\"]) --> B[\"调用 CalloutPwrShdnInShdnPhase<br>（仅 Core0 调用）\"]\n    B --> Z([\"结束\"])",
+        "flowchartFormat": "mermaid",
+        "llmModel": "claude-sample",
+        "generatedAt": "2026-08-13T02:35:01.397Z"
+      }
+    },
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_Startup",
+      "name": "Gp_EcuStpShdn_Startup",
+      "signature": "void Gp_EcuStpShdn_Startup(void)",
+      "returnType": "void",
+      "parameters": [],
+      "isStatic": false,
+      "file": "Gp_EcuStpShdn.c",
+      "lineStart": 484,
+      "lineEnd": 703,
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_Startup",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "void",
+        "description": "Gp_EcuStpShdn startup.\nthis function will realize multi-core timing controlling. invoke microcontroller PreRun test function\nand check test result, and process test failed situation. get reset information from Gp_RstM,\ncheck safe state flag and try power shutdown flag, the program will enter the corresponding state if the flag is set,\nelse, the program will invoke MCAL initialization function and check initialization result,\nand process initialization failed situation. invoke SBC self test function and check test result,\nand process test failed situation. this function will record several system time of startup key point for observing."
+      },
+      "calls": [
+        "Gp_EcuStpShdn_CalloutGetCoreId",
+        "Gp_EcuStpShdn_CalloutInitStageOneCore0",
+        "Gp_RstM_InitOne",
+        "GP_ECUSTPSHDN_NOP",
+        "Gp_TstApp_PreRunInit",
+        "Gp_TstApp_PreRunPhase",
+        "Gp_EcuStpShdn_CalloutGetSysTimeMs",
+        "Gp_RstM_InitTwo",
+        "Gp_RstM_Init",
+        "Gp_RstM_GetLastRstTypeInfo",
+        "Gp_EcuStpShdn_CalloutPwrShdnInStpPhase",
+        "(*)->StpStageTwo_pf",
+        "Gp_EcuStpShdn_CalloutSbcInitInSafeState",
+        "Gp_EcuStpShdn_CalloutSafeState",
+        "Gp_EcuStpShdn_MstProcMcuPreRunTest",
+        "Gp_EcuStpShdn_MstPostInit",
+        "Gp_EcuStpShdn_CalloutSbcInit",
+        "Gp_EcuStpShdn_CheckInitRslt",
+        "Gp_EcuStpShdn_CalloutInitFailedHnd"
+      ],
+      "calledBy": [],
+      "globalsAccessed": [
+        "Gp_EcuStpShdn_rtSatCont_lcatst",
+        "Gp_EcuStpShdn_bufMstLocalImpl_ltst",
+        "Gp_EcuStpShdn_bufSatLocalImplCore0_ltst"
+      ],
+      "conditionalFlags": [],
+      "bodyText": "{\n    const   Gp_EcuStpShdn_SatRunTimeType*   Rt_cptst = &Gp_EcuStpShdn_rtSatCont_lcatst[0U];\n    volatile    Gp_EcuStpShdn_MstLocalImplType* MstImpl_ptst = &Gp_EcuStpShdn_bufMstLocalImpl_ltst;\n    volatile    Gp_EcuStpShdn_SatLocalImplType* SatImpl_ptst = &Gp_EcuStpShdn_bufSatLocalImplCore0_ltst;\n    uint32  CoreId_u32 = 0U;\n    uint32  Cnt_u32 = 0U;\n    uint32  SbcInfo_u32 = 0U;\n    uint8   RstTypePlt_u8 = 0U;\n    uint8   RstTypeMcal_u8 = 0U;\n    uint8   RstId_u8 = 0U;\n    uint8   RstCoreId_u8 = 0U;\n\n    /*get core ID*/\n    CoreId_u32 = Gp_EcuStpShdn_CalloutGetCoreId();\n    /*get satellite runtime buffer address of current core to local address*/\n    Rt_cptst = &Gp_EcuStpShdn_rtSatCont_lcatst[CoreId_u32];\n    SatImpl_ptst = Rt_cptst->Impl_ptst;\n\n    /********\n    stage one\n    ********/\n    /*\n    ECU is init stage one.\n    master will complete necessary initialization\n    which will increase performance of subsequent process.\n    satellite will stay.\n    */\n    if (CoreId_u32 == GP_ECUSTPSHDN_CORE0_ID)\n    {\n        /*set initialization value for other driver init result*/\n        SatImpl_ptst->InitRsltAllBits_u32 = 0U;\n        for (Cnt_u32 = 0U; Cnt_u32 < (uint32)GP_ECUSTPSHDN_INIT_RSLT_REC_NUM; Cnt_u32++)\n        {\n            SatImpl_ptst->InitCheckRslt_t[Cnt_u32] = E_OK;\n        }\n\n        /*set initialization value*/\n        for (Cnt_u32 = 0U; Cnt_u32 < (uint32)GP_ECUSTPSHDN_MST_TIME_STAMP_NUM; Cnt_u32++)\n        {\n            MstImpl_ptst->TimeStamp_u32[Cnt_u32] = 0U;\n        }\n\n        MstImpl_ptst->McuPreTestRslt_u32 = 0U;\n        MstImpl_ptst->McuRunTestRslt_u32 = 0U;\n        MstImpl_ptst->SbcInfo_u32 = 0U;\n        MstImpl_ptst->StpStage_t = GP_ECUSTPSHDN_STPSTAGE_ONE;\n        MstImpl_ptst->McuSelfTest_t = GP_ECUSTPSHDN_SELFTEST_UNDEF;\n        MstImpl_ptst->SbcSelfTest_t = GP_ECUSTPSHDN_SELFTEST_UNDEF;\n\n        MstImpl_ptst->RstTypePlt_u8 = 0U;\n        MstImpl_ptst->RstTypeMcal_u8 = 0U;\n        MstImpl_ptst->RstId_u8 = 0U;\n        MstImpl_ptst->RstCoreId_u8 = 0U;\n\n        MstImpl_ptst->SafeState_b = FALSE;\n        MstImpl_ptst->TryPwrShdn_b = FALSE;\n\n        SatImpl_ptst->TimeStamp_u32 = 0U;\n\n        Gp_EcuStpShdn_CalloutInitStageOneCore0(SatImpl_ptst);\n\n                                                            \n        Gp_RstM_InitOne();\n                                                                    \n        /*master set ECU is init stage two*/\n        MstImpl_ptst->StpStage_t = GP_ECUSTPSHDN_STPSTAGE_TWO;\n    }\n    else\n    {\n        /*set initialization value for other driver init result*/\n        SatImpl_ptst->InitRsltAllBits_u32 = 0U;\n        for (Cnt_u32 = 0U; Cnt_u32 < (uint32)GP_ECUSTPSHDN_INIT_RSLT_REC_NUM; Cnt_u32++)\n        {\n            SatImpl_ptst->InitCheckRslt_t[Cnt_u32] = E_OK;\n        }\n\n        /*set initialization value*/\n        SatImpl_ptst->TimeStamp_u32 = 0U;\n        /*satellite is waiting for init stage two*/\n        while (MstImpl_ptst->StpStage_t != GP_ECUSTPSHDN_STPSTAGE_TWO)\n        {\n            GP_ECUSTPSHDN_NOP();\n        }\n    }\n\n    /********\n    stage two\n    ********/\n    /*\n    ECU is init stage two.\n    all cores perform SafeTpack init and pre_run phase test, if safety is enable.\n    and then master will invoke RstM init and get reset reason.\n    master will check try power down flag and enter safe state flag, perform corresponding program.\n    master will check MCU pre-run test and SBC test result, perform corresponding program.\n    satellite will stay.\n    */\n\n                                           \n    Gp_TstApp_PreRunInit();\n    Gp_TstApp_PreRunPhase();\n                                                   \n    /*record PreRunTest completion time stamp*/\n    MstImpl_ptst->TimeStamp_u32[GP_ECUSTPSHDN_MST_TIME_STAMP_PRERUN] = Gp_EcuStpShdn_CalloutGetSysTimeMs();\n\n    if (CoreId_u32 == GP_ECUSTPSHDN_CORE0_ID)\n    {\n                                                            \n        Gp_RstM_InitTwo();\n     \n        Gp_RstM_Init();\n                                                                    \n        Gp_RstM_GetLastRstTypeInfo\n        (\n            &RstTypePlt_u8,\n            &RstTypeMcal_u8,\n            &RstId_u8,\n            &RstCoreId_u8\n        );\n        MstImpl_ptst->RstTypePlt_u8 = RstTypePlt_u8;\n        MstImpl_ptst->RstTypeMcal_u8 = RstTypeMcal_u8;\n        MstImpl_ptst->RstId_u8 = RstId_u8;\n        MstImpl_ptst->RstCoreId_u8 = RstCoreId_u8;\n                                           \n                                                  \n        /*check if Gp_RstM set try power down flag*/\n        if (MstImpl_ptst->TryPwrShdn_b == TRUE)\n        {\n            Gp_EcuStpShdn_CalloutPwrShdnInStpPhase();\n            /*program will not run to here*/\n        }\n        else\n        {\n            /*check if Gp_RstM set enter safe state flag*/\n            if (MstImpl_ptst->SafeState_b == TRUE)\n            {\n                /*core0 init*/\n                Rt_cptst->StpStageTwo_pf(SatImpl_ptst);\n                Gp_EcuStpShdn_CalloutSbcInitInSafeState(&SbcInfo_u32);\n                MstImpl_ptst->SbcInfo_u32 = SbcInfo_u32;\n                Gp_EcuStpShdn_CalloutSafeState();\n            }\n            else\n                                                          \n                                                   \n            {\n                                           \n                Gp_EcuStpShdn_MstProcMcuPreRunTest();\n                                                   \n                /*core0 init*/\n                Rt_cptst->StpStageTwo_pf(SatImpl_ptst);\n                /*record master initialization completion time stamp*/\n                MstImpl_ptst->TimeStamp_u32[GP_ECUSTPSHDN_MST_TIME_STAMP_MST_INIT] =  \n                    Gp_EcuStpShdn_CalloutGetSysTimeMs();\n                                           \n                Gp_EcuStpShdn_MstPostInit();\n                                                   \n                Gp_EcuStpShdn_CalloutSbcInit(&SbcInfo_u32);\n                MstImpl_ptst->SbcInfo_u32 = SbcInfo_u32;\n                /*record master post initialization completion time stamp*/\n                MstImpl_ptst->TimeStamp_u32[GP_ECUSTPSHDN_MST_TIME_STAMP_MST_POST_INIT] =  \n                    Gp_EcuStpShdn_CalloutGetSysTimeMs();\n            }\n            /*master set ECU is init stage three*/\n            MstImpl_ptst->StpStage_t = GP_ECUSTPSHDN_STPSTAGE_THREE;\n                                           \n                                                  \n        }\n                                                          \n                                                   \n    }\n    else\n    {\n        /*satellite is waiting for init stage three*/\n        while (MstImpl_ptst->StpStage_t != GP_ECUSTPSHDN_STPSTAGE_THREE)\n        {\n            GP_ECUSTPSHDN_NOP();\n        }\n    }\n\n    /**********\n    stage three\n    **********/\n    /*\n    ECU is init stage three.\n    satellite will complete initialization\n    */\n    if (CoreId_u32 == GP_ECUSTPSHDN_CORE0_ID)\n    {\n        /*do nothing*/\n    }\n    else\n    {\n        Rt_cptst->StpStageTwo_pf(SatImpl_ptst);\n        /*record satellite initialization completion time stamp*/\n        SatImpl_ptst->TimeStamp_u32 = Gp_EcuStpShdn_CalloutGetSysTimeMs();\n                                           \n        /*program will check initialization result when it is not safe state*/\n        if (MstImpl_ptst->SafeState_b == FALSE)\n        {\n            /*check initialization result*/\n            Gp_EcuStpShdn_CheckInitRslt(SatImpl_ptst);\n            if (SatImpl_ptst->InitRsltAllBits_u32 != 0U)\n            {\n                                                  \n                Gp_EcuStpShdn_CalloutInitFailedHnd(SatImpl_ptst->InitRsltAllBits_u32);\n                                                          \n            }\n            else\n            {\n                /*do nothing*/\n            }\n        }\n        else\n        {\n            /*do nothing*/\n        }\n                                                   \n    }\n}",
+      "bodyHash": "53d2849904946644",
+      "sigHash": "5392b5f3d2cbfb18",
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.3.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_Startup",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "实现 ECU 多核启动序列，分三个阶段执行，主核（Core0）与从核之间通过屏障同步。阶段一：主核初始化运行时缓冲区并调用 Gp_EcuStpShdn_CalloutInitStageOneCore0，随后将阶段置为 STAGE_TWO；从核自旋等待直至进入 STAGE_TWO。阶段二：所有核执行 SafeTpack 预运行初始化与测试（安全功能使能时）；主核调用 Gp_RstM 初始化并读取上次复位信息，随后评估 TryPwrShdn 与 SafeState 标志——若 TryPwrShdn 置位则调用 Gp_EcuStpShdn_CalloutPwrShdnInStpPhase（不返回）；若 SafeState 置位则执行 Core0 初始化、安全状态下的 SBC 初始化并进入安全状态处理；否则依次执行 MCU 预运行测试检查、经从核运行时容器函数指针完成 Core0 初始化、主核后初始化与 SBC 初始化，然后将阶段置为 STAGE_THREE。阶段三：从核完成自身初始化并记录完成时间戳；非安全状态下检查初始化结果，失败经 Gp_EcuStpShdn_CalloutInitFailedHnd 上报。启动关键节点的时间戳记录在主核本地缓冲区中供观测。本函数在 EcuM DriverInitOne 阶段每核各调用一次。",
+        "flowchart": "flowchart TD\n    A([\"开始\"]) --> B[\"CalloutGetCoreId 获取核 ID<br>取本核 satellite 运行时缓冲区\"]\n    B --> C{\"CoreId 为 core0\"}\n    C -- master --> D[\"初始化运行时缓冲区<br>CalloutInitStageOneCore0<br>RstM_InitOne（条件编译）<br>StpStage_t 置为 STAGE_TWO\"]\n    C -- satellite --> E[\"初始化本核缓冲区<br>自旋等待 STAGE_TWO\"]\n    D --> F[\"SafeTpack PreRunInit 与 PreRunPhase（条件编译）<br>记录 PreRun 完成时间戳\"]\n    E --> F\n    F --> G{\"CoreId 为 core0\"}\n    G -- master --> H[\"RstM_Init 或 InitTwo<br>GetLastRstTypeInfo 读取复位信息\"]\n    H --> I{\"TryPwrShdn_b 已置位\"}\n    I -- 是 --> J[\"CalloutPwrShdnInStpPhase<br>程序不再返回\"]\n    I -- 否 --> K{\"SafeState_b 已置位\"}\n    K -- 是 --> L[\"core0 初始化<br>CalloutSbcInitInSafeState<br>CalloutSafeState 进入安全状态\"]\n    K -- 否 --> M[\"MstProcMcuPreRunTest（条件编译）<br>core0 初始化 StpStageTwo_pf<br>MstPostInit（条件编译）<br>CalloutSbcInit\"]\n    M --> N[\"StpStage_t 置为 STAGE_THREE\"]\n    L --> N\n    G -- satellite --> O[\"自旋等待 STAGE_THREE\"]\n    N --> P{\"CoreId 为 core0\"}\n    O --> P\n    P -- master --> Z([\"结束\"])\n    P -- satellite --> Q[\"StpStageTwo_pf satellite 初始化<br>记录初始化完成时间戳<br>非安全状态时检查初始化结果（条件编译）\"]\n    Q --> Z",
+        "flowchartFormat": "mermaid",
+        "llmModel": "claude-sample",
+        "generatedAt": "2026-08-13T02:35:01.397Z"
+      }
+    },
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_Mainfunction",
+      "name": "Gp_EcuStpShdn_Mainfunction",
+      "signature": "void Gp_EcuStpShdn_Mainfunction(void)",
+      "returnType": "void",
+      "parameters": [],
+      "isStatic": false,
+      "file": "Gp_EcuStpShdn.c",
+      "lineStart": 719,
+      "lineEnd": 778,
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_Mainfunction",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "void",
+        "description": "Gp_EcuStpShdn main function.\nthis function will invoke MCU Runtime test, and check the test result, and process test failed situation\nif program is not in safe state or try power shutdown state.\nthis function will calculate the last satellite time stamp by the master core.\nthis function should be invoke by the cores which need perform MCU runtime test."
+      },
+      "calls": [
+        "Gp_EcuStpShdn_CalloutGetCoreId",
+        "Gp_EcuStpShdn_GetLastSatTimeStamp",
+        "Gp_TstApp_RunTimePhase",
+        "Gp_EcuStpShdn_CalloutChkMcuRunTimeTest",
+        "Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd"
+      ],
+      "calledBy": [],
+      "globalsAccessed": [
+        "Gp_EcuStpShdn_bufMstLocalImpl_ltst"
+      ],
+      "conditionalFlags": [],
+      "bodyText": "{\n    volatile    Gp_EcuStpShdn_MstLocalImplType* MstImpl_ptst = &Gp_EcuStpShdn_bufMstLocalImpl_ltst;\n    uint32  CoreId_u32 = 0U;\n\n    /*get core ID*/\n    CoreId_u32 = Gp_EcuStpShdn_CalloutGetCoreId();\n\n    if (CoreId_u32 == GP_ECUSTPSHDN_CORE0_ID)\n    {\n        /*get last satellite initialization time stamp, it will be get only once by core0*/\n        if (MstImpl_ptst->TimeStamp_u32[GP_ECUSTPSHDN_MST_TIME_STAMP_LAST_SAT_INIT] == 0U)\n        {\n            MstImpl_ptst->TimeStamp_u32[GP_ECUSTPSHDN_MST_TIME_STAMP_LAST_SAT_INIT] =  \n                Gp_EcuStpShdn_GetLastSatTimeStamp();\n        }\n        else\n        {\n            /*do nothing*/\n        }\n    }\n    else\n    {\n        /*do nothing*/\n    }\n\n                                           \n    if ((MstImpl_ptst->TryPwrShdn_b == FALSE) && (MstImpl_ptst->SafeState_b == FALSE))\n    {\n        /*perform MCU runtime test*/\n        Gp_TstApp_RunTimePhase();\n        /*\n        ECU is runtime stage.\n        master will check MCU runtime test result, and perform corresponding program.\n        */\n        if (CoreId_u32 == GP_ECUSTPSHDN_CORE0_ID)\n        {\n            /*check if switch to run phase is failed*/\n            if (Gp_EcuStpShdn_CalloutChkMcuRunTimeTest() == FALSE)\n            {\n                                                  \n                Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd();\n                                                          \n            }\n            else\n            {\n                /*do nothing*/\n            }\n        }\n        else\n        {\n            /*do nothing*/\n        }\n    }\n    else\n    {\n        /*do nothing*/\n    }\n                                                   \n}",
+      "bodyHash": "eccdafb5f930bb4c",
+      "sigHash": "13cda1b5a8925f33",
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.3.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_Mainfunction",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "模块周期主函数，由需要执行 MCU 运行时测试的核循环调用。首次调用时，Core0 通过 Gp_EcuStpShdn_GetLastSatTimeStamp 计算并记录最后完成初始化的从核时间戳。若 TryPwrShdn 与 SafeState 标志均未置位，则执行 MCU 运行时测试（安全功能使能时经 Gp_TstApp_RunTimePhase）；随后 Core0 经 Gp_EcuStpShdn_CalloutChkMcuRunTimeTest 检查运行时测试结果，失败时调用 Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd。本函数无参数、无返回值。",
+        "flowchart": "flowchart TD\n    A([\"开始\"]) --> B[\"CalloutGetCoreId 获取核 ID\"]\n    B --> C{\"core0 且未记录过<br>最后 satellite 时间戳\"}\n    C -- 是 --> D[\"GetLastSatTimeStamp 计算并记录\"]\n    C -- 否 --> E[\"跳过\"]\n    D --> F{\"TryPwrShdn 与 SafeState<br>均为 FALSE（条件编译）\"}\n    E --> F\n    F -- 是 --> G[\"Gp_TstApp_RunTimePhase 执行运行时测试\"]\n    F -- 否 --> Z([\"结束\"])\n    G --> H{\"CoreId 为 core0\"}\n    H -- 是 --> I{\"CalloutChkMcuRunTimeTest 返回 FALSE\"}\n    H -- 否 --> Z\n    I -- 是 --> J[\"CalloutMcuRunTimeTestFailedHnd（条件编译）\"]\n    I -- 否 --> Z\n    J --> Z",
+        "flowchartFormat": "mermaid",
+        "llmModel": "claude-sample",
+        "generatedAt": "2026-08-13T02:35:01.397Z"
+      }
+    }
+  ],
+  "internalFunctions": [
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_CheckInitRslt",
+      "name": "Gp_EcuStpShdn_CheckInitRslt",
+      "signature": "void Gp_EcuStpShdn_CheckInitRslt(Gp_EcuStpShdn_SatLocalImplType* Impl_ptst)",
+      "returnType": "void",
+      "parameters": [
+        {
+          "type": "Gp_EcuStpShdn_SatLocalImplType",
+          "name": "Impl_ptst",
+          "pointerDepth": 1
+        }
+      ],
+      "isStatic": true,
+      "file": "Gp_EcuStpShdn.c",
+      "lineStart": 210,
+      "lineEnd": 226,
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [
+          {
+            "raw": "volatile Gp_EcuStpShdn_SatLocalImplType* Impl_ptst - pointer to satellite local implement",
+            "description": "pointer to satellite local implement",
+            "name": "Impl_ptst",
+            "type": "volatile Gp_EcuStpShdn_SatLocalImplType*"
+          }
+        ],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_CheckInitRslt",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "void",
+        "description": "Gp_EcuStpShdn check initialization result"
+      },
+      "calls": [],
+      "calledBy": [
+        "Gp_EcuStpShdn_MstPostInit",
+        "Gp_EcuStpShdn_Startup"
+      ],
+      "globalsAccessed": [],
+      "conditionalFlags": [
+        "GP_ECUSTPSHDN_SAFETY_ENABLE"
+      ],
+      "bodyText": "{\n    uint32  Cnt_u32 = 0U;\n\n    for (Cnt_u32 = 0U; Cnt_u32 < (uint32)GP_ECUSTPSHDN_INIT_RSLT_REC_NUM; Cnt_u32++)\n    {\n        if (Impl_ptst->InitCheckRslt_t[Cnt_u32] == E_NOT_OK)\n        {\n            /*recored initialization failed in all result according to bit field*/\n            Impl_ptst->InitRsltAllBits_u32 |= (uint32)((uint32)1U << Cnt_u32);\n        }\n        else\n        {\n            /*do nothing*/\n        }\n    }\n}",
+      "bodyHash": "5ffa5f6fe0660a15",
+      "sigHash": "b0bc4c148e212fec",
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.4.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CheckInitRslt",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "汇总从核本地缓冲区的初始化检查结果。遍历 InitCheckRslt_t 结果数组，对值为 E_NOT_OK 的每一项，将 InitRsltAllBits_u32 中的对应位置 1，使调用方可按位识别所有失败的初始化步骤。仅在 GP_ECUSTPSHDN_SAFETY_ENABLE 为 STD_ON 时参与编译。由 Gp_EcuStpShdn_MstPostInit 及 Gp_EcuStpShdn_Startup（从核路径）调用。",
+        "flowchart": "flowchart TD\n    A([\"开始\"]) --> B[\"Cnt 置 0\"]\n    B --> C{\"Cnt 小于 INIT_RSLT_REC_NUM 32\"}\n    C -- 是 --> D{\"InitCheckRslt_t[Cnt]<br>等于 E_NOT_OK\"}\n    D -- 是 --> E[\"InitRsltAllBits_u32 第 Cnt 位置 1\"]\n    D -- 否 --> F[\"不处理\"]\n    E --> G[\"Cnt 加 1\"]\n    F --> G\n    G --> C\n    C -- 否 --> Z([\"结束\"])",
+        "flowchartFormat": "mermaid",
+        "llmModel": "claude-sample",
+        "generatedAt": "2026-08-13T02:35:01.397Z"
+      }
+    },
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_MstProcMcuPreRunTest",
+      "name": "Gp_EcuStpShdn_MstProcMcuPreRunTest",
+      "signature": "void Gp_EcuStpShdn_MstProcMcuPreRunTest(void)",
+      "returnType": "void",
+      "parameters": [],
+      "isStatic": true,
+      "file": "Gp_EcuStpShdn.c",
+      "lineStart": 239,
+      "lineEnd": 255,
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_MstProcMcuPreRunTest",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "void",
+        "description": "Gp_EcuStpShdn master process MCU PreRunTest"
+      },
+      "calls": [
+        "Gp_EcuStpShdn_CalloutChkMcuPreRunTest",
+        "Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd"
+      ],
+      "calledBy": [
+        "Gp_EcuStpShdn_Startup"
+      ],
+      "globalsAccessed": [
+        "Gp_EcuStpShdn_bufMstLocalImpl_ltst"
+      ],
+      "conditionalFlags": [
+        "GP_ECUSTPSHDN_SAFETY_ENABLE"
+      ],
+      "bodyText": "{\n    volatile    Gp_EcuStpShdn_MstLocalImplType* MstImpl_ptst = &Gp_EcuStpShdn_bufMstLocalImpl_ltst;\n\n    /*check if MCU PreRunTest is failed*/\n    if (Gp_EcuStpShdn_CalloutChkMcuPreRunTest() == FALSE)\n    {\n        MstImpl_ptst->McuSelfTest_t = GP_ECUSTPSHDN_SELFTEST_FAIL;\n                                                  \n        Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd();\n                                                          \n    }\n    else\n    {\n        MstImpl_ptst->McuSelfTest_t = GP_ECUSTPSHDN_SELFTEST_PASS;\n    }\n}",
+      "bodyHash": "c51461914a356e3c",
+      "sigHash": "217054d52168c174",
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.4.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_MstProcMcuPreRunTest",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "在主核上检查 MCU 预运行测试结果。测试结果经 Gp_EcuStpShdn_CalloutChkMcuPreRunTest 查询并记录到主核本地缓冲区（McuSelfTest_t：SELFTEST_PASS 或 SELFTEST_FAIL）。失败时在 GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE 为 STD_ON 的条件下调用 Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd 执行失败处理。仅在 GP_ECUSTPSHDN_SAFETY_ENABLE 为 STD_ON 时参与编译。由 Gp_EcuStpShdn_Startup 在阶段二中调用。",
+        "flowchart": "flowchart TD\n    A([\"开始\"]) --> B{\"CalloutChkMcuPreRunTest<br>返回 FALSE\"}\n    B -- 是 --> C[\"McuSelfTest_t 置为 SELFTEST_FAIL\"]\n    C --> D[\"CalloutMcuPreRunTestFailedHnd<br>（条件编译 SAFETY_ACTION_ENABLE）\"]\n    B -- 否 --> E[\"McuSelfTest_t 置为 SELFTEST_PASS\"]\n    D --> Z([\"结束\"])\n    E --> Z",
+        "flowchartFormat": "mermaid",
+        "llmModel": "claude-sample",
+        "generatedAt": "2026-08-13T02:35:01.397Z"
+      }
+    },
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_MstPostInit",
+      "name": "Gp_EcuStpShdn_MstPostInit",
+      "signature": "void Gp_EcuStpShdn_MstPostInit(void)",
+      "returnType": "void",
+      "parameters": [],
+      "isStatic": true,
+      "file": "Gp_EcuStpShdn.c",
+      "lineStart": 268,
+      "lineEnd": 309,
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_MstPostInit",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "void",
+        "description": "Gp_EcuStpShdn master post initialization"
+      },
+      "calls": [
+        "Gp_EcuStpShdn_CheckInitRslt",
+        "Gp_EcuStpShdn_CalloutInitFailedHnd",
+        "Gp_TstApp_SwitchToRunPhase",
+        "Gp_EcuStpShdn_CalloutChkSwtToRun",
+        "Gp_EcuStpShdn_CalloutSwtToRunFailedHnd",
+        "Gp_EcuStpShdn_CalloutChkSbcTest",
+        "Gp_EcuStpShdn_CalloutSbcTestFailedHnd"
+      ],
+      "calledBy": [
+        "Gp_EcuStpShdn_Startup"
+      ],
+      "globalsAccessed": [
+        "Gp_EcuStpShdn_bufMstLocalImpl_ltst",
+        "Gp_EcuStpShdn_bufSatLocalImplCore0_ltst"
+      ],
+      "conditionalFlags": [
+        "GP_ECUSTPSHDN_SAFETY_ENABLE"
+      ],
+      "bodyText": "{\n    volatile    Gp_EcuStpShdn_MstLocalImplType* MstImpl_ptst = &Gp_EcuStpShdn_bufMstLocalImpl_ltst;\n    volatile    Gp_EcuStpShdn_SatLocalImplType* SatImpl_ptst = &Gp_EcuStpShdn_bufSatLocalImplCore0_ltst;\n\n    /*check initialization result*/\n    Gp_EcuStpShdn_CheckInitRslt(SatImpl_ptst);\n    if (SatImpl_ptst->InitRsltAllBits_u32 != 0U)\n    {\n                                                  \n        Gp_EcuStpShdn_CalloutInitFailedHnd(SatImpl_ptst->InitRsltAllBits_u32);\n                                                          \n    }\n    else\n    {\n        /*do nothing*/\n    }\n    Gp_TstApp_SwitchToRunPhase();\n    /*check if switch to run phase is failed*/\n    if (Gp_EcuStpShdn_CalloutChkSwtToRun() == FALSE)\n    {\n                                                  \n        Gp_EcuStpShdn_CalloutSwtToRunFailedHnd();\n                                                          \n    }\n    else\n    {\n        /*do nothing*/\n    }\n    /*check SBC self test result*/\n    if (Gp_EcuStpShdn_CalloutChkSbcTest() == FALSE)\n    {\n        MstImpl_ptst->SbcSelfTest_t = GP_ECUSTPSHDN_SELFTEST_FAIL;\n                                                  \n        Gp_EcuStpShdn_CalloutSbcTestFailedHnd();\n                                                          \n    }\n    else\n    {\n        MstImpl_ptst->SbcSelfTest_t = GP_ECUSTPSHDN_SELFTEST_PASS;\n    }\n}",
+      "bodyHash": "cd2eff8f25800b58",
+      "sigHash": "44d53b9e8301da58",
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.4.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_MstPostInit",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "Core0 初始化之后执行主核后初始化检查。首先经 Gp_EcuStpShdn_CheckInitRslt 汇总初始化结果，失败经 Gp_EcuStpShdn_CalloutInitFailedHnd 上报；随后将测试应用切换到运行阶段（Gp_TstApp_SwitchToRunPhase），并经 Gp_EcuStpShdn_CalloutChkSwtToRun 检查切换结果，失败时调用 Gp_EcuStpShdn_CalloutSwtToRunFailedHnd；最后经 Gp_EcuStpShdn_CalloutChkSbcTest 检查 SBC 自检结果并记录到主核本地缓冲区（SbcSelfTest_t），失败时调用 Gp_EcuStpShdn_CalloutSbcTestFailedHnd。仅在 GP_ECUSTPSHDN_SAFETY_ENABLE 为 STD_ON 时参与编译。由 Gp_EcuStpShdn_Startup 在阶段二中调用。",
+        "flowchart": "flowchart TD\n    A([\"开始\"]) --> B[\"CheckInitRslt 汇总初始化结果\"]\n    B --> C{\"InitRsltAllBits_u32 非 0\"}\n    C -- 是 --> D[\"CalloutInitFailedHnd<br>（条件编译 SAFETY_ACTION_ENABLE）\"]\n    C -- 否 --> E[\"继续\"]\n    D --> F[\"Gp_TstApp_SwitchToRunPhase 切换到运行阶段\"]\n    E --> F\n    F --> G{\"CalloutChkSwtToRun 返回 FALSE\"}\n    G -- 是 --> H[\"CalloutSwtToRunFailedHnd（条件编译）\"]\n    G -- 否 --> I[\"继续\"]\n    H --> J{\"CalloutChkSbcTest 返回 FALSE\"}\n    I --> J\n    J -- 是 --> K[\"SbcSelfTest_t 置为 FAIL<br>CalloutSbcTestFailedHnd（条件编译）\"]\n    J -- 否 --> L[\"SbcSelfTest_t 置为 PASS\"]\n    K --> Z([\"结束\"])\n    L --> Z",
+        "flowchartFormat": "mermaid",
+        "llmModel": "claude-sample",
+        "generatedAt": "2026-08-13T02:35:01.397Z"
+      }
+    },
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_GetLastSatTimeStamp",
+      "name": "Gp_EcuStpShdn_GetLastSatTimeStamp",
+      "signature": "uint32 Gp_EcuStpShdn_GetLastSatTimeStamp(void)",
+      "returnType": "uint32",
+      "parameters": [],
+      "isStatic": true,
+      "file": "Gp_EcuStpShdn.c",
+      "lineStart": 322,
+      "lineEnd": 364,
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_GetLastSatTimeStamp",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "uint32 - maximum time stamp",
+        "description": "Gp_EcuStpShdn get last satellite time stamp"
+      },
+      "calls": [],
+      "calledBy": [
+        "Gp_EcuStpShdn_Mainfunction"
+      ],
+      "globalsAccessed": [
+        "Gp_EcuStpShdn_bufSatLocalImplCore1_ltst",
+        "Gp_EcuStpShdn_bufSatLocalImplCore2_ltst",
+        "Gp_EcuStpShdn_bufSatLocalImplCore3_ltst",
+        "Gp_EcuStpShdn_bufSatLocalImplCore4_ltst",
+        "Gp_EcuStpShdn_bufSatLocalImplCore5_ltst"
+      ],
+      "conditionalFlags": [],
+      "bodyText": "{\n    uint32  TimeStamp_u32[GP_ECUSTPSHDN_ACTIVE_CORE_NUM];\n    uint32  Cnt_u32 = 0U;\n    uint32  MaxTimeStamp_u32 = 0U;\n\n    /*master core time stamp is not record in satellite local implement buffer*/\n    TimeStamp_u32[0U] = 0U;\n                                        \n    TimeStamp_u32[1U] = Gp_EcuStpShdn_bufSatLocalImplCore1_ltst.TimeStamp_u32;\n                                                \n\n                                        \n    TimeStamp_u32[2U] = Gp_EcuStpShdn_bufSatLocalImplCore2_ltst.TimeStamp_u32;\n                                                \n\n                                        \n    TimeStamp_u32[3U] = Gp_EcuStpShdn_bufSatLocalImplCore3_ltst.TimeStamp_u32;\n                                                \n\n                                        \n    TimeStamp_u32[4U] = Gp_EcuStpShdn_bufSatLocalImplCore4_ltst.TimeStamp_u32;\n                                                \n\n                                        \n    TimeStamp_u32[5U] = Gp_EcuStpShdn_bufSatLocalImplCore5_ltst.TimeStamp_u32;\n                                                \n\n    /*get maximum satellite time stamp*/\n    for (Cnt_u32 = 0U; Cnt_u32 < (uint32)GP_ECUSTPSHDN_ACTIVE_CORE_NUM; Cnt_u32++)\n    {\n        if (MaxTimeStamp_u32 < TimeStamp_u32[Cnt_u32])\n        {\n            MaxTimeStamp_u32 = TimeStamp_u32[Cnt_u32];\n        }\n        else\n        {\n            /*do nothing*/\n        }\n    }\n\n    return (MaxTimeStamp_u32);\n}",
+      "bodyHash": "1194ad2d443579a4",
+      "sigHash": "d56189aa80256c12",
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.4.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_GetLastSatTimeStamp",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "计算所有激活从核中最大的初始化完成时间戳。主核时间戳不记录在从核缓冲区中，因此索引 0 按 0 处理。按 GP_ECUSTPSHDN_ACTIVE_CORE_NUM 遍历各激活从核，从对应从核本地缓冲区读取时间戳，返回最大值。由 Gp_EcuStpShdn_Mainfunction 在 Core0 上调用一次。",
+        "flowchart": "flowchart TD\n    A([\"开始\"]) --> B[\"时间戳数组初始化<br>master 核索引 0 置 0\"]\n    B --> C[\"逐核读取 satellite 时间戳<br>（按激活核数，条件编译）\"]\n    C --> D[\"Cnt 置 0<br>MaxTimeStamp 置 0\"]\n    D --> E{\"Cnt 小于激活核数\"}\n    E -- 是 --> F{\"TimeStamp[Cnt] 大于 Max\"}\n    F -- 是 --> G[\"MaxTimeStamp 更新为该值\"]\n    F -- 否 --> H[\"不处理\"]\n    G --> I[\"Cnt 加 1\"]\n    H --> I\n    I --> E\n    E -- 否 --> J[\"返回 MaxTimeStamp\"]\n    J --> Z([\"结束\"])",
+        "flowchartFormat": "mermaid",
+        "llmModel": "claude-sample",
+        "generatedAt": "2026-08-13T02:35:01.397Z"
+      }
+    }
+  ],
+  "internalVariables": [
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_bufMstLocalImpl_ltst",
+      "name": "Gp_EcuStpShdn_bufMstLocalImpl_ltst",
+      "type": "static volatile Gp_EcuStpShdn_MstLocalImplType",
+      "isStatic": true,
+      "isConst": false,
+      "isVolatile": true,
+      "file": "Gp_EcuStpShdn.c",
+      "line": 45,
+      "comment": "master local implement runtime buffer",
+      "conditionalFlags": [],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.4.1",
+        "workItemKind": "variable",
+        "title": "Gp_EcuStpShdn_bufMstLocalImpl_ltst",
+        "workItemId": null
+      }
+    },
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_bufSatLocalImplCore0_ltst",
+      "name": "Gp_EcuStpShdn_bufSatLocalImplCore0_ltst",
+      "type": "static volatile Gp_EcuStpShdn_SatLocalImplType",
+      "isStatic": true,
+      "isConst": false,
+      "isVolatile": true,
+      "file": "Gp_EcuStpShdn.c",
+      "line": 53,
+      "comment": "satellite local implement runtime buffer core0",
+      "conditionalFlags": [],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.4.1",
+        "workItemKind": "variable",
+        "title": "Gp_EcuStpShdn_bufSatLocalImplCore0_ltst",
+        "workItemId": null
+      }
+    },
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_bufSatLocalImplCore1_ltst",
+      "name": "Gp_EcuStpShdn_bufSatLocalImplCore1_ltst",
+      "type": "static volatile Gp_EcuStpShdn_SatLocalImplType",
+      "isStatic": true,
+      "isConst": false,
+      "isVolatile": true,
+      "file": "Gp_EcuStpShdn.c",
+      "line": 62,
+      "comment": "satellite local implement runtime buffer core1",
+      "conditionalFlags": [
+        "GP_ECUSTPSHDN_ACTIVE_CORE_NUM"
+      ],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.4.1",
+        "workItemKind": "variable",
+        "title": "Gp_EcuStpShdn_bufSatLocalImplCore1_ltst",
+        "workItemId": null
+      }
+    },
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_bufSatLocalImplCore2_ltst",
+      "name": "Gp_EcuStpShdn_bufSatLocalImplCore2_ltst",
+      "type": "static volatile Gp_EcuStpShdn_SatLocalImplType",
+      "isStatic": true,
+      "isConst": false,
+      "isVolatile": true,
+      "file": "Gp_EcuStpShdn.c",
+      "line": 72,
+      "comment": "satellite local implement runtime buffer core2",
+      "conditionalFlags": [
+        "GP_ECUSTPSHDN_ACTIVE_CORE_NUM"
+      ],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.4.1",
+        "workItemKind": "variable",
+        "title": "Gp_EcuStpShdn_bufSatLocalImplCore2_ltst",
+        "workItemId": null
+      }
+    },
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_bufSatLocalImplCore3_ltst",
+      "name": "Gp_EcuStpShdn_bufSatLocalImplCore3_ltst",
+      "type": "static volatile Gp_EcuStpShdn_SatLocalImplType",
+      "isStatic": true,
+      "isConst": false,
+      "isVolatile": true,
+      "file": "Gp_EcuStpShdn.c",
+      "line": 82,
+      "comment": "satellite local implement runtime buffer core3",
+      "conditionalFlags": [
+        "GP_ECUSTPSHDN_ACTIVE_CORE_NUM"
+      ],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.4.1",
+        "workItemKind": "variable",
+        "title": "Gp_EcuStpShdn_bufSatLocalImplCore3_ltst",
+        "workItemId": null
+      }
+    },
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_bufSatLocalImplCore4_ltst",
+      "name": "Gp_EcuStpShdn_bufSatLocalImplCore4_ltst",
+      "type": "static volatile Gp_EcuStpShdn_SatLocalImplType",
+      "isStatic": true,
+      "isConst": false,
+      "isVolatile": true,
+      "file": "Gp_EcuStpShdn.c",
+      "line": 92,
+      "comment": "satellite local implement runtime buffer core4",
+      "conditionalFlags": [
+        "GP_ECUSTPSHDN_ACTIVE_CORE_NUM"
+      ],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.4.1",
+        "workItemKind": "variable",
+        "title": "Gp_EcuStpShdn_bufSatLocalImplCore4_ltst",
+        "workItemId": null
+      }
+    },
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_bufSatLocalImplCore5_ltst",
+      "name": "Gp_EcuStpShdn_bufSatLocalImplCore5_ltst",
+      "type": "static volatile Gp_EcuStpShdn_SatLocalImplType",
+      "isStatic": true,
+      "isConst": false,
+      "isVolatile": true,
+      "file": "Gp_EcuStpShdn.c",
+      "line": 102,
+      "comment": "satellite local implement runtime buffer core5",
+      "conditionalFlags": [
+        "GP_ECUSTPSHDN_ACTIVE_CORE_NUM"
+      ],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.4.1",
+        "workItemKind": "variable",
+        "title": "Gp_EcuStpShdn_bufSatLocalImplCore5_ltst",
+        "workItemId": null
+      }
+    },
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_rtSatCont_lcatst",
+      "name": "Gp_EcuStpShdn_rtSatCont_lcatst",
+      "type": "static const Gp_EcuStpShdn_SatRunTimeType",
+      "isStatic": true,
+      "isConst": true,
+      "isVolatile": false,
+      "file": "Gp_EcuStpShdn.c",
+      "line": 112,
+      "comment": "FC runtime buffer address container for satellite local implement variables",
+      "conditionalFlags": [],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.4.1",
+        "workItemKind": "variable",
+        "title": "Gp_EcuStpShdn_rtSatCont_lcatst",
+        "workItemId": null
+      }
+    }
+  ],
+  "providedVariables": [],
+  "calledExternalFunctions": [
+    {
+      "name": "Gp_EcuStpShdn_CalloutChkMcuPreRunTest",
+      "signature": "boolean Gp_EcuStpShdn_CalloutChkMcuPreRunTest(void)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_CalloutChkMcuPreRunTest",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "None",
+        "description": "Gp_EcuStpShdn callout function for check MCU PreRunTest result."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "Gp_EcuStpShdn_MstProcMcuPreRunTest"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.2.2",
+        "workItemKind": "table",
+        "title": "Callout 接口函数",
+        "workItemId": null
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutChkMcuRunTimeTest",
+      "signature": "boolean Gp_EcuStpShdn_CalloutChkMcuRunTimeTest(void)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_CalloutChkMcuRunTimeTest",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "None",
+        "description": "Gp_EcuStpShdn callout function for check MCU RunTimeTest result."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "Gp_EcuStpShdn_Mainfunction"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.2.2",
+        "workItemKind": "table",
+        "title": "Callout 接口函数",
+        "workItemId": null
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutChkSbcTest",
+      "signature": "boolean Gp_EcuStpShdn_CalloutChkSbcTest(void)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_CalloutChkSbcTest",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "None",
+        "description": "Gp_EcuStpShdn callout function for check SBC test result."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "Gp_EcuStpShdn_MstPostInit"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.2.2",
+        "workItemKind": "table",
+        "title": "Callout 接口函数",
+        "workItemId": null
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutChkSwtToRun",
+      "signature": "boolean Gp_EcuStpShdn_CalloutChkSwtToRun(void)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_CalloutChkSwtToRun",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "None",
+        "description": "Gp_EcuStpShdn callout function for check switch to run phase."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "Gp_EcuStpShdn_MstPostInit"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.2.2",
+        "workItemKind": "table",
+        "title": "Callout 接口函数",
+        "workItemId": null
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutGetCoreId",
+      "signature": "uint32 Gp_EcuStpShdn_CalloutGetCoreId(void)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_CalloutGetCoreId",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "uint32 - core ID",
+        "description": "get core ID callout function, the function should get core ID from lower driver,\nand make sure of core ID is available(core ID is valid and is enabled in configuration and is used as index 0~5)."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "Gp_EcuStpShdn_Startup",
+        "Gp_EcuStpShdn_Mainfunction"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.2.2",
+        "workItemKind": "table",
+        "title": "Callout 接口函数",
+        "workItemId": null
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutGetSysTimeMs",
+      "signature": "uint32 Gp_EcuStpShdn_CalloutGetSysTimeMs(void)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_CalloutGetSysTimeMs",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "uint32 - system time million second",
+        "description": "get system time million second callout function."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "Gp_EcuStpShdn_Startup"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.2.2",
+        "workItemKind": "table",
+        "title": "Callout 接口函数",
+        "workItemId": null
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutInitFailedHnd",
+      "signature": "void Gp_EcuStpShdn_CalloutInitFailedHnd(uint32 InitRslt_u32)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [
+          {
+            "raw": "uint32 InitRslt_u32 - initialization result",
+            "description": "initialization result",
+            "name": "InitRslt_u32",
+            "type": "uint32"
+          }
+        ],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_CalloutInitFailedHnd",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "None",
+        "description": "Gp_EcuStpShdn callout function for handling of initialization failed."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "Gp_EcuStpShdn_MstPostInit",
+        "Gp_EcuStpShdn_Startup"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.2.2",
+        "workItemKind": "table",
+        "title": "Callout 接口函数",
+        "workItemId": null
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutInitStageOneCore0",
+      "signature": "void Gp_EcuStpShdn_CalloutInitStageOneCore0(Gp_EcuStpShdn_SatLocalImplType* Impl_ptst)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [
+          {
+            "raw": "volatile Gp_EcuStpShdn_SatLocalImplType* Impl_ptst - pointer to satellite local implement",
+            "description": "pointer to satellite local implement",
+            "name": "Impl_ptst",
+            "type": "volatile Gp_EcuStpShdn_SatLocalImplType*"
+          }
+        ],
+        "functionName": "Gp_EcuStpShdn_CalloutInitStageOneCore0",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "None",
+        "description": "Gp_EcuStpShdn callout function for initialization stage one of core0."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "Gp_EcuStpShdn_Startup"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.2.2",
+        "workItemKind": "table",
+        "title": "Callout 接口函数",
+        "workItemId": null
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutInitStageTwoCore0",
+      "signature": "void Gp_EcuStpShdn_CalloutInitStageTwoCore0(Gp_EcuStpShdn_SatLocalImplType* Impl_ptst)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [
+          {
+            "raw": "volatile Gp_EcuStpShdn_SatLocalImplType* Impl_ptst - pointer to satellite local implement",
+            "description": "pointer to satellite local implement",
+            "name": "Impl_ptst",
+            "type": "volatile Gp_EcuStpShdn_SatLocalImplType*"
+          }
+        ],
+        "functionName": "Gp_EcuStpShdn_CalloutInitStageTwoCore0",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "None",
+        "description": "Gp_EcuStpShdn callout function for initialization stage two of core0."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "(rtSatCont 配置表函数指针引用)"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.2.2",
+        "workItemKind": "table",
+        "title": "Callout 接口函数",
+        "workItemId": null
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutInitStageTwoCore1",
+      "signature": "void Gp_EcuStpShdn_CalloutInitStageTwoCore1(Gp_EcuStpShdn_SatLocalImplType* Impl_ptst)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [
+          {
+            "raw": "volatile Gp_EcuStpShdn_SatLocalImplType* Impl_ptst - pointer to satellite local implement",
+            "description": "pointer to satellite local implement",
+            "name": "Impl_ptst",
+            "type": "volatile Gp_EcuStpShdn_SatLocalImplType*"
+          }
+        ],
+        "functionName": "Gp_EcuStpShdn_CalloutInitStageTwoCore1",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "None",
+        "description": "Gp_EcuStpShdn callout function for initialization stage two of core1."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "(rtSatCont 配置表函数指针引用)"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.2.2",
+        "workItemKind": "table",
+        "title": "Callout 接口函数",
+        "workItemId": null
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutInitStageTwoCore2",
+      "signature": "void Gp_EcuStpShdn_CalloutInitStageTwoCore2(Gp_EcuStpShdn_SatLocalImplType* Impl_ptst)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [
+          {
+            "raw": "volatile Gp_EcuStpShdn_SatLocalImplType* Impl_ptst - pointer to satellite local implement",
+            "description": "pointer to satellite local implement",
+            "name": "Impl_ptst",
+            "type": "volatile Gp_EcuStpShdn_SatLocalImplType*"
+          }
+        ],
+        "functionName": "Gp_EcuStpShdn_CalloutInitStageTwoCore2",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "None",
+        "description": "Gp_EcuStpShdn callout function for initialization stage two of core2."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "(rtSatCont 配置表函数指针引用)"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.2.2",
+        "workItemKind": "table",
+        "title": "Callout 接口函数",
+        "workItemId": null
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutInitStageTwoCore3",
+      "signature": "void Gp_EcuStpShdn_CalloutInitStageTwoCore3(Gp_EcuStpShdn_SatLocalImplType* Impl_ptst)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [
+          {
+            "raw": "volatile Gp_EcuStpShdn_SatLocalImplType* Impl_ptst - pointer to satellite local implement",
+            "description": "pointer to satellite local implement",
+            "name": "Impl_ptst",
+            "type": "volatile Gp_EcuStpShdn_SatLocalImplType*"
+          }
+        ],
+        "functionName": "Gp_EcuStpShdn_CalloutInitStageTwoCore3",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "None",
+        "description": "Gp_EcuStpShdn callout function for initialization stage two of core3."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "(rtSatCont 配置表函数指针引用)"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.2.2",
+        "workItemKind": "table",
+        "title": "Callout 接口函数",
+        "workItemId": null
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutInitStageTwoCore4",
+      "signature": "void Gp_EcuStpShdn_CalloutInitStageTwoCore4(Gp_EcuStpShdn_SatLocalImplType* Impl_ptst)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [
+          {
+            "raw": "volatile Gp_EcuStpShdn_SatLocalImplType* Impl_ptst - pointer to satellite local implement",
+            "description": "pointer to satellite local implement",
+            "name": "Impl_ptst",
+            "type": "volatile Gp_EcuStpShdn_SatLocalImplType*"
+          }
+        ],
+        "functionName": "Gp_EcuStpShdn_CalloutInitStageTwoCore4",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "None",
+        "description": "Gp_EcuStpShdn callout function for initialization stage two of core4."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "(rtSatCont 配置表函数指针引用)"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.2.2",
+        "workItemKind": "table",
+        "title": "Callout 接口函数",
+        "workItemId": null
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutInitStageTwoCore5",
+      "signature": "void Gp_EcuStpShdn_CalloutInitStageTwoCore5(Gp_EcuStpShdn_SatLocalImplType* Impl_ptst)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [
+          {
+            "raw": "volatile Gp_EcuStpShdn_SatLocalImplType* Impl_ptst - pointer to satellite local implement",
+            "description": "pointer to satellite local implement",
+            "name": "Impl_ptst",
+            "type": "volatile Gp_EcuStpShdn_SatLocalImplType*"
+          }
+        ],
+        "functionName": "Gp_EcuStpShdn_CalloutInitStageTwoCore5",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "None",
+        "description": "Gp_EcuStpShdn callout function for initialization stage two of core5."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "(rtSatCont 配置表函数指针引用)"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.2.2",
+        "workItemKind": "table",
+        "title": "Callout 接口函数",
+        "workItemId": null
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd",
+      "signature": "void Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd(void)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "None",
+        "description": "Gp_EcuStpShdn callout function for handling of MCU PreRunTest failed."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "Gp_EcuStpShdn_MstProcMcuPreRunTest"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.2.2",
+        "workItemKind": "table",
+        "title": "Callout 接口函数",
+        "workItemId": null
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd",
+      "signature": "void Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd(void)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "None",
+        "description": "Gp_EcuStpShdn callout function for handling of MCU RunTimeTest failed."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "Gp_EcuStpShdn_Mainfunction"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.2.2",
+        "workItemKind": "table",
+        "title": "Callout 接口函数",
+        "workItemId": null
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutOsErrRecov",
+      "signature": "void Gp_EcuStpShdn_CalloutOsErrRecov(uint8 OsStatus_u8)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [
+          {
+            "raw": "uint8 OsStatus_u8 - OS status",
+            "description": "OS status",
+            "name": "OsStatus_u8",
+            "type": "uint8"
+          }
+        ],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_CalloutOsErrRecov",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "None",
+        "description": "Gp_EcuStpShdn callout function for OS error recovery."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "Gp_EcuStpShdn_OsErrRecov"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.2.2",
+        "workItemKind": "table",
+        "title": "Callout 接口函数",
+        "workItemId": null
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase",
+      "signature": "void Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase(void)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "None",
+        "description": "Gp_EcuStpShdn callout function for power shut down in shut down phase."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "Gp_EcuStpShdn_PwrShdnInShdnPhase"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.2.2",
+        "workItemKind": "table",
+        "title": "Callout 接口函数",
+        "workItemId": null
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutPwrShdnInStpPhase",
+      "signature": "void Gp_EcuStpShdn_CalloutPwrShdnInStpPhase(void)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_CalloutPwrShdnInStpPhase",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "None",
+        "description": "Gp_EcuStpShdn callout function for power shut down in start up phase."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "Gp_EcuStpShdn_Startup"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.2.2",
+        "workItemKind": "table",
+        "title": "Callout 接口函数",
+        "workItemId": null
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutSafeState",
+      "signature": "void Gp_EcuStpShdn_CalloutSafeState(void)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_CalloutSafeState",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "None",
+        "description": "Gp_EcuStpShdn callout function for special handling of safe state."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "Gp_EcuStpShdn_Startup"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.2.2",
+        "workItemKind": "table",
+        "title": "Callout 接口函数",
+        "workItemId": null
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutSbcInit",
+      "signature": "void Gp_EcuStpShdn_CalloutSbcInit(uint32* SbcInfo_pu32)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [
+          {
+            "raw": "uint32* SbcInfo_pu32 - SBC information when system start up",
+            "description": "SBC information when system start up",
+            "name": "SbcInfo_pu32",
+            "type": "uint32*"
+          }
+        ],
+        "functionName": "Gp_EcuStpShdn_CalloutSbcInit",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "None",
+        "description": "Gp_EcuStpShdn callout function for SBC initialization."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "Gp_EcuStpShdn_Startup"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.2.2",
+        "workItemKind": "table",
+        "title": "Callout 接口函数",
+        "workItemId": null
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutSbcInitInSafeState",
+      "signature": "void Gp_EcuStpShdn_CalloutSbcInitInSafeState(uint32* SbcInfo_pu32)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [
+          {
+            "raw": "uint32* SbcInfo_pu32 - SBC information when system start up",
+            "description": "SBC information when system start up",
+            "name": "SbcInfo_pu32",
+            "type": "uint32*"
+          }
+        ],
+        "functionName": "Gp_EcuStpShdn_CalloutSbcInitInSafeState",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "None",
+        "description": "Gp_EcuStpShdn callout function for SBC initialization in safe state."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "Gp_EcuStpShdn_Startup"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.2.2",
+        "workItemKind": "table",
+        "title": "Callout 接口函数",
+        "workItemId": null
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutSbcTestFailedHnd",
+      "signature": "void Gp_EcuStpShdn_CalloutSbcTestFailedHnd(void)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_CalloutSbcTestFailedHnd",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "None",
+        "description": "Gp_EcuStpShdn callout function for handling of SBC test failed."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "Gp_EcuStpShdn_MstPostInit"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.2.2",
+        "workItemKind": "table",
+        "title": "Callout 接口函数",
+        "workItemId": null
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutSwtToRunFailedHnd",
+      "signature": "void Gp_EcuStpShdn_CalloutSwtToRunFailedHnd(void)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_CalloutSwtToRunFailedHnd",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "None",
+        "description": "Gp_EcuStpShdn callout function for handling of switch to run phase failed."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "Gp_EcuStpShdn_MstPostInit"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.2.2",
+        "workItemKind": "table",
+        "title": "Callout 接口函数",
+        "workItemId": null
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutTrapRecov",
+      "signature": "void Gp_EcuStpShdn_CalloutTrapRecov(uint8 OsStatus_u8)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [
+          {
+            "raw": "uint8 OsStatus_u8 - OS status",
+            "description": "OS status",
+            "name": "OsStatus_u8",
+            "type": "uint8"
+          }
+        ],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_CalloutTrapRecov",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "None",
+        "description": "Gp_EcuStpShdn callout function for trap recovery."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "Gp_EcuStpShdn_TrapRecov"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.2.2",
+        "workItemKind": "table",
+        "title": "Callout 接口函数",
+        "workItemId": null
+      }
+    },
+    {
+      "name": "Gp_RstM_GetLastRstTypeInfo",
+      "signature": "",
+      "group": "Gp_RstM",
+      "comment": {
+        "description": "获取上次复位的类型信息（复位类型、复位 ID、复位核）"
+      },
+      "calledFrom": [
+        "Gp_EcuStpShdn_Startup"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.2.2",
+        "workItemKind": "table",
+        "title": "Gp_RstM 接口函数",
+        "workItemId": null
+      },
+      "commentSource": "inferred"
+    },
+    {
+      "name": "Gp_RstM_Init",
+      "signature": "",
+      "group": "Gp_RstM",
+      "comment": {
+        "description": "复位管理器初始化"
+      },
+      "calledFrom": [
+        "Gp_EcuStpShdn_Startup"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.2.2",
+        "workItemKind": "table",
+        "title": "Gp_RstM 接口函数",
+        "workItemId": null
+      },
+      "commentSource": "inferred"
+    },
+    {
+      "name": "Gp_RstM_InitOne",
+      "signature": "",
+      "group": "Gp_RstM",
+      "comment": {
+        "description": "复位管理器第一阶段初始化"
+      },
+      "calledFrom": [
+        "Gp_EcuStpShdn_Startup"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.2.2",
+        "workItemKind": "table",
+        "title": "Gp_RstM 接口函数",
+        "workItemId": null
+      },
+      "commentSource": "inferred"
+    },
+    {
+      "name": "Gp_RstM_InitTwo",
+      "signature": "",
+      "group": "Gp_RstM",
+      "comment": {
+        "description": "复位管理器第二阶段初始化"
+      },
+      "calledFrom": [
+        "Gp_EcuStpShdn_Startup"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.2.2",
+        "workItemKind": "table",
+        "title": "Gp_RstM 接口函数",
+        "workItemId": null
+      },
+      "commentSource": "inferred"
+    },
+    {
+      "name": "Gp_TstApp_PreRunInit",
+      "signature": "",
+      "group": "Gp_TstApp",
+      "comment": {
+        "description": "测试应用预运行初始化（安全功能）"
+      },
+      "calledFrom": [
+        "Gp_EcuStpShdn_Startup"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.2.2",
+        "workItemKind": "table",
+        "title": "Gp_TstApp 接口函数",
+        "workItemId": null
+      },
+      "commentSource": "inferred"
+    },
+    {
+      "name": "Gp_TstApp_PreRunPhase",
+      "signature": "",
+      "group": "Gp_TstApp",
+      "comment": {
+        "description": "测试应用预运行阶段执行（安全功能）"
+      },
+      "calledFrom": [
+        "Gp_EcuStpShdn_Startup"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.2.2",
+        "workItemKind": "table",
+        "title": "Gp_TstApp 接口函数",
+        "workItemId": null
+      },
+      "commentSource": "inferred"
+    },
+    {
+      "name": "Gp_TstApp_RunTimePhase",
+      "signature": "",
+      "group": "Gp_TstApp",
+      "comment": {
+        "description": "测试应用运行时阶段执行（安全功能）"
+      },
+      "calledFrom": [
+        "Gp_EcuStpShdn_Mainfunction"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.2.2",
+        "workItemKind": "table",
+        "title": "Gp_TstApp 接口函数",
+        "workItemId": null
+      },
+      "commentSource": "inferred"
+    },
+    {
+      "name": "Gp_TstApp_SwitchToRunPhase",
+      "signature": "",
+      "group": "Gp_TstApp",
+      "comment": {
+        "description": "切换到运行阶段（安全功能）"
+      },
+      "calledFrom": [
+        "Gp_EcuStpShdn_MstPostInit"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.2.2",
+        "workItemKind": "table",
+        "title": "Gp_TstApp 接口函数",
+        "workItemId": null
+      },
+      "commentSource": "inferred"
+    }
+  ],
+  "types": [
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_StpStageType",
+      "name": "Gp_EcuStpShdn_StpStageType",
+      "kind": "typedef",
+      "underlyingType": "uint8",
+      "comment": "定义 ECU 启动阶段的枚举类型，表示当前所处的启动阶段",
+      "file": "Gp_EcuStpShdn_Types.h",
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.1.2",
+        "workItemKind": "type",
+        "title": "Gp_EcuStpShdn_StpStageType",
+        "workItemId": null
+      },
+      "relatedDefines": [
+        {
+          "name": "GP_ECUSTPSHDN_STPSTAGE_UNDEF",
+          "value": "((Gp_EcuStpShdn_StpStageType)0x00U)",
+          "isFunctionLike": false,
+          "comment": "未定义状态",
+          "file": "Gp_EcuStpShdn_Types.h",
+          "polarion": {
+            "isWorkItem": false,
+            "chapter": "6",
+            "workItemKind": "config",
+            "title": "GP_ECUSTPSHDN_STPSTAGE_UNDEF",
+            "workItemId": null
+          }
+        },
+        {
+          "name": "GP_ECUSTPSHDN_STPSTAGE_ONE",
+          "value": "((Gp_EcuStpShdn_StpStageType)0x01U)",
+          "isFunctionLike": false,
+          "comment": "启动第一阶段：主核基础初始化",
+          "file": "Gp_EcuStpShdn_Types.h",
+          "polarion": {
+            "isWorkItem": false,
+            "chapter": "6",
+            "workItemKind": "config",
+            "title": "GP_ECUSTPSHDN_STPSTAGE_ONE",
+            "workItemId": null
+          }
+        },
+        {
+          "name": "GP_ECUSTPSHDN_STPSTAGE_TWO",
+          "value": "((Gp_EcuStpShdn_StpStageType)0x02U)",
+          "isFunctionLike": false,
+          "comment": "启动第二阶段：多核同步与自检",
+          "file": "Gp_EcuStpShdn_Types.h",
+          "polarion": {
+            "isWorkItem": false,
+            "chapter": "6",
+            "workItemKind": "config",
+            "title": "GP_ECUSTPSHDN_STPSTAGE_TWO",
+            "workItemId": null
+          }
+        },
+        {
+          "name": "GP_ECUSTPSHDN_STPSTAGE_THREE",
+          "value": "((Gp_EcuStpShdn_StpStageType)0x03U)",
+          "isFunctionLike": false,
+          "comment": "启动第三阶段：从核完成初始化",
+          "file": "Gp_EcuStpShdn_Types.h",
+          "polarion": {
+            "isWorkItem": false,
+            "chapter": "6",
+            "workItemKind": "config",
+            "title": "GP_ECUSTPSHDN_STPSTAGE_THREE",
+            "workItemId": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_SelfTestType",
+      "name": "Gp_EcuStpShdn_SelfTestType",
+      "kind": "typedef",
+      "underlyingType": "uint8",
+      "comment": "定义自检结果的枚举类型",
+      "file": "Gp_EcuStpShdn_Types.h",
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.1.2",
+        "workItemKind": "type",
+        "title": "Gp_EcuStpShdn_SelfTestType",
+        "workItemId": null
+      },
+      "relatedDefines": [
+        {
+          "name": "GP_ECUSTPSHDN_SELFTEST_UNDEF",
+          "value": "((Gp_EcuStpShdn_SelfTestType)0x00U)",
+          "isFunctionLike": false,
+          "comment": "自检状态未定义",
+          "file": "Gp_EcuStpShdn_Types.h",
+          "polarion": {
+            "isWorkItem": false,
+            "chapter": "6",
+            "workItemKind": "config",
+            "title": "GP_ECUSTPSHDN_SELFTEST_UNDEF",
+            "workItemId": null
+          }
+        },
+        {
+          "name": "GP_ECUSTPSHDN_SELFTEST_PASS",
+          "value": "((Gp_EcuStpShdn_SelfTestType)0x01U)",
+          "isFunctionLike": false,
+          "comment": "自检通过",
+          "file": "Gp_EcuStpShdn_Types.h",
+          "polarion": {
+            "isWorkItem": false,
+            "chapter": "6",
+            "workItemKind": "config",
+            "title": "GP_ECUSTPSHDN_SELFTEST_PASS",
+            "workItemId": null
+          }
+        },
+        {
+          "name": "GP_ECUSTPSHDN_SELFTEST_FAIL",
+          "value": "((Gp_EcuStpShdn_SelfTestType)0x02U)",
+          "isFunctionLike": false,
+          "comment": "自检失败",
+          "file": "Gp_EcuStpShdn_Types.h",
+          "polarion": {
+            "isWorkItem": false,
+            "chapter": "6",
+            "workItemKind": "config",
+            "title": "GP_ECUSTPSHDN_SELFTEST_FAIL",
+            "workItemId": null
+          }
+        }
+      ]
+    },
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_MstLocalImplType",
+      "name": "Gp_EcuStpShdn_MstLocalImplType",
+      "kind": "struct",
+      "elements": [
+        {
+          "name": "TimeStamp_u32",
+          "type": "uint32[GP_ECUSTPSHDN_MST_TIME_STAMP_NUM]",
+          "comment": "主核记录的关键启动时间点数组"
+        },
+        {
+          "name": "McuPreTestRslt_u32",
+          "type": "uint32",
+          "comment": "MCU 预运行测试结果的简要信息"
+        },
+        {
+          "name": "McuRunTestRslt_u32",
+          "type": "uint32",
+          "comment": "MCU 运行时测试结果的简要信息"
+        },
+        {
+          "name": "SbcInfo_u32",
+          "type": "uint32",
+          "comment": "启动时的 SBC 信息"
+        },
+        {
+          "name": "StpStage_t",
+          "type": "Gp_EcuStpShdn_StpStageType",
+          "comment": "当前启动阶段"
+        },
+        {
+          "name": "McuSelfTest_t",
+          "type": "Gp_EcuStpShdn_SelfTestType",
+          "comment": "MCU 自检结果"
+        },
+        {
+          "name": "SbcSelfTest_t",
+          "type": "Gp_EcuStpShdn_SelfTestType",
+          "comment": "SBC 自检结果"
+        },
+        {
+          "name": "RstTypePlt_u8",
+          "type": "uint8",
+          "comment": "平台复位类型"
+        },
+        {
+          "name": "RstTypeMcal_u8",
+          "type": "uint8",
+          "comment": "MCAL 复位类型"
+        },
+        {
+          "name": "RstId_u8",
+          "type": "uint8",
+          "comment": "复位 ID"
+        },
+        {
+          "name": "RstCoreId_u8",
+          "type": "uint8",
+          "comment": "复位核 ID"
+        },
+        {
+          "name": "SafeState_b",
+          "type": "boolean",
+          "comment": "安全状态标志"
+        },
+        {
+          "name": "TryPwrShdn_b",
+          "type": "boolean",
+          "comment": "尝试断电标志"
+        }
+      ],
+      "comment": "主核本地实现数据结构，存储主核的启动信息、时间戳、复位信息和测试状态",
+      "file": "Gp_EcuStpShdn_Types.h",
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.1.2",
+        "workItemKind": "type",
+        "title": "Gp_EcuStpShdn_MstLocalImplType",
+        "workItemId": null
+      }
+    },
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_SatLocalImplType",
+      "name": "Gp_EcuStpShdn_SatLocalImplType",
+      "kind": "struct",
+      "elements": [
+        {
+          "name": "TimeStamp_u32",
+          "type": "uint32",
+          "comment": "从核记录的启动完成时间戳"
+        },
+        {
+          "name": "InitRsltAllBits_u32",
+          "type": "uint32",
+          "comment": "初始化结果的位域汇总（每位对应一项检查结果）"
+        },
+        {
+          "name": "InitCheckRslt_t",
+          "type": "Std_ReturnType[GP_ECUSTPSHDN_INIT_RSLT_REC_NUM]",
+          "comment": "初始化检查结果数组"
+        }
+      ],
+      "comment": "从核（卫星核）本地实现数据结构，存储从核的启动信息和时间戳",
+      "file": "Gp_EcuStpShdn_Types.h",
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.1.2",
+        "workItemKind": "type",
+        "title": "Gp_EcuStpShdn_SatLocalImplType",
+        "workItemId": null
+      }
+    },
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_SatRunTimeType",
+      "name": "Gp_EcuStpShdn_SatRunTimeType",
+      "kind": "struct",
+      "elements": [
+        {
+          "name": "Impl_ptst",
+          "type": "volatile Gp_EcuStpShdn_SatLocalImplType *",
+          "comment": "指向从核本地实现缓冲区的指针"
+        },
+        {
+          "name": "StpStageTwo_pf",
+          "type": "void (*)(volatile Gp_EcuStpShdn_SatLocalImplType* Impl_ptst)",
+          "comment": "指向从核阶段二初始化函数的函数指针"
+        }
+      ],
+      "comment": "从核运行时容器，包含指向从核本地缓冲区的指针和阶段二初始化函数指针",
+      "file": "Gp_EcuStpShdn_Types.h",
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.1.2",
+        "workItemKind": "type",
+        "title": "Gp_EcuStpShdn_SatRunTimeType",
+        "workItemId": null
+      }
+    }
+  ],
+  "configMacros": [
+    {
+      "name": "GP_ECUSTPSHDN_ACTIVE_CORE_NUM",
+      "value": "(2U)",
+      "isFunctionLike": false,
+      "comment": "define active core number",
+      "file": "ConfTemplate\\Gp_EcuStpShdn_Cfg.h",
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "6",
+        "workItemKind": "config",
+        "title": "GP_ECUSTPSHDN_ACTIVE_CORE_NUM",
+        "workItemId": null
+      }
+    },
+    {
+      "name": "GP_ECUSTPSHDN_NOP",
+      "value": "MCAL_NOP()",
+      "isFunctionLike": true,
+      "comment": "define NOP",
+      "file": "ConfTemplate\\Gp_EcuStpShdn_Cfg.h",
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "6",
+        "workItemKind": "config",
+        "title": "GP_ECUSTPSHDN_NOP",
+        "workItemId": null
+      }
+    },
+    {
+      "name": "GP_ECUSTPSHDN_SAFETY_ENABLE",
+      "value": "(STD_ON)",
+      "isFunctionLike": false,
+      "comment": "safety enable",
+      "file": "ConfTemplate\\Gp_EcuStpShdn_Cfg.h",
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "6",
+        "workItemKind": "config",
+        "title": "GP_ECUSTPSHDN_SAFETY_ENABLE",
+        "workItemId": null
+      }
+    },
+    {
+      "name": "GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE",
+      "value": "(STD_ON)",
+      "isFunctionLike": false,
+      "comment": null,
+      "file": "ConfTemplate\\Gp_EcuStpShdn_Cfg.h",
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "6",
+        "workItemKind": "config",
+        "title": "GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE",
+        "workItemId": null
+      }
+    }
+  ],
+  "dynamicDesign": {
+    "stateMachine": {
+      "name": "Gp_EcuStpShdn 启动阶段状态机",
+      "diagram": "stateDiagram-v2\n    [*] --> UNDEF : 上电复位\n    UNDEF --> STAGE_ONE : 各核进入 Gp_EcuStpShdn_Startup\n    STAGE_ONE --> STAGE_TWO : master 完成阶段一初始化（satellite 自旋等待屏障）\n    STAGE_TWO --> STAGE_THREE : master 完成 RstM 初始化、MCAL 初始化检查与 SBC 初始化\n    STAGE_TWO --> [*] : TryPwrShdn 标志置位，进入下电流程（不再返回）\n    STAGE_TWO --> [*] : SafeState 标志置位，进入安全状态处理\n    STAGE_THREE --> [*] : satellite 完成初始化并记录时间戳\n    note right of STAGE_TWO : 安全使能时各核执行 SafeTpack PreRun 初始化与测试；master 检查 MCU PreRun 与 SBC 自检结果，失败调用对应 FailedHnd Callout",
+      "diagramFormat": "mermaid",
+      "states": [
+        {
+          "name": "UNDEF",
+          "description": "未定义状态，上电复位后的初始状态，StpStage_t 初始值"
+        },
+        {
+          "name": "STAGE_ONE",
+          "description": "启动阶段一：master 完成必要的初始化（运行时缓冲区、阶段一 Callout），satellite 核自旋等待 master 置位 STAGE_TWO"
+        },
+        {
+          "name": "STAGE_TWO",
+          "description": "启动阶段二：所有核执行 SafeTpack PreRun 初始化与测试（安全使能时）；master 完成 RstM 初始化并获取复位信息，检查 TryPwrShdn/SafeState 标志并进入相应分支，正常路径完成 MCAL 初始化检查与 SBC 初始化"
+        },
+        {
+          "name": "STAGE_THREE",
+          "description": "启动阶段三：satellite 核完成自身初始化并记录时间戳；非安全状态时检查初始化结果，失败上报 CalloutInitFailedHnd"
+        }
+      ],
+      "transitions": [
+        {
+          "from": "UNDEF",
+          "to": "STAGE_ONE",
+          "trigger": "各核进入 Gp_EcuStpShdn_Startup",
+          "description": "master 在阶段一初始化运行时缓冲区后将 StpStage_t 置为 STAGE_TWO"
+        },
+        {
+          "from": "STAGE_ONE",
+          "to": "STAGE_TWO",
+          "trigger": "master 完成阶段一初始化",
+          "description": "satellite 核通过自旋等待 StpStage_t == STAGE_TWO 实现屏障同步"
+        },
+        {
+          "from": "STAGE_TWO",
+          "to": "STAGE_THREE",
+          "trigger": "master 完成阶段二全部处理",
+          "description": "master 完成初始化检查后 StpStage_t 置为 STAGE_THREE，satellite 解除等待开始自身初始化"
+        },
+        {
+          "from": "STAGE_TWO",
+          "to": "[*]",
+          "trigger": "TryPwrShdn_b == TRUE",
+          "description": "调用 Gp_EcuStpShdn_CalloutPwrShdnInStpPhase，程序不再返回"
+        },
+        {
+          "from": "STAGE_TWO",
+          "to": "[*]",
+          "trigger": "SafeState_b == TRUE",
+          "description": "安全状态初始化（SBC 安全状态初始化）后进入 Gp_EcuStpShdn_CalloutSafeState"
+        }
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.3.1",
+        "workItemKind": "statemachine",
+        "title": "Gp_EcuStpShdn 启动阶段状态机",
+        "workItemId": null
+      }
+    },
+    "sequences": [
+      {
+        "name": "Initialization",
+        "description": "Gp_EcuStpShdn_Startup 初始化序列：master（core0）与 satellite 核的三阶段启动过程",
+        "diagram": "sequenceDiagram\n    actor EcuM\n    participant M as Gp_EcuStpShdn_Startup(master core0)\n    participant S as Gp_EcuStpShdn_Startup(satellite)\n    participant CO as Callout\n    participant TA as Gp_TstApp\n    participant RM as Gp_RstM\n    EcuM->>M: Startup()\n    EcuM->>S: Startup()\n    M->>CO: CalloutGetCoreId()\n    S->>CO: CalloutGetCoreId()\n    Note over M,S: Stage One\n    M->>M: 初始化运行时缓冲区\n    M->>CO: CalloutInitStageOneCore0(SatImpl)\n    M->>RM: InitOne() 仅限 APP_NO_BOOT 配置\n    M->>M: StpStage_t 置为 STAGE_TWO\n    S->>S: 自旋等待 STAGE_TWO\n    Note over M,S: Stage Two\n    M->>TA: PreRunInit() 和 PreRunPhase()\n    S->>TA: PreRunInit() 和 PreRunPhase()\n    M->>CO: CalloutGetSysTimeMs()\n    M->>RM: Init() 或 InitTwo()\n    M->>RM: GetLastRstTypeInfo()\n    alt TryPwrShdn_b 为 TRUE\n        M->>CO: CalloutPwrShdnInStpPhase()\n        Note right of M: 程序不再返回\n    else SafeState_b 为 TRUE\n        M->>CO: StpStageTwo_pf(SatImpl) core0初始化\n        M->>CO: CalloutSbcInitInSafeState(SbcInfo)\n        M->>CO: CalloutSafeState()\n    else 正常路径\n        M->>M: MstProcMcuPreRunTest()\n        M->>CO: StpStageTwo_pf(SatImpl) core0初始化\n        M->>M: MstPostInit()\n        M->>CO: CalloutSbcInit(SbcInfo)\n    end\n    M->>M: StpStage_t 置为 STAGE_THREE\n    Note over M,S: Stage Three\n    S->>S: 自旋等待 STAGE_THREE\n    S->>CO: StpStageTwo_pf(SatImpl) satellite初始化\n    S->>CO: CalloutGetSysTimeMs()\n    alt 非安全状态且初始化失败\n        S->>CO: CalloutInitFailedHnd(InitRsltAllBits)\n    end",
+        "diagramFormat": "mermaid",
+        "polarion": {
+          "isWorkItem": true,
+          "chapter": "5.3.2",
+          "workItemKind": "sequence",
+          "title": "Gp_EcuStpShdn Initialization 序列图",
+          "workItemId": null
+        }
+      },
+      {
+        "name": "Runtime",
+        "description": "Gp_EcuStpShdn_Mainfunction 周期运行序列：MCU 运行时测试与结果检查",
+        "diagram": "sequenceDiagram\n    actor OS\n    participant MF as Gp_EcuStpShdn_Mainfunction\n    participant CO as Callout\n    participant TA as Gp_TstApp\n    OS->>MF: Mainfunction() 周期调度\n    MF->>CO: CalloutGetCoreId()\n    alt core0 且首次执行\n        MF->>MF: GetLastSatTimeStamp()\n        Note right of MF: 记录最后 satellite 初始化时间戳\n    end\n    alt TryPwrShdn 和 SafeState 均为 FALSE\n        MF->>TA: RunTimePhase()\n        alt core0\n            MF->>CO: CalloutChkMcuRunTimeTest()\n            alt 测试失败\n                MF->>CO: CalloutMcuRunTimeTestFailedHnd()\n            end\n        end\n    else 安全状态或尝试下电\n        Note right of MF: 跳过 MCU 运行时测试\n    end",
+        "diagramFormat": "mermaid",
+        "polarion": {
+          "isWorkItem": true,
+          "chapter": "5.3.2",
+          "workItemKind": "sequence",
+          "title": "Gp_EcuStpShdn Runtime 序列图",
+          "workItemId": null
+        }
+      }
+    ]
+  },
+  "functionalDescription": "Gp_EcuStpShdn 模块负责多核 ECU 启动阶段的时序协调与安全监控，主要功能包括：\n- 多核启动时序控制：按 STAGE_ONE / STAGE_TWO / STAGE_THREE 三个阶段协调主核（Core0）与从核的初始化\n- 自检管理：触发并检查 MCU 预运行测试、运行时测试与 SBC 自检结果，失败时按配置执行安全动作\n- 安全状态管理：提供进入与查询安全状态的接口（SetSafeState / GetSafeState）\n- 故障恢复：提供 Trap 恢复与 OS 错误恢复接口，具体恢复策略转发至 Callout 函数实现\n- 断电管理：处理启动阶段（TryPwrShdn 标志）与关闭阶段（PwrShdnInShdnPhase）的断电请求\n- 时间戳记录：记录启动关键节点时间戳，主核统计最后完成初始化的从核时间\n模块在 EcuM 的 DriverInitOne 阶段经 Gp_EcuStpShdn_Startup 被调用，是 ECU 启动的关键路径；运行时由 Gp_EcuStpShdn_Mainfunction 周期执行运行时测试。"
+}

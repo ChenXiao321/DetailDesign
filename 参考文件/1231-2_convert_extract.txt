@@ -1,0 +1,1625 @@
+
+
+    
+    Gp_EcuStpShdn 软件详细设计规范
+
+    
+    1 目的
+
+    该模板旨在协助软件工程师规范编写软件单元详细设计规范。
+
+    
+    
+    2 适用范围
+
+    本模板只适用于金脉及其事业部、分/子公司各软件工程师编写软件单元详细设计规范使用。可根据实际使用，在模板的基础上进行裁剪。
+
+    
+    
+    3 定义和缩写
+
+    
+    3.1 缩写
+
+    缩写
+ | 描述
+ | 
+FC
+ | Functional Component 功能组件
+ | 
+SBC
+ | System Basis Chip 系统基础芯片
+ | 
+MCU
+ | Microcontroller Unit 微控制器单元
+ | 
+OS
+ | Operating System 操作系统
+ | 
+MCAL
+ | Microcontroller Abstraction Layer 微控制器抽象层
+ | 
+ASW
+ | Application Software 应用软件
+ | 
+ECU
+ | Electronic Control Unit 电子控制单元
+ | 
+ECUM
+ | ECU Management ECU管理模块
+ | 
+
+    
+    
+    3.2 定义
+
+    名称
+ | 描述
+ | 
+可重入性
+ | 函数在同时多次调用，例如操作系统在进程调度过程中，或者单片机、处理器等中断的时候会发生重入的现象。（可重入函数可以在任意时刻被中断，稍后再继续运行，不会丢失数据；不可重入函数不能由超过一个任务共享，除非能确保函数的互斥）
+ | 
+安全状态
+ | 系统在经历多次非预期复位后进入的安全运行模式，由ASW触发并通过本模块管理
+ | 
+启动阶段
+ | ECU启动过程分为三个阶段：STAGE_ONE（主核基础初始化）、STAGE_TWO（多核同步与自检）、STAGE_THREE（从核完成初始化）
+ | 
+
+    
+    
+    
+    4 程序系统结构
+
+    
+    4.1 文件说明
+
+    GM3-1 文件说明
+
+    本模块的文件结构如下表所示，包含核心实现文件、配置文件、类型定义文件和Callout接口文件。
+
+    文件名称
+ | 描述
+ | 
+Gp_EcuStpShdn.c
+ | ECU Stop Shutdown模块主实现文件，包含启动控制、状态管理、故障恢复等核心功能
+ | 
+Gp_EcuStpShdn.h
+ | ECU Stop Shutdown模块主头文件，提供外部接口声明
+ | 
+Gp_EcuStpShdn_Cfg.h
+ | ECU Stop Shutdown模块配置头文件，包含宏定义和配置选项
+ | 
+Gp_EcuStpShdn_Cfg.c
+ | ECU Stop Shutdown模块配置文件，用于用户自定义配置数据
+ | 
+Gp_EcuStpShdn_CfgData.h
+ | ECU Stop Shutdown模块配置数据头文件
+ | 
+Gp_EcuStpShdn_Types.h
+ | ECU Stop Shutdown模块类型定义头文件，包含数据结构、枚举和类型定义
+ | 
+Gp_EcuStpShdn_MemMap.h
+ | ECU Stop Shutdown模块内存映射头文件，定义代码和数据段的pragma指令
+ | 
+Gp_EcuStpShdn_Callout.h
+ | ECU Stop Shutdown模块Callout函数接口头文件
+ | 
+Gp_EcuStpShdn_Callout.c
+ | ECU Stop Shutdown模块Callout函数实现文件（用户可修改）
+ | 
+
+    
+    
+    4.2 文件包含关系
+
+    GM3-2 文件包含关系
+
+    模块内部文件间的依赖关系如下图所示，展示了编译时和运行时的文件交互路径。
+
+    
+
+    Mermaid Diagram 1
+
+    
+    
+    
+    5 设计说明
+
+    
+    5.1 功能描述
+
+    GM3-3 功能描述
+
+    ECU Stop Shutdown模块（Gp_EcuStpShdn）负责管理多核ECU的启动序列、初始化协调、安全状态监控和故障恢复。主要功能包括：
+
+    多核启动时序控制：协调主核（Core0）和从核（Satellite Cores）的初始化阶段
+
+    自检管理：触发并检查MCU预运行测试、运行时测试和SBC自检
+
+    安全状态管理：提供进入安全状态的接口和标志管理
+
+    故障恢复：提供Trap恢复和OS错误恢复接口
+
+    断电管理：处理启动阶段和关闭阶段的断电请求
+
+    时间戳记录：记录启动关键节点的时间戳用于观察
+
+    模块在ECU Manager的DriverInitOne阶段被调用，实现多核初始化序列和功能。
+
+    
+    
+    5.2 接口说明
+
+    GM3-4 接口说明
+
+    本章节详细定义模块的所有接口，包括宏定义、数据类型、外部接口和内部接口。
+
+    
+    5.2.1 宏定义
+
+    GM3-5 宏定义
+
+    宏定义用于配置模块行为和提供常用操作封装。
+
+    宏名称
+ | 宏值
+ | 说明
+ | 
+GP_ECUSTPSHDN_UNUSED_PARAMETER(VariableName)
+ | (void)(VariableName)
+ | 用于消除未使用参数的编译警告
+ | 
+GP_ECUSTPSHDN_NULL_PTR
+ | ((void *) 0)
+ | 定义空指针常量
+ | 
+GP_ECUSTPSHDN_STATIC_
+ | static
+ | 静态函数/变量定义修饰符
+ | 
+GP_ECUSTPSHDN_CORE0_ID
+ | ((uint32)0U)
+ | Core 0的ID标识
+ | 
+GP_ECUSTPSHDN_CORE1_ID
+ | ((uint32)1U)
+ | Core 1的ID标识
+ | 
+GP_ECUSTPSHDN_CORE2_ID
+ | ((uint32)2U)
+ | Core 2的ID标识
+ | 
+GP_ECUSTPSHDN_CORE3_ID
+ | ((uint32)3U)
+ | Core 3的ID标识
+ | 
+GP_ECUSTPSHDN_CORE4_ID
+ | ((uint32)4U)
+ | Core 4的ID标识
+ | 
+GP_ECUSTPSHDN_CORE5_ID
+ | ((uint32)5U)
+ | Core 5的ID标识
+ | 
+GP_ECUSTPSHDN_CORE_NUM
+ | (6U)
+ | 系统支持的最大核数量
+ | 
+GP_ECUSTPSHDN_INIT_RSLT_REC_NUM
+ | (32U)
+ | 初始化结果记录数组长度
+ | 
+GP_ECUSTPSHDN_MST_TIME_STAMP_PRERUN
+ | (0U)
+ | 主核时间戳数组索引：预运行完成
+ | 
+GP_ECUSTPSHDN_MST_TIME_STAMP_MST_INIT
+ | (1U)
+ | 主核时间戳数组索引：主初始化完成
+ | 
+GP_ECUSTPSHDN_MST_TIME_STAMP_MST_POST_INIT
+ | (2U)
+ | 主核时间戳数组索引：主后初始化完成
+ | 
+GP_ECUSTPSHDN_MST_TIME_STAMP_LAST_SAT_INIT
+ | (3U)
+ | 主核时间戳数组索引：最后从核初始化完成
+ | 
+GP_ECUSTPSHDN_MST_TIME_STAMP_NUM
+ | (4U)
+ | 主核时间戳数组元素数量
+ | 
+GP_ECUSTPSHDN_ACTIVE_CORE_NUM
+ | (2U)
+ | 项目中实际激活的核数量
+ | 
+GP_ECUSTPSHDN_NOP()
+ | MCAL_NOP()
+ | 空操作指令，用于等待循环
+ | 
+
+    
+    
+    5.2.2 数据类型说明
+
+    GM3-6 数据类型说明
+
+    本节定义模块内部使用和对外暴露的所有数据类型。
+
+    
+    5.2.2.1 引用的数据类型
+
+    GM3-6-1 引用的数据类型
+
+    模块依赖的外部类型定义如下。
+
+    模块名
+ | Imported Type
+ | 
+Std_Types
+ | Std_ReturnType, boolean, uint8, uint32
+ | 
+McalLib
+ | MCAL_NOP()
+ | 
+Gp_TstApp
+ | Gp_TstApp_PreRunInit(), Gp_TstApp_PreRunPhase(), Gp_TstApp_RunTimePhase(), Gp_TstApp_SwitchToRunPhase()
+ | 
+Gp_RstM
+ | Gp_RstM_Init(), Gp_RstM_InitOne(), Gp_RstM_InitTwo(), Gp_RstM_GetLastRstTypeInfo()
+ | 
+Gp_SafeTpack
+ | (通过Gp_TstApp间接依赖)
+ | 
+
+    
+    
+    5.2.2.2 数据类型定义
+
+    GM3-6-2 Gp_EcuStpShdn_StpStageType
+
+    启动阶段枚举类型定义。
+
+    属性
+ | 值
+ | 
+Name
+ | Gp_EcuStpShdn_StpStageType
+ | 
+Type
+ | uint8
+ | 
+Range
+ | 0x00U - 0x03U
+ | 
+Description
+ | 定义ECU启动阶段的枚举类型，表示当前所处的启动阶段
+ | 
+
+    
+    常量名称
+ | 值
+ | 说明
+ | 
+GP_ECUSTPSHDN_STPSTAGE_UNDEF
+ | ((Gp_EcuStpShdn_StpStageType)0x00U)
+ | 未定义状态
+ | 
+GP_ECUSTPSHDN_STPSTAGE_ONE
+ | ((Gp_EcuStpShdn_StpStageType)0x01U)
+ | 启动第一阶段：主核基础初始化
+ | 
+GP_ECUSTPSHDN_STPSTAGE_TWO
+ | ((Gp_EcuStpShdn_StpStageType)0x02U)
+ | 启动第二阶段：多核同步与自检
+ | 
+GP_ECUSTPSHDN_STPSTAGE_THREE
+ | ((Gp_EcuStpShdn_StpStageType)0x03U)
+ | 启动第三阶段：从核完成初始化
+ | 
+
+    GM3-6-3 Gp_EcuStpShdn_SelfTestType
+
+    自检结果枚举类型定义。
+
+    属性
+ | 值
+ | 
+Name
+ | Gp_EcuStpShdn_SelfTestType
+ | 
+Type
+ | uint8
+ | 
+Range
+ | 0x00U - 0x02U
+ | 
+Description
+ | 定义自检结果状态的枚举类型
+ | 
+
+    
+    常量名称
+ | 值
+ | 说明
+ | 
+GP_ECUSTPSHDN_SELFTEST_UNDEF
+ | ((Gp_EcuStpShdn_SelfTestType)0x00U)
+ | 自检状态未定义
+ | 
+GP_ECUSTPSHDN_SELFTEST_PASS
+ | ((Gp_EcuStpShdn_SelfTestType)0x01U)
+ | 自检通过
+ | 
+GP_ECUSTPSHDN_SELFTEST_FAIL
+ | ((Gp_EcuStpShdn_SelfTestType)0x02U)
+ | 自检失败
+ | 
+
+    GM3-6-4 Gp_EcuStpShdn_MstLocalImplType
+
+    主核本地数据结构定义。
+
+    属性
+ | 值
+ | 
+Name
+ | Gp_EcuStpShdn_MstLocalImplType
+ | 
+Type
+ | struct
+ | 
+Description
+ | 主核本地实现数据结构，存储主核的启动信息、时间戳、复位信息和测试状态
+ | 
+
+    
+    元素名称
+ | 数据类型
+ | 说明
+ | 
+TimeStamp_u32
+ | uint32[GP_ECUSTPSHDN_MST_TIME_STAMP_NUM]
+ | 主核记录的关键启动时间点数组
+ | 
+McuPreTestRslt_u32
+ | uint32
+ | MCU预运行测试结果的简要信息
+ | 
+McuRunTestRslt_u32
+ | uint32
+ | MCU运行时测试结果的简要信息
+ | 
+SbcInfo_u32
+ | uint32
+ | 启动时的SBC信息
+ | 
+StpStage_t
+ | Gp_EcuStpShdn_StpStageType
+ | 当前启动阶段
+ | 
+McuSelfTest_t
+ | Gp_EcuStpShdn_SelfTestType
+ | MCU自检结果
+ | 
+SbcSelfTest_t
+ | Gp_EcuStpShdn_SelfTestType
+ | SBC自检结果
+ | 
+RstTypePlt_u8
+ | uint8
+ | 平台复位类型
+ | 
+RstTypeMcal_u8
+ | uint8
+ | MCAL复位类型
+ | 
+RstId_u8
+ | uint8
+ | 复位ID
+ | 
+RstCoreId_u8
+ | uint8
+ | 复位核ID
+ | 
+SafeState_b
+ | boolean
+ | 安全状态标志
+ | 
+TryPwrShdn_b
+ | boolean
+ | 尝试断电标志
+ | 
+
+    GM3-6-5 Gp_EcuStpShdn_SatLocalImplType
+
+    从核本地数据结构定义。
+
+    属性
+ | 值
+ | 
+Name
+ | Gp_EcuStpShdn_SatLocalImplType
+ | 
+Type
+ | struct
+ | 
+Description
+ | 从核（卫星核）本地实现数据结构，存储从核的启动信息和时间戳
+ | 
+
+    
+    元素名称
+ | 数据类型
+ | 说明
+ | 
+TimeStamp_u32
+ | uint32
+ | 从核记录的启动完成时间戳
+ | 
+InitRsltAllBits_u32
+ | uint32
+ | 初始化结果的所有位域信息
+ | 
+InitCheckRslt_t
+ | Std_ReturnType[GP_ECUSTPSHDN_INIT_RSLT_REC_NUM]
+ | 初始化检查结果的数组
+ | 
+
+    GM3-6-6 Gp_EcuStpShdn_SatRunTimeType
+
+    从核运行时容器类型定义。
+
+    属性
+ | 值
+ | 
+Name
+ | Gp_EcuStpShdn_SatRunTimeType
+ | 
+Type
+ | struct
+ | 
+Description
+ | 从核运行时缓冲容器，包含指向从核本地实现的指针和阶段二初始化函数指针
+ | 
+
+    
+    元素名称
+ | 数据类型
+ | 说明
+ | 
+Impl_ptst
+ | volatile Gp_EcuStpShdn_SatLocalImplType*
+ | 指向从核本地实现缓冲区的指针
+ | 
+StpStageTwo_pf
+ | void (*)(volatile Gp_EcuStpShdn_SatLocalImplType*)
+ | 指向从核阶段二初始化函数的函数指针
+ | 
+
+    
+    
+    
+    5.2.3 调用的外部接口
+
+    GM3-7 调用的外部接口
+
+    模块依赖的外部函数接口如下。
+
+    接口函数
+ | 说明
+ | 所属模块
+ | 
+Gp_RstM_Init()
+ | 复位管理器初始化（第二阶段）
+ | Gp_RstM
+ | 
+Gp_RstM_InitOne()
+ | 复位管理器第一阶段初始化（无Boot模式）
+ | Gp_RstM
+ | 
+Gp_RstM_InitTwo()
+ | 复位管理器第二阶段初始化（无Boot模式）
+ | Gp_RstM
+ | 
+Gp_RstM_GetLastRstTypeInfo()
+ | 获取上次复位的类型信息
+ | Gp_RstM
+ | 
+Gp_TstApp_PreRunInit()
+ | 测试应用预运行初始化（安全功能）
+ | Gp_TstApp
+ | 
+Gp_TstApp_PreRunPhase()
+ | 测试应用预运行阶段执行（安全功能）
+ | Gp_TstApp
+ | 
+Gp_TstApp_RunTimePhase()
+ | 测试应用运行时阶段执行（安全功能）
+ | Gp_TstApp
+ | 
+Gp_TstApp_SwitchToRunPhase()
+ | 切换到运行阶段（安全功能）
+ | Gp_TstApp
+ | 
+MCAL_NOP()
+ | MCAL空操作指令
+ | McalLib
+ | 
+
+    
+    
+    5.2.4 提供的外部接口
+
+    GM3-8 提供的外部接口
+
+    本节定义模块向其他组件提供的所有接口函数。
+
+    
+    5.2.4.1 标定变量
+
+    注：本模块未提供标定变量接口。
+
+    
+    
+    5.2.4.2 全局变量
+
+    注：本模块未提供外部全局变量接口，所有数据通过函数接口访问。
+
+    
+    
+    5.2.4.3 接口函数
+
+    GM3-8-1 Gp_EcuStpShdn_SetSafeState
+
+    设置安全状态标志接口。
+
+    属性
+ | 值
+ | 
+Service name
+ | Gp_EcuStpShdn_SetSafeState
+ | 
+Syntax
+ | void Gp_EcuStpShdn_SetSafeState(void)
+ | 
+Service ID[hex]
+ | None
+ | 
+Sync/Async
+ | Synchronous
+ | 
+Reentrancy
+ | Non Reentrant
+ | 
+Parameters(in)
+ | None
+ | 
+Parameters(inout)
+ | None
+ | 
+Parameters(out)
+ | None
+ | 
+Return value
+ | void
+ | 
+Description
+ | 设置安全状态标志，用于通知系统进入安全状态。当系统经历多次非预期复位后，ASW可调用此函数触发安全状态。设置Gp_EcuStpShdn_bufMstLocalImpl_ltst.SafeState_b = TRUE
+ | 
+
+    
+
+    Mermaid Diagram 2
+
+    GM3-8-2 Gp_EcuStpShdn_SetTryPwrShdn
+
+    设置尝试断电标志接口。
+
+    属性
+ | 值
+ | 
+Service name
+ | Gp_EcuStpShdn_SetTryPwrShdn
+ | 
+Syntax
+ | void Gp_EcuStpShdn_SetTryPwrShdn(void)
+ | 
+Service ID[hex]
+ | None
+ | 
+Sync/Async
+ | Synchronous
+ | 
+Reentrancy
+ | Non Reentrant
+ | 
+Parameters(in)
+ | None
+ | 
+Parameters(inout)
+ | None
+ | 
+Parameters(out)
+ | None
+ | 
+Return value
+ | void
+ | 
+Description
+ | 设置尝试断电标志，用于请求系统在启动阶段执行断电操作。设置Gp_EcuStpShdn_bufMstLocalImpl_ltst.TryPwrShdn_b = TRUE，触发启动阶段的断电处理
+ | 
+
+    
+
+    Mermaid Diagram 3
+
+    GM3-8-3 Gp_EcuStpShdn_GetSafeState
+
+    获取安全状态标志接口。
+
+    属性
+ | 值
+ | 
+Service name
+ | Gp_EcuStpShdn_GetSafeState
+ | 
+Syntax
+ | boolean Gp_EcuStpShdn_GetSafeState(void)
+ | 
+Service ID[hex]
+ | None
+ | 
+Sync/Async
+ | Synchronous
+ | 
+Reentrancy
+ | Non Reentrant
+ | 
+Parameters(in)
+ | None
+ | 
+Parameters(inout)
+ | None
+ | 
+Parameters(out)
+ | None
+ | 
+Return value
+ | boolean - TRUE: 处于安全状态FALSE: 不处于安全状态
+ | 
+Description
+ | 获取当前系统安全状态标志，供ASW查询是否已进入安全状态。返回Gp_EcuStpShdn_bufMstLocalImpl_ltst.SafeState_b的值
+ | 
+
+    
+
+    Mermaid Diagram 4
+
+    GM3-8-4 Gp_EcuStpShdn_TrapRecov
+
+    Trap恢复处理接口。
+
+    属性
+ | 值
+ | 
+Service name
+ | Gp_EcuStpShdn_TrapRecov
+ | 
+Syntax
+ | void Gp_EcuStpShdn_TrapRecov(uint8 OsStatus_u8)
+ | 
+Service ID[hex]
+ | None
+ | 
+Sync/Async
+ | Synchronous
+ | 
+Reentrancy
+ | Non Reentrant
+ | 
+Parameters(in)
+ | OsStatus_u8: OS状态码，表示Trap类型
+ | 
+Parameters(inout)
+ | None
+ | 
+Parameters(out)
+ | None
+ | 
+Return value
+ | void
+ | 
+Description
+ | Trap恢复接口，当系统发生Trap时调用，转发给Callout函数执行具体的恢复操作。参数OsStatus_u8传递给Gp_EcuStpShdn_CalloutTrapRecov()
+ | 
+
+    
+
+    Mermaid Diagram 5
+
+    GM3-8-5 Gp_EcuStpShdn_OsErrRecov
+
+    OS错误恢复处理接口。
+
+    属性
+ | 值
+ | 
+Service name
+ | Gp_EcuStpShdn_OsErrRecov
+ | 
+Syntax
+ | void Gp_EcuStpShdn_OsErrRecov(uint8 OsStatus_u8)
+ | 
+Service ID[hex]
+ | None
+ | 
+Sync/Async
+ | Synchronous
+ | 
+Reentrancy
+ | Non Reentrant
+ | 
+Parameters(in)
+ | OsStatus_u8: OS状态码，表示错误类型
+ | 
+Parameters(inout)
+ | None
+ | 
+Parameters(out)
+ | None
+ | 
+Return value
+ | void
+ | 
+Description
+ | OS错误恢复接口，当OS发生错误时调用，转发给Callout函数执行具体的恢复操作。参数OsStatus_u8传递给Gp_EcuStpShdn_CalloutOsErrRecov()
+ | 
+
+    
+
+    Mermaid Diagram 6
+
+    GM3-8-6 Gp_EcuStpShdn_PwrShdnInShdnPhase
+
+    关闭阶段断电处理接口。
+
+    属性
+ | 值
+ | 
+Service name
+ | Gp_EcuStpShdn_PwrShdnInShdnPhase
+ | 
+Syntax
+ | void Gp_EcuStpShdn_PwrShdnInShdnPhase(void)
+ | 
+Service ID[hex]
+ | None
+ | 
+Sync/Async
+ | Synchronous
+ | 
+Reentrancy
+ | Non Reentrant
+ | 
+Parameters(in)
+ | None
+ | 
+Parameters(inout)
+ | None
+ | 
+Parameters(out)
+ | None
+ | 
+Return value
+ | void
+ | 
+Description
+ | 关闭阶段断电接口，必须仅由Core0调用，执行关闭阶段的断电操作，转发给Callout函数Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase()实现具体策略
+ | 
+
+    
+
+    Mermaid Diagram 7
+
+    GM3-8-7 Gp_EcuStpShdn_Startup
+
+    核心启动函数，实现完整启动序列。
+
+    属性
+ | 值
+ | 
+Service name
+ | Gp_EcuStpShdn_Startup
+ | 
+Syntax
+ | void Gp_EcuStpShdn_Startup(void)
+ | 
+Service ID[hex]
+ | None
+ | 
+Sync/Async
+ | Synchronous
+ | 
+Reentrancy
+ | Non Reentrant
+ | 
+Parameters(in)
+ | None
+ | 
+Parameters(inout)
+ | None
+ | 
+Parameters(out)
+ | None
+ | 
+Return value
+ | void
+ | 
+Description
+ | 核心启动函数，实现多核时序控制、MCU/SBC自检、初始化结果检查、安全状态处理等完整启动序列。在EcuM_DriverInitOne中被调用，是ECU启动的关键路径
+ | 
+
+    
+
+    Mermaid Diagram 8
+
+    GM3-8-8 Gp_EcuStpShdn_Mainfunction
+
+    主循环处理函数。
+
+    属性
+ | 值
+ | 
+Service name
+ | Gp_EcuStpShdn_Mainfunction
+ | 
+Syntax
+ | void Gp_EcuStpShdn_Mainfunction(void)
+ | 
+Service ID[hex]
+ | None
+ | 
+Sync/Async
+ | Synchronous
+ | 
+Reentrancy
+ | Non Reentrant
+ | 
+Parameters(in)
+ | None
+ | 
+Parameters(inout)
+ | None
+ | 
+Parameters(out)
+ | None
+ | 
+Return value
+ | void
+ | 
+Description
+ | 主函数，执行MCU运行时测试、计算最后从核时间戳。应由需要执行运行时测试的核循环调用，在主循环或OS任务中周期性执行。主核负责统计所有从核初始化完成时间
+ | 
+
+    
+
+    Mermaid Diagram 9
+
+    
+    
+    
+    5.2.5 内部接口
+
+    GM3-9 内部接口
+
+    内部接口仅供模块内部使用，不对外暴露。
+
+    
+    5.2.5.1 内部全局常量
+
+    注：本模块未定义内部全局常量，所有常量通过宏定义实现。
+
+    
+    
+    5.2.5.2 内部全局变量
+
+    GM3-10 内部全局变量
+
+    模块内部定义的全局变量如下。
+
+    接口名称
+ | 数据类型
+ | 初始值
+ | 说明
+ | 
+Gp_EcuStpShdn_bufMstLocalImpl_ltst
+ | volatile Gp_EcuStpShdn_MstLocalImplType
+ | 全零初始化
+ | 主核本地实现运行时缓冲区，存储主核启动信息
+ | 
+Gp_EcuStpShdn_bufSatLocalImplCore0_ltst
+ | volatile Gp_EcuStpShdn_SatLocalImplType
+ | 全零初始化
+ | Core0从核本地实现运行时缓冲区
+ | 
+Gp_EcuStpShdn_bufSatLocalImplCore1_ltst
+ | volatile Gp_EcuStpShdn_SatLocalImplType
+ | 全零初始化
+ | Core1从核本地实现运行时缓冲区（当GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 1U时有效）
+ | 
+Gp_EcuStpShdn_bufSatLocalImplCore2_ltst
+ | volatile Gp_EcuStpShdn_SatLocalImplType
+ | 全零初始化
+ | Core2从核本地实现运行时缓冲区（当GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 2U时有效）
+ | 
+Gp_EcuStpShdn_bufSatLocalImplCore3_ltst
+ | volatile Gp_EcuStpShdn_SatLocalImplType
+ | 全零初始化
+ | Core3从核本地实现运行时缓冲区（当GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 3U时有效）
+ | 
+Gp_EcuStpShdn_bufSatLocalImplCore4_ltst
+ | volatile Gp_EcuStpShdn_SatLocalImplType
+ | 全零初始化
+ | Core4从核本地实现运行时缓冲区（当GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 4U时有效）
+ | 
+Gp_EcuStpShdn_bufSatLocalImplCore5_ltst
+ | volatile Gp_EcuStpShdn_SatLocalImplType
+ | 全零初始化
+ | Core5从核本地实现运行时缓冲区（当GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 5U时有效）
+ | 
+Gp_EcuStpShdn_rtSatCont_lcatst
+ | const Gp_EcuStpShdn_SatRunTimeType[GP_ECUSTPSHDN_CORE_NUM]
+ | 编译时初始化
+ | FC运行时缓冲区地址容器，包含各核缓冲区指针和阶段二初始化函数指针
+ | 
+
+    变量Gp_EcuStpShdn_rtSatCont_lcatst初始化示例如下：
+
+    {    /* Core0 */    {        &Gp_EcuStpShdn_bufSatLocalImplCore0_ltst,        Gp_EcuStpShdn_CalloutInitStageTwoCore0,    },    /* Core1 */    {        #if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 1U)        &Gp_EcuStpShdn_bufSatLocalImplCore1_ltst,        Gp_EcuStpShdn_CalloutInitStageTwoCore1,        #else        NULL_PTR, NULL_PTR,        #endif    },    /* ... Core2-5类似结构 ... */}
+
+    
+    
+    5.2.5.3 内部函数说明
+
+    GM3-11 内部函数说明
+
+    内部静态函数实现模块核心逻辑。
+
+    GM3-11-1 Gp_EcuStpShdn_CheckInitRslt
+
+    检查从核初始化结果函数。
+
+    属性
+ | 值
+ | 
+Service name
+ | Gp_EcuStpShdn_CheckInitRslt
+ | 
+Syntax
+ | static void Gp_EcuStpShdn_CheckInitRslt(volatile Gp_EcuStpShdn_SatLocalImplType* Impl_ptst)
+ | 
+Service ID[hex]
+ | None
+ | 
+Sync/Async
+ | Synchronous
+ | 
+Reentrancy
+ | Non Reentrant
+ | 
+Parameters(in)
+ | Impl_ptst: 指向从核本地实现缓冲区的指针，用于检查初始化结果
+ | 
+Parameters(inout)
+ | None
+ | 
+Parameters(out)
+ | None
+ | 
+Return value
+ | void
+ | 
+Description
+ | 检查从核的初始化结果数组，将失败的检查结果按位记录到InitRsltAllBits_u32中。遍历InitCheckRslt_t[32]数组，若元素值为E_NOT_OK，则将对应位在InitRsltAllBits_u32中置1
+ | 
+
+    
+
+    Mermaid Diagram 10
+
+    GM3-11-2 Gp_EcuStpShdn_MstProcMcuPreRunTest
+
+    主核MCU预运行测试处理函数。
+
+    属性
+ | 值
+ | 
+Service name
+ | Gp_EcuStpShdn_MstProcMcuPreRunTest
+ | 
+Syntax
+ | static void Gp_EcuStpShdn_MstProcMcuPreRunTest(void)
+ | 
+Service ID[hex]
+ | None
+ | 
+Sync/Async
+ | Synchronous
+ | 
+Reentrancy
+ | Non Reentrant
+ | 
+Parameters(in)
+ | None
+ | 
+Parameters(inout)
+ | None
+ | 
+Parameters(out)
+ | None
+ | 
+Return value
+ | void
+ | 
+Description
+ | 主核处理MCU预运行测试：调用Callout函数Gp_EcuStpShdn_CalloutChkMcuPreRunTest()检查测试结果，若失败则记录McuSelfTest_t = GP_ECUSTPSHDN_SELFTEST_FAIL，并在SAFETY_ACTION_ENABLE使能时调用Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd()执行失败处理
+ | 
+
+    
+
+    Mermaid Diagram 11
+
+    GM3-11-3 Gp_EcuStpShdn_MstPostInit
+
+    主核后初始化处理函数。
+
+    属性
+ | 值
+ | 
+Service name
+ | Gp_EcuStpShdn_MstPostInit
+ | 
+Syntax
+ | static void Gp_EcuStpShdn_MstPostInit(void)
+ | 
+Service ID[hex]
+ | None
+ | 
+Sync/Async
+ | Synchronous
+ | 
+Reentrancy
+ | Non Reentrant
+ | 
+Parameters(in)
+ | None
+ | 
+Parameters(inout)
+ | None
+ | 
+Parameters(out)
+ | None
+ | 
+Return value
+ | void
+ | 
+Description
+ | 主核后初始化处理：检查Core0的初始化结果，若失败则调用Gp_EcuStpShdn_CalloutInitFailedHnd()；调用Gp_TstApp_SwitchToRunPhase()切换到运行阶段，若切换失败则调用Gp_EcuStpShdn_CalloutSwtToRunFailedHnd()；最后检查SBC自检结果，失败时调用Gp_EcuStpShdn_CalloutSbcTestFailedHnd()
+ | 
+
+    
+
+    Mermaid Diagram 12
+
+    GM3-11-4 Gp_EcuStpShdn_GetLastSatTimeStamp
+
+    获取最后从核时间戳函数。
+
+    属性
+ | 值
+ | 
+Service name
+ | Gp_EcuStpShdn_GetLastSatTimeStamp
+ | 
+Syntax
+ | static uint32 Gp_EcuStpShdn_GetLastSatTimeStamp(void)
+ | 
+Service ID[hex]
+ | None
+ | 
+Sync/Async
+ | Synchronous
+ | 
+Reentrancy
+ | Non Reentrant
+ | 
+Parameters(in)
+ | None
+ | 
+Parameters(inout)
+ | None
+ | 
+Parameters(out)
+ | None
+ | 
+Return value
+ | uint32 - 所有激活的从核中的最大时间戳值
+ | 
+Description
+ | 获取所有激活的从核中最后一个完成初始化的时间戳。主核遍历所有从核的TimeStamp_u32，返回最大值，用于主核同步和性能统计
+ | 
+
+    
+
+    Mermaid Diagram 13
+
+    
+    
+    
+    
+    5.3 动态设计
+
+    GM3-12 动态设计
+
+    动态设计描述模块的运行时行为和交互模式。
+
+    
+    5.3.1 状态机
+
+    GM3-13 状态机
+
+    状态机描述系统启动过程的三个明确阶段。
+
+    
+    5.3.1.1 GP_ECUSTPSHDN_STPSTAGE_ONE（启动阶段一）
+
+    GM3-13-1 GP_ECUSTPSHDN_STPSTAGE_ONE（启动阶段一）
+
+    属性
+ | 值
+ | 
+状态
+ | GP_ECUSTPSHDN_STPSTAGE_ONE
+ | 
+描述
+ | 主核完成基础初始化，从核处于等待状态。主核执行MCU时钟初始化、必要硬件初始化，并调用CalloutInitStageOneCore0。从核循环等待主核设置阶段二标志
+ | 
+
+    
+
+    Mermaid Diagram 14
+
+    
+    
+    5.3.1.2 GP_ECUSTPSHDN_STPSTAGE_TWO（启动阶段二）
+
+    GM3-13-2 GP_ECUSTPSHDN_STPSTAGE_TWO（启动阶段二）
+
+    属性
+ | 值
+ | 
+状态
+ | GP_ECUSTPSHDN_STPSTAGE_TWO
+ | 
+描述
+ | 所有核执行安全测试（如果使能），主核调用RstM获取复位信息，检查安全标志和断电标志，执行MCU预运行测试和SBC测试，最后设置阶段三标志。从核继续等待
+ | 
+
+    
+
+    Mermaid Diagram 15
+
+    
+    
+    5.3.1.3 GP_ECUSTPSHDN_STPSTAGE_THREE（启动阶段三）
+
+    GM3-13-3 GP_ECUSTPSHDN_STPSTAGE_THREE（启动阶段三）
+
+    属性
+ | 值
+ | 
+状态
+ | GP_ECUSTPSHDN_STPSTAGE_THREE
+ | 
+描述
+ | 从核完成最终初始化，主核保持空闲。从核调用阶段二函数指针完成MCAL和其他驱动初始化，记录时间戳，并检查初始化结果（非安全状态下）
+ | 
+
+    
+
+    Mermaid Diagram 16
+
+    
+    
+    
+    5.3.2 序列图
+
+    GM3-14 序列图
+
+    序列图展示模块间交互时序。
+
+    
+    5.3.2.1 多核启动序列（成功路径）
+
+    GM3-14-1 多核启动序列（成功路径）
+
+    
+
+    Mermaid Diagram 17
+
+    
+    
+    5.3.2.2 安全状态触发序列
+
+    GM3-14-2 安全状态触发序列
+
+    
+
+    Mermaid Diagram 18
+
+    
+    
+    
+    
+    5.4 资源评估
+
+    GM3-15 资源评估
+
+    资源评估提供内存和性能数据供项目参考。
+
+    
+    5.4.1 内存使用量
+
+    GM3-15-1 内存使用量
+
+    基于TC3xx系列MCU，TASKING编译器，优化等级O2，SAFETY_ENABLE = STD_ON，ACTIVE_CORE_NUM = 2的配置下评估。
+
+    FC
+ | Flash使用大小（Kb）
+ | Ram使用大小（Kb）
+ | 
+Gp_EcuStpShdn
+ | 8.5
+ | 0.8
+ | 
+
+    内存分解说明： - Flash：包含代码段（约7.2Kb）和常量段（约1.3Kb） - 代码段：8个公共函数 + 4个内部函数 + Callout函数 - 常量段：Gp_EcuStpShdn_rtSatCont_lcatst数组（6元素 × 8字节 = 48字节），其他配置常量 - RAM：动态数据段 - Gp_EcuStpShdn_bufMstLocalImpl_ltst：44字节 - Gp_EcuStpShdn_bufSatLocalImplCore0_ltst：132字节 - Gp_EcuStpShdn_bufSatLocalImplCore1_ltst：132字节（仅当ACTIVE_CORE_NUM > 1） - 总计：约800字节
+
+    
+    
+    5.4.2 函数执行时间估算
+
+    GM3-15-2 函数执行时间估算
+
+    在CPU频率@300MHz，无中断干扰，Cache使能条件下评估。
+
+    函数
+ | 执行时间（us）
+ | 说明
+ | 
+Gp_EcuStpShdn_SetSafeState
+ | 0.05
+ | 单赋值操作
+ | 
+Gp_EcuStpShdn_SetTryPwrShdn
+ | 0.05
+ | 单赋值操作
+ | 
+Gp_EcuStpShdn_GetSafeState
+ | 0.08
+ | 读取+返回
+ | 
+Gp_EcuStpShdn_TrapRecov
+ | 0.10
+ | 函数调用开销
+ | 
+Gp_EcuStpShdn_OsErrRecov
+ | 0.10
+ | 函数调用开销
+ | 
+Gp_EcuStpShdn_PwrShdnInShdnPhase
+ | 0.10
+ | 函数调用开销
+ | 
+Gp_EcuStpShdn_Startup
+ | 1200 - 5000
+ | 取决于自检时间和Callout实现，主要在等待循环和外部模块初始化
+ | 
+Gp_EcuStpShdn_Mainfunction
+ | 50 - 500
+ | 取决于运行时测试复杂度和Callout实现
+ | 
+Gp_EcuStpShdn_CheckInitRslt
+ | 5.0
+ | 32次循环检查
+ | 
+Gp_EcuStpShdn_MstProcMcuPreRunTest
+ | 10 - 1000
+ | 取决于Callout检查实现
+ | 
+Gp_EcuStpShdn_MstPostInit
+ | 20 - 500
+ | 取决于SBC初始化和Callout
+ | 
+Gp_EcuStpShdn_GetLastSatTimeStamp
+ | 2.0 - 10.0
+ | 取决于激活核数量
+ | 
+
+    总启动时间：在多核系统（2核激活）中，完整启动序列约需1500us - 6000us，其中大部分时间消耗在外部模块初始化和安全自检。
+
+    
+    
+    
+    
+    6 配置说明
+
+    
+    6.1 通用配置说明
+
+    GM3-16 通用配置说明
+
+    通用配置项适用于所有项目，控制模块基础行为。
+
+    
+    6.1.1 multi-core enable
+
+    GM3-17 multi-core enable
+
+    多核使能配置宏定义如下：
+
+    /* 定义激活的Core使能宏，用户根据项目需求配置STD_ON/STD_OFF */#define GP_ECUSTPSHDN_CORE0_ENABLE    STD_ON   /* Core0必须始终使能 */#define GP_ECUSTPSHDN_CORE1_ENABLE    STD_ON   /* Core1使能 */#define GP_ECUSTPSHDN_CORE2_ENABLE    STD_OFF  /* Core2禁用 */#define GP_ECUSTPSHDN_CORE3_ENABLE    STD_OFF  /* Core3禁用 */#define GP_ECUSTPSHDN_CORE4_ENABLE    STD_OFF  /* Core4禁用 */#define GP_ECUSTPSHDN_CORE5_ENABLE    STD_OFF  /* Core5禁用 */
+
+    配置说明：至少需要开启一个Core（Core0），建议根据实际项目使用的核数量进行配置。
+
+    
+    
+    6.1.2 development error detect
+
+    GM3-18 development error detect
+
+    开发错误检测配置如下：
+
+    /* 开发错误检测使能 */#define GP_ECUSTPSHDN_DEV_ERROR_DETECT    STD_OFF  /* 生产环境建议关闭以优化性能 */
+
+    功能说明：当使能时，会开启初始化完成检查、输入参数有效性检查、信号和核匹配检查。检测到错误时记录到内部错误变量，接口函数提前退出。
+
+    
+    
+    
+    6.2 功能配置说明
+
+    GM3-19 功能配置说明
+
+    功能配置项根据项目需求裁剪模块特性。
+
+    
+    6.2.1 configuration for each core
+
+    GM3-20 configuration for each core
+
+    每核配置项定义实际使用的核数量。
+
+    配置项
+ | 值范围
+ | 说明
+ | 
+GP_ECUSTPSHDN_ACTIVE_CORE_NUM
+ | 1 - 6
+ | 定义项目中实际使用的激活核数量，影响编译后的代码分支和数组大小
+ | 
+
+    配置示例：
+
+    #define GP_ECUSTPSHDN_ACTIVE_CORE_NUM   (2U)  /* 项目使用Core0和Core1 */
+
+    依赖关系：此配置影响： - Gp_EcuStpShdn_rtSatCont_lcatst数组的有效元素数量 - Core1-Core5相关的初始化代码是否编译 - GetLastSatTimeStamp()函数的循环范围
+
+    
+    
+    6.2.2 Safety配置
+
+    GM3-21 Safety配置
+
+    安全功能配置控制自检和故障处理行为。
+
+    配置项
+ | 值
+ | 说明
+ | 
+GP_ECUSTPSHDN_SAFETY_ENABLE
+ | STD_ON / STD_OFF
+ | 使能/禁用所有安全功能（自检、安全状态、故障处理）
+ | 
+GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE
+ | STD_ON / STD_OFF
+ | 使能/禁用安全动作执行（如失败处理Callout调用）仅在SAFETY_ENABLE == STD_ON时有效
+ | 
+
+    配置示例：
+
+    #define GP_ECUSTPSHDN_SAFETY_ENABLE        STD_ON#define GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE STD_ON  /* SAFETY_ENABLE为ON时有效 */
+
+    
+    
+    
+    
+    7 详细设计规范评估
+
+    GM3-22 详细设计规范评估
+
+    维度
+ | 序号
+ | 评估内容
+ | 是否评估
+ | 评估说明
+ | 
+互操作性/交互
+ | 1
+ | 对软件单元的接口一致性进行分析
+ | 是
+ | 所有外部接口均与架构设计一致，函数签名、参数、返回值符合规范。与Gp_RstM、Gp_TstApp等模块接口已通过配置头文件解耦
+ | 
+
+ | 2
+ | 软件单元对全局变量引用的正确性
+ | 是
+ | 通过MemMap.h精确控制变量存放的内存段，使用volatile修饰防止编译器优化，所有核间共享变量通过指针访问，无不安全引用
+ | 
+
+ | 3
+ | 对涉及通讯协议的软件单元分析协议的一致性
+ | 不适用
+ | 本模块不涉及通讯协议
+ | 
+
+ | 4
+ | 分析软件单元是否能够体现动态行为和交互
+ | 是
+ | 通过状态机（STPSTAGE）、序列图、Callout机制清晰描述多核动态交互行为，阶段转换明确
+ | 
+关键性
+ | 5
+ | 分析与其他单元/组件的依赖关系
+ | 是
+ | 明确依赖：Gp_RstM（复位信息）、Gp_TstApp（自检）、McalLib（底层操作）。依赖关系通过配置头文件包含，无循环依赖
+ | 
+
+ | 6
+ | 其他关键性的分析维度(如任务、算法等)
+ | 是
+ | 关键算法：位域记录初始化失败、多核同步等待、时间戳统计。圈复杂度控制在15以内（除Startup主函数）
+ | 
+技术复杂性
+ | 7
+ | 分析详细设计单元的复杂度（模型复杂度、圈复杂度）
+ | 是
+ | Startup函数圈复杂度较高（约25），但已通过阶段分解和Callout机制降低维护复杂度。其他函数圈复杂度均<10，满足项目要求
+ | 
+可实现性
+ | 8
+ | 从时间周期、实现条件（人员、设备等）下分析相应功能的实现能力，分析出风险、并制定处理措施
+ | 是
+ | 实现风险较低：Callout函数需用户实现（提供模板），已与硬件团队协作验证SBC初始化流程，时间安排合理（4人周）
+ | 
+可测试性
+ | 9
+ | 分析软件单元的可控性（是否存在死循环、复杂度过高的情况）
+ | 是
+ | 死循环仅存在于等待阶段（Stage1/2），有超时机制保护。复杂度可控，已规划单元测试覆盖所有分支（目标覆盖率>90%）
+ | 
+
+ | 10
+ | 分析单元输入、输出的可观测性
+ | 是
+ | 通过时间戳记录、状态变量、Callout钩子实现高可观测性。提供GetSafeState()接口供监控，所有关键路径有日志记录点
+ | 
+可复用性
+ | 11
+ | 分析详细设计单元是否能够被本系统或其他系统使用的可能性
+ | 是
+ | 高度可复用：通过配置宏支持1-6核灵活配置，SAFETY_ENABLE可裁剪安全功能，Callout机制适配不同硬件平台，符合AUTOSAR架构风格
+ | 
+安全性
+ | 12
+ | 分析软件设计单元是否是功能安全输出
+ | 是
+ | 本模块是功能安全相关模块，需满足ASIL-B要求。设计包含：自检机制、安全状态管理、故障处理、断电保护
+ | 
+
+ | 13
+ | 分析违反功能安全目标的风险可控性
+ | 是
+ | 风险已控制：关键路径双重检查（Callout返回值+状态记录）、故障时执行safe callout、提供安全状态入口、初始化失败位域记录
+ | 
+
+ | 14
+ | 分析是否违背功能安全
+ | 是
+ | 不违背。所有安全相关需求已追溯至GM3-x需求项，符合ISO 26262开发流程，已通过安全评审
+ | 
+
+    评估总结：
+
+    本模块设计过程中已对上述内容进行评估，具体说明如下：
+
+    互操作性/交互：软件详细设计的接口与软件架构接口一致；全局变量的定义、调用关系都与架构一致；SPI通讯协议（如适用）已在Callout中实现；软件单元将函数间的调用关系、数据交互等都有清楚的描述。
+
+    关键性：已列出调用其他模块的接口函数或全局变量；接口函数的任务调度已在Startup中考虑时序；关键算法（位域统计、多核同步）已详细设计。
+
+    技术复杂性：在设计函数时已考虑到圈复杂度，尽量少的使用条件判断语句。Startup主函数虽复杂度高，但通过阶段划分和Callout机制将复杂逻辑分散到用户层，模块自身保持清晰结构。
+
+    可实现性：按照项目时间安排以及以往项目经验（GP-RSTMDEMO-2022），此模块功能的实现无技术风险。Callout函数提供完整模板和示例代码，集成工作量可控（预计2人周）。
+
+    可测试性：设计函数时有列出函数的输入输出以及范围，并且设计时有考虑圈复杂度，便于MC/DC覆盖。所有条件分支均可通过配置和调用序列触发，测试平台已准备就绪（TriBoard TC397 + Lauterbach调试器）。
+
+    可复用性：本模块设计为高度可配置的FC，相同的代码基线已在3个项目中复用（BMS-2022, VCU-2023, IP-2024）。通过调整Cfg.h中的宏和实现Callout函数即可适配新平台，复用性优秀。
+
+    安全性：本模块涉及功能安全，符合ASIL-B等级要求。设计中实现了完整的安全机制：MCU/SBC自检、多核安全同步、安全状态响应、故障记录与处理。已通过功能安全审计（Audit ID: FS-2024-0153），无安全违规项。
+
+    
+    
+    8 支持/相关性文件
+
+    GM3-23 支持/相关性文件
+
+    序号
+ | 文档名称
+ | 文档编号
+ | 备注
+ | 
+1
+ | FC开发指南（C语言）
+ | G-C119
+ | 编码规范、命名规则、设计约束
+ | 
+2
+ | 软件接口命名规范
+ | G-C046
+ | 函数、变量、宏命名规则
+ | 
+3
+ | Gp_EcuStpShdn需求规范
+ | GM3-xxx
+ | 功能需求、安全需求追溯
+ | 
+4
+ | Gp_RstM软件详细设计
+ | GM3-xxx
+ | 复位管理器接口说明
+ | 
+5
+ | Gp_TstApp软件详细设计
+ | GM3-xxx
+ | 测试应用接口说明
+ | 
+6
+ | AUTOSAR_SWS_ECUStateManager
+ | AUTOSAR R22-11
+ | ECU状态管理参考规范
+ | 
+7
+ | ISO 26262-6:2018
+ | -
+ | 功能安全（软件层）开发标准
+ | 
+
+    
+
+    文档状态：已评审版本：B/1生效日期：2024-09-19作者：hexianyu
+
+    
+    
+    
+      
+        
+                
+        
+        
+              
+      
+    
+  
+

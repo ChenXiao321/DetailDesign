@@ -1,0 +1,17 @@
+{
+  "name": "@lld/core",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "web-tree-sitter": "^0.24.7",
+    "tree-sitter-wasms": "^0.1.11"
+  }
+}

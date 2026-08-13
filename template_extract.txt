@@ -1,0 +1,658 @@
+xxx软件详细设计规范
+xxx Software Detailed Design Specification
+项目编号/Project number：
+作者/Author：
+保密性/Security：
+版本/Version：
+日期/Date：
+状态/Status：
+审核/Review：
+目录
+[15] 模板修订记录3
+[15] 文档修订记录6
+[15] 1目的7
+[15] 2适用范围7
+[15] 3定义和缩写7
+[18] 3.1缩写7
+[18] 3.2定义7
+[11] 3.2.1定义说明7
+[11] 3.2.2属性7
+[15] 4程序系统结构8
+[18] 4.1文件说明8
+[18] 4.2文件包含关系8
+[15] 5设计说明9
+[18] 5.1功能描述9
+[18] 5.2接口说明10
+[11] 5.2.1数据类型说明10
+[16] 5.2.1.1引用的数据类型10
+[16] 5.2.1.2数据类型定义10
+[11] 5.2.2调用的外部接口11
+[16] 5.2.2.1全局变量11
+[16] 5.2.2.2接口函数11
+[11] 5.2.3提供的外部接口12
+[16] 5.2.3.1全局变量12
+[16] 5.2.3.2接口函数12
+[11] 5.2.4内部接口15
+[16] 5.2.4.1全局变量定义15
+[16] 5.2.4.2内部函数说明15
+[18] 5.3动态设计16
+[11] 5.3.1状态机16
+[16] 5.3.1.1状态描述17
+[16] 5.3.1.2状态迁移17
+[11] 5.3.2序列图18
+[18] 5.4内存使用量19
+[15] 6配置说明20
+[18] 6.1通用配置说明20
+[18] 6.2功能配置说明20
+[15] 7详细设计规范评估20
+[15] 8支持/相关性文件20
+[19] 模板修订记录
+[32] 版次
+[32] 修订人
+[32] 修订描述
+[32] 修订日期
+[32] 备注
+[32] 修订原因
+[32] 修订内容
+[32] A/0
+[32] 张春晓
+[32] 初始版本
+[32] 2020.06.27
+[32] A/1
+[32] 周丹、张春晓
+[32] 1、5.1.2.1及5.1.3.1中增加初始值及默认值属性，增加箭头方向说明，删除标题中的ASPICE;
+[32] 2、文档状态增加草稿→评审中→已评审→发布中（未通过发布，文档状态为发布中）
+[32] 草稿→评审中→已评审→发布中→拒绝（未通过发布，文档状态为拒绝）
+[32] 草稿→评审中→已评审→发布中→已发布（未通过发布，文档状态为已发布）
+[32] 删除草稿→评审中→已评审→已发布（已评审后，文档状态为已发布）；
+[32] 删除封面文档编号；
+[32] 3、将文档名称由“详细设计规范（手写代码）”更新为“软件详细设计规范（Code）”
+[32] 4、在详细设计规范评估章节增加安全性评估
+[32] 5、将模块变量定义章节分为模块外部变量定义和模块内部变量定义两个章节，将5.1.2.2和5.1.2.3章节合并为接口函数，在函数表格中增加函数名称
+[32] 6、删掉模块的任务调度，修改为模块的时序图章节
+[32] 7、删除4.3章节Xx模块在架构中分布
+[32] 8、修改对变量和函数描述的表格
+[32] 2021.04、22
+[32] A/2
+[32] 张春晓
+[32] 根据CI-1087增加Imported Types章节
+[32] 根据CI-1174增加Xx模块设计方法选择章节
+[32] 根据PLM中的OPL93增加默认值
+[32] 删除文档修订记录中状态一列
+[32] 文字状态迁移图替代文档状态说明文字描述，文档状态删除已评审和拒绝状态；
+[32] 2021.06.29
+[32] A/3
+[32] 张春晓、周丹
+[32] 根据CI-1464更新功能视图
+[32] 根据CI-1466修改适用范围
+[32] 增加配置说明章节
+[32] 删除硬件接口章节，在详细设计评估中增加安全性举例
+[32] 2021.12.10
+[32] A/4
+[32] 周丹
+[32] 第6章章节划分不清晰
+[32] 调整第六章章节结构。新增接口说明章节，包含类型定义、调用外部接口、提供外部接口、内部接口
+[32] 将接口函数说明放到6.2.2调用外部接口章节，并简化调用的外部接口描述形式。内部函数说明放到6.2.4内部接口章节；
+[32] 删除6.2.3.1外部全局变量定义/内6.2.4.1内部全局变量定义中的枚举变量定义、结构体变量定义章节；6.2.1.2类型定义中补充结构体类型的示例。
+[32] 2022.03.25
+[32] 变量定义表格格式不便于工具部署；
+[32] 更新6.2.3.1变量定义表格格式，属性在左，内容在右；
+[32] 2022.03.25
+[32] 标定变量在cfg文件中描述，category属性多余，Quantization属性含义解释不清。
+[32] 更新6.2.3.1变量定义表格格式,删除category/ Quantization属性，base type修改为data type。
+[32] 2022.03.25
+[32] 重新梳理工作项link关系
+[32] 属性定义中，链接的工组项中列举出与该工作项相关的工作项类型及所有的link role。
+[32] 2022.06.29
+[32] 模块描述方法不易理解
+[32] 5.1模块描述方式章节中，补充各描述方法的说明。
+[32] 2022.06.29
+[32] A/5
+[32] 周丹
+[32] 客户反馈现有表格格式占篇幅较大
+[32] 1、调整5.2.3.1提供的外部变量接口的格式，属性在上，内容在下；调整5.2.4.1内部变量的格式，属性在上，内容在下，同时删除initial/default/scope/attribute属性，且所有内部变量可在一个表格内展示；
+[32] 2022.10.21
+[32] 文档标题中已体现模块信息，在各章节目录中无需再次说明
+[32] 删除各章节目录中的“XX模块”。
+[32] 2022.10.21
+[32] 设计方法属于指南性内容，不交付给客户
+[32] 删除设计方法章节
+[32] 2023.05.04
+[32] 标题描述不准确
+[32] 5.1章节标题“功能视图”更新为“功能描述”；5.3章节标题“动态视图”更新为“动态设计”
+[32] 2023.05.04
+[32] 数据类型属性定义不准确
+[32] 5.2.1.2章节，结构体的表格属性中，Range更新为Elements
+[32] 2023.05.04
+[32] 外部接口格式参考autosar中定义的 表格
+[32] 5.2.2章节定义的表格中，删除FC name与comment属性
+[32] 2023.05.16
+[32] 全局变量的attribute属性可根据标题确定。调用的全局变量全in，提供的全局变量全out
+[32] 5.2.3.1删除attribute属性
+[32] 2023.05.22
+文档工作流在《研发文档命名规范》中有定义，表单中无需重复描述
+删除文档修订记录中的文档状态流
+2023.06.07
+属性定义在手册中有说明，表单中无需重复描述
+删除3.2的属性定义章节
+2023.06.07
+[19] 文档修订记录
+[32] 版次
+[32] 修订人
+[32] 修订描述
+[32] 修订日期
+[32] 备注
+[32] 修订原因
+[32] 修订内容
+[2] 目的
+该模板旨在协助软件工程师规范编写软件单元详细设计规范。
+[2] 适用范围
+本模板只适用于金脉及其事业部、分/子公司各软件工程师编写软件单元详细设计规范使用。可根据实际使用，在模板的基础上进行裁剪。
+[2] 定义和缩写
+[3] 缩写
+[32] 缩写
+[32] 描述
+[32] ADC
+[32] Analog to Digital Converter 模数转换器
+[3] 定义
+[32] 名称
+[32] 描述
+[32] 可重入性
+[32] 函数在同时多次调用，例如操作系统在进程调度过程中，或者单片机、处理器等中断的时候会发生重入的现象。
+[32] （可重入函数可以在任意时刻被打断，稍后再继续运行，不会丢失数据；不可重入函数不能由超过一个任务共享，除非能确保函数的互斥）
+[2] 程序系统结构
+[3] 文件说明
+[32] 文件名称
+[32] 描述
+[32] Xxxx.c
+[32] Xxx模块驱动
+[32] Xxxx.h
+[32] Xxxx_cfg.c
+[32] Xxx模块配置文件
+[3] 文件包含关系
+例：将包含的头文件都列出，可通过图或表的形式。（箭头指向被调用的元素）
+[32] 文件名称
+[32] 包含文件
+[32] Gp_Tlf35584.c
+[32] Gp_Tlf35584.h
+[32] Gp_Tlf35584.h
+[32] IfxPort_reg.h、Mcal_WdgLib.h、Gp_SafeSpi.h、Gp_Tlf35584_Cfg.h、Gp_Tlf35584_IntFunc.h
+[2] 设计说明
+[3] 功能描述
+Xx功能接口图：显示FC的接口关系.（箭头指向与数据流向一致）
+注：若FC与其他FC强相关，则可以在功能视图中体现其它FC名称。若只是与显示接口关系，则不体现其它FC名称。
+[3] 接口说明
+[4] 数据类型说明
+[5] 引用的数据类型
+[32] 模块名
+[32] Imported Type
+[32] Dem
+[32] Dem_EventIdType
+[32] Dem_EventStatusType
+[32] Os
+[32] CounterType
+[32] StatusType
+[5] 数据类型定义
+示例1：Gp_Tlf35584_ModeType
+[32] Name:
+[32] Gp_Tlf35584_ModeType
+[32] Type:
+[32] Uint8
+[32] Range:
+[32] 0-<Tlf35584模式的最大值>
+[32] -
+[32] 实际的上限值是根据Tlf35584配置的模式确定的
+[32] Desceription:
+[32] 这个类型区别Tlf35584配置的不同模式
+示例2：Gp_Tlf35584_StatusType
+[32] Name:
+[32] Gp_Tlf35584_StatusType
+[32] Type:
+[32] Uint8
+[32] Range:
+[32] TLF35584_STATUS_OK
+[32] 0
+[32] Tlf35584状态正常
+[32] TLF35584_STATUS_NOK
+[32] 1
+[32] Tlf35584状态异常
+[32] Desceription:
+[32] 这个类型用来表示Tlf35584当前的状态
+示例3：st_Tlf35584_CfgWorkData
+[32] Name:
+[32] st_Tlf35584_CfgWorkData
+[32] Type:
+[32] Struct
+[32] Elements:
+[32] e_Tlf35584WdgMode
+[32] WdgMode
+[32] 35584模式
+[32] uint8
+[32] HeartbeatBase
+[32] 心跳基数
+[32] uint8
+[32] OpenWindowHeartbeat
+[32] 开窗心跳
+[32] uint8
+[32] CloseWindowHeartbeat
+[32] 关窗心跳
+[32] uint8
+[32] FwdHeartbeat
+[32] 功能狗心跳
+[32] uint8
+[32] WdgErrorThreshold
+[32] 看门狗错误阈值
+[32] Desceription:
+[32] 这个类型用来表示Tlf35584当前的状态
+[4] 调用的外部接口
+[5] 全局变量
+此处描述Xx模块调用的其他模块的全局变量。
+[32] Interface
+[32] Description
+[32] Com_ReadyModeReq_flg
+[32] Xxx
+[32] IoSigIfAdc_Kl15_Flg
+[32] Xxx
+[32] 状态
+[32] Status
+[32] Draft
+[32] 链接关系
+[32] Linked Work Items
+[32] 来自：
+[32] is derived from：
+GM3-100 FC需求中关于全局变量的描述
+[32] 附件
+[32] Attachment
+[32] None
+[5] 接口函数
+此处描述Xx模块调用的其他模块的接口函数。
+[32] Interface
+[32] Description
+[32] Xx1_GetValue
+[32] Xxx
+[32] Xx1_SetValue
+[32] Xxx
+[32] 状态
+[32] Status
+[32] Draft
+[32] 链接关系
+[32] Linked Work Items
+[32] 来自：
+[32] is derived from：
+[32] GM3-101 FC需求中关于接口函数的描述
+[32] 附件
+[32] Attachment
+[32] None
+[4] 提供的外部接口
+[5] 全局变量
+此处定义的是此模块定义的全局变量，提供给其他模块使用。
+示例：Gp_Tlf35584_004 – 全局变量 ui8_Pwm_Mode
+[32] Interface
+[32] Data Type
+[32] Initial
+[32] Default
+[32] Scope
+[32] ui8_Pwm_Mode
+[32] Uint8
+[32] 0
+[32] 0
+[32] 0-3
+[32] Description
+[32] PWM输出模式。
+[32] =0，上下桥都关；=1，上桥关，下桥开；=2，上桥开，下桥关；
+[32] =3，正常控制。
+注：
+[33] Interface 为数据接口名称。
+[33] Data Type 为数据类型。（uint8/boolean等）
+[33] Initial 为接口定义时的值。
+[33] Default为出错情况下的值（没有可不写）
+[33] Scope 为该接口在项目中的有效取值范围。
+[32] 状态
+[32] Status
+[32] Draft
+[32] 链接关系
+[32] Linked Work Items
+[32] 来自：
+[32] Is derived from：
+[32] GM3-103 FC需求中关于全局变量的描述
+[32] 附件
+[32] Attachment
+[32] None
+[5] 接口函数
+注：对于功能性函数使用下表的格式
+1)对于Parameters需要依次填写变量名、变量说明（包括范围）、变量attribute（in/out/inout）。
+2)如果有多个Parameters，需要自行增加行数。
+3)Description需要描述该函数的功能。
+[6] Gp_Tlf35584_Init
+示例：Gp_Tlf35584_014 – Gp_Tlf35584_Init
+[32] Service name:
+[32] Gp_Tlf35584_Init
+[32] Syntax:
+[32] void Gp_Tlf35584_Init (void)
+[32] Service ID[hex]:
+[32] None
+[32] Sync/Async:
+[32] Synchronous
+[32] Reentrancy:
+[32] Non Reentrancy
+[32] Parameters(in)：
+[32] None
+[32] Parameters(inout):
+[32] None
+[32] Parameters(out)：
+[32] None
+[32] Return value:
+[32] None
+[32] Description:
+[32] Initializes the Tlf35584 driver
+对此函数进行详细的功能描述。可使用文字说明，流程图，时序图等对函数功能进行描述。
+[32] 状态
+[32] Status
+[32] Draft
+[32] 链接关系
+[32] Linked Work Items
+[32] 来自：
+[32] Is derived from：
+[32] GM3-113 FC需求中关于接口函数的描述
+[32] 附件
+[32] Attachment
+[32] None
+[6] Gp_IoMcuDio_GetDiSig
+[32] Service name:
+[32] Gp_IoMcuDio_GetDiSig
+[32] Syntax:
+[32] Std_ReturnType Gp_IoMcuDio_GetDiSig(uint16 Id_u16, boolean* DioLvl_pb)
+[32] Service ID[hex]:
+[32] None
+[32] Sync/Async:
+[32] Synchronous
+[32] Reentrancy:
+[32] Non Reentrancy
+[32] Parameters(in)：
+[32] Id_u16
+[32] signal ID; 0~0xFFFF
+[32] Parameters(inout)：
+[32] None
+[32] Parameters(out)：
+[32] DioLvl_pb
+[32] pointer to buffer of DIO level ;STD_LOW/STD_HIGH
+[32] Return value:
+[32] Std_ReturnType
+[32] E_OK/E_NOT_OK
+[32] Description:
+[32] Gp_IoMcuDio DiSig interface.this function will output DiSig value through output argument for the corresponding ID.this function should be invoked after Gp_IoMcuDio_Init is completed.
+[6] Gp_Tlf35584_Mainfunction
+示例：Gp_Tlf35584_015 –Gp_Tlf35584_Mainfunction
+[32] Service name:
+[32] Gp_Tlf35584_MainFunction
+[32] Syntax:
+[32] void Gp_Tlf35584_MainFunction(void)
+[32] Service ID[hex]:
+[32] None
+[32] Sync/Async:
+[32] Synchronous
+[32] Reentrancy:
+[32] Non Reentrancy
+[32] Parameters(in)：
+[32] None
+[32] Parameters(inout)：
+[32] None
+[32] Parameters(out)：
+[32] None
+[32] Return value:
+[32] None
+[32] Description:
+[32] xxxx
+对此函数进行详细的功能描述,描述方法同上。
+[32] 状态
+[32] Status
+[32] Draft
+[32] 链接关系
+[32] Linked Work Items
+[32] 来自：
+[32] Is derived from：
+[32] GM3-115 FC需求中关于接口的描述
+[32] 附件
+[32] Attachment
+[32] None
+[4] 内部接口
+[5] 全局变量定义
+此处定义的是此模块定义的全局变量，仅在此模块内使用。
+示例：Gp_Tlf35584_100 – 全局变量
+[32] Interface
+[32] Data Type
+[32] Description
+[32] Var1
+[32] Xxx
+[32] Xxx
+[32] Var2
+[32] Xxx
+[32] Xxx
+[32] Var3
+[32] Xxx
+[32] Xxx
+[32] 状态
+[32] Status
+[32] raftD
+[32] 链接关系
+[32] Linked Work Items
+[32] 来自：
+[32] Is derived from：
+[32] 附件
+[32] Attachment
+[32] None
+[5] 内部函数说明
+示例： Gp_Tlf35584_100 –Gp_IoMcuAdc_CheckCoreId
+[32] Service name:
+[32] Gp_IoMcuAdc_CheckCoreId
+[32] Syntax:
+[32] boolean Gp_IoMcuAdc_CheckCoreId(uint32 CoreId_u32)
+[32] Service ID[hex]:
+[32] None
+[32] Sync/Async:
+[32] Synchronous
+[32] Reentrancy:
+[32] Non_Reentrancy
+[32] Parameters(in)：
+[32] uint32 CoreId_u32
+[32] core ID 0~5
+[32] Parameters(inout):
+[32] None
+[32] Parameters(out)：
+[32] None
+[32] Return value:
+[32] boolean
+[32] TRUE/FALSE
+[32] Description:
+[32] Gp_IoMcuAdc check core ID.the function will check if the input core ID is consistent with configuration and is enable,and return TRUE if core ID is valid, else return FASLE.
+[3] 动态设计
+对模块主要状态或功能进行概括描述。
+[4] 状态机
+示例：Gp_Tlf35584_007 – Gp_Tlf35584模块的状态切换
+系统上电前Tlf35584处于Poowerdown状态，系统上电后软件对Tlf35584进行初始化，初始化自检成功后，Tlf35584可以在Normal和Standby两种状态之间切换。
+[32] 状态
+[32] Status
+[32] Draft
+[32] 链接关系
+[32] Linked Work Items
+[32] 来自：
+[32] Is derived from：
+[32] GM3-106 架构中关于模块状态的描述
+[32] 附件
+[32] Attachment
+[32] None
+[5] 状态描述
+示例1：Gp_Tlf35584_008 – Init状态
+应该完成35584的初始化
+[32] 状态
+[32] Status
+[32] Draft
+[32] 链接关系
+[32] Linked Work Items
+[32] 来自：
+[32] Is derived from：
+[32] GM3-107 FC需求中关于状态的描述
+[32] 附件
+[32] Attachment
+[32] None
+示例2：Gp_Tlf35584_009 – Normal状态
+应该完成35584的喂狗
+[32] 状态
+[32] Status
+[32] Draft
+[32] 链接关系
+[32] Linked Work Items
+[32] 来自：
+[32] Is derived from：
+[32] GM3-108 FC需求中关于状态的描述
+[32] 附件
+[32] Attachment
+[32] None
+[5] 状态迁移
+示例1：Gp_Tlf35584_010 – Init到Normal状态迁移
+Tlf35584在INIT状态时，通过SPI配置，即接收到到NORMAL状态的跳转指令后切换到NORMAL状态
+[32] 状态
+[32] Status
+[32] Draft
+[32] 链接关系
+[32] Linked Work Items
+[32] 来自：
+[32] Is derived from：
+[32] GM3-109 FC需求中关于状态迁移的描述
+[32] 附件
+[32] Attachment
+[32] None
+示例2：Gp_Tlf35584_011– Normal到Standby状态迁移
+Tlf35584在NORMAL状态时，通过SPI配置，即接收到到STANDBY状态的跳转指令后切换状态
+[32] 状态
+[32] Status
+[32] Draft
+[32] 链接关系
+[32] Linked Work Items
+[32] 来自：
+[32] Is derived from：
+[32] GM3-110 FC需求中关于状态迁移的描述
+[32] 附件
+[32] Attachment
+[32] None
+[4] 序列图
+示例1：Gp_Tlf35584_013 –Initialization
+Gp_Tlf35584_Init初始化函数在初始化任务中调用，只调用一次。
+[32] 状态
+[32] Status
+[32] Draft
+[32] 链接关系
+[32] Linked Work Items
+[32] 来自：
+[32] Is derived from：
+[32] GM3-112 FC需求中关于调用的描述
+[32] 附件
+[32] Attachment
+[32] None
+示例2：Gp_Tlf35584_013 – Power Down
+[32] 状态
+[32] Status
+[32] Draft
+[32] 链接关系
+[32] Linked Work Items
+[32] 来自：
+[32] Is derived from：
+[32] GM3-112 FC需求中关于调用的描述
+[32] 附件
+[32] Attachment
+[32] None
+[3] 内存使用量
+示例：Gp_Tlf35584_018 – 内存使用量
+[32] FC
+[32] Flash使用大小（Kb）
+[32] Ram使用大小（Kb）
+[32] Gp_Tlf35584
+[32] 42
+[32] 4
+[32] 状态
+[32] Status
+[32] Draft
+[32] 链接关系
+[32] Linked Work Items
+[32] 来自：
+[32] Is derived from：
+[32] GM3-118 FC需求中关于内存使用的描述
+[32] 附件
+[32] Attachment
+[32] None
+[2] 配置说明
+[3] 通用配置说明
+[3] 功能配置说明
+[2] 详细设计规范评估
+[32] 维度
+[32] 序号
+[32] 评估内容
+[32] 是否评估
+[32] 互操作性/交互
+[32] 1
+[32] 对软件单元的接口一致性进行分析
+[32] 是
+[32] 2
+[32] 软件单元对全局变量引用的正确性
+[32] 是
+[32] 3
+[32] 对涉及通讯协议的软件单元分析协议的一致性
+[32] 是
+[32] 4
+[32] 分析软件单元是否能够体现动态行为和交互
+[32] 是
+[32] 关键性
+[32] 5
+[32] 分析与其他单元/组件的依赖关系
+[32] 是
+[32] 6
+[32] 其他关键性的分析维度(如任务、算法等)
+[32] 是
+[32] 技术复杂性
+[32] 7
+[32] 分析详细设计单元的复杂度（模型复杂度、圈复杂度）
+[32] 是
+[32] 可实现性
+[32] 8
+[32] 从时间周期、实现条件（人员、设备等）下分析相应功能的实现能力，分析出风险、并制定处理措施
+[32] 是
+[32] 可测试性
+[32] 9
+[32] 分析软件单元的可控性（是否存在死循环、复杂度过高的情况）
+[32] 是
+[32] 10
+[32] 分析单元输入、输出的可观测性
+[32] 是
+[32] 可复用性
+[32] 11
+[32] 分析详细设计单元是否能够被本系统或其他系统使用的可能性
+[32] 是
+[32] 安全性
+[32] 12
+[32] 分析软件设计单元是否是功能安全输出
+[32] 是
+[32] 13
+[32] 分析违反功能安全目标的风险可控性
+[32] 是
+[32] 14
+[32] 分析是否违背功能安全
+[32] 是
+[32] 总结：本模块设计过程中已对上述内容进行评估
+[32] 对已评估或未评估内容进行说明，并给出评估的理由。例如：
+[32] 互操作性/交互：软件详细设计的接口与软件架构接口一致；全局变量的定义、调用关系都与架构一致；spi通讯；软件单元将函数间的调用关系、数据交互等都有清楚的描述。
+[32] 关键性：已列出调用其他模块的接口函数或全局变量；接口函数的任务调度已考虑
+[32] 技术复杂性：在设计函数时已考虑到圈复杂度，尽量少的使用条件判断语句
+[32] 可实现性：按照项目时间安排以及以往项目经验，此模块功能的实现无风险
+[32] 可测试性：设计函数时有列出函数的输入输出以及范围，并且设计时有考虑圈复杂度。
+[32] 可复用性：未考虑，此模块是针对特定项目设计的，因其特殊性未考虑平台化。
+[32] 安全性：此模块不涉及功能安全，故不进行安全性评估
+[2] 支持/相关性文件
+[32] 序号
+[32] 文档名称
+[32] 文档编号
+[32] 1
+[32] 软件接口命名规范
+[32] G-C046
+[32] 2
+[32] C代码编码规则
+[32] G-C049

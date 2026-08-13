@@ -1,0 +1,188 @@
+{
+  "_note": "由 Claude 按 LLM prompt 结构生成的示例内容，用于评审流程与质量；正式环境由 Qwen 经同一 pipeline 生成。函数描述遵循模板示例的英文风格，动态设计遵循模板的中文风格。",
+  "flowcharts": {
+    "Gp_EcuStpShdn_Startup": "flowchart TD\n    A([\"开始\"]) --> B[\"CalloutGetCoreId 获取核 ID<br>取本核 satellite 运行时缓冲区\"]\n    B --> C{\"CoreId 为 core0\"}\n    C -- master --> D[\"初始化运行时缓冲区<br>CalloutInitStageOneCore0<br>RstM_InitOne（条件编译）<br>StpStage_t 置为 STAGE_TWO\"]\n    C -- satellite --> E[\"初始化本核缓冲区<br>自旋等待 STAGE_TWO\"]\n    D --> F[\"SafeTpack PreRunInit 与 PreRunPhase（条件编译）<br>记录 PreRun 完成时间戳\"]\n    E --> F\n    F --> G{\"CoreId 为 core0\"}\n    G -- master --> H[\"RstM_Init 或 InitTwo<br>GetLastRstTypeInfo 读取复位信息\"]\n    H --> I{\"TryPwrShdn_b 已置位\"}\n    I -- 是 --> J[\"CalloutPwrShdnInStpPhase<br>程序不再返回\"]\n    I -- 否 --> K{\"SafeState_b 已置位\"}\n    K -- 是 --> L[\"core0 初始化<br>CalloutSbcInitInSafeState<br>CalloutSafeState 进入安全状态\"]\n    K -- 否 --> M[\"MstProcMcuPreRunTest（条件编译）<br>core0 初始化 StpStageTwo_pf<br>MstPostInit（条件编译）<br>CalloutSbcInit\"]\n    M --> N[\"StpStage_t 置为 STAGE_THREE\"]\n    L --> N\n    G -- satellite --> O[\"自旋等待 STAGE_THREE\"]\n    N --> P{\"CoreId 为 core0\"}\n    O --> P\n    P -- master --> Z([\"结束\"])\n    P -- satellite --> Q[\"StpStageTwo_pf satellite 初始化<br>记录初始化完成时间戳<br>非安全状态时检查初始化结果（条件编译）\"]\n    Q --> Z",
+    "Gp_EcuStpShdn_Mainfunction": "flowchart TD\n    A([\"开始\"]) --> B[\"CalloutGetCoreId 获取核 ID\"]\n    B --> C{\"core0 且未记录过<br>最后 satellite 时间戳\"}\n    C -- 是 --> D[\"GetLastSatTimeStamp 计算并记录\"]\n    C -- 否 --> E[\"跳过\"]\n    D --> F{\"TryPwrShdn 与 SafeState<br>均为 FALSE（条件编译）\"}\n    E --> F\n    F -- 是 --> G[\"Gp_TstApp_RunTimePhase 执行运行时测试\"]\n    F -- 否 --> Z([\"结束\"])\n    G --> H{\"CoreId 为 core0\"}\n    H -- 是 --> I{\"CalloutChkMcuRunTimeTest 返回 FALSE\"}\n    H -- 否 --> Z\n    I -- 是 --> J[\"CalloutMcuRunTimeTestFailedHnd（条件编译）\"]\n    I -- 否 --> Z\n    J --> Z",
+    "Gp_EcuStpShdn_CheckInitRslt": "flowchart TD\n    A([\"开始\"]) --> B[\"Cnt 置 0\"]\n    B --> C{\"Cnt 小于 INIT_RSLT_REC_NUM 32\"}\n    C -- 是 --> D{\"InitCheckRslt_t[Cnt]<br>等于 E_NOT_OK\"}\n    D -- 是 --> E[\"InitRsltAllBits_u32 第 Cnt 位置 1\"]\n    D -- 否 --> F[\"不处理\"]\n    E --> G[\"Cnt 加 1\"]\n    F --> G\n    G --> C\n    C -- 否 --> Z([\"结束\"])",
+    "Gp_EcuStpShdn_MstProcMcuPreRunTest": "flowchart TD\n    A([\"开始\"]) --> B{\"CalloutChkMcuPreRunTest<br>返回 FALSE\"}\n    B -- 是 --> C[\"McuSelfTest_t 置为 SELFTEST_FAIL\"]\n    C --> D[\"CalloutMcuPreRunTestFailedHnd<br>（条件编译 SAFETY_ACTION_ENABLE）\"]\n    B -- 否 --> E[\"McuSelfTest_t 置为 SELFTEST_PASS\"]\n    D --> Z([\"结束\"])\n    E --> Z",
+    "Gp_EcuStpShdn_MstPostInit": "flowchart TD\n    A([\"开始\"]) --> B[\"CheckInitRslt 汇总初始化结果\"]\n    B --> C{\"InitRsltAllBits_u32 非 0\"}\n    C -- 是 --> D[\"CalloutInitFailedHnd<br>（条件编译 SAFETY_ACTION_ENABLE）\"]\n    C -- 否 --> E[\"继续\"]\n    D --> F[\"Gp_TstApp_SwitchToRunPhase 切换到运行阶段\"]\n    E --> F\n    F --> G{\"CalloutChkSwtToRun 返回 FALSE\"}\n    G -- 是 --> H[\"CalloutSwtToRunFailedHnd（条件编译）\"]\n    G -- 否 --> I[\"继续\"]\n    H --> J{\"CalloutChkSbcTest 返回 FALSE\"}\n    I --> J\n    J -- 是 --> K[\"SbcSelfTest_t 置为 FAIL<br>CalloutSbcTestFailedHnd（条件编译）\"]\n    J -- 否 --> L[\"SbcSelfTest_t 置为 PASS\"]\n    K --> Z([\"结束\"])\n    L --> Z",
+    "Gp_EcuStpShdn_GetLastSatTimeStamp": "flowchart TD\n    A([\"开始\"]) --> B[\"时间戳数组初始化<br>master 核索引 0 置 0\"]\n    B --> C[\"逐核读取 satellite 时间戳<br>（按激活核数，条件编译）\"]\n    C --> D[\"Cnt 置 0<br>MaxTimeStamp 置 0\"]\n    D --> E{\"Cnt 小于激活核数\"}\n    E -- 是 --> F{\"TimeStamp[Cnt] 大于 Max\"}\n    F -- 是 --> G[\"MaxTimeStamp 更新为该值\"]\n    F -- 否 --> H[\"不处理\"]\n    G --> I[\"Cnt 加 1\"]\n    H --> I\n    I --> E\n    E -- 否 --> J[\"返回 MaxTimeStamp\"]\n    J --> Z([\"结束\"])",
+    "Gp_EcuStpShdn_SetSafeState": "flowchart TD\n    A([\"开始\"]) --> B[\"SafeState_b 置 TRUE<br>（写主核本地缓冲区）\"]\n    B --> Z([\"结束\"])",
+    "Gp_EcuStpShdn_SetTryPwrShdn": "flowchart TD\n    A([\"开始\"]) --> B[\"TryPwrShdn_b 置 TRUE<br>（写主核本地缓冲区）\"]\n    B --> Z([\"结束\"])",
+    "Gp_EcuStpShdn_GetSafeState": "flowchart TD\n    A([\"开始\"]) --> B[\"读取 SafeState_b<br>（主核本地缓冲区）\"]\n    B --> C[\"返回该值\"]\n    C --> Z([\"结束\"])",
+    "Gp_EcuStpShdn_TrapRecov": "flowchart TD\n    A([\"开始\"]) --> B[\"透传 OsStatus_u8<br>调用 CalloutTrapRecov\"]\n    B --> Z([\"结束\"])",
+    "Gp_EcuStpShdn_OsErrRecov": "flowchart TD\n    A([\"开始\"]) --> B[\"透传 OsStatus_u8<br>调用 CalloutOsErrRecov\"]\n    B --> Z([\"结束\"])",
+    "Gp_EcuStpShdn_PwrShdnInShdnPhase": "flowchart TD\n    A([\"开始\"]) --> B[\"调用 CalloutPwrShdnInShdnPhase<br>（仅 Core0 调用）\"]\n    B --> Z([\"结束\"])"
+  },
+  "functions": {
+    "Gp_EcuStpShdn_SetSafeState": "设置主核本地缓冲区中的安全状态标志（SafeState_b = TRUE）。当系统经历多次非预期复位后，由 Gp_RstM 或 ASW 调用本接口请求进入安全状态。该标志在 Gp_EcuStpShdn_Startup 阶段二中被检查：一旦置位，程序在安全状态下初始化 SBC，并通过 Gp_EcuStpShdn_CalloutSafeState 进入安全状态处理；该标志同时在 Gp_EcuStpShdn_Mainfunction 中被检查，用于抑制 MCU 运行时测试。本函数无参数、无返回值。",
+    "Gp_EcuStpShdn_SetTryPwrShdn": "设置主核本地缓冲区中的尝试断电标志（TryPwrShdn_b = TRUE）。当检测到断电请求时由 Gp_RstM 调用本接口。该标志在 Gp_EcuStpShdn_Startup 阶段二中被检查：一旦置位，立即调用 Gp_EcuStpShdn_CalloutPwrShdnInStpPhase 执行启动阶段断电，程序不预期返回。本函数无参数、无返回值。",
+    "Gp_EcuStpShdn_GetSafeState": "返回主核本地缓冲区中的当前安全状态标志（SafeState_b）。本接口提供给 ASW，用于查询 ECU 是否已进入安全状态（例如多次非预期复位之后）。返回值：TRUE 表示安全状态标志已置位，否则返回 FALSE。",
+    "Gp_EcuStpShdn_TrapRecov": "Trap 恢复接口。将 OS 状态码（OsStatus_u8）透传给 Gp_EcuStpShdn_CalloutTrapRecov，具体的恢复行为由集成方在 Callout 函数中实现。本函数预期在系统发生 Trap 时由 Trap 处理程序调用。",
+    "Gp_EcuStpShdn_OsErrRecov": "OS 错误恢复接口。将 OS 状态码（OsStatus_u8）透传给 Gp_EcuStpShdn_CalloutOsErrRecov，具体的恢复行为由集成方在 Callout 函数中实现。本函数预期在 OS 发生错误时由 OS 错误钩子调用。",
+    "Gp_EcuStpShdn_PwrShdnInShdnPhase": "在关闭阶段调用 Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase，执行 ECU 断电序列。本函数仅允许 Core0 调用。无参数、无返回值。",
+    "Gp_EcuStpShdn_Startup": "实现 ECU 多核启动序列，分三个阶段执行，主核（Core0）与从核之间通过屏障同步。阶段一：主核初始化运行时缓冲区并调用 Gp_EcuStpShdn_CalloutInitStageOneCore0，随后将阶段置为 STAGE_TWO；从核自旋等待直至进入 STAGE_TWO。阶段二：所有核执行 SafeTpack 预运行初始化与测试（安全功能使能时）；主核调用 Gp_RstM 初始化并读取上次复位信息，随后评估 TryPwrShdn 与 SafeState 标志——若 TryPwrShdn 置位则调用 Gp_EcuStpShdn_CalloutPwrShdnInStpPhase（不返回）；若 SafeState 置位则执行 Core0 初始化、安全状态下的 SBC 初始化并进入安全状态处理；否则依次执行 MCU 预运行测试检查、经从核运行时容器函数指针完成 Core0 初始化、主核后初始化与 SBC 初始化，然后将阶段置为 STAGE_THREE。阶段三：从核完成自身初始化并记录完成时间戳；非安全状态下检查初始化结果，失败经 Gp_EcuStpShdn_CalloutInitFailedHnd 上报。启动关键节点的时间戳记录在主核本地缓冲区中供观测。本函数在 EcuM DriverInitOne 阶段每核各调用一次。",
+    "Gp_EcuStpShdn_Mainfunction": "模块周期主函数，由需要执行 MCU 运行时测试的核循环调用。首次调用时，Core0 通过 Gp_EcuStpShdn_GetLastSatTimeStamp 计算并记录最后完成初始化的从核时间戳。若 TryPwrShdn 与 SafeState 标志均未置位，则执行 MCU 运行时测试（安全功能使能时经 Gp_TstApp_RunTimePhase）；随后 Core0 经 Gp_EcuStpShdn_CalloutChkMcuRunTimeTest 检查运行时测试结果，失败时调用 Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd。本函数无参数、无返回值。",
+    "Gp_EcuStpShdn_CheckInitRslt": "汇总从核本地缓冲区的初始化检查结果。遍历 InitCheckRslt_t 结果数组，对值为 E_NOT_OK 的每一项，将 InitRsltAllBits_u32 中的对应位置 1，使调用方可按位识别所有失败的初始化步骤。仅在 GP_ECUSTPSHDN_SAFETY_ENABLE 为 STD_ON 时参与编译。由 Gp_EcuStpShdn_MstPostInit 及 Gp_EcuStpShdn_Startup（从核路径）调用。",
+    "Gp_EcuStpShdn_MstProcMcuPreRunTest": "在主核上检查 MCU 预运行测试结果。测试结果经 Gp_EcuStpShdn_CalloutChkMcuPreRunTest 查询并记录到主核本地缓冲区（McuSelfTest_t：SELFTEST_PASS 或 SELFTEST_FAIL）。失败时在 GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE 为 STD_ON 的条件下调用 Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd 执行失败处理。仅在 GP_ECUSTPSHDN_SAFETY_ENABLE 为 STD_ON 时参与编译。由 Gp_EcuStpShdn_Startup 在阶段二中调用。",
+    "Gp_EcuStpShdn_MstPostInit": "Core0 初始化之后执行主核后初始化检查。首先经 Gp_EcuStpShdn_CheckInitRslt 汇总初始化结果，失败经 Gp_EcuStpShdn_CalloutInitFailedHnd 上报；随后将测试应用切换到运行阶段（Gp_TstApp_SwitchToRunPhase），并经 Gp_EcuStpShdn_CalloutChkSwtToRun 检查切换结果，失败时调用 Gp_EcuStpShdn_CalloutSwtToRunFailedHnd；最后经 Gp_EcuStpShdn_CalloutChkSbcTest 检查 SBC 自检结果并记录到主核本地缓冲区（SbcSelfTest_t），失败时调用 Gp_EcuStpShdn_CalloutSbcTestFailedHnd。仅在 GP_ECUSTPSHDN_SAFETY_ENABLE 为 STD_ON 时参与编译。由 Gp_EcuStpShdn_Startup 在阶段二中调用。",
+    "Gp_EcuStpShdn_GetLastSatTimeStamp": "计算所有激活从核中最大的初始化完成时间戳。主核时间戳不记录在从核缓冲区中，因此索引 0 按 0 处理。按 GP_ECUSTPSHDN_ACTIVE_CORE_NUM 遍历各激活从核，从对应从核本地缓冲区读取时间戳，返回最大值。由 Gp_EcuStpShdn_Mainfunction 在 Core0 上调用一次。"
+  },
+  "dynamicDesign": {
+    "stateMachine": {
+      "name": "Gp_EcuStpShdn 启动阶段状态机",
+      "diagram": "stateDiagram-v2\n    [*] --> UNDEF : 上电复位\n    UNDEF --> STAGE_ONE : 各核进入 Gp_EcuStpShdn_Startup\n    STAGE_ONE --> STAGE_TWO : master 完成阶段一初始化（satellite 自旋等待屏障）\n    STAGE_TWO --> STAGE_THREE : master 完成 RstM 初始化、MCAL 初始化检查与 SBC 初始化\n    STAGE_TWO --> [*] : TryPwrShdn 标志置位，进入下电流程（不再返回）\n    STAGE_TWO --> [*] : SafeState 标志置位，进入安全状态处理\n    STAGE_THREE --> [*] : satellite 完成初始化并记录时间戳\n    note right of STAGE_TWO : 安全使能时各核执行 SafeTpack PreRun 初始化与测试；master 检查 MCU PreRun 与 SBC 自检结果，失败调用对应 FailedHnd Callout",
+      "diagramFormat": "mermaid",
+      "states": [
+        {
+          "name": "UNDEF",
+          "description": "未定义状态，上电复位后的初始状态，StpStage_t 初始值"
+        },
+        {
+          "name": "STAGE_ONE",
+          "description": "启动阶段一：master 完成必要的初始化（运行时缓冲区、阶段一 Callout），satellite 核自旋等待 master 置位 STAGE_TWO"
+        },
+        {
+          "name": "STAGE_TWO",
+          "description": "启动阶段二：所有核执行 SafeTpack PreRun 初始化与测试（安全使能时）；master 完成 RstM 初始化并获取复位信息，检查 TryPwrShdn/SafeState 标志并进入相应分支，正常路径完成 MCAL 初始化检查与 SBC 初始化"
+        },
+        {
+          "name": "STAGE_THREE",
+          "description": "启动阶段三：satellite 核完成自身初始化并记录时间戳；非安全状态时检查初始化结果，失败上报 CalloutInitFailedHnd"
+        }
+      ],
+      "transitions": [
+        {
+          "from": "UNDEF",
+          "to": "STAGE_ONE",
+          "trigger": "各核进入 Gp_EcuStpShdn_Startup",
+          "description": "master 在阶段一初始化运行时缓冲区后将 StpStage_t 置为 STAGE_TWO"
+        },
+        {
+          "from": "STAGE_ONE",
+          "to": "STAGE_TWO",
+          "trigger": "master 完成阶段一初始化",
+          "description": "satellite 核通过自旋等待 StpStage_t == STAGE_TWO 实现屏障同步"
+        },
+        {
+          "from": "STAGE_TWO",
+          "to": "STAGE_THREE",
+          "trigger": "master 完成阶段二全部处理",
+          "description": "master 完成初始化检查后 StpStage_t 置为 STAGE_THREE，satellite 解除等待开始自身初始化"
+        },
+        {
+          "from": "STAGE_TWO",
+          "to": "[*]",
+          "trigger": "TryPwrShdn_b == TRUE",
+          "description": "调用 Gp_EcuStpShdn_CalloutPwrShdnInStpPhase，程序不再返回"
+        },
+        {
+          "from": "STAGE_TWO",
+          "to": "[*]",
+          "trigger": "SafeState_b == TRUE",
+          "description": "安全状态初始化（SBC 安全状态初始化）后进入 Gp_EcuStpShdn_CalloutSafeState"
+        }
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.3.1",
+        "workItemKind": "statemachine",
+        "title": "Gp_EcuStpShdn 启动阶段状态机",
+        "workItemId": null
+      }
+    },
+    "sequences": [
+      {
+        "name": "Initialization",
+        "description": "Gp_EcuStpShdn_Startup 初始化序列：master（core0）与 satellite 核的三阶段启动过程",
+        "diagram": "sequenceDiagram\n    actor EcuM\n    participant M as Gp_EcuStpShdn_Startup(master core0)\n    participant S as Gp_EcuStpShdn_Startup(satellite)\n    participant CO as Callout\n    participant TA as Gp_TstApp\n    participant RM as Gp_RstM\n    EcuM->>M: Startup()\n    EcuM->>S: Startup()\n    M->>CO: CalloutGetCoreId()\n    S->>CO: CalloutGetCoreId()\n    Note over M,S: Stage One\n    M->>M: 初始化运行时缓冲区\n    M->>CO: CalloutInitStageOneCore0(SatImpl)\n    M->>RM: InitOne() 仅限 APP_NO_BOOT 配置\n    M->>M: StpStage_t 置为 STAGE_TWO\n    S->>S: 自旋等待 STAGE_TWO\n    Note over M,S: Stage Two\n    M->>TA: PreRunInit() 和 PreRunPhase()\n    S->>TA: PreRunInit() 和 PreRunPhase()\n    M->>CO: CalloutGetSysTimeMs()\n    M->>RM: Init() 或 InitTwo()\n    M->>RM: GetLastRstTypeInfo()\n    alt TryPwrShdn_b 为 TRUE\n        M->>CO: CalloutPwrShdnInStpPhase()\n        Note right of M: 程序不再返回\n    else SafeState_b 为 TRUE\n        M->>CO: StpStageTwo_pf(SatImpl) core0初始化\n        M->>CO: CalloutSbcInitInSafeState(SbcInfo)\n        M->>CO: CalloutSafeState()\n    else 正常路径\n        M->>M: MstProcMcuPreRunTest()\n        M->>CO: StpStageTwo_pf(SatImpl) core0初始化\n        M->>M: MstPostInit()\n        M->>CO: CalloutSbcInit(SbcInfo)\n    end\n    M->>M: StpStage_t 置为 STAGE_THREE\n    Note over M,S: Stage Three\n    S->>S: 自旋等待 STAGE_THREE\n    S->>CO: StpStageTwo_pf(SatImpl) satellite初始化\n    S->>CO: CalloutGetSysTimeMs()\n    alt 非安全状态且初始化失败\n        S->>CO: CalloutInitFailedHnd(InitRsltAllBits)\n    end",
+        "diagramFormat": "mermaid",
+        "polarion": {
+          "isWorkItem": true,
+          "chapter": "5.3.2",
+          "workItemKind": "sequence",
+          "title": "Gp_EcuStpShdn Initialization 序列图",
+          "workItemId": null
+        }
+      },
+      {
+        "name": "Runtime",
+        "description": "Gp_EcuStpShdn_Mainfunction 周期运行序列：MCU 运行时测试与结果检查",
+        "diagram": "sequenceDiagram\n    actor OS\n    participant MF as Gp_EcuStpShdn_Mainfunction\n    participant CO as Callout\n    participant TA as Gp_TstApp\n    OS->>MF: Mainfunction() 周期调度\n    MF->>CO: CalloutGetCoreId()\n    alt core0 且首次执行\n        MF->>MF: GetLastSatTimeStamp()\n        Note right of MF: 记录最后 satellite 初始化时间戳\n    end\n    alt TryPwrShdn 和 SafeState 均为 FALSE\n        MF->>TA: RunTimePhase()\n        alt core0\n            MF->>CO: CalloutChkMcuRunTimeTest()\n            alt 测试失败\n                MF->>CO: CalloutMcuRunTimeTestFailedHnd()\n            end\n        end\n    else 安全状态或尝试下电\n        Note right of MF: 跳过 MCU 运行时测试\n    end",
+        "diagramFormat": "mermaid",
+        "polarion": {
+          "isWorkItem": true,
+          "chapter": "5.3.2",
+          "workItemKind": "sequence",
+          "title": "Gp_EcuStpShdn Runtime 序列图",
+          "workItemId": null
+        }
+      }
+    ]
+  },
+  "module": {
+    "functionalDescription": "Gp_EcuStpShdn 模块负责多核 ECU 启动阶段的时序协调与安全监控，主要功能包括：\n- 多核启动时序控制：按 STAGE_ONE / STAGE_TWO / STAGE_THREE 三个阶段协调主核（Core0）与从核的初始化\n- 自检管理：触发并检查 MCU 预运行测试、运行时测试与 SBC 自检结果，失败时按配置执行安全动作\n- 安全状态管理：提供进入与查询安全状态的接口（SetSafeState / GetSafeState）\n- 故障恢复：提供 Trap 恢复与 OS 错误恢复接口，具体恢复策略转发至 Callout 函数实现\n- 断电管理：处理启动阶段（TryPwrShdn 标志）与关闭阶段（PwrShdnInShdnPhase）的断电请求\n- 时间戳记录：记录启动关键节点时间戳，主核统计最后完成初始化的从核时间\n模块在 EcuM 的 DriverInitOne 阶段经 Gp_EcuStpShdn_Startup 被调用，是 ECU 启动的关键路径；运行时由 Gp_EcuStpShdn_Mainfunction 周期执行运行时测试。"
+  },
+  "types": {
+    "Gp_EcuStpShdn_StpStageType": {
+      "comment": "定义 ECU 启动阶段的枚举类型，表示当前所处的启动阶段",
+      "defines": {
+        "GP_ECUSTPSHDN_STPSTAGE_UNDEF": "未定义状态",
+        "GP_ECUSTPSHDN_STPSTAGE_ONE": "启动第一阶段：主核基础初始化",
+        "GP_ECUSTPSHDN_STPSTAGE_TWO": "启动第二阶段：多核同步与自检",
+        "GP_ECUSTPSHDN_STPSTAGE_THREE": "启动第三阶段：从核完成初始化"
+      }
+    },
+    "Gp_EcuStpShdn_SelfTestType": {
+      "comment": "定义自检结果的枚举类型",
+      "defines": {
+        "GP_ECUSTPSHDN_SELFTEST_UNDEF": "自检状态未定义",
+        "GP_ECUSTPSHDN_SELFTEST_PASS": "自检通过",
+        "GP_ECUSTPSHDN_SELFTEST_FAIL": "自检失败"
+      }
+    },
+    "Gp_EcuStpShdn_MstLocalImplType": {
+      "comment": "主核本地实现数据结构，存储主核的启动信息、时间戳、复位信息和测试状态",
+      "elements": {
+        "TimeStamp_u32": "主核记录的关键启动时间点数组",
+        "McuPreTestRslt_u32": "MCU 预运行测试结果的简要信息",
+        "McuRunTestRslt_u32": "MCU 运行时测试结果的简要信息",
+        "SbcInfo_u32": "启动时的 SBC 信息",
+        "StpStage_t": "当前启动阶段",
+        "McuSelfTest_t": "MCU 自检结果",
+        "SbcSelfTest_t": "SBC 自检结果",
+        "RstTypePlt_u8": "平台复位类型",
+        "RstTypeMcal_u8": "MCAL 复位类型",
+        "RstId_u8": "复位 ID",
+        "RstCoreId_u8": "复位核 ID",
+        "SafeState_b": "安全状态标志",
+        "TryPwrShdn_b": "尝试断电标志"
+      }
+    },
+    "Gp_EcuStpShdn_SatLocalImplType": {
+      "comment": "从核（卫星核）本地实现数据结构，存储从核的启动信息和时间戳",
+      "elements": {
+        "TimeStamp_u32": "从核记录的启动完成时间戳",
+        "InitRsltAllBits_u32": "初始化结果的位域汇总（每位对应一项检查结果）",
+        "InitCheckRslt_t": "初始化检查结果数组"
+      }
+    },
+    "Gp_EcuStpShdn_SatRunTimeType": {
+      "comment": "从核运行时容器，包含指向从核本地缓冲区的指针和阶段二初始化函数指针",
+      "elements": {
+        "Impl_ptst": "指向从核本地实现缓冲区的指针",
+        "StpStageTwo_pf": "指向从核阶段二初始化函数的函数指针"
+      }
+    }
+  },
+  "externals": {
+    "Gp_RstM_GetLastRstTypeInfo": "获取上次复位的类型信息（复位类型、复位 ID、复位核）",
+    "Gp_RstM_Init": "复位管理器初始化",
+    "Gp_RstM_InitOne": "复位管理器第一阶段初始化",
+    "Gp_RstM_InitTwo": "复位管理器第二阶段初始化",
+    "Gp_TstApp_PreRunInit": "测试应用预运行初始化（安全功能）",
+    "Gp_TstApp_PreRunPhase": "测试应用预运行阶段执行（安全功能）",
+    "Gp_TstApp_RunTimePhase": "测试应用运行时阶段执行（安全功能）",
+    "Gp_TstApp_SwitchToRunPhase": "切换到运行阶段（安全功能）"
+  }
+}

@@ -1,0 +1,490 @@
+import { createHash } from 'node:crypto';
+import type Parser from 'web-tree-sitter';
+import { parseCFile, preprocessSource, walkTopLevel, collectBodyRefs, nodeText, ParsedCFile, PreprocessedSource } from '../parser/cParser.js';
+import { parseHeaderComment } from '../parser/commentParser.js';
+import type {
+  ModuleModel, FunctionUnit, VariableUnit, TypeUnit,
+  ExternalInterface, ConfigMacro, HeaderComment, Parameter, PolarionMarker,
+} from '../model/types.js';
+
+export interface InputFile {
+  /** 相对路径，如 Gp_EcuStpStdn/Gp_EcuStpShdn.c */
+  path: string;
+  content: string;
+}
+
+type FileRole = 'source' | 'header' | 'types' | 'config' | 'callout' | 'memmap';
+
+function detectRole(fileName: string): FileRole {
+  if (/_Memmap\.h$/i.test(fileName)) return 'memmap';
+  if (/_Callout\.[ch]$/i.test(fileName)) return 'callout';
+  if (/_Types\.h$/i.test(fileName)) return 'types';
+  if (/_Cfg(Data)?\.[ch]$/i.test(fileName)) return 'config';
+  if (/\.c$/i.test(fileName)) return 'source';
+  return 'header';
+}
+
+function sha256(text: string): string {
+  return createHash('sha256').update(text).digest('hex').slice(0, 16);
+}
+
+/** 提取文件的 #include 头文件名（用于 4.2 文件包含关系） */
+function extractIncludes(content: string): string[] {
+  const out: string[] = [];
+  for (const m of content.matchAll(/^\s*#\s*include\s*[<"]([^>"]+)[>"]/gm)) {
+    out.push(m[1]);
+  }
+  return [...new Set(out)];
+}
+
+/** 归一化：剥注释 + 压缩空白 */
+function normalizeCode(text: string): string {
+  return text
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/\/\/[^\n]*/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/** 向上查找紧邻的块注释（函数头注释） */
+function findPrecedingComment(lines: string[], startRow: number): string | null {
+  let row = startRow - 1;
+  while (row >= 0 && lines[row].trim() === '') row--;
+  if (row < 0) return null;
+  const endLine = lines[row].trimEnd();
+  if (!/\*\/\s*$/.test(endLine)) return null;
+  let begin = row;
+  while (begin >= 0 && !lines[begin].includes('/*')) begin--;
+  if (begin < 0) return null;
+  return lines.slice(begin, row + 1).join('\n');
+}
+
+/** 提取同行行尾注释，或上一行独立注释 */
+function extractInlineComment(line: string, prevLine: string | undefined): string | null {
+  const m = line.match(/\/\*(.+?)\*\//);
+  const text = m ? m[1].trim() : (() => {
+    if (!prevLine) return null;
+    const p = prevLine.match(/^\s*\/\*([^*].*?)\*\/\s*$/) || prevLine.match(/^\s*\/\/\s*(.+)$/);
+    return p ? p[1].trim() : null;
+  })();
+  // 过滤代码中的占位符标记（如 $TDST-B$）
+  if (text && /^\$.*\$$/.test(text)) return null;
+  return text;
+}
+
+/** 取声明器的最内层标识符（穿透指针/数组/函数指针/括号包裹） */
+function innermostIdentifier(node: Parser.SyntaxNode): Parser.SyntaxNode | null {
+  if (node.type === 'identifier' || node.type === 'field_identifier') return node;
+  const d = node.childForFieldName('declarator');
+  if (d) {
+    const r = innermostIdentifier(d);
+    if (r) return r;
+  }
+  for (const c of node.namedChildren) {
+    const r = innermostIdentifier(c);
+    if (r) return r;
+  }
+  return null;
+}
+
+/** 解析 struct 成员声明 → { name, type }（指针/数组/函数指针归一到类型列） */
+function parseFieldDecl(fieldText: string, declText: string, name: string): { name: string; type: string } {
+  const full = normalizeCode(fieldText.replace(/;\s*$/, ''));
+  if (declText.includes('(*')) {
+    // 函数指针：void (*Name)(params) → void (*)(params)
+    return { name, type: normalizeCode(full.replace(name, '')) };
+  }
+  const ptr = (declText.match(/\*/g) ?? []).join('');
+  const arr = declText.match(/\[.*\]/)?.[0] ?? '';
+  const base = normalizeCode(full.replace(declText, ''));
+  return { name, type: base + (ptr ? ` ${ptr}` : '') + arr };
+}
+
+interface RawFunction {
+  name: string;
+  returnType: string;
+  parameters: Parameter[];
+  isStatic: boolean;
+  file: string;
+  lineStart: number;
+  lineEnd: number;
+  comment: HeaderComment | null;
+  calls: string[];
+  identifiers: string[];
+  conditionalFlags: string[];
+  bodyText: string;
+  signature: string;
+}
+
+type TSNode = import('web-tree-sitter').SyntaxNode;
+
+/** 从 function_definition 或 declaration(原型) 提取函数信息 */
+function extractFunction(
+  node: TSNode,
+  file: ParsedCFile,
+  filePath: string,
+  condFlags: string[],
+  isDefinition: boolean,
+): RawFunction | null {
+  let declarator: TSNode | null = null;
+  let body: TSNode | null = null;
+
+  if (isDefinition) {
+    declarator = node.childForFieldName('declarator');
+    body = node.childForFieldName('body');
+  } else {
+    for (const child of node.namedChildren) {
+      if (child.type === 'function_declarator') { declarator = child; break; }
+      if (child.type === 'init_declarator') {
+        const inner = child.childForFieldName('declarator');
+        if (inner && inner.type === 'function_declarator') declarator = inner;
+      }
+    }
+  }
+  if (!declarator) return null;
+
+  // 函数名（剥嵌套 declarator）
+  let nameNode = declarator.childForFieldName('declarator');
+  while (nameNode && nameNode.type !== 'identifier') {
+    nameNode = nameNode.childForFieldName('declarator') ?? nameNode.namedChildren[0] ?? null;
+  }
+  if (!nameNode) return null;
+  const name = nodeText(nameNode, file.source);
+
+  // declarator 之前的文本：返回类型 + 存储类
+  const prefix = file.source.slice(node.startIndex, declarator.startIndex);
+  const isStatic = /\bstatic\b/.test(prefix) || /_STATIC_\b/.test(prefix);
+  const returnType = normalizeCode(
+    prefix.replace(/\bstatic\b/g, '').replace(/\b\w*_STATIC_\b/g, '').replace(/\bextern\b/g, ''),
+  );
+
+  // 参数
+  const parameters: Parameter[] = [];
+  const paramList = declarator.childForFieldName('parameters');
+  if (paramList) {
+    for (const p of paramList.namedChildren) {
+      if (p.type !== 'parameter_declaration') continue;
+      const typeNode = p.childForFieldName('type');
+      const declNode = p.childForFieldName('declarator');
+      const pType = typeNode ? normalizeCode(nodeText(typeNode, file.source)) : '';
+      let pName = '';
+      let pointerDepth = 0;
+      if (declNode) {
+        if (declNode.type === 'identifier') {
+          pName = nodeText(declNode, file.source);
+        } else {
+          const text = nodeText(declNode, file.source);
+          pointerDepth = (text.match(/\*/g) ?? []).length;
+          const idMatch = text.match(/([A-Za-z_][A-Za-z0-9_]*)\s*$/);
+          if (idMatch) pName = idMatch[1];
+        }
+      }
+      if (pType === 'void' && !pName) continue;
+      parameters.push({ type: pType, name: pName, pointerDepth });
+    }
+  }
+
+  const paramStr = parameters.map(p => `${p.type}${'*'.repeat(p.pointerDepth)} ${p.name}`.trim()).join(', ');
+  const signature = `${returnType} ${name}(${paramStr || 'void'})`;
+
+  const commentBlock = findPrecedingComment(file.lines, node.startPosition.row);
+  const comment = commentBlock ? parseHeaderComment(commentBlock) : null;
+
+  let calls: string[] = [];
+  let identifiers: string[] = [];
+  let bodyText = '';
+  if (body) {
+    const refs = collectBodyRefs(body, file.source);
+    calls = refs.calls;
+    identifiers = refs.identifiers;
+    bodyText = nodeText(body, file.source);
+  }
+
+  return {
+    name, returnType, parameters, isStatic,
+    file: filePath,
+    lineStart: node.startPosition.row + 1,
+    lineEnd: node.endPosition.row + 1,
+    comment, calls, identifiers,
+    conditionalFlags: condFlags,
+    bodyText, signature,
+  };
+}
+
+function makeMarker(chapter: string, kind: PolarionMarker['workItemKind'], title: string, isWorkItem = true): PolarionMarker {
+  return { isWorkItem, chapter, workItemKind: kind, title, workItemId: null };
+}
+
+/** 从原始源码按行扫描宏定义（#define），含注释与生效条件 */
+function extractMacros(
+  pre: PreprocessedSource,
+  filePath: string,
+  filter: (name: string) => boolean,
+): ConfigMacro[] {
+  const macros: ConfigMacro[] = [];
+  for (let i = 0; i < pre.originalLines.length; i++) {
+    const line = pre.originalLines[i];
+    const m = line.match(/^\s*#\s*define\s+([A-Za-z_][A-Za-z0-9_]*)(\([^)]*\))?\s*(.*?)\s*$/);
+    if (!m) continue;
+    const [, name, args, rawValue] = m;
+    if (!filter(name)) continue;
+    macros.push({
+      name,
+      value: normalizeCode(rawValue.replace(/\/\*.*?\*\//g, '')),
+      isFunctionLike: !!args,
+      comment: extractInlineComment(line, pre.originalLines[i - 1]),
+      file: filePath,
+      polarion: makeMarker('6', 'config', name, false),
+    });
+  }
+  return macros;
+}
+
+/** 分析整个模块，产出中间模型 */
+export async function analyzeModule(files: InputFile[], moduleName?: string): Promise<ModuleModel> {
+  const parsed: { input: InputFile; role: FileRole; pre: PreprocessedSource; file: ParsedCFile }[] = [];
+  const fileInfos: { path: string; role: FileRole; includes: string[] }[] = [];
+  for (const input of files) {
+    const base = input.path.split(/[\\/]/).pop()!;
+    const role = detectRole(base);
+    // Memmap 文件不解析（纯 pragma 包装），但保留在文件清单中
+    fileInfos.push({ path: input.path, role, includes: extractIncludes(input.content) });
+    if (role === 'memmap') continue;
+    const pre = preprocessSource(input.content);
+    parsed.push({ input, role, pre, file: await parseCFile(pre.clean) });
+  }
+
+  const mainSource = parsed.find(p => p.role === 'source');
+  const module = moduleName ?? (mainSource ? mainSource.input.path.split(/[\\/]/).pop()!.replace(/\.c$/i, '') : 'UnknownModule');
+
+  const definedFunctions: RawFunction[] = [];   // 仅主 .c
+  const prototypes: RawFunction[] = [];          // 头文件 + Callout（含 Callout.c 定义）
+  const variables: VariableUnit[] = [];
+  const types: TypeUnit[] = [];
+  const configMacros: ConfigMacro[] = [];
+  const typeDefines: ConfigMacro[] = [];         // Types.h 里的枚举式宏
+
+  for (const { input, role, pre, file } of parsed) {
+    // ---------- 宏提取（基于原始源码，与语法树无关） ----------
+    if (role === 'config') {
+      configMacros.push(...extractMacros(pre, input.path,
+        n => !/_H_$/.test(n) && !/_(START|STOP)$/.test(n)));
+    }
+    if (role === 'types') {
+      typeDefines.push(...extractMacros(pre, input.path, n => !/_H_$/.test(n)));
+    }
+
+    walkTopLevel(file.tree, (node) => {
+      const condFlags = pre.condFlagsAt(node.startPosition.row);
+
+      // ---------- 函数定义：只有主 .c 才算模块函数 ----------
+      if (node.type === 'function_definition') {
+        const fn = extractFunction(node, file, input.path, condFlags, true);
+        if (!fn) return;
+        if (role === 'source') definedFunctions.push(fn);
+        else if (role === 'callout') prototypes.push(fn);  // Callout 实现 → 外部接口声明
+        return;
+      }
+      // ---------- 函数原型 / 变量 ----------
+      if (node.type === 'declaration') {
+        const hasFuncDecl = node.namedChildren.some(c =>
+          c.type === 'function_declarator' ||
+          (c.type === 'init_declarator' && c.childForFieldName('declarator')?.type === 'function_declarator'));
+        if (hasFuncDecl) {
+          if (role === 'header' || role === 'callout') {
+            const proto = extractFunction(node, file, input.path, condFlags, false);
+            if (proto) prototypes.push(proto);
+          }
+          return;
+        }
+        // 变量（仅主 .c 的模块级变量）
+        if (role !== 'source') return;
+        let varName: string | null = null;
+        let declStart = node.endIndex;
+        for (const child of node.namedChildren) {
+          if (child.type === 'init_declarator' || child.type === 'array_declarator' || child.type === 'identifier') {
+            declStart = child.startIndex;
+            const t = nodeText(child, file.source);
+            const m = t.match(/([A-Za-z_][A-Za-z0-9_]*)/);
+            if (m) { varName = m[1]; break; }
+          }
+        }
+        if (!varName) return;
+        const typePart = file.source.slice(node.startIndex, declStart);
+        const row = node.startPosition.row;
+        variables.push({
+          id: `${module}::${varName}`,
+          name: varName,
+          type: normalizeCode(typePart.replace(/\b\w*_STATIC_\b/g, 'static')),
+          isStatic: /\bstatic\b/.test(typePart) || /_STATIC_\b/.test(typePart),
+          isConst: /\bconst\b/.test(typePart),
+          isVolatile: /\bvolatile\b/.test(typePart),
+          file: input.path,
+          line: row + 1,
+          comment: extractInlineComment(pre.originalLines[row] ?? '', pre.originalLines[row - 1]),
+          conditionalFlags: condFlags,
+          polarion: makeMarker('5.2.4.1', 'variable', varName, false),
+        });
+        return;
+      }
+      // ---------- typedef / struct（仅 Types.h） ----------
+      if (node.type === 'type_definition' && role === 'types') {
+        const text = nodeText(node, file.source);
+        const isStruct = /\bstruct\b/.test(text);
+        const typeNode = node.childForFieldName('type');
+        const declNode = node.childForFieldName('declarator');
+        if (!declNode) return;
+        const name = nodeText(declNode, file.source);
+        let elements: TypeUnit['elements'];
+        if (isStruct && typeNode) {
+          elements = [];
+          const bodyNode = typeNode.namedChildren.find(c => c.type === 'field_declaration_list');
+          if (bodyNode) {
+            for (const field of bodyNode.namedChildren) {
+              if (field.type !== 'field_declaration') continue;
+              const fDecl = field.childForFieldName('declarator');
+              const fRow = field.startPosition.row;
+              const declText = fDecl ? nodeText(fDecl, file.source) : '';
+              const nameNode = fDecl ? innermostIdentifier(fDecl) : null;
+              const parsed = parseFieldDecl(
+                nodeText(field, file.source),
+                declText,
+                nameNode ? nodeText(nameNode, file.source) : normalizeCode(declText),
+              );
+              elements.push({
+                name: parsed.name,
+                type: parsed.type,
+                comment: extractInlineComment(pre.originalLines[fRow] ?? '', undefined),
+              });
+            }
+          }
+        }
+        types.push({
+          id: `${module}::${name}`,
+          name,
+          kind: isStruct ? 'struct' : 'typedef',
+          underlyingType: typeNode && !isStruct ? normalizeCode(nodeText(typeNode, file.source)) : undefined,
+          elements,
+          comment: extractInlineComment(
+            pre.originalLines[node.startPosition.row] ?? '',
+            pre.originalLines[node.startPosition.row - 1],
+          ),
+          file: input.path,
+          polarion: makeMarker('5.2.1.2', 'type', name, false),
+        });
+        return;
+      }
+    });
+  }
+
+  // ---------- typedef 关联枚举宏 ----------
+  for (const define of typeDefines) {
+    let best: TypeUnit | null = null;
+    let bestLen = 0;
+    for (const t of types) {
+      const typePrefix = 'GP_' + t.name.replace(/^Gp_/, '').replace(/Type$/, '').toUpperCase() + '_';
+      if (define.name.startsWith(typePrefix) && typePrefix.length > bestLen) {
+        best = t; bestLen = typePrefix.length;
+      }
+    }
+    if (best) (best.relatedDefines ??= []).push(define);
+  }
+
+  // ---------- 交叉引用 ----------
+  const definedNames = new Set(definedFunctions.map(f => f.name));
+  const protoByName = new Map<string, RawFunction>();
+  for (const p of prototypes) if (!protoByName.has(p.name)) protoByName.set(p.name, p);
+  const globalNames = new Set(variables.map(v => v.name));
+
+  const externalMap = new Map<string, ExternalInterface>();
+  for (const fn of definedFunctions) {
+    for (const callee of fn.calls) {
+      if (definedNames.has(callee) || callee.startsWith('(*)')) continue;
+      if (/^[A-Z_0-9]+$/.test(callee)) continue;   // 宏调用（NOP 等）
+      let ext = externalMap.get(callee);
+      if (!ext) {
+        const proto = protoByName.get(callee);
+        let group: string;
+        if (proto && /Callout/.test(proto.file)) {
+          group = 'Callout';
+        } else if (proto) {
+          group = proto.file.split(/[\\/]/).pop()!;
+        } else {
+          group = callee.match(/^(Gp_[A-Za-z]+)_/)?.[1] ?? 'External';
+        }
+        ext = {
+          name: callee,
+          signature: proto?.signature ?? '',
+          group,
+          comment: proto?.comment ?? null,
+          commentSource: proto?.comment ? 'header' : undefined,
+          calledFrom: [],
+          polarion: makeMarker('5.2.2.2', 'table', `${group} 接口函数`, true),
+        };
+        externalMap.set(callee, ext);
+      }
+      if (!ext.calledFrom.includes(fn.name)) ext.calledFrom.push(fn.name);
+    }
+  }
+
+  // Callout 函数指针引用（出现在配置表初始化中但未被直接调用，如 InitStageTwoCore1-5）
+  const mainClean = mainSource?.pre.clean ?? '';
+  for (const proto of prototypes) {
+    if (definedNames.has(proto.name) || externalMap.has(proto.name)) continue;
+    if (!/Callout/.test(proto.file)) continue;
+    if (!new RegExp(`\\b${proto.name}\\b`).test(mainClean)) continue;
+    externalMap.set(proto.name, {
+      name: proto.name,
+      signature: proto.signature,
+      group: 'Callout',
+      comment: proto.comment ?? null,
+      commentSource: proto.comment ? 'header' : undefined,
+      calledFrom: ['(rtSatCont 配置表函数指针引用)'],
+      polarion: makeMarker('5.2.2.2', 'table', 'Callout 接口函数', true),
+    });
+  }
+
+  // ---------- 组装 FunctionUnit ----------
+  const toUnit = (fn: RawFunction, chapter: string, kind: PolarionMarker['workItemKind']): FunctionUnit => ({
+    id: `${module}::${fn.name}`,
+    name: fn.name,
+    signature: fn.signature,
+    returnType: fn.returnType,
+    parameters: fn.parameters,
+    isStatic: fn.isStatic,
+    file: fn.file,
+    lineStart: fn.lineStart,
+    lineEnd: fn.lineEnd,
+    comment: fn.comment,
+    calls: fn.calls,
+    calledBy: definedFunctions.filter(other => other.name !== fn.name && other.calls.includes(fn.name)).map(o => o.name),
+    globalsAccessed: fn.identifiers.filter(id => globalNames.has(id)),
+    conditionalFlags: fn.conditionalFlags,
+    bodyText: fn.bodyText.length > 8000 ? fn.bodyText.slice(0, 8000) + '\n/* ...(截断) */' : fn.bodyText,
+    bodyHash: sha256(normalizeCode(fn.bodyText)),
+    sigHash: sha256(normalizeCode(fn.signature)),
+    polarion: makeMarker(chapter, kind, fn.name, true),
+  });
+
+  const providedFunctions = definedFunctions
+    .filter(f => !f.isStatic)
+    .map(f => toUnit(f, '5.2.3.2', 'function'))
+    .sort((a, b) => a.lineStart - b.lineStart);
+  const internalFunctions = definedFunctions
+    .filter(f => f.isStatic)
+    .map(f => toUnit(f, '5.2.4.2', 'function'))
+    .sort((a, b) => a.lineStart - b.lineStart);
+
+  return {
+    module,
+    analyzedAt: new Date().toISOString(),
+    files: fileInfos,
+    providedFunctions,
+    internalFunctions,
+    internalVariables: variables.filter(v => v.isStatic),
+    providedVariables: variables.filter(v => !v.isStatic),
+    calledExternalFunctions: [...externalMap.values()].sort((a, b) => a.group.localeCompare(b.group) || a.name.localeCompare(b.name)),
+    types,
+    configMacros,
+  };
+}

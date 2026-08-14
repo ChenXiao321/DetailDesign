@@ -28,7 +28,7 @@ function paramRows(params: ParamDoc[], dir: string): string {
 }
 
 /** 函数工作项卡片（模板 5.2.3.2 表格样式） */
-function functionCard(fn: FunctionUnit, diagramBlock?: (src: string) => string): string {
+function functionCard(fn: FunctionUnit, diagramBlock?: (src: string) => string, staticVars?: ReadonlySet<string>): string {
   const c: HeaderComment | null = fn.comment;
   const desc = fn.generated?.detailedDescription ?? c?.description ?? '<span class="todo">（待生成）</span>';
   const flowchart = fn.generated?.flowchart;
@@ -45,8 +45,11 @@ function functionCard(fn: FunctionUnit, diagramBlock?: (src: string) => string):
   const calledByNote = fn.calledBy.length > 0
     ? `<tr><td class="label">被调用</td><td class="muted small">${fn.calledBy.map(esc).join(', ')}</td></tr>`
     : '';
+  // 严格按 C 术语：static 文件作用域变量 = 静态全局变量（内部链接）；非 static = 外部链接全局变量
+  const allStatic = fn.globalsAccessed.length > 0 && fn.globalsAccessed.every(n => staticVars?.has(n));
+  const globalsLabel = allStatic ? '访问的静态全局变量' : '访问的模块全局变量';
   const globalsNote = fn.globalsAccessed.length > 0
-    ? `<tr><td class="label">访问全局变量</td><td class="muted small">${fn.globalsAccessed.map(esc).join(', ')}</td></tr>`
+    ? `<tr><td class="label">${globalsLabel}</td><td class="muted small">${fn.globalsAccessed.map(esc).join(', ')}</td></tr>`
     : '';
 
   return `
@@ -176,7 +179,7 @@ export function generateHtmlReport(model: ModuleModel, opts?: { mermaidJs?: stri
     groups.get(e.group)!.push(e);
   }
 
-  // ---- 5.2.1.1 引用的数据类型 ----
+  // ---- 5.2.1.1 引用的数据类型（只列类型，对应模板 模块名|Imported Type；外部函数归属 5.2.2，不在此列） ----
   const STD_TYPES = ['Std_ReturnType', 'boolean', 'uint8', 'uint16', 'uint32', 'uint64',
     'sint8', 'sint16', 'sint32', 'sint64', 'float32', 'float64'];
   const scanText = [
@@ -185,14 +188,23 @@ export function generateHtmlReport(model: ModuleModel, opts?: { mermaidJs?: stri
     ...model.types.flatMap(t => [t.underlyingType ?? '', ...(t.elements ?? []).map(e => e.type)]),
   ].join(' ');
   const usedStdTypes = STD_TYPES.filter(t => new RegExp(`\\b${t}\\b`).test(scanText));
+  // 外部类型探测：按 AUTOSAR 命名约定取 XxxType 形标识符，排除本模块已定义类型与 Std_Types，
+  // 按模块前缀归组（Dem_EventIdType → Dem）；无下划线前缀的（如 CounterType）归入「其他」
+  const localTypeNames = new Set(model.types.map(t => t.name));
+  const extTypeGroups = new Map<string, Set<string>>();
+  for (const tok of scanText.match(/[A-Za-z_]\w*/g) ?? []) {
+    if (!/Type$/.test(tok)) continue;
+    if (localTypeNames.has(tok) || STD_TYPES.includes(tok)) continue;
+    const mod = tok.includes('_') ? tok.split('_')[0] : '其他';
+    if (!extTypeGroups.has(mod)) extTypeGroups.set(mod, new Set());
+    extTypeGroups.get(mod)!.add(tok);
+  }
   const importedTypeRows: string[] = [];
   if (usedStdTypes.length > 0) {
     importedTypeRows.push(`<tr><td><code>Std_Types</code></td><td><code>${usedStdTypes.join('<br>')}</code></td></tr>`);
   }
-  for (const [group, items] of [...groups.entries()]) {
-    // Callout 是本模块的配置代码（ConfTemplate），不属于"引用的外部模块"，不列入
-    if (group === 'Callout') continue;
-    importedTypeRows.push(`<tr><td><code>${esc(group)}</code></td><td><code>${items.map(e => esc(e.name) + '()').join('<br>')}</code></td></tr>`);
+  for (const [mod, types] of [...extTypeGroups.entries()].sort()) {
+    importedTypeRows.push(`<tr><td><code>${esc(mod)}</code></td><td><code>${[...types].map(esc).join('<br>')}</code></td></tr>`);
   }
 
   // ---- 5.2.1.2 数据类型（属性|值 格式，参照模板与既有文档） ----
@@ -239,10 +251,11 @@ ${detailTable}`;
   // ---- 5.2.4.1 内部变量 ----
   const internalVarRows = model.internalVariables.map(v =>
     `<tr><td><code>${esc(v.name)}</code></td><td><code>${esc(v.type)}</code></td><td>${esc(v.comment)}</td>${v.conditionalFlags.length ? `<td class="muted small">条件: <code>${esc(v.conditionalFlags.join(','))}</code></td>` : '<td></td>'}</tr>`).join('');
+  const staticVarNames: ReadonlySet<string> = new Set(model.internalVariables.map(v => v.name));
 
   // ---- 5.2.3.1 提供的外部全局变量 ----
   const providedVarSection = model.providedVariables.length === 0
-    ? '<p class="muted">注：本模块未提供外部全局变量接口，模块数据均通过函数接口访问。</p>'
+    ? '<p class="muted">注：本模块未提供外部链接的全局变量（即非 static 的文件作用域变量），模块数据均通过函数接口访问。</p>'
     : `<table class="simple"><tr><th>变量名</th><th>数据类型</th><th>说明</th></tr>${model.providedVariables.map(v =>
         `<tr><td><code>${esc(v.name)}</code></td><td><code>${esc(v.type)}</code></td><td>${esc(v.comment)}</td></tr>`).join('')}</table>`;
 
@@ -348,13 +361,14 @@ ${calledSection}
 <h3>5.2.3.1 全局变量</h3>
 ${providedVarSection}
 <h3>5.2.3.2 接口函数</h3>
-${model.providedFunctions.map(f => functionCard(f, diagramBlock)).join('\n')}
+${model.providedFunctions.map(f => functionCard(f, diagramBlock, staticVarNames)).join('\n')}
 
 <h3 id="s524">5.2.4 内部接口</h3>
 <h3>5.2.4.1 全局变量定义</h3>
+<p class="muted">注：以下为本模块的静态全局变量（<code>static</code> 声明，内部链接，仅本模块内可见，外部模块不可直接访问）。</p>
 <table class="simple"><tr><th>变量名</th><th>数据类型</th><th>说明</th><th>备注</th></tr>${internalVarRows}</table>
 <h3>5.2.4.2 内部函数说明</h3>
-${model.internalFunctions.map(f => functionCard(f, diagramBlock)).join('\n')}
+${model.internalFunctions.map(f => functionCard(f, diagramBlock, staticVarNames)).join('\n')}
 
 <h2 id="s53">5.3 动态设计</h2>
 ${smSection}

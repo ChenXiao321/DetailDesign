@@ -105,7 +105,7 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
 <h2 id="s52">5.2 接口说明</h2>
 <h3 id="s521">5.2.1 数据类型说明</h3>
 <h3>5.2.1.1 引用的数据类型</h3>
-<table class="simple"><tr><th>模块名</th><th>Imported Type</th></tr><tr><td><code>Std_Types</code></td><td><code>Std_ReturnType<br>boolean<br>uint8<br>uint32</code></td></tr><tr><td><code>Gp_RstM</code></td><td><code>Gp_RstM_GetLastRstTypeInfo()<br>Gp_RstM_Init()<br>Gp_RstM_InitOne()<br>Gp_RstM_InitTwo()</code></td></tr><tr><td><code>Gp_TstApp</code></td><td><code>Gp_TstApp_PreRunInit()<br>Gp_TstApp_PreRunPhase()<br>Gp_TstApp_RunTimePhase()<br>Gp_TstApp_SwitchToRunPhase()</code></td></tr></table>
+<table class="simple"><tr><th>模块名</th><th>Imported Type</th></tr><tr><td><code>Std_Types</code></td><td><code>Std_ReturnType<br>boolean<br>uint8<br>uint32</code></td></tr></table>
 <h3>5.2.1.2 数据类型定义</h3>
 <h3>Gp_EcuStpShdn_StpStageType <span class="badge">工作项 · 5.2.1.2</span></h3>
 <table class="wi-table"><tr><th style="width:170px;text-align:left;padding:8px 16px;background:var(--label-bg)">属性</th><th style="text-align:left;padding:8px 16px;background:var(--label-bg)">值</th></tr><tr><td class="label">Name</td><td><code>Gp_EcuStpShdn_StpStageType</code></td></tr><tr><td class="label">Type</td><td><code>uint8</code></td></tr><tr><td class="label">Range</td><td><code>0x00 - 0x03</code></td></tr><tr><td class="label">Description</td><td>定义 ECU 启动阶段的枚举类型，表示当前所处的启动阶段</td></tr></table>
@@ -135,7 +135,7 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
 
 <h3 id="s523">5.2.3 提供的外部接口</h3>
 <h3>5.2.3.1 全局变量</h3>
-<p class="muted">注：本模块未提供外部全局变量接口，模块数据均通过函数接口访问。</p>
+<p class="muted">注：本模块未提供外部链接的全局变量（即非 static 的文件作用域变量），模块数据均通过函数接口访问。</p>
 <h3>5.2.3.2 接口函数</h3>
 
 <div class="workitem" id="Gp_EcuStpShdn::Gp_EcuStpShdn_SetSafeState">
@@ -161,7 +161,7 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
 <details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">flowchart TD
     A(["开始"]) --&gt; B["SafeState_b 置 TRUE&lt;br&gt;（写主核本地缓冲区）"]
     B --&gt; Z(["结束"])</pre></details></td></tr>
-    <tr><td class="label">访问全局变量</td><td class="muted small">Gp_EcuStpShdn_bufMstLocalImpl_ltst</td></tr>
+    <tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_EcuStpShdn_bufMstLocalImpl_ltst</td></tr>
   </table>
   <div class="wi-footer">
     <span>源: Gp_EcuStpShdn.c:377-380</span>
@@ -193,7 +193,7 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
 <details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">flowchart TD
     A(["开始"]) --&gt; B["TryPwrShdn_b 置 TRUE&lt;br&gt;（写主核本地缓冲区）"]
     B --&gt; Z(["结束"])</pre></details></td></tr>
-    <tr><td class="label">访问全局变量</td><td class="muted small">Gp_EcuStpShdn_bufMstLocalImpl_ltst</td></tr>
+    <tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_EcuStpShdn_bufMstLocalImpl_ltst</td></tr>
   </table>
   <div class="wi-footer">
     <span>源: Gp_EcuStpShdn.c:393-396</span>
@@ -227,7 +227,7 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
     A(["开始"]) --&gt; B["读取 SafeState_b&lt;br&gt;（主核本地缓冲区）"]
     B --&gt; C["返回该值"]
     C --&gt; Z(["结束"])</pre></details></td></tr>
-    <tr><td class="label">访问全局变量</td><td class="muted small">Gp_EcuStpShdn_bufMstLocalImpl_ltst</td></tr>
+    <tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_EcuStpShdn_bufMstLocalImpl_ltst</td></tr>
   </table>
   <div class="wi-footer">
     <span>源: Gp_EcuStpShdn.c:409-416</span>
@@ -393,7 +393,7 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
     P -- master --&gt; Z(["结束"])
     P -- satellite --&gt; Q["StpStageTwo_pf satellite 初始化&lt;br&gt;记录初始化完成时间戳&lt;br&gt;非安全状态时检查初始化结果（条件编译）"]
     Q --&gt; Z</pre></details></td></tr>
-    <tr><td class="label">调用</td><td class="muted small">Gp_EcuStpShdn_CalloutGetCoreId<br>Gp_EcuStpShdn_CalloutInitStageOneCore0<br>Gp_RstM_InitOne<br>GP_ECUSTPSHDN_NOP<br>Gp_TstApp_PreRunInit<br>Gp_TstApp_PreRunPhase<br>Gp_EcuStpShdn_CalloutGetSysTimeMs<br>Gp_RstM_InitTwo<br>Gp_RstM_Init<br>Gp_RstM_GetLastRstTypeInfo<br>Gp_EcuStpShdn_CalloutPwrShdnInStpPhase<br>(*)-&gt;StpStageTwo_pf<br>Gp_EcuStpShdn_CalloutSbcInitInSafeState<br>Gp_EcuStpShdn_CalloutSafeState<br>Gp_EcuStpShdn_MstProcMcuPreRunTest<br>Gp_EcuStpShdn_MstPostInit<br>Gp_EcuStpShdn_CalloutSbcInit<br>Gp_EcuStpShdn_CheckInitRslt<br>Gp_EcuStpShdn_CalloutInitFailedHnd</td></tr><tr><td class="label">访问全局变量</td><td class="muted small">Gp_EcuStpShdn_rtSatCont_lcatst, Gp_EcuStpShdn_bufMstLocalImpl_ltst, Gp_EcuStpShdn_bufSatLocalImplCore0_ltst</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_EcuStpShdn_CalloutGetCoreId<br>Gp_EcuStpShdn_CalloutInitStageOneCore0<br>Gp_RstM_InitOne<br>GP_ECUSTPSHDN_NOP<br>Gp_TstApp_PreRunInit<br>Gp_TstApp_PreRunPhase<br>Gp_EcuStpShdn_CalloutGetSysTimeMs<br>Gp_RstM_InitTwo<br>Gp_RstM_Init<br>Gp_RstM_GetLastRstTypeInfo<br>Gp_EcuStpShdn_CalloutPwrShdnInStpPhase<br>(*)-&gt;StpStageTwo_pf<br>Gp_EcuStpShdn_CalloutSbcInitInSafeState<br>Gp_EcuStpShdn_CalloutSafeState<br>Gp_EcuStpShdn_MstProcMcuPreRunTest<br>Gp_EcuStpShdn_MstPostInit<br>Gp_EcuStpShdn_CalloutSbcInit<br>Gp_EcuStpShdn_CheckInitRslt<br>Gp_EcuStpShdn_CalloutInitFailedHnd</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_EcuStpShdn_rtSatCont_lcatst, Gp_EcuStpShdn_bufMstLocalImpl_ltst, Gp_EcuStpShdn_bufSatLocalImplCore0_ltst</td></tr>
   </table>
   <div class="wi-footer">
     <span>源: Gp_EcuStpShdn.c:484-703</span>
@@ -449,7 +449,7 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
     I -- 是 --&gt; J["CalloutMcuRunTimeTestFailedHnd（条件编译）"]
     I -- 否 --&gt; Z
     J --&gt; Z</pre></details></td></tr>
-    <tr><td class="label">调用</td><td class="muted small">Gp_EcuStpShdn_CalloutGetCoreId<br>Gp_EcuStpShdn_GetLastSatTimeStamp<br>Gp_TstApp_RunTimePhase<br>Gp_EcuStpShdn_CalloutChkMcuRunTimeTest<br>Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd</td></tr><tr><td class="label">访问全局变量</td><td class="muted small">Gp_EcuStpShdn_bufMstLocalImpl_ltst</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_EcuStpShdn_CalloutGetCoreId<br>Gp_EcuStpShdn_GetLastSatTimeStamp<br>Gp_TstApp_RunTimePhase<br>Gp_EcuStpShdn_CalloutChkMcuRunTimeTest<br>Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_EcuStpShdn_bufMstLocalImpl_ltst</td></tr>
   </table>
   <div class="wi-footer">
     <span>源: Gp_EcuStpShdn.c:719-778</span>
@@ -460,6 +460,7 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
 
 <h3 id="s524">5.2.4 内部接口</h3>
 <h3>5.2.4.1 全局变量定义</h3>
+<p class="muted">注：以下为本模块的静态全局变量（<code>static</code> 声明，内部链接，仅本模块内可见，外部模块不可直接访问）。</p>
 <table class="simple"><tr><th>变量名</th><th>数据类型</th><th>说明</th><th>备注</th></tr><tr><td><code>Gp_EcuStpShdn_bufMstLocalImpl_ltst</code></td><td><code>static volatile Gp_EcuStpShdn_MstLocalImplType</code></td><td>master local implement runtime buffer</td><td></td></tr><tr><td><code>Gp_EcuStpShdn_bufSatLocalImplCore0_ltst</code></td><td><code>static volatile Gp_EcuStpShdn_SatLocalImplType</code></td><td>satellite local implement runtime buffer core0</td><td></td></tr><tr><td><code>Gp_EcuStpShdn_bufSatLocalImplCore1_ltst</code></td><td><code>static volatile Gp_EcuStpShdn_SatLocalImplType</code></td><td>satellite local implement runtime buffer core1</td><td class="muted small">条件: <code>GP_ECUSTPSHDN_ACTIVE_CORE_NUM</code></td></tr><tr><td><code>Gp_EcuStpShdn_bufSatLocalImplCore2_ltst</code></td><td><code>static volatile Gp_EcuStpShdn_SatLocalImplType</code></td><td>satellite local implement runtime buffer core2</td><td class="muted small">条件: <code>GP_ECUSTPSHDN_ACTIVE_CORE_NUM</code></td></tr><tr><td><code>Gp_EcuStpShdn_bufSatLocalImplCore3_ltst</code></td><td><code>static volatile Gp_EcuStpShdn_SatLocalImplType</code></td><td>satellite local implement runtime buffer core3</td><td class="muted small">条件: <code>GP_ECUSTPSHDN_ACTIVE_CORE_NUM</code></td></tr><tr><td><code>Gp_EcuStpShdn_bufSatLocalImplCore4_ltst</code></td><td><code>static volatile Gp_EcuStpShdn_SatLocalImplType</code></td><td>satellite local implement runtime buffer core4</td><td class="muted small">条件: <code>GP_ECUSTPSHDN_ACTIVE_CORE_NUM</code></td></tr><tr><td><code>Gp_EcuStpShdn_bufSatLocalImplCore5_ltst</code></td><td><code>static volatile Gp_EcuStpShdn_SatLocalImplType</code></td><td>satellite local implement runtime buffer core5</td><td class="muted small">条件: <code>GP_ECUSTPSHDN_ACTIVE_CORE_NUM</code></td></tr><tr><td><code>Gp_EcuStpShdn_rtSatCont_lcatst</code></td><td><code>static const Gp_EcuStpShdn_SatRunTimeType</code></td><td>FC runtime buffer address container for satellite local implement variables</td><td></td></tr></table>
 <h3>5.2.4.2 内部函数说明</h3>
 
@@ -540,7 +541,7 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
     B -- 否 --&gt; E["McuSelfTest_t 置为 SELFTEST_PASS"]
     D --&gt; Z(["结束"])
     E --&gt; Z</pre></details></td></tr>
-    <tr><td class="label">条件编译</td><td><code>GP_ECUSTPSHDN_SAFETY_ENABLE</code> 生效时参与编译</td></tr><tr><td class="label">调用</td><td class="muted small">Gp_EcuStpShdn_CalloutChkMcuPreRunTest<br>Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_EcuStpShdn_Startup</td></tr><tr><td class="label">访问全局变量</td><td class="muted small">Gp_EcuStpShdn_bufMstLocalImpl_ltst</td></tr>
+    <tr><td class="label">条件编译</td><td><code>GP_ECUSTPSHDN_SAFETY_ENABLE</code> 生效时参与编译</td></tr><tr><td class="label">调用</td><td class="muted small">Gp_EcuStpShdn_CalloutChkMcuPreRunTest<br>Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_EcuStpShdn_Startup</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_EcuStpShdn_bufMstLocalImpl_ltst</td></tr>
   </table>
   <div class="wi-footer">
     <span>源: Gp_EcuStpShdn.c:239-255</span>
@@ -598,7 +599,7 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
     J -- 否 --&gt; L["SbcSelfTest_t 置为 PASS"]
     K --&gt; Z(["结束"])
     L --&gt; Z</pre></details></td></tr>
-    <tr><td class="label">条件编译</td><td><code>GP_ECUSTPSHDN_SAFETY_ENABLE</code> 生效时参与编译</td></tr><tr><td class="label">调用</td><td class="muted small">Gp_EcuStpShdn_CheckInitRslt<br>Gp_EcuStpShdn_CalloutInitFailedHnd<br>Gp_TstApp_SwitchToRunPhase<br>Gp_EcuStpShdn_CalloutChkSwtToRun<br>Gp_EcuStpShdn_CalloutSwtToRunFailedHnd<br>Gp_EcuStpShdn_CalloutChkSbcTest<br>Gp_EcuStpShdn_CalloutSbcTestFailedHnd</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_EcuStpShdn_Startup</td></tr><tr><td class="label">访问全局变量</td><td class="muted small">Gp_EcuStpShdn_bufMstLocalImpl_ltst, Gp_EcuStpShdn_bufSatLocalImplCore0_ltst</td></tr>
+    <tr><td class="label">条件编译</td><td><code>GP_ECUSTPSHDN_SAFETY_ENABLE</code> 生效时参与编译</td></tr><tr><td class="label">调用</td><td class="muted small">Gp_EcuStpShdn_CheckInitRslt<br>Gp_EcuStpShdn_CalloutInitFailedHnd<br>Gp_TstApp_SwitchToRunPhase<br>Gp_EcuStpShdn_CalloutChkSwtToRun<br>Gp_EcuStpShdn_CalloutSwtToRunFailedHnd<br>Gp_EcuStpShdn_CalloutChkSbcTest<br>Gp_EcuStpShdn_CalloutSbcTestFailedHnd</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_EcuStpShdn_Startup</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_EcuStpShdn_bufMstLocalImpl_ltst, Gp_EcuStpShdn_bufSatLocalImplCore0_ltst</td></tr>
   </table>
   <div class="wi-footer">
     <span>源: Gp_EcuStpShdn.c:268-309</span>
@@ -650,7 +651,7 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
     I --&gt; E
     E -- 否 --&gt; J["返回 MaxTimeStamp"]
     J --&gt; Z(["结束"])</pre></details></td></tr>
-    <tr><td class="label">被调用</td><td class="muted small">Gp_EcuStpShdn_Mainfunction</td></tr><tr><td class="label">访问全局变量</td><td class="muted small">Gp_EcuStpShdn_bufSatLocalImplCore1_ltst, Gp_EcuStpShdn_bufSatLocalImplCore2_ltst, Gp_EcuStpShdn_bufSatLocalImplCore3_ltst, Gp_EcuStpShdn_bufSatLocalImplCore4_ltst, Gp_EcuStpShdn_bufSatLocalImplCore5_ltst</td></tr>
+    <tr><td class="label">被调用</td><td class="muted small">Gp_EcuStpShdn_Mainfunction</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_EcuStpShdn_bufSatLocalImplCore1_ltst, Gp_EcuStpShdn_bufSatLocalImplCore2_ltst, Gp_EcuStpShdn_bufSatLocalImplCore3_ltst, Gp_EcuStpShdn_bufSatLocalImplCore4_ltst, Gp_EcuStpShdn_bufSatLocalImplCore5_ltst</td></tr>
   </table>
   <div class="wi-footer">
     <span>源: Gp_EcuStpShdn.c:322-364</span>

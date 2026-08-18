@@ -4,7 +4,7 @@ import { parseCFile, preprocessSource, walkTopLevel, collectBodyRefs, nodeText, 
 import { parseHeaderComment } from '../parser/commentParser.js';
 import type {
   ModuleModel, FunctionUnit, VariableUnit, TypeUnit,
-  ExternalInterface, ConfigMacro, HeaderComment, Parameter, PolarionMarker,
+  ExternalInterface, ConfigMacro, ConfigUsage, HeaderComment, Parameter, PolarionMarker,
 } from '../model/types.js';
 
 export interface InputFile {
@@ -228,16 +228,55 @@ function extractMacros(
     if (!m) continue;
     const [, name, args, rawValue] = m;
     if (!filter(name)) continue;
+    const value = normalizeCode(rawValue.replace(/\/\*.*?\*\//g, ''));
+    // 分类：无参函数式宏且取值仅为另一宏调用 → alias（实现别名，非配置项）；
+    // 值（去括号）为 STD_ON/STD_OFF 的特性开关 → functional（6.2）；其余 → general（6.1）
+    const bare = value.replace(/[()\s]/g, '');
+    const isAlias = !!args && args === '()' && /^[A-Za-z_][A-Za-z0-9_]*\s*\(.*\)$/.test(value);
+    const kind: ConfigMacro['kind'] = isAlias ? 'alias'
+      : (bare === 'STD_ON' || bare === 'STD_OFF') ? 'functional' : 'general';
     macros.push({
       name,
-      value: normalizeCode(rawValue.replace(/\/\*.*?\*\//g, '')),
+      value,
       isFunctionLike: !!args,
       comment: extractInlineComment(line, pre.originalLines[i - 1]),
       file: filePath,
-      polarion: makeMarker('6', 'config', name, false),
+      kind,
+      usages: [],
+      affects: [],
+      polarion: makeMarker(kind === 'alias' ? '6' : kind === 'functional' ? '6.2' : '6.1', 'config', name, false),
     });
   }
   return macros;
+}
+
+/** 扫描配置宏在模块内的使用点（基于原始源码行，排除 #define 定义行与 #endif/#else 收尾行） */
+function scanConfigUsages(
+  parsed: { input: InputFile; pre: PreprocessedSource }[],
+  macros: ConfigMacro[],
+): void {
+  for (const macro of macros) {
+    const wordRe = new RegExp(`\\b${macro.name}\\b`);
+    const usages: ConfigUsage[] = [];
+    for (const { input, pre } of parsed) {
+      for (let i = 0; i < pre.originalLines.length; i++) {
+        const line = pre.originalLines[i];
+        if (!wordRe.test(line)) continue;
+        const trimmed = line.trim();
+        if (/^#\s*define/.test(trimmed)) continue;            // 定义行
+        if (/^#\s*(endif|else)\b/.test(trimmed)) continue;    // 区域收尾行（注释里重复宏名）
+        if (/^(\/\/|\/\*|\*)/.test(trimmed)) continue;        // 纯注释行
+        let kind: ConfigUsage['kind'];
+        if (/^#\s*(if|elif)\b/.test(trimmed)) kind = 'condCompile';
+        else if (macro.isFunctionLike && new RegExp(`\\b${macro.name}\\s*\\(`).test(line)) kind = 'call';
+        else if (new RegExp(`\\[[^\\]]*\\b${macro.name}\\b`).test(line)) kind = 'arrayDim';
+        else if (/\bfor\s*\(/.test(line)) kind = 'loopBound';
+        else kind = 'reference';
+        usages.push({ kind, file: input.path, line: i + 1, context: trimmed.slice(0, 80) });
+      }
+    }
+    macro.usages = usages;
+  }
 }
 
 /** 分析整个模块，产出中间模型 */
@@ -419,7 +458,10 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
           comment: proto?.comment ?? null,
           commentSource: proto?.comment ? 'header' : undefined,
           calledFrom: [],
-          polarion: makeMarker('5.2.2.2', 'table', `${group} 接口函数`, true),
+          // Callout 是集成方实现的功能配置点 → 6.2，每个 Callout 一个工作项；其余外部接口 → 5.2.2.2
+          polarion: group === 'Callout'
+            ? makeMarker('6.2', 'function', callee, true)
+            : makeMarker('5.2.2.2', 'table', `${group} 接口函数`, true),
         };
         externalMap.set(callee, ext);
       }
@@ -440,7 +482,7 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
       comment: proto.comment ?? null,
       commentSource: proto.comment ? 'header' : undefined,
       calledFrom: ['(rtSatCont 配置表函数指针引用)'],
-      polarion: makeMarker('5.2.2.2', 'table', 'Callout 接口函数', true),
+      polarion: makeMarker('6.2', 'function', proto.name, true),
     });
   }
 
@@ -474,6 +516,19 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
     .filter(f => f.isStatic)
     .map(f => toUnit(f, '5.2.4.2', 'function'))
     .sort((a, b) => a.lineStart - b.lineStart);
+
+  // ---------- 配置宏用法扫描 + 影响范围回填 ----------
+  scanConfigUsages(parsed, configMacros);
+  for (const macro of configMacros) {
+    const affected = new Set<string>();
+    for (const fn of [...providedFunctions, ...internalFunctions]) {
+      if (fn.conditionalFlags.includes(macro.name)) affected.add(fn.name);
+    }
+    for (const v of variables) {
+      if (v.conditionalFlags.includes(macro.name)) affected.add(v.name);
+    }
+    macro.affects = [...affected].sort();
+  }
 
   return {
     module,

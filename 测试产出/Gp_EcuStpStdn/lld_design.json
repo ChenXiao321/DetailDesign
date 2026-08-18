@@ -900,10 +900,15 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutChkMcuPreRunTest",
         "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "检查 MCU 预运行测试结果。由 MstProcMcuPreRunTest 在启动第二阶段调用；集成方实现预运行测试结果的判定逻辑，确认测试是否通过。",
+        "llmModel": "claude-sample（离线内容源）",
+        "generatedAt": "2026-08-18T09:48:29.243Z"
       }
     },
     {
@@ -927,10 +932,15 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutChkMcuRunTimeTest",
         "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "检查 MCU 运行时测试结果。由 Mainfunction 在运行时周期调用；集成方实现运行时测试结果的判定逻辑。",
+        "llmModel": "claude-sample（离线内容源）",
+        "generatedAt": "2026-08-18T09:48:29.243Z"
       }
     },
     {
@@ -954,10 +964,15 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutChkSbcTest",
         "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "检查 SBC 自检结果。由 MstPostInit 在主核后初始化阶段调用；集成方实现 SBC 自检结果的判定逻辑。",
+        "llmModel": "claude-sample（离线内容源）",
+        "generatedAt": "2026-08-18T09:48:29.243Z"
       }
     },
     {
@@ -981,10 +996,15 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutChkSwtToRun",
         "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "检查切换到运行阶段的结果。由 MstPostInit 调用；集成方实现切换结果的确认逻辑。",
+        "llmModel": "claude-sample（离线内容源）",
+        "generatedAt": "2026-08-18T09:48:29.243Z"
       }
     },
     {
@@ -1009,10 +1029,15 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutGetCoreId",
         "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "从底层驱动获取当前核 ID。集成方需保证返回的核 ID 有效、在配置中已使能，且可用作 0~5 的数组索引；Startup 与 Mainfunction 均依赖该值索引核本地缓冲区。",
+        "llmModel": "claude-sample（离线内容源）",
+        "generatedAt": "2026-08-18T09:48:29.243Z"
       }
     },
     {
@@ -1036,10 +1061,15 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutGetSysTimeMs",
         "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "获取系统毫秒级时间戳。由 Startup 调用，用于记录启动关键节点时间；集成方对接底层计时资源。",
+        "llmModel": "claude-sample（离线内容源）",
+        "generatedAt": "2026-08-18T09:48:29.243Z"
       }
     },
     {
@@ -1071,10 +1101,15 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutInitFailedHnd",
         "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "初始化失败处理。当 Startup 第三阶段检测到初始化结果非零时调用；集成方实现失败后的处理策略（如错误记录、复位请求）。",
+        "llmModel": "claude-sample（离线内容源）",
+        "generatedAt": "2026-08-18T09:48:29.243Z"
       }
     },
     {
@@ -1105,10 +1140,15 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutInitStageOneCore0",
         "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "Core0 第一阶段初始化。由 Startup 在启动第一阶段调用；集成方实现 Core0 特有的早期初始化内容。",
+        "llmModel": "claude-sample（离线内容源）",
+        "generatedAt": "2026-08-18T09:48:29.243Z"
       }
     },
     {
@@ -1139,10 +1179,15 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutInitStageTwoCore0",
         "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "Core0 第二阶段初始化。经 rtSatCont 配置表函数指针在启动第二/三阶段调用；集成方实现该核的第二阶段初始化内容。",
+        "llmModel": "claude-sample（离线内容源）",
+        "generatedAt": "2026-08-18T09:48:29.243Z"
       }
     },
     {
@@ -1173,10 +1218,15 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutInitStageTwoCore1",
         "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "Core1 第二阶段初始化。经 rtSatCont 配置表函数指针在启动第二/三阶段调用；集成方实现该核的第二阶段初始化内容。",
+        "llmModel": "claude-sample（离线内容源）",
+        "generatedAt": "2026-08-18T09:48:29.243Z"
       }
     },
     {
@@ -1207,10 +1257,15 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutInitStageTwoCore2",
         "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "Core2 第二阶段初始化。经 rtSatCont 配置表函数指针在启动第二/三阶段调用（需 ACTIVE_CORE_NUM > 2 参与编译）；集成方实现该核的第二阶段初始化内容。",
+        "llmModel": "claude-sample（离线内容源）",
+        "generatedAt": "2026-08-18T09:48:29.243Z"
       }
     },
     {
@@ -1241,10 +1296,15 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutInitStageTwoCore3",
         "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "Core3 第二阶段初始化。经 rtSatCont 配置表函数指针在启动第二/三阶段调用（需 ACTIVE_CORE_NUM > 3 参与编译）；集成方实现该核的第二阶段初始化内容。",
+        "llmModel": "claude-sample（离线内容源）",
+        "generatedAt": "2026-08-18T09:48:29.243Z"
       }
     },
     {
@@ -1275,10 +1335,15 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutInitStageTwoCore4",
         "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "Core4 第二阶段初始化。经 rtSatCont 配置表函数指针在启动第二/三阶段调用（需 ACTIVE_CORE_NUM > 4 参与编译）；集成方实现该核的第二阶段初始化内容。",
+        "llmModel": "claude-sample（离线内容源）",
+        "generatedAt": "2026-08-18T09:48:29.243Z"
       }
     },
     {
@@ -1309,10 +1374,15 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutInitStageTwoCore5",
         "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "Core5 第二阶段初始化。经 rtSatCont 配置表函数指针在启动第二/三阶段调用（需 ACTIVE_CORE_NUM > 5 参与编译）；集成方实现该核的第二阶段初始化内容。",
+        "llmModel": "claude-sample（离线内容源）",
+        "generatedAt": "2026-08-18T09:48:29.243Z"
       }
     },
     {
@@ -1336,10 +1406,15 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd",
         "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "MCU 预运行测试失败处理。由 MstProcMcuPreRunTest 调用（SAFETY_ACTION_ENABLE 使能时参与编译）；集成方实现失败后的安全动作。",
+        "llmModel": "claude-sample（离线内容源）",
+        "generatedAt": "2026-08-18T09:48:29.243Z"
       }
     },
     {
@@ -1363,10 +1438,15 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd",
         "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "MCU 运行时测试失败处理。由 Mainfunction 周期调用（SAFETY_ACTION_ENABLE 使能时参与编译）；集成方实现失败后的安全动作。",
+        "llmModel": "claude-sample（离线内容源）",
+        "generatedAt": "2026-08-18T09:48:29.243Z"
       }
     },
     {
@@ -1397,10 +1477,15 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutOsErrRecov",
         "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "OS 错误恢复。由 OsErrRecov 接口转发调用；集成方实现具体的 OS 错误恢复策略。",
+        "llmModel": "claude-sample（离线内容源）",
+        "generatedAt": "2026-08-18T09:48:29.243Z"
       }
     },
     {
@@ -1424,10 +1509,15 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase",
         "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "关闭阶段的断电处理。由 PwrShdnInShdnPhase 调用；集成方执行项目具体的断电序列。",
+        "llmModel": "claude-sample（离线内容源）",
+        "generatedAt": "2026-08-18T09:48:29.243Z"
       }
     },
     {
@@ -1451,10 +1541,15 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutPwrShdnInStpPhase",
         "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "启动阶段的断电处理。当 RstM 设置 TryPwrShdn 标志时由 Startup 调用；调用后程序不再返回，集成方执行断电序列。",
+        "llmModel": "claude-sample（离线内容源）",
+        "generatedAt": "2026-08-18T09:48:29.243Z"
       }
     },
     {
@@ -1478,10 +1573,15 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutSafeState",
         "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "安全状态特殊处理。当进入安全状态标志置位时由 Startup 调用；集成方实现安全状态下的系统行为。",
+        "llmModel": "claude-sample（离线内容源）",
+        "generatedAt": "2026-08-18T09:48:29.243Z"
       }
     },
     {
@@ -1512,10 +1612,15 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutSbcInit",
         "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "SBC 初始化。由 Startup 在主核后初始化阶段调用；集成方完成 SBC 初始化，并通过输出参数 SbcInfo_pu32 回写系统启动时的 SBC 信息。",
+        "llmModel": "claude-sample（离线内容源）",
+        "generatedAt": "2026-08-18T09:48:29.243Z"
       }
     },
     {
@@ -1546,10 +1651,15 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutSbcInitInSafeState",
         "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "安全状态下的 SBC 初始化。由 Startup 在安全状态分支调用；集成方完成 SBC 初始化，并通过输出参数 SbcInfo_pu32 回写 SBC 信息。",
+        "llmModel": "claude-sample（离线内容源）",
+        "generatedAt": "2026-08-18T09:48:29.243Z"
       }
     },
     {
@@ -1573,10 +1683,15 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutSbcTestFailedHnd",
         "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "SBC 自检失败处理。由 MstPostInit 调用（SAFETY_ACTION_ENABLE 使能时参与编译）；集成方实现失败后的安全动作。",
+        "llmModel": "claude-sample（离线内容源）",
+        "generatedAt": "2026-08-18T09:48:29.243Z"
       }
     },
     {
@@ -1600,10 +1715,15 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutSwtToRunFailedHnd",
         "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "切换运行阶段失败处理。由 MstPostInit 调用（SAFETY_ACTION_ENABLE 使能时参与编译）；集成方实现失败后的安全动作。",
+        "llmModel": "claude-sample（离线内容源）",
+        "generatedAt": "2026-08-18T09:48:29.243Z"
       }
     },
     {
@@ -1634,10 +1754,15 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutTrapRecov",
         "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "Trap 恢复。由 TrapRecov 接口转发调用；集成方实现 Trap 发生后的恢复策略。",
+        "llmModel": "claude-sample（离线内容源）",
+        "generatedAt": "2026-08-18T09:48:29.243Z"
       }
     },
     {
@@ -2072,12 +2197,189 @@
       "isFunctionLike": false,
       "comment": "define active core number",
       "file": "ConfTemplate\\Gp_EcuStpShdn_Cfg.h",
+      "kind": "general",
+      "usages": [
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_EcuStpShdn_Callout.c",
+          "line": 152,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 1U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_EcuStpShdn_Callout.c",
+          "line": 171,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 2U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_EcuStpShdn_Callout.c",
+          "line": 190,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 3U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_EcuStpShdn_Callout.c",
+          "line": 209,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 4U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_EcuStpShdn_Callout.c",
+          "line": 228,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 5U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_EcuStpShdn_Callout.h",
+          "line": 92,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 1U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_EcuStpShdn_Callout.h",
+          "line": 107,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 2U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_EcuStpShdn_Callout.h",
+          "line": 122,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 3U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_EcuStpShdn_Callout.h",
+          "line": 137,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 4U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_EcuStpShdn_Callout.h",
+          "line": 152,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 5U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 58,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 1U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 68,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 2U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 78,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 3U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 88,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 4U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 98,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 5U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 122,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 1U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 132,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 2U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 142,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 3U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 152,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 4U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 162,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 5U)"
+        },
+        {
+          "kind": "arrayDim",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 324,
+          "context": "uint32  TimeStamp_u32[GP_ECUSTPSHDN_ACTIVE_CORE_NUM];"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 330,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 1U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 334,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 2U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 338,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 3U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 342,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 4U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 346,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 5U)"
+        },
+        {
+          "kind": "loopBound",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 351,
+          "context": "for (Cnt_u32 = 0U; Cnt_u32 < (uint32)GP_ECUSTPSHDN_ACTIVE_CORE_NUM; Cnt_u32++)"
+        }
+      ],
+      "affects": [
+        "Gp_EcuStpShdn_bufSatLocalImplCore1_ltst",
+        "Gp_EcuStpShdn_bufSatLocalImplCore2_ltst",
+        "Gp_EcuStpShdn_bufSatLocalImplCore3_ltst",
+        "Gp_EcuStpShdn_bufSatLocalImplCore4_ltst",
+        "Gp_EcuStpShdn_bufSatLocalImplCore5_ltst"
+      ],
       "polarion": {
         "isWorkItem": false,
-        "chapter": "6",
+        "chapter": "6.1",
         "workItemKind": "config",
         "title": "GP_ECUSTPSHDN_ACTIVE_CORE_NUM",
         "workItemId": null
+      },
+      "generated": {
+        "valueEffect": "定义项目中实际激活的核数量，取值范围 1~6。该值通过 25 处条件编译（> 1U 至 > 5U 五档）裁剪 Core1~Core5 的缓冲区定义与 Callout 代码，同时决定主核 TimeStamp_u32 数组维度和 GetLastSatTimeStamp 的遍历上界。当前配置为 2，即激活 Core0 与 Core1，Core2~Core5 相关代码不参与编译。",
+        "llmModel": "claude-sample（离线内容源）",
+        "generatedAt": "2026-08-18T09:48:29.242Z"
       }
     },
     {
@@ -2086,6 +2388,22 @@
       "isFunctionLike": true,
       "comment": "define NOP",
       "file": "ConfTemplate\\Gp_EcuStpShdn_Cfg.h",
+      "kind": "alias",
+      "usages": [
+        {
+          "kind": "call",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 566,
+          "context": "GP_ECUSTPSHDN_NOP();"
+        },
+        {
+          "kind": "call",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 660,
+          "context": "GP_ECUSTPSHDN_NOP();"
+        }
+      ],
+      "affects": [],
       "polarion": {
         "isWorkItem": false,
         "chapter": "6",
@@ -2100,12 +2418,103 @@
       "isFunctionLike": false,
       "comment": "safety enable",
       "file": "ConfTemplate\\Gp_EcuStpShdn_Cfg.h",
+      "kind": "functional",
+      "usages": [
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_EcuStpShdn_Callout.c",
+          "line": 247,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_EcuStpShdn_Callout.c",
+          "line": 313,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_EcuStpShdn_Callout.h",
+          "line": 232,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_EcuStpShdn_Cfg.h",
+          "line": 52,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 181,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 198,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 582,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 607,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 630,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 638,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 649,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 680,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 745,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)"
+        }
+      ],
+      "affects": [
+        "Gp_EcuStpShdn_CheckInitRslt",
+        "Gp_EcuStpShdn_MstPostInit",
+        "Gp_EcuStpShdn_MstProcMcuPreRunTest"
+      ],
       "polarion": {
         "isWorkItem": false,
-        "chapter": "6",
+        "chapter": "6.2",
         "workItemKind": "config",
         "title": "GP_ECUSTPSHDN_SAFETY_ENABLE",
         "workItemId": null
+      },
+      "generated": {
+        "valueEffect": "安全功能总开关。STD_ON 时编译预运行/运行时自检、安全状态与故障处理相关代码（13 处条件编译）；STD_OFF 时上述代码全部裁剪，且 GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE 不再定义。",
+        "llmModel": "claude-sample（离线内容源）",
+        "generatedAt": "2026-08-18T09:48:29.243Z"
       }
     },
     {
@@ -2114,12 +2523,69 @@
       "isFunctionLike": false,
       "comment": null,
       "file": "ConfTemplate\\Gp_EcuStpShdn_Cfg.h",
+      "kind": "functional",
+      "usages": [
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 247,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 277,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 289,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 301,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 608,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 650,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 688,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 759,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE == STD_ON)"
+        }
+      ],
+      "affects": [],
       "polarion": {
         "isWorkItem": false,
-        "chapter": "6",
+        "chapter": "6.2",
         "workItemKind": "config",
         "title": "GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE",
         "workItemId": null
+      },
+      "generated": {
+        "valueEffect": "安全动作执行开关，仅在 GP_ECUSTPSHDN_SAFETY_ENABLE 为 STD_ON 时有效（Cfg.h 中受其条件编译包裹）。STD_ON 时编译自检失败后的安全动作执行代码（8 处条件编译）；STD_OFF 时仅保留检测与记录，不执行故障处理动作。",
+        "llmModel": "claude-sample（离线内容源）",
+        "generatedAt": "2026-08-18T09:48:29.243Z"
       }
     }
   ],

@@ -1,6 +1,6 @@
 {
   "module": "Gp_EcuStpShdn",
-  "analyzedAt": "2026-08-12T09:42:09.066Z",
+  "analyzedAt": "2026-08-18T09:48:29.174Z",
   "files": [
     {
       "path": "ConfTemplate\\Gp_EcuStpShdn_Callout.c",
@@ -816,9 +816,9 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutChkMcuPreRunTest",
         "workItemId": null
       }
     },
@@ -843,9 +843,9 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutChkMcuRunTimeTest",
         "workItemId": null
       }
     },
@@ -870,9 +870,9 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutChkSbcTest",
         "workItemId": null
       }
     },
@@ -897,9 +897,9 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutChkSwtToRun",
         "workItemId": null
       }
     },
@@ -925,9 +925,9 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutGetCoreId",
         "workItemId": null
       }
     },
@@ -952,9 +952,9 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutGetSysTimeMs",
         "workItemId": null
       }
     },
@@ -987,9 +987,9 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutInitFailedHnd",
         "workItemId": null
       }
     },
@@ -1021,9 +1021,9 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutInitStageOneCore0",
         "workItemId": null
       }
     },
@@ -1055,9 +1055,9 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutInitStageTwoCore0",
         "workItemId": null
       }
     },
@@ -1089,9 +1089,9 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutInitStageTwoCore1",
         "workItemId": null
       }
     },
@@ -1123,9 +1123,9 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutInitStageTwoCore2",
         "workItemId": null
       }
     },
@@ -1157,9 +1157,9 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutInitStageTwoCore3",
         "workItemId": null
       }
     },
@@ -1191,9 +1191,9 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutInitStageTwoCore4",
         "workItemId": null
       }
     },
@@ -1225,9 +1225,9 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutInitStageTwoCore5",
         "workItemId": null
       }
     },
@@ -1252,9 +1252,9 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd",
         "workItemId": null
       }
     },
@@ -1279,9 +1279,9 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd",
         "workItemId": null
       }
     },
@@ -1313,9 +1313,9 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutOsErrRecov",
         "workItemId": null
       }
     },
@@ -1340,9 +1340,9 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase",
         "workItemId": null
       }
     },
@@ -1367,9 +1367,9 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutPwrShdnInStpPhase",
         "workItemId": null
       }
     },
@@ -1394,9 +1394,9 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutSafeState",
         "workItemId": null
       }
     },
@@ -1428,9 +1428,9 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutSbcInit",
         "workItemId": null
       }
     },
@@ -1462,9 +1462,9 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutSbcInitInSafeState",
         "workItemId": null
       }
     },
@@ -1489,9 +1489,9 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutSbcTestFailedHnd",
         "workItemId": null
       }
     },
@@ -1516,9 +1516,9 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutSwtToRunFailedHnd",
         "workItemId": null
       }
     },
@@ -1550,9 +1550,9 @@
       ],
       "polarion": {
         "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Callout 接口函数",
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutTrapRecov",
         "workItemId": null
       }
     },
@@ -1707,9 +1707,12 @@
           "isFunctionLike": false,
           "comment": "undefined status",
           "file": "Gp_EcuStpShdn_Types.h",
+          "kind": "general",
+          "usages": [],
+          "affects": [],
           "polarion": {
             "isWorkItem": false,
-            "chapter": "6",
+            "chapter": "6.1",
             "workItemKind": "config",
             "title": "GP_ECUSTPSHDN_STPSTAGE_UNDEF",
             "workItemId": null
@@ -1721,9 +1724,12 @@
           "isFunctionLike": false,
           "comment": "startup stage one",
           "file": "Gp_EcuStpShdn_Types.h",
+          "kind": "general",
+          "usages": [],
+          "affects": [],
           "polarion": {
             "isWorkItem": false,
-            "chapter": "6",
+            "chapter": "6.1",
             "workItemKind": "config",
             "title": "GP_ECUSTPSHDN_STPSTAGE_ONE",
             "workItemId": null
@@ -1735,9 +1741,12 @@
           "isFunctionLike": false,
           "comment": "startup stage two",
           "file": "Gp_EcuStpShdn_Types.h",
+          "kind": "general",
+          "usages": [],
+          "affects": [],
           "polarion": {
             "isWorkItem": false,
-            "chapter": "6",
+            "chapter": "6.1",
             "workItemKind": "config",
             "title": "GP_ECUSTPSHDN_STPSTAGE_TWO",
             "workItemId": null
@@ -1749,9 +1758,12 @@
           "isFunctionLike": false,
           "comment": "startup stage three",
           "file": "Gp_EcuStpShdn_Types.h",
+          "kind": "general",
+          "usages": [],
+          "affects": [],
           "polarion": {
             "isWorkItem": false,
-            "chapter": "6",
+            "chapter": "6.1",
             "workItemKind": "config",
             "title": "GP_ECUSTPSHDN_STPSTAGE_THREE",
             "workItemId": null
@@ -1780,9 +1792,12 @@
           "isFunctionLike": false,
           "comment": "undefined status",
           "file": "Gp_EcuStpShdn_Types.h",
+          "kind": "general",
+          "usages": [],
+          "affects": [],
           "polarion": {
             "isWorkItem": false,
-            "chapter": "6",
+            "chapter": "6.1",
             "workItemKind": "config",
             "title": "GP_ECUSTPSHDN_SELFTEST_UNDEF",
             "workItemId": null
@@ -1794,9 +1809,12 @@
           "isFunctionLike": false,
           "comment": "self test pass",
           "file": "Gp_EcuStpShdn_Types.h",
+          "kind": "general",
+          "usages": [],
+          "affects": [],
           "polarion": {
             "isWorkItem": false,
-            "chapter": "6",
+            "chapter": "6.1",
             "workItemKind": "config",
             "title": "GP_ECUSTPSHDN_SELFTEST_PASS",
             "workItemId": null
@@ -1808,9 +1826,12 @@
           "isFunctionLike": false,
           "comment": "self test fail",
           "file": "Gp_EcuStpShdn_Types.h",
+          "kind": "general",
+          "usages": [],
+          "affects": [],
           "polarion": {
             "isWorkItem": false,
-            "chapter": "6",
+            "chapter": "6.1",
             "workItemKind": "config",
             "title": "GP_ECUSTPSHDN_SELFTEST_FAIL",
             "workItemId": null
@@ -1964,9 +1985,181 @@
       "isFunctionLike": false,
       "comment": "define active core number",
       "file": "ConfTemplate\\Gp_EcuStpShdn_Cfg.h",
+      "kind": "general",
+      "usages": [
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_EcuStpShdn_Callout.c",
+          "line": 152,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 1U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_EcuStpShdn_Callout.c",
+          "line": 171,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 2U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_EcuStpShdn_Callout.c",
+          "line": 190,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 3U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_EcuStpShdn_Callout.c",
+          "line": 209,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 4U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_EcuStpShdn_Callout.c",
+          "line": 228,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 5U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_EcuStpShdn_Callout.h",
+          "line": 92,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 1U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_EcuStpShdn_Callout.h",
+          "line": 107,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 2U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_EcuStpShdn_Callout.h",
+          "line": 122,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 3U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_EcuStpShdn_Callout.h",
+          "line": 137,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 4U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_EcuStpShdn_Callout.h",
+          "line": 152,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 5U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 58,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 1U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 68,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 2U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 78,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 3U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 88,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 4U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 98,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 5U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 122,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 1U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 132,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 2U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 142,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 3U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 152,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 4U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 162,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 5U)"
+        },
+        {
+          "kind": "arrayDim",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 324,
+          "context": "uint32  TimeStamp_u32[GP_ECUSTPSHDN_ACTIVE_CORE_NUM];"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 330,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 1U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 334,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 2U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 338,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 3U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 342,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 4U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 346,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 5U)"
+        },
+        {
+          "kind": "loopBound",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 351,
+          "context": "for (Cnt_u32 = 0U; Cnt_u32 < (uint32)GP_ECUSTPSHDN_ACTIVE_CORE_NUM; Cnt_u32++)"
+        }
+      ],
+      "affects": [
+        "Gp_EcuStpShdn_bufSatLocalImplCore1_ltst",
+        "Gp_EcuStpShdn_bufSatLocalImplCore2_ltst",
+        "Gp_EcuStpShdn_bufSatLocalImplCore3_ltst",
+        "Gp_EcuStpShdn_bufSatLocalImplCore4_ltst",
+        "Gp_EcuStpShdn_bufSatLocalImplCore5_ltst"
+      ],
       "polarion": {
         "isWorkItem": false,
-        "chapter": "6",
+        "chapter": "6.1",
         "workItemKind": "config",
         "title": "GP_ECUSTPSHDN_ACTIVE_CORE_NUM",
         "workItemId": null
@@ -1978,6 +2171,22 @@
       "isFunctionLike": true,
       "comment": "define NOP",
       "file": "ConfTemplate\\Gp_EcuStpShdn_Cfg.h",
+      "kind": "alias",
+      "usages": [
+        {
+          "kind": "call",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 566,
+          "context": "GP_ECUSTPSHDN_NOP();"
+        },
+        {
+          "kind": "call",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 660,
+          "context": "GP_ECUSTPSHDN_NOP();"
+        }
+      ],
+      "affects": [],
       "polarion": {
         "isWorkItem": false,
         "chapter": "6",
@@ -1992,9 +2201,95 @@
       "isFunctionLike": false,
       "comment": "safety enable",
       "file": "ConfTemplate\\Gp_EcuStpShdn_Cfg.h",
+      "kind": "functional",
+      "usages": [
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_EcuStpShdn_Callout.c",
+          "line": 247,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_EcuStpShdn_Callout.c",
+          "line": 313,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_EcuStpShdn_Callout.h",
+          "line": 232,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_EcuStpShdn_Cfg.h",
+          "line": 52,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 181,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 198,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 582,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 607,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 630,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 638,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 649,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 680,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 745,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)"
+        }
+      ],
+      "affects": [
+        "Gp_EcuStpShdn_CheckInitRslt",
+        "Gp_EcuStpShdn_MstPostInit",
+        "Gp_EcuStpShdn_MstProcMcuPreRunTest"
+      ],
       "polarion": {
         "isWorkItem": false,
-        "chapter": "6",
+        "chapter": "6.2",
         "workItemKind": "config",
         "title": "GP_ECUSTPSHDN_SAFETY_ENABLE",
         "workItemId": null
@@ -2006,9 +2301,61 @@
       "isFunctionLike": false,
       "comment": null,
       "file": "ConfTemplate\\Gp_EcuStpShdn_Cfg.h",
+      "kind": "functional",
+      "usages": [
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 247,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 277,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 289,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 301,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 608,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 650,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 688,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 759,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE == STD_ON)"
+        }
+      ],
+      "affects": [],
       "polarion": {
         "isWorkItem": false,
-        "chapter": "6",
+        "chapter": "6.2",
         "workItemKind": "config",
         "title": "GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE",
         "workItemId": null

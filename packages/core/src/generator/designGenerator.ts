@@ -4,7 +4,8 @@ import type {
 import type { LLMProvider } from '../llm/provider.js';
 import {
   buildFunctionDescriptionPrompt, buildFlowchartPrompt,
-  buildStateMachinePrompt, buildSequencePrompt,
+  buildStateMachinePrompt, buildSequencePrompt, buildConfigValueEffectPrompt,
+  buildCalloutDescriptionPrompt,
 } from '../llm/prompts.js';
 
 /** 从 LLM 输出中提取 Mermaid 源码（剥 ```mermaid 围栏）；非法则抛错 */
@@ -162,6 +163,41 @@ export async function generateDesign(
   if (!only || only.includes('dynamic')) {
     log('生成动态设计（状态机/序列图）');
     model.dynamicDesign = await generateDynamicDesign(model, provider);
+  }
+
+  if (!only || only.includes('configs')) {
+    for (const macro of model.configMacros) {
+      if (macro.kind === 'alias') continue;   // 别名宏非配置项，不生成取值说明
+      log(`生成配置说明: ${macro.name}`);
+      const { system, user } = buildConfigValueEffectPrompt(model, macro);
+      const text = await generateWithRetry(provider, system, user, (o) => {
+        const cleaned = o.trim();
+        if (cleaned.length < 10) throw new Error('说明过短（<10字符）');
+        return cleaned;
+      });
+      macro.generated = {
+        valueEffect: text,
+        llmModel: provider.name,
+        generatedAt: new Date().toISOString(),
+      };
+    }
+  }
+
+  if (!only || only.includes('callouts')) {
+    for (const ext of model.calledExternalFunctions.filter(e => e.group === 'Callout')) {
+      log(`生成 Callout 描述: ${ext.name}`);
+      const { system, user } = buildCalloutDescriptionPrompt(model, ext);
+      const text = await generateWithRetry(provider, system, user, (o) => {
+        const cleaned = o.trim();
+        if (cleaned.length < 10) throw new Error('描述过短（<10字符）');
+        return cleaned;
+      });
+      ext.generated = {
+        detailedDescription: text,
+        llmModel: provider.name,
+        generatedAt: new Date().toISOString(),
+      };
+    }
   }
 
   return model;

@@ -132,7 +132,15 @@ export interface ExternalInterface {
   /** 说明来源：header=从头文件注释提取；inferred=按命名/调用上下文推断（报告标"推断，待确认"） */
   commentSource?: 'header' | 'inferred';
   calledFrom: string[];         // 模块内哪些函数调它
+  generated?: GeneratedFunctionContent;   // LLM 生成内容（Callout 的主要功能描述用 detailedDescription）
   polarion: PolarionMarker;     // 表格类工作项标记
+}
+
+export interface ConfigUsage {
+  kind: 'condCompile' | 'arrayDim' | 'loopBound' | 'call' | 'reference';
+  file: string;
+  line: number;               // 1-based 行号
+  context: string;            // 该行内容（截断至 ~80 字符）
 }
 
 export interface ConfigMacro {
@@ -141,6 +149,17 @@ export interface ConfigMacro {
   isFunctionLike: boolean;      // 带参数的宏，如 NOP()
   comment: string | null;
   file: string;
+  /** 分类：值（去括号）为 STD_ON/STD_OFF 的特性开关 → functional（6.2）；
+   * 无参函数式宏且取值仅为另一宏调用（如 NOP → MCAL_NOP()）→ alias（实现别名，非配置项）；
+   * 其余 → general（6.1） */
+  kind: 'general' | 'functional' | 'alias';
+  usages: ConfigUsage[];        // 模块内引用点（静态扫描）
+  affects: string[];            // conditionalFlags 含本宏的函数/变量/类型名（回填）
+  generated?: {
+    valueEffect: string;        // 取值影响说明（LLM 生成）
+    llmModel: string;
+    generatedAt: string;
+  };
   polarion: PolarionMarker;
 }
 

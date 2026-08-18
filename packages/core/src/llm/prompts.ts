@@ -1,4 +1,4 @@
-import type { FunctionUnit, ModuleModel } from '../model/types.js';
+import type { ConfigMacro, ConfigUsage, ExternalInterface, FunctionUnit, ModuleModel } from '../model/types.js';
 
 /**
  * Prompt 设计原则（针对 35B 级 MoE 模型）：
@@ -84,7 +84,74 @@ export function buildFlowchartPrompt(
   return { system: SYSTEM_DESIGNER, user: lines.join('\n') };
 }
 
-/** 状态机 Mermaid（5.3.1） */
+/** Callout 函数主要功能描述（6.2.x Callout function 各工作项的 Description） */
+export function buildCalloutDescriptionPrompt(
+  model: ModuleModel,
+  ext: ExternalInterface,
+): { system: string; user: string } {
+  const lines: string[] = [];
+  lines.push(`# 任务`);
+  lines.push(`为以下 Callout 回调函数撰写详细设计文档第 6 章的主要功能描述。`);
+  lines.push(`Callout 由集成方在配置代码中实现，是本模块的功能配置点；描述重点是"集成方需要实现什么"。`);
+  lines.push(``);
+  lines.push(`# Callout 信息`);
+  lines.push(`- 所属模块: ${model.module}`);
+  lines.push(`- 函数签名: ${ext.signature || ext.name}`);
+  if (ext.comment?.description) lines.push(`- 头文件注释: ${ext.comment.description.replace(/\n/g, ' ')}`);
+  const params = [...(ext.comment?.paramsIn ?? []), ...(ext.comment?.paramsInout ?? []), ...(ext.comment?.paramsOut ?? [])];
+  if (params.length > 0) lines.push(`- 参数: ${params.map(p => p.raw).join('；')}`);
+  if (ext.comment?.returnValue && ext.comment.returnValue !== 'None') lines.push(`- 返回值: ${ext.comment.returnValue}`);
+  lines.push(`- 模块内调用者: ${ext.calledFrom.join(', ')}`);
+  lines.push(``);
+  lines.push(`# 输出要求`);
+  lines.push(`用 1~3 句话说明该 Callout 的主要功能：集成方需要实现什么行为、返回值/输出参数的含义、模块在何时调用它。`);
+  lines.push(`直接输出描述正文，不要输出标题、列表编号或任何格式标记。`);
+  return { system: SYSTEM_DESIGNER, user: lines.join('\n') };
+}
+export function buildConfigValueEffectPrompt(
+  model: ModuleModel,
+  macro: ConfigMacro,
+): { system: string; user: string } {
+  const KIND_LABEL: Record<ConfigUsage['kind'], string> = {
+    condCompile: '条件编译裁剪',
+    arrayDim: '数组维度',
+    loopBound: '循环上界',
+    call: '代码中调用',
+    reference: '引用',
+  };
+  const lines: string[] = [];
+  lines.push(`# 任务`);
+  lines.push(`为以下 C 配置宏撰写详细设计文档第 6 章的「取值影响」说明，即该配置项怎么使用、取不同值时的行为差异。`);
+  lines.push(``);
+  lines.push(`# 配置宏信息`);
+  lines.push(`- 所属模块: ${model.module}`);
+  lines.push(`- 宏名: ${macro.name}`);
+  lines.push(`- 当前取值: ${macro.value || '(空)'}`);
+  lines.push(`- 分类: ${macro.kind === 'functional' ? '功能配置（按项目需求裁剪特性）' : '通用配置（所有项目通用的基础行为）'}`);
+  if (macro.comment) lines.push(`- 代码注释: ${macro.comment}`);
+  lines.push(``);
+  lines.push(`# 使用事实（静态分析结果，必须以其为准）`);
+  if (macro.usages.length === 0) {
+    lines.push(`- 模块内未发现引用点`);
+  } else {
+    const byKind = new Map<string, number>();
+    for (const u of macro.usages) byKind.set(u.kind, (byKind.get(u.kind) ?? 0) + 1);
+    for (const [k, n] of byKind) lines.push(`- ${KIND_LABEL[k as ConfigUsage['kind']]}: ${n} 处`);
+    const condExprs = [...new Set(macro.usages.filter(u => u.kind === 'condCompile').map(u => u.context.replace(/^#\s*(if|elif)\s*/, '')))];
+    if (condExprs.length > 0) lines.push(`- 条件编译表达式: ${condExprs.join(' ; ')}`);
+  }
+  if (macro.affects.length > 0) {
+    lines.push(`- 条件编译直接影响的函数/变量: ${macro.affects.join(', ')}`);
+  }
+  lines.push(``);
+  lines.push(`# 输出要求`);
+  lines.push(`用 2~4 句话说明：`);
+  lines.push(`1. 该配置项控制什么行为`);
+  lines.push(`2. 各候选取值（如 STD_ON/STD_OFF 或数值范围）分别产生什么效果`);
+  lines.push(`3. 与其他配置项的依赖关系（仅当使用事实中有体现才写）`);
+  lines.push(`直接输出说明正文，不要输出标题、列表编号或任何格式标记。`);
+  return { system: SYSTEM_DESIGNER, user: lines.join('\n') };
+}
 export function buildStateMachinePrompt(model: ModuleModel): { system: string; user: string } | null {
   // 找枚举式 typedef（带 relatedDefines 的）作为状态机候选
   const stateType = model.types.find(t => t.kind === 'typedef' && (t.relatedDefines?.length ?? 0) >= 3);

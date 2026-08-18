@@ -1,5 +1,5 @@
 import type {
-  ModuleModel, FunctionUnit, HeaderComment, ParamDoc,
+  ModuleModel, FunctionUnit, HeaderComment, ParamDoc, ConfigMacro, ConfigUsage, ExternalInterface,
 } from '../model/types.js';
 
 /** HTML 转义 */
@@ -81,6 +81,34 @@ function functionCard(fn: FunctionUnit, diagramBlock?: (src: string) => string, 
 </div>`;
 }
 
+/** Callout 工作项卡片（6.2.x Callout function，字段与函数卡片对齐模板） */
+function calloutCard(e: ExternalInterface, secNo: string): string {
+  const c: HeaderComment | null = e.comment;
+  const desc = e.generated?.detailedDescription
+    ? `${esc(e.generated.detailedDescription)}<span class="inferred">推断，待确认</span>`
+    : (c?.description ? esc(c.description) : '<span class="todo">（待生成）</span>');
+  return `<h5>${secNo} <code>${esc(e.name)}</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">${esc(e.name)}</span>
+    <span class="wi-tag">工作项 · ${esc(e.polarion.chapter)}</span>
+    <span class="wi-id">${esc(e.polarion.workItemId ?? '待导入分配ID')}</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>${esc(e.name)}</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>${esc(e.signature || e.name)}</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>${esc(c?.syncAsync ?? 'Synchronous')}</td></tr>
+    <tr><td class="label">Reentrancy</td><td>${esc(c?.reentrancy ?? 'Non Reentrancy')}</td></tr>
+    ${paramRows(c?.paramsIn ?? [], 'in')}
+    ${paramRows(c?.paramsInout ?? [], 'inout')}
+    ${paramRows(c?.paramsOut ?? [], 'out')}
+    <tr><td class="label">Return value</td><td>${esc(c?.returnValue ?? 'None')}</td></tr>
+    <tr><td class="label">Description</td><td class="desc">${desc}</td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">${e.calledFrom.map(esc).join(', ')}</td></tr>
+  </table>
+</div>`;
+}
+
 /** 文件用途说明（4.1 文件说明表）：按角色 + 分析数据生成中文描述 */
 function describeFile(path: string, role: string, model: ModuleModel): string {
   const base = path.split(/[\\/]/).pop() ?? path;
@@ -109,7 +137,7 @@ function describeFile(path: string, role: string, model: ModuleModel): string {
     }
     case 'config': {
       if (isC) return '配置数据文件（配置代码）：定义模块配置数据（核运行时容器、函数指针表等）';
-      const n = model.configMacros.filter(c => c.file === path).length;
+      const n = model.configMacros.filter(c => c.file === path && c.kind !== 'alias').length;
       return n > 0
         ? `配置参数头文件（配置代码）：定义 ${n} 个配置宏`
         : '配置数据头文件（配置代码）：配置数据的类型与声明';
@@ -140,6 +168,8 @@ nav a { margin-right:16px; color:var(--accent); text-decoration:none; }
 main { max-width:1060px; margin:0 auto; padding:24px 40px 80px; }
 h2 { border-bottom:2px solid var(--accent); padding-bottom:6px; margin-top:48px; font-size:19px; }
 h3 { margin-top:32px; font-size:16px; color:#0a3069; }
+h4 { margin-top:24px; font-size:14px; color:#24292f; }
+h5 { margin-top:20px; font-size:13px; color:#24292f; }
 .workitem { border:1px solid var(--border); border-radius:8px; margin:20px 0; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.06); }
 .wi-header { background:#0a3069; color:#fff; padding:10px 16px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
 .wi-title { font-weight:600; font-family:Consolas,monospace; }
@@ -249,8 +279,10 @@ ${detailTable}`;
   }).join('\n');
 
   // ---- 5.2.4.1 内部变量 ----
-  const internalVarRows = model.internalVariables.map(v =>
-    `<tr><td><code>${esc(v.name)}</code></td><td><code>${esc(v.type)}</code></td><td>${esc(v.comment)}</td>${v.conditionalFlags.length ? `<td class="muted small">条件: <code>${esc(v.conditionalFlags.join(','))}</code></td>` : '<td></td>'}</tr>`).join('');
+  const internalVarRows = model.internalVariables.map(v => {
+    const badges = [v.isConst ? '<span class="badge">const</span>' : '', v.isVolatile ? '<span class="badge">volatile</span>' : ''].join('');
+    return `<tr><td><code>${esc(v.name)}</code>${badges}</td><td><code>${esc(v.type)}</code></td><td>${esc(v.comment)}</td>${v.conditionalFlags.length ? `<td class="muted small">条件: <code>${esc(v.conditionalFlags.join(','))}</code></td>` : '<td></td>'}</tr>`;
+  }).join('');
   const staticVarNames: ReadonlySet<string> = new Set(model.internalVariables.map(v => v.name));
 
   // ---- 5.2.3.1 提供的外部全局变量 ----
@@ -297,9 +329,55 @@ ${dd.stateMachine.transitions.map(t => `<tr><td><code>${esc(t.from)}</code></td>
 ${diagramBlock(s.diagram)}
 <details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">${escRaw(s.diagram)}</pre></details>`).join('\n');
 
-  // ---- 6 配置 ----
-  const cfgRows = model.configMacros.map(c =>
-    `<tr><td><code>${esc(c.name)}</code></td><td><code>${esc(c.value)}</code></td><td>${c.isFunctionLike ? '函数式宏' : '值宏'}</td><td>${esc(c.comment)}</td></tr>`).join('');
+  // ---- 6 配置（6.1 通用 / 6.2 功能，每个配置项一个子章节） ----
+  const USAGE_KIND_LABEL: Record<ConfigUsage['kind'], string> = {
+    condCompile: '条件编译裁剪',
+    arrayDim: '数组维度',
+    loopBound: '循环上界',
+    call: '代码中调用',
+    reference: '直接引用',
+  };
+  const configSubsection = (c: ConfigMacro, secNo: string): string => {
+    const usageParts: string[] = [];
+    const condUsages = c.usages.filter(u => u.kind === 'condCompile');
+    if (condUsages.length > 0) {
+      const exprs = [...new Set(condUsages.map(u => u.context.replace(/^#\s*(?:if|elif)\s*/, '')))];
+      usageParts.push(`<li>条件编译裁剪 ${condUsages.length} 处：${exprs.map(e => `<code>${esc(e)}</code>`).join('，')}</li>`);
+    }
+    for (const kind of ['arrayDim', 'loopBound', 'call', 'reference'] as const) {
+      const us = c.usages.filter(u => u.kind === kind);
+      if (us.length === 0) continue;
+      const locs = us.map(u => `${esc(u.file.split(/[\\/]/).pop()!)}:${u.line}`).join('，');
+      usageParts.push(`<li>${USAGE_KIND_LABEL[kind]} ${us.length} 处（${locs}），如 <code>${esc(us[0].context)}</code>${us.length > 1 ? ' 等' : ''}</li>`);
+    }
+    if (c.usages.length === 0) usageParts.push('<li class="muted">模块内未发现引用点</li>');
+    const example = `#define ${c.name}${c.isFunctionLike ? '()' : ''}   ${c.value || ''}${c.comment ? `  /* ${c.comment} */` : ''}`;
+    return `<h4>${secNo} <code>${esc(c.name)}</code></h4>
+<table class="simple"><tr><th>配置项</th><th>取值</th><th>形式</th><th>说明</th></tr>
+<tr><td><code>${esc(c.name)}</code></td><td><code>${esc(c.value)}</code></td><td>${c.isFunctionLike ? '函数式宏' : '值宏'}</td><td>${esc(c.comment)}</td></tr></table>
+<p><b>配置示例：</b></p>
+<pre class="plantuml">${escRaw(example)}</pre>
+<p><b>使用方式（静态分析事实）：</b></p>
+<ul>${usageParts.join('')}</ul>
+${c.affects.length > 0 ? `<p><b>影响范围（条件编译直接作用的函数/变量）：</b>${c.affects.map(a => `<code>${esc(a)}</code>`).join('，')}</p>` : ''}
+<p><b>取值影响：</b>${c.generated ? `${esc(c.generated.valueEffect)}<span class="inferred">推断，待确认</span>` : '<span class="todo">（待 LLM 生成）</span>'}</p>`;
+  };
+  const configSections = (list: ConfigMacro[], base: string) =>
+    list.length === 0
+      ? '<p class="muted">注：本模块无此类配置项。</p>'
+      : list.map((c, i) => configSubsection(c, `${base}.${i + 1}`)).join('\n');
+  const generalCfgSection = configSections(model.configMacros.filter(c => c.kind === 'general'), '6.1');
+  const functionalCfgs = model.configMacros.filter(c => c.kind === 'functional');
+  const functionalCfgSection = configSections(functionalCfgs, '6.2');
+  // Callout 回调函数：由集成方在配置代码中实现，属于功能配置点
+  const callouts = model.calledExternalFunctions.filter(e => e.group === 'Callout');
+  const calloutSecNo = `6.2.${functionalCfgs.length + 1}`;
+  const calloutCfgSection = callouts.length === 0 ? '' : `<h4>${calloutSecNo} Callout function</h4>
+<p class="muted">Callout 回调函数由集成方在配置代码（ConfTemplate）中实现，是本模块的功能配置点：通过编写/修改 Callout 实现来适配项目策略（核ID获取、阶段初始化、故障处理等）。每个 Callout 为一个独立工作项。</p>
+${callouts.map((e, i) => calloutCard(e, `${calloutSecNo}.${i + 1}`)).join('\n')}`;
+  const aliasCfgs = model.configMacros.filter(c => c.kind === 'alias');
+  const aliasCfgNote = aliasCfgs.length === 0 ? '' :
+    `<p class="muted">注：以下宏为固定别名（实现重定义，无可选值，不属于配置项）：${aliasCfgs.map(c => `<code>${esc(c.name)}${c.isFunctionLike ? '()' : ''} → ${esc(c.value)}</code>`).join('，')}</p>`;
 
   // ---- 文件清单（主文件在前） ----
   const fileRows = [...model.files]
@@ -354,7 +432,7 @@ ${typesSection}
 <h3>5.2.2.1 全局变量</h3>
 <p class="muted">注：本模块未引用外部模块的全局变量，跨模块数据交互均通过函数接口完成。</p>
 <h3>5.2.2.2 接口函数</h3>
-<p class="muted">注：Callout 回调接口（${calloutCount} 个）属于本模块配置代码（ConfTemplate），由集成方实现，不属于外部接口，未列入本节；其声明见 4.1 文件说明，调用关系见各接口函数卡片的「调用」行。</p>
+<p class="muted">注：Callout 回调接口（${calloutCount} 个）属于本模块配置代码（ConfTemplate），由集成方实现，不属于外部接口，未列入本节；其作为功能配置点见 ${calloutSecNo} Callout function，声明见 4.1 文件说明，调用关系见各接口函数卡片的「调用」行。</p>
 ${calledSection}
 
 <h3 id="s523">5.2.3 提供的外部接口</h3>
@@ -365,7 +443,7 @@ ${model.providedFunctions.map(f => functionCard(f, diagramBlock, staticVarNames)
 
 <h3 id="s524">5.2.4 内部接口</h3>
 <h3>5.2.4.1 全局变量定义</h3>
-<p class="muted">注：以下为本模块的静态全局变量（<code>static</code> 声明，内部链接，仅本模块内可见，外部模块不可直接访问）。</p>
+<p class="muted">注：以下为本模块的静态全局变量/常量（<code>static</code> 声明，内部链接，仅本模块内可见，外部模块不可直接访问）；其中 <code>const</code> 修饰的为只读常量，<code>volatile</code> 修饰的为易变变量。</p>
 <table class="simple"><tr><th>变量名</th><th>数据类型</th><th>说明</th><th>备注</th></tr>${internalVarRows}</table>
 <h3>5.2.4.2 内部函数说明</h3>
 ${model.internalFunctions.map(f => functionCard(f, diagramBlock, staticVarNames)).join('\n')}
@@ -376,7 +454,13 @@ ${seqSection}
 
 <h2 id="s6">6 配置说明</h2>
 <h3>6.1 通用配置说明</h3>
-<table class="simple"><tr><th>配置项</th><th>取值</th><th>形式</th><th>说明</th></tr>${cfgRows}</table>
+<p class="muted">通用配置项适用于所有项目，控制模块基础行为。</p>
+${generalCfgSection}
+<h3>6.2 功能配置说明</h3>
+<p class="muted">功能配置项根据项目需求裁剪模块特性。</p>
+${functionalCfgSection}
+${calloutCfgSection}
+${aliasCfgNote}
 </main>
 ${opts?.mermaidJs ? `<script>${opts.mermaidJs}</script>
 <script>mermaid.initialize({ startOnLoad: true, securityLevel: 'loose', theme: 'neutral', sequence: { showSequenceNumbers: true } });</script>` : ''}

@@ -184,5 +184,37 @@
     "Gp_TstApp_PreRunPhase": "测试应用预运行阶段执行（安全功能）",
     "Gp_TstApp_RunTimePhase": "测试应用运行时阶段执行（安全功能）",
     "Gp_TstApp_SwitchToRunPhase": "切换到运行阶段（安全功能）"
+  },
+  "configs": {
+    "GP_ECUSTPSHDN_ACTIVE_CORE_NUM": "定义项目中实际激活的核数量，取值范围 1~6。该值通过 25 处条件编译（> 1U 至 > 5U 五档）裁剪 Core1~Core5 的缓冲区定义与 Callout 代码，同时决定主核 TimeStamp_u32 数组维度和 GetLastSatTimeStamp 的遍历上界。当前配置为 2，即激活 Core0 与 Core1，Core2~Core5 相关代码不参与编译。",
+    "GP_ECUSTPSHDN_SAFETY_ENABLE": "安全功能总开关。STD_ON 时编译预运行/运行时自检、安全状态与故障处理相关代码（13 处条件编译）；STD_OFF 时上述代码全部裁剪，且 GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE 不再定义。",
+    "GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE": "安全动作执行开关，仅在 GP_ECUSTPSHDN_SAFETY_ENABLE 为 STD_ON 时有效（Cfg.h 中受其条件编译包裹）。STD_ON 时编译自检失败后的安全动作执行代码（8 处条件编译）；STD_OFF 时仅保留检测与记录，不执行故障处理动作。"
+  },
+  "callouts": {
+    "Gp_EcuStpShdn_CalloutChkMcuPreRunTest": "检查 MCU 预运行测试结果。由 MstProcMcuPreRunTest 在启动第二阶段调用；集成方实现预运行测试结果的判定逻辑，确认测试是否通过。",
+    "Gp_EcuStpShdn_CalloutChkMcuRunTimeTest": "检查 MCU 运行时测试结果。由 Mainfunction 在运行时周期调用；集成方实现运行时测试结果的判定逻辑。",
+    "Gp_EcuStpShdn_CalloutChkSbcTest": "检查 SBC 自检结果。由 MstPostInit 在主核后初始化阶段调用；集成方实现 SBC 自检结果的判定逻辑。",
+    "Gp_EcuStpShdn_CalloutChkSwtToRun": "检查切换到运行阶段的结果。由 MstPostInit 调用；集成方实现切换结果的确认逻辑。",
+    "Gp_EcuStpShdn_CalloutGetCoreId": "从底层驱动获取当前核 ID。集成方需保证返回的核 ID 有效、在配置中已使能，且可用作 0~5 的数组索引；Startup 与 Mainfunction 均依赖该值索引核本地缓冲区。",
+    "Gp_EcuStpShdn_CalloutGetSysTimeMs": "获取系统毫秒级时间戳。由 Startup 调用，用于记录启动关键节点时间；集成方对接底层计时资源。",
+    "Gp_EcuStpShdn_CalloutInitFailedHnd": "初始化失败处理。当 Startup 第三阶段检测到初始化结果非零时调用；集成方实现失败后的处理策略（如错误记录、复位请求）。",
+    "Gp_EcuStpShdn_CalloutInitStageOneCore0": "Core0 第一阶段初始化。由 Startup 在启动第一阶段调用；集成方实现 Core0 特有的早期初始化内容。",
+    "Gp_EcuStpShdn_CalloutInitStageTwoCore0": "Core0 第二阶段初始化。经 rtSatCont 配置表函数指针在启动第二/三阶段调用；集成方实现该核的第二阶段初始化内容。",
+    "Gp_EcuStpShdn_CalloutInitStageTwoCore1": "Core1 第二阶段初始化。经 rtSatCont 配置表函数指针在启动第二/三阶段调用；集成方实现该核的第二阶段初始化内容。",
+    "Gp_EcuStpShdn_CalloutInitStageTwoCore2": "Core2 第二阶段初始化。经 rtSatCont 配置表函数指针在启动第二/三阶段调用（需 ACTIVE_CORE_NUM > 2 参与编译）；集成方实现该核的第二阶段初始化内容。",
+    "Gp_EcuStpShdn_CalloutInitStageTwoCore3": "Core3 第二阶段初始化。经 rtSatCont 配置表函数指针在启动第二/三阶段调用（需 ACTIVE_CORE_NUM > 3 参与编译）；集成方实现该核的第二阶段初始化内容。",
+    "Gp_EcuStpShdn_CalloutInitStageTwoCore4": "Core4 第二阶段初始化。经 rtSatCont 配置表函数指针在启动第二/三阶段调用（需 ACTIVE_CORE_NUM > 4 参与编译）；集成方实现该核的第二阶段初始化内容。",
+    "Gp_EcuStpShdn_CalloutInitStageTwoCore5": "Core5 第二阶段初始化。经 rtSatCont 配置表函数指针在启动第二/三阶段调用（需 ACTIVE_CORE_NUM > 5 参与编译）；集成方实现该核的第二阶段初始化内容。",
+    "Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd": "MCU 预运行测试失败处理。由 MstProcMcuPreRunTest 调用（SAFETY_ACTION_ENABLE 使能时参与编译）；集成方实现失败后的安全动作。",
+    "Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd": "MCU 运行时测试失败处理。由 Mainfunction 周期调用（SAFETY_ACTION_ENABLE 使能时参与编译）；集成方实现失败后的安全动作。",
+    "Gp_EcuStpShdn_CalloutOsErrRecov": "OS 错误恢复。由 OsErrRecov 接口转发调用；集成方实现具体的 OS 错误恢复策略。",
+    "Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase": "关闭阶段的断电处理。由 PwrShdnInShdnPhase 调用；集成方执行项目具体的断电序列。",
+    "Gp_EcuStpShdn_CalloutPwrShdnInStpPhase": "启动阶段的断电处理。当 RstM 设置 TryPwrShdn 标志时由 Startup 调用；调用后程序不再返回，集成方执行断电序列。",
+    "Gp_EcuStpShdn_CalloutSafeState": "安全状态特殊处理。当进入安全状态标志置位时由 Startup 调用；集成方实现安全状态下的系统行为。",
+    "Gp_EcuStpShdn_CalloutSbcInit": "SBC 初始化。由 Startup 在主核后初始化阶段调用；集成方完成 SBC 初始化，并通过输出参数 SbcInfo_pu32 回写系统启动时的 SBC 信息。",
+    "Gp_EcuStpShdn_CalloutSbcInitInSafeState": "安全状态下的 SBC 初始化。由 Startup 在安全状态分支调用；集成方完成 SBC 初始化，并通过输出参数 SbcInfo_pu32 回写 SBC 信息。",
+    "Gp_EcuStpShdn_CalloutSbcTestFailedHnd": "SBC 自检失败处理。由 MstPostInit 调用（SAFETY_ACTION_ENABLE 使能时参与编译）；集成方实现失败后的安全动作。",
+    "Gp_EcuStpShdn_CalloutSwtToRunFailedHnd": "切换运行阶段失败处理。由 MstPostInit 调用（SAFETY_ACTION_ENABLE 使能时参与编译）；集成方实现失败后的安全动作。",
+    "Gp_EcuStpShdn_CalloutTrapRecov": "Trap 恢复。由 TrapRecov 接口转发调用；集成方实现 Trap 发生后的恢复策略。"
   }
 }

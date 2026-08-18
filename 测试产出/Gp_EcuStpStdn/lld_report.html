@@ -15,6 +15,8 @@ nav a { margin-right:16px; color:var(--accent); text-decoration:none; }
 main { max-width:1060px; margin:0 auto; padding:24px 40px 80px; }
 h2 { border-bottom:2px solid var(--accent); padding-bottom:6px; margin-top:48px; font-size:19px; }
 h3 { margin-top:32px; font-size:16px; color:#0a3069; }
+h4 { margin-top:24px; font-size:14px; color:#24292f; }
+h5 { margin-top:20px; font-size:13px; color:#24292f; }
 .workitem { border:1px solid var(--border); border-radius:8px; margin:20px 0; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.06); }
 .wi-header { background:#0a3069; color:#fff; padding:10px 16px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
 .wi-title { font-weight:600; font-family:Consolas,monospace; }
@@ -58,7 +60,7 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
 
 <h2 id="s4">4 程序系统结构</h2>
 <h3>4.1 文件说明</h3>
-<table class="simple"><tr><th>文件</th><th>说明</th></tr><tr><td><code>Gp_EcuStpShdn.c</code></td><td>模块主实现文件：实现 8 个对外接口函数与 4 个内部函数；主要入口为 Startup、Mainfunction</td></tr><tr><td><code>Gp_EcuStpShdn.h</code></td><td>模块对外头文件：声明 8 个对外接口函数</td></tr><tr><td><code>Gp_EcuStpShdn_Types.h</code></td><td>类型定义头文件：定义 2 个枚举式 typedef 与 3 个结构体</td></tr><tr><td><code>ConfTemplate\Gp_EcuStpShdn_Cfg.h</code></td><td>配置参数头文件（配置代码）：定义 4 个配置宏</td></tr><tr><td><code>ConfTemplate\Gp_EcuStpShdn_CfgData.h</code></td><td>配置数据头文件（配置代码）：配置数据的类型与声明</td></tr><tr><td><code>ConfTemplate\Gp_EcuStpShdn_Cfg.c</code></td><td>配置数据文件（配置代码）：定义模块配置数据（核运行时容器、函数指针表等）</td></tr><tr><td><code>ConfTemplate\Gp_EcuStpShdn_Callout.h</code></td><td>Callout 声明头文件（配置代码）：声明 25 个由集成方实现的回调接口</td></tr><tr><td><code>ConfTemplate\Gp_EcuStpShdn_Callout.c</code></td><td>Callout 实现文件（配置代码）：由集成方实现 25 个回调接口的具体策略</td></tr><tr><td><code>ConfTemplate\Gp_EcuStpShdn_Memmap.h</code></td><td>内存映射头文件：定义变量/函数的存储段放置（MemMap），不影响功能逻辑</td></tr></table>
+<table class="simple"><tr><th>文件</th><th>说明</th></tr><tr><td><code>Gp_EcuStpShdn.c</code></td><td>模块主实现文件：实现 8 个对外接口函数与 4 个内部函数；主要入口为 Startup、Mainfunction</td></tr><tr><td><code>Gp_EcuStpShdn.h</code></td><td>模块对外头文件：声明 8 个对外接口函数</td></tr><tr><td><code>Gp_EcuStpShdn_Types.h</code></td><td>类型定义头文件：定义 2 个枚举式 typedef 与 3 个结构体</td></tr><tr><td><code>ConfTemplate\Gp_EcuStpShdn_Cfg.h</code></td><td>配置参数头文件（配置代码）：定义 3 个配置宏</td></tr><tr><td><code>ConfTemplate\Gp_EcuStpShdn_CfgData.h</code></td><td>配置数据头文件（配置代码）：配置数据的类型与声明</td></tr><tr><td><code>ConfTemplate\Gp_EcuStpShdn_Cfg.c</code></td><td>配置数据文件（配置代码）：定义模块配置数据（核运行时容器、函数指针表等）</td></tr><tr><td><code>ConfTemplate\Gp_EcuStpShdn_Callout.h</code></td><td>Callout 声明头文件（配置代码）：声明 25 个由集成方实现的回调接口</td></tr><tr><td><code>ConfTemplate\Gp_EcuStpShdn_Callout.c</code></td><td>Callout 实现文件（配置代码）：由集成方实现 25 个回调接口的具体策略</td></tr><tr><td><code>ConfTemplate\Gp_EcuStpShdn_Memmap.h</code></td><td>内存映射头文件：定义变量/函数的存储段放置（MemMap），不影响功能逻辑</td></tr></table>
 
 <h3>4.2 文件包含关系</h3>
 <p class="muted">模块内部文件间的包含关系如下图所示（由 #include 静态分析生成）。</p>
@@ -127,7 +129,7 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
 <h3>5.2.2.1 全局变量</h3>
 <p class="muted">注：本模块未引用外部模块的全局变量，跨模块数据交互均通过函数接口完成。</p>
 <h3>5.2.2.2 接口函数</h3>
-<p class="muted">注：Callout 回调接口（25 个）属于本模块配置代码（ConfTemplate），由集成方实现，不属于外部接口，未列入本节；其声明见 4.1 文件说明，调用关系见各接口函数卡片的「调用」行。</p>
+<p class="muted">注：Callout 回调接口（25 个）属于本模块配置代码（ConfTemplate），由集成方实现，不属于外部接口，未列入本节；其作为功能配置点见 6.2.3 Callout function，声明见 4.1 文件说明，调用关系见各接口函数卡片的「调用」行。</p>
 <h3>Gp_RstM <span class="badge">4 个接口</span></h3>
 <table class="simple"><tr><th>接口</th><th>说明</th><th>模块内调用者</th></tr><tr><td><code>Gp_RstM_GetLastRstTypeInfo</code></td><td>获取上次复位的类型信息（复位类型、复位 ID、复位核） <span class="inferred">推断，待确认</span></td><td class="muted small">Gp_EcuStpShdn_Startup</td></tr><tr><td><code>Gp_RstM_Init</code></td><td>复位管理器初始化 <span class="inferred">推断，待确认</span></td><td class="muted small">Gp_EcuStpShdn_Startup</td></tr><tr><td><code>Gp_RstM_InitOne</code></td><td>复位管理器第一阶段初始化 <span class="inferred">推断，待确认</span></td><td class="muted small">Gp_EcuStpShdn_Startup</td></tr><tr><td><code>Gp_RstM_InitTwo</code></td><td>复位管理器第二阶段初始化 <span class="inferred">推断，待确认</span></td><td class="muted small">Gp_EcuStpShdn_Startup</td></tr></table>
 <h3>Gp_TstApp <span class="badge">4 个接口</span></h3>
@@ -460,8 +462,8 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
 
 <h3 id="s524">5.2.4 内部接口</h3>
 <h3>5.2.4.1 全局变量定义</h3>
-<p class="muted">注：以下为本模块的静态全局变量（<code>static</code> 声明，内部链接，仅本模块内可见，外部模块不可直接访问）。</p>
-<table class="simple"><tr><th>变量名</th><th>数据类型</th><th>说明</th><th>备注</th></tr><tr><td><code>Gp_EcuStpShdn_bufMstLocalImpl_ltst</code></td><td><code>static volatile Gp_EcuStpShdn_MstLocalImplType</code></td><td>master local implement runtime buffer</td><td></td></tr><tr><td><code>Gp_EcuStpShdn_bufSatLocalImplCore0_ltst</code></td><td><code>static volatile Gp_EcuStpShdn_SatLocalImplType</code></td><td>satellite local implement runtime buffer core0</td><td></td></tr><tr><td><code>Gp_EcuStpShdn_bufSatLocalImplCore1_ltst</code></td><td><code>static volatile Gp_EcuStpShdn_SatLocalImplType</code></td><td>satellite local implement runtime buffer core1</td><td class="muted small">条件: <code>GP_ECUSTPSHDN_ACTIVE_CORE_NUM</code></td></tr><tr><td><code>Gp_EcuStpShdn_bufSatLocalImplCore2_ltst</code></td><td><code>static volatile Gp_EcuStpShdn_SatLocalImplType</code></td><td>satellite local implement runtime buffer core2</td><td class="muted small">条件: <code>GP_ECUSTPSHDN_ACTIVE_CORE_NUM</code></td></tr><tr><td><code>Gp_EcuStpShdn_bufSatLocalImplCore3_ltst</code></td><td><code>static volatile Gp_EcuStpShdn_SatLocalImplType</code></td><td>satellite local implement runtime buffer core3</td><td class="muted small">条件: <code>GP_ECUSTPSHDN_ACTIVE_CORE_NUM</code></td></tr><tr><td><code>Gp_EcuStpShdn_bufSatLocalImplCore4_ltst</code></td><td><code>static volatile Gp_EcuStpShdn_SatLocalImplType</code></td><td>satellite local implement runtime buffer core4</td><td class="muted small">条件: <code>GP_ECUSTPSHDN_ACTIVE_CORE_NUM</code></td></tr><tr><td><code>Gp_EcuStpShdn_bufSatLocalImplCore5_ltst</code></td><td><code>static volatile Gp_EcuStpShdn_SatLocalImplType</code></td><td>satellite local implement runtime buffer core5</td><td class="muted small">条件: <code>GP_ECUSTPSHDN_ACTIVE_CORE_NUM</code></td></tr><tr><td><code>Gp_EcuStpShdn_rtSatCont_lcatst</code></td><td><code>static const Gp_EcuStpShdn_SatRunTimeType</code></td><td>FC runtime buffer address container for satellite local implement variables</td><td></td></tr></table>
+<p class="muted">注：以下为本模块的静态全局变量/常量（<code>static</code> 声明，内部链接，仅本模块内可见，外部模块不可直接访问）；其中 <code>const</code> 修饰的为只读常量，<code>volatile</code> 修饰的为易变变量。</p>
+<table class="simple"><tr><th>变量名</th><th>数据类型</th><th>说明</th><th>备注</th></tr><tr><td><code>Gp_EcuStpShdn_bufMstLocalImpl_ltst</code><span class="badge">volatile</span></td><td><code>static volatile Gp_EcuStpShdn_MstLocalImplType</code></td><td>master local implement runtime buffer</td><td></td></tr><tr><td><code>Gp_EcuStpShdn_bufSatLocalImplCore0_ltst</code><span class="badge">volatile</span></td><td><code>static volatile Gp_EcuStpShdn_SatLocalImplType</code></td><td>satellite local implement runtime buffer core0</td><td></td></tr><tr><td><code>Gp_EcuStpShdn_bufSatLocalImplCore1_ltst</code><span class="badge">volatile</span></td><td><code>static volatile Gp_EcuStpShdn_SatLocalImplType</code></td><td>satellite local implement runtime buffer core1</td><td class="muted small">条件: <code>GP_ECUSTPSHDN_ACTIVE_CORE_NUM</code></td></tr><tr><td><code>Gp_EcuStpShdn_bufSatLocalImplCore2_ltst</code><span class="badge">volatile</span></td><td><code>static volatile Gp_EcuStpShdn_SatLocalImplType</code></td><td>satellite local implement runtime buffer core2</td><td class="muted small">条件: <code>GP_ECUSTPSHDN_ACTIVE_CORE_NUM</code></td></tr><tr><td><code>Gp_EcuStpShdn_bufSatLocalImplCore3_ltst</code><span class="badge">volatile</span></td><td><code>static volatile Gp_EcuStpShdn_SatLocalImplType</code></td><td>satellite local implement runtime buffer core3</td><td class="muted small">条件: <code>GP_ECUSTPSHDN_ACTIVE_CORE_NUM</code></td></tr><tr><td><code>Gp_EcuStpShdn_bufSatLocalImplCore4_ltst</code><span class="badge">volatile</span></td><td><code>static volatile Gp_EcuStpShdn_SatLocalImplType</code></td><td>satellite local implement runtime buffer core4</td><td class="muted small">条件: <code>GP_ECUSTPSHDN_ACTIVE_CORE_NUM</code></td></tr><tr><td><code>Gp_EcuStpShdn_bufSatLocalImplCore5_ltst</code><span class="badge">volatile</span></td><td><code>static volatile Gp_EcuStpShdn_SatLocalImplType</code></td><td>satellite local implement runtime buffer core5</td><td class="muted small">条件: <code>GP_ECUSTPSHDN_ACTIVE_CORE_NUM</code></td></tr><tr><td><code>Gp_EcuStpShdn_rtSatCont_lcatst</code><span class="badge">const</span></td><td><code>static const Gp_EcuStpShdn_SatRunTimeType</code></td><td>FC runtime buffer address container for satellite local implement variables</td><td></td></tr></table>
 <h3>5.2.4.2 内部函数说明</h3>
 
 <div class="workitem" id="Gp_EcuStpShdn::Gp_EcuStpShdn_CheckInitRslt">
@@ -828,7 +830,539 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
 
 <h2 id="s6">6 配置说明</h2>
 <h3>6.1 通用配置说明</h3>
-<table class="simple"><tr><th>配置项</th><th>取值</th><th>形式</th><th>说明</th></tr><tr><td><code>GP_ECUSTPSHDN_ACTIVE_CORE_NUM</code></td><td><code>(2U)</code></td><td>值宏</td><td>define active core number</td></tr><tr><td><code>GP_ECUSTPSHDN_NOP</code></td><td><code>MCAL_NOP()</code></td><td>函数式宏</td><td>define NOP</td></tr><tr><td><code>GP_ECUSTPSHDN_SAFETY_ENABLE</code></td><td><code>(STD_ON)</code></td><td>值宏</td><td>safety enable</td></tr><tr><td><code>GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE</code></td><td><code>(STD_ON)</code></td><td>值宏</td><td></td></tr></table>
+<p class="muted">通用配置项适用于所有项目，控制模块基础行为。</p>
+<h4>6.1.1 <code>GP_ECUSTPSHDN_ACTIVE_CORE_NUM</code></h4>
+<table class="simple"><tr><th>配置项</th><th>取值</th><th>形式</th><th>说明</th></tr>
+<tr><td><code>GP_ECUSTPSHDN_ACTIVE_CORE_NUM</code></td><td><code>(2U)</code></td><td>值宏</td><td>define active core number</td></tr></table>
+<p><b>配置示例：</b></p>
+<pre class="plantuml">#define GP_ECUSTPSHDN_ACTIVE_CORE_NUM   (2U)  /* define active core number */</pre>
+<p><b>使用方式（静态分析事实）：</b></p>
+<ul><li>条件编译裁剪 25 处：<code>(GP_ECUSTPSHDN_ACTIVE_CORE_NUM &gt; 1U)</code>，<code>(GP_ECUSTPSHDN_ACTIVE_CORE_NUM &gt; 2U)</code>，<code>(GP_ECUSTPSHDN_ACTIVE_CORE_NUM &gt; 3U)</code>，<code>(GP_ECUSTPSHDN_ACTIVE_CORE_NUM &gt; 4U)</code>，<code>(GP_ECUSTPSHDN_ACTIVE_CORE_NUM &gt; 5U)</code></li><li>数组维度 1 处（Gp_EcuStpShdn.c:324），如 <code>uint32  TimeStamp_u32[GP_ECUSTPSHDN_ACTIVE_CORE_NUM];</code></li><li>循环上界 1 处（Gp_EcuStpShdn.c:351），如 <code>for (Cnt_u32 = 0U; Cnt_u32 &lt; (uint32)GP_ECUSTPSHDN_ACTIVE_CORE_NUM; Cnt_u32++)</code></li></ul>
+<p><b>影响范围（条件编译直接作用的函数/变量）：</b><code>Gp_EcuStpShdn_bufSatLocalImplCore1_ltst</code>，<code>Gp_EcuStpShdn_bufSatLocalImplCore2_ltst</code>，<code>Gp_EcuStpShdn_bufSatLocalImplCore3_ltst</code>，<code>Gp_EcuStpShdn_bufSatLocalImplCore4_ltst</code>，<code>Gp_EcuStpShdn_bufSatLocalImplCore5_ltst</code></p>
+<p><b>取值影响：</b>定义项目中实际激活的核数量，取值范围 1~6。该值通过 25 处条件编译（&gt; 1U 至 &gt; 5U 五档）裁剪 Core1~Core5 的缓冲区定义与 Callout 代码，同时决定主核 TimeStamp_u32 数组维度和 GetLastSatTimeStamp 的遍历上界。当前配置为 2，即激活 Core0 与 Core1，Core2~Core5 相关代码不参与编译。<span class="inferred">推断，待确认</span></p>
+<h3>6.2 功能配置说明</h3>
+<p class="muted">功能配置项根据项目需求裁剪模块特性。</p>
+<h4>6.2.1 <code>GP_ECUSTPSHDN_SAFETY_ENABLE</code></h4>
+<table class="simple"><tr><th>配置项</th><th>取值</th><th>形式</th><th>说明</th></tr>
+<tr><td><code>GP_ECUSTPSHDN_SAFETY_ENABLE</code></td><td><code>(STD_ON)</code></td><td>值宏</td><td>safety enable</td></tr></table>
+<p><b>配置示例：</b></p>
+<pre class="plantuml">#define GP_ECUSTPSHDN_SAFETY_ENABLE   (STD_ON)  /* safety enable */</pre>
+<p><b>使用方式（静态分析事实）：</b></p>
+<ul><li>条件编译裁剪 13 处：<code>(GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)</code></li></ul>
+<p><b>影响范围（条件编译直接作用的函数/变量）：</b><code>Gp_EcuStpShdn_CheckInitRslt</code>，<code>Gp_EcuStpShdn_MstPostInit</code>，<code>Gp_EcuStpShdn_MstProcMcuPreRunTest</code></p>
+<p><b>取值影响：</b>安全功能总开关。STD_ON 时编译预运行/运行时自检、安全状态与故障处理相关代码（13 处条件编译）；STD_OFF 时上述代码全部裁剪，且 GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE 不再定义。<span class="inferred">推断，待确认</span></p>
+<h4>6.2.2 <code>GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE</code></h4>
+<table class="simple"><tr><th>配置项</th><th>取值</th><th>形式</th><th>说明</th></tr>
+<tr><td><code>GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE</code></td><td><code>(STD_ON)</code></td><td>值宏</td><td></td></tr></table>
+<p><b>配置示例：</b></p>
+<pre class="plantuml">#define GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE   (STD_ON)</pre>
+<p><b>使用方式（静态分析事实）：</b></p>
+<ul><li>条件编译裁剪 8 处：<code>(GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE == STD_ON)</code></li></ul>
+
+<p><b>取值影响：</b>安全动作执行开关，仅在 GP_ECUSTPSHDN_SAFETY_ENABLE 为 STD_ON 时有效（Cfg.h 中受其条件编译包裹）。STD_ON 时编译自检失败后的安全动作执行代码（8 处条件编译）；STD_OFF 时仅保留检测与记录，不执行故障处理动作。<span class="inferred">推断，待确认</span></p>
+<h4>6.2.3 Callout function</h4>
+<p class="muted">Callout 回调函数由集成方在配置代码（ConfTemplate）中实现，是本模块的功能配置点：通过编写/修改 Callout 实现来适配项目策略（核ID获取、阶段初始化、故障处理等）。每个 Callout 为一个独立工作项。</p>
+<h5>6.2.3.1 <code>Gp_EcuStpShdn_CalloutChkMcuPreRunTest</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutChkMcuPreRunTest</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutChkMcuPreRunTest</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>boolean Gp_EcuStpShdn_CalloutChkMcuPreRunTest(void)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">检查 MCU 预运行测试结果。由 MstProcMcuPreRunTest 在启动第二阶段调用；集成方实现预运行测试结果的判定逻辑，确认测试是否通过。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_EcuStpShdn_MstProcMcuPreRunTest</td></tr>
+  </table>
+</div>
+<h5>6.2.3.2 <code>Gp_EcuStpShdn_CalloutChkMcuRunTimeTest</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutChkMcuRunTimeTest</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutChkMcuRunTimeTest</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>boolean Gp_EcuStpShdn_CalloutChkMcuRunTimeTest(void)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">检查 MCU 运行时测试结果。由 Mainfunction 在运行时周期调用；集成方实现运行时测试结果的判定逻辑。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_EcuStpShdn_Mainfunction</td></tr>
+  </table>
+</div>
+<h5>6.2.3.3 <code>Gp_EcuStpShdn_CalloutChkSbcTest</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutChkSbcTest</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutChkSbcTest</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>boolean Gp_EcuStpShdn_CalloutChkSbcTest(void)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">检查 SBC 自检结果。由 MstPostInit 在主核后初始化阶段调用；集成方实现 SBC 自检结果的判定逻辑。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_EcuStpShdn_MstPostInit</td></tr>
+  </table>
+</div>
+<h5>6.2.3.4 <code>Gp_EcuStpShdn_CalloutChkSwtToRun</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutChkSwtToRun</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutChkSwtToRun</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>boolean Gp_EcuStpShdn_CalloutChkSwtToRun(void)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">检查切换到运行阶段的结果。由 MstPostInit 调用；集成方实现切换结果的确认逻辑。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_EcuStpShdn_MstPostInit</td></tr>
+  </table>
+</div>
+<h5>6.2.3.5 <code>Gp_EcuStpShdn_CalloutGetCoreId</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutGetCoreId</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutGetCoreId</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>uint32 Gp_EcuStpShdn_CalloutGetCoreId(void)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>uint32 - core ID</td></tr>
+    <tr><td class="label">Description</td><td class="desc">从底层驱动获取当前核 ID。集成方需保证返回的核 ID 有效、在配置中已使能，且可用作 0~5 的数组索引；Startup 与 Mainfunction 均依赖该值索引核本地缓冲区。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_EcuStpShdn_Startup, Gp_EcuStpShdn_Mainfunction</td></tr>
+  </table>
+</div>
+<h5>6.2.3.6 <code>Gp_EcuStpShdn_CalloutGetSysTimeMs</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutGetSysTimeMs</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutGetSysTimeMs</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>uint32 Gp_EcuStpShdn_CalloutGetSysTimeMs(void)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>uint32 - system time million second</td></tr>
+    <tr><td class="label">Description</td><td class="desc">获取系统毫秒级时间戳。由 Startup 调用，用于记录启动关键节点时间；集成方对接底层计时资源。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_EcuStpShdn_Startup</td></tr>
+  </table>
+</div>
+<h5>6.2.3.7 <code>Gp_EcuStpShdn_CalloutInitFailedHnd</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutInitFailedHnd</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutInitFailedHnd</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_CalloutInitFailedHnd(uint32 InitRslt_u32)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td><code>InitRslt_u32</code><br><span class="muted">uint32; initialization result</span></td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">初始化失败处理。当 Startup 第三阶段检测到初始化结果非零时调用；集成方实现失败后的处理策略（如错误记录、复位请求）。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_EcuStpShdn_MstPostInit, Gp_EcuStpShdn_Startup</td></tr>
+  </table>
+</div>
+<h5>6.2.3.8 <code>Gp_EcuStpShdn_CalloutInitStageOneCore0</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutInitStageOneCore0</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutInitStageOneCore0</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_CalloutInitStageOneCore0(Gp_EcuStpShdn_SatLocalImplType* Impl_ptst)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td><code>Impl_ptst</code><br><span class="muted">volatile Gp_EcuStpShdn_SatLocalImplType*; pointer to satellite local implement</span></td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">Core0 第一阶段初始化。由 Startup 在启动第一阶段调用；集成方实现 Core0 特有的早期初始化内容。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_EcuStpShdn_Startup</td></tr>
+  </table>
+</div>
+<h5>6.2.3.9 <code>Gp_EcuStpShdn_CalloutInitStageTwoCore0</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutInitStageTwoCore0</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutInitStageTwoCore0</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_CalloutInitStageTwoCore0(Gp_EcuStpShdn_SatLocalImplType* Impl_ptst)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td><code>Impl_ptst</code><br><span class="muted">volatile Gp_EcuStpShdn_SatLocalImplType*; pointer to satellite local implement</span></td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">Core0 第二阶段初始化。经 rtSatCont 配置表函数指针在启动第二/三阶段调用；集成方实现该核的第二阶段初始化内容。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">(rtSatCont 配置表函数指针引用)</td></tr>
+  </table>
+</div>
+<h5>6.2.3.10 <code>Gp_EcuStpShdn_CalloutInitStageTwoCore1</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutInitStageTwoCore1</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutInitStageTwoCore1</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_CalloutInitStageTwoCore1(Gp_EcuStpShdn_SatLocalImplType* Impl_ptst)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td><code>Impl_ptst</code><br><span class="muted">volatile Gp_EcuStpShdn_SatLocalImplType*; pointer to satellite local implement</span></td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">Core1 第二阶段初始化。经 rtSatCont 配置表函数指针在启动第二/三阶段调用；集成方实现该核的第二阶段初始化内容。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">(rtSatCont 配置表函数指针引用)</td></tr>
+  </table>
+</div>
+<h5>6.2.3.11 <code>Gp_EcuStpShdn_CalloutInitStageTwoCore2</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutInitStageTwoCore2</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutInitStageTwoCore2</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_CalloutInitStageTwoCore2(Gp_EcuStpShdn_SatLocalImplType* Impl_ptst)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td><code>Impl_ptst</code><br><span class="muted">volatile Gp_EcuStpShdn_SatLocalImplType*; pointer to satellite local implement</span></td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">Core2 第二阶段初始化。经 rtSatCont 配置表函数指针在启动第二/三阶段调用（需 ACTIVE_CORE_NUM &gt; 2 参与编译）；集成方实现该核的第二阶段初始化内容。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">(rtSatCont 配置表函数指针引用)</td></tr>
+  </table>
+</div>
+<h5>6.2.3.12 <code>Gp_EcuStpShdn_CalloutInitStageTwoCore3</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutInitStageTwoCore3</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutInitStageTwoCore3</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_CalloutInitStageTwoCore3(Gp_EcuStpShdn_SatLocalImplType* Impl_ptst)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td><code>Impl_ptst</code><br><span class="muted">volatile Gp_EcuStpShdn_SatLocalImplType*; pointer to satellite local implement</span></td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">Core3 第二阶段初始化。经 rtSatCont 配置表函数指针在启动第二/三阶段调用（需 ACTIVE_CORE_NUM &gt; 3 参与编译）；集成方实现该核的第二阶段初始化内容。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">(rtSatCont 配置表函数指针引用)</td></tr>
+  </table>
+</div>
+<h5>6.2.3.13 <code>Gp_EcuStpShdn_CalloutInitStageTwoCore4</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutInitStageTwoCore4</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutInitStageTwoCore4</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_CalloutInitStageTwoCore4(Gp_EcuStpShdn_SatLocalImplType* Impl_ptst)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td><code>Impl_ptst</code><br><span class="muted">volatile Gp_EcuStpShdn_SatLocalImplType*; pointer to satellite local implement</span></td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">Core4 第二阶段初始化。经 rtSatCont 配置表函数指针在启动第二/三阶段调用（需 ACTIVE_CORE_NUM &gt; 4 参与编译）；集成方实现该核的第二阶段初始化内容。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">(rtSatCont 配置表函数指针引用)</td></tr>
+  </table>
+</div>
+<h5>6.2.3.14 <code>Gp_EcuStpShdn_CalloutInitStageTwoCore5</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutInitStageTwoCore5</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutInitStageTwoCore5</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_CalloutInitStageTwoCore5(Gp_EcuStpShdn_SatLocalImplType* Impl_ptst)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td><code>Impl_ptst</code><br><span class="muted">volatile Gp_EcuStpShdn_SatLocalImplType*; pointer to satellite local implement</span></td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">Core5 第二阶段初始化。经 rtSatCont 配置表函数指针在启动第二/三阶段调用（需 ACTIVE_CORE_NUM &gt; 5 参与编译）；集成方实现该核的第二阶段初始化内容。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">(rtSatCont 配置表函数指针引用)</td></tr>
+  </table>
+</div>
+<h5>6.2.3.15 <code>Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd(void)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">MCU 预运行测试失败处理。由 MstProcMcuPreRunTest 调用（SAFETY_ACTION_ENABLE 使能时参与编译）；集成方实现失败后的安全动作。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_EcuStpShdn_MstProcMcuPreRunTest</td></tr>
+  </table>
+</div>
+<h5>6.2.3.16 <code>Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd(void)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">MCU 运行时测试失败处理。由 Mainfunction 周期调用（SAFETY_ACTION_ENABLE 使能时参与编译）；集成方实现失败后的安全动作。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_EcuStpShdn_Mainfunction</td></tr>
+  </table>
+</div>
+<h5>6.2.3.17 <code>Gp_EcuStpShdn_CalloutOsErrRecov</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutOsErrRecov</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutOsErrRecov</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_CalloutOsErrRecov(uint8 OsStatus_u8)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td><code>OsStatus_u8</code><br><span class="muted">uint8; OS status</span></td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">OS 错误恢复。由 OsErrRecov 接口转发调用；集成方实现具体的 OS 错误恢复策略。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_EcuStpShdn_OsErrRecov</td></tr>
+  </table>
+</div>
+<h5>6.2.3.18 <code>Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase(void)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">关闭阶段的断电处理。由 PwrShdnInShdnPhase 调用；集成方执行项目具体的断电序列。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_EcuStpShdn_PwrShdnInShdnPhase</td></tr>
+  </table>
+</div>
+<h5>6.2.3.19 <code>Gp_EcuStpShdn_CalloutPwrShdnInStpPhase</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutPwrShdnInStpPhase</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutPwrShdnInStpPhase</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_CalloutPwrShdnInStpPhase(void)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">启动阶段的断电处理。当 RstM 设置 TryPwrShdn 标志时由 Startup 调用；调用后程序不再返回，集成方执行断电序列。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_EcuStpShdn_Startup</td></tr>
+  </table>
+</div>
+<h5>6.2.3.20 <code>Gp_EcuStpShdn_CalloutSafeState</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutSafeState</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutSafeState</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_CalloutSafeState(void)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">安全状态特殊处理。当进入安全状态标志置位时由 Startup 调用；集成方实现安全状态下的系统行为。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_EcuStpShdn_Startup</td></tr>
+  </table>
+</div>
+<h5>6.2.3.21 <code>Gp_EcuStpShdn_CalloutSbcInit</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutSbcInit</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutSbcInit</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_CalloutSbcInit(uint32* SbcInfo_pu32)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td><code>SbcInfo_pu32</code><br><span class="muted">uint32*; SBC information when system start up</span></td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">SBC 初始化。由 Startup 在主核后初始化阶段调用；集成方完成 SBC 初始化，并通过输出参数 SbcInfo_pu32 回写系统启动时的 SBC 信息。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_EcuStpShdn_Startup</td></tr>
+  </table>
+</div>
+<h5>6.2.3.22 <code>Gp_EcuStpShdn_CalloutSbcInitInSafeState</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutSbcInitInSafeState</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutSbcInitInSafeState</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_CalloutSbcInitInSafeState(uint32* SbcInfo_pu32)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td><code>SbcInfo_pu32</code><br><span class="muted">uint32*; SBC information when system start up</span></td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">安全状态下的 SBC 初始化。由 Startup 在安全状态分支调用；集成方完成 SBC 初始化，并通过输出参数 SbcInfo_pu32 回写 SBC 信息。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_EcuStpShdn_Startup</td></tr>
+  </table>
+</div>
+<h5>6.2.3.23 <code>Gp_EcuStpShdn_CalloutSbcTestFailedHnd</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutSbcTestFailedHnd</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutSbcTestFailedHnd</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_CalloutSbcTestFailedHnd(void)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">SBC 自检失败处理。由 MstPostInit 调用（SAFETY_ACTION_ENABLE 使能时参与编译）；集成方实现失败后的安全动作。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_EcuStpShdn_MstPostInit</td></tr>
+  </table>
+</div>
+<h5>6.2.3.24 <code>Gp_EcuStpShdn_CalloutSwtToRunFailedHnd</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutSwtToRunFailedHnd</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutSwtToRunFailedHnd</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_CalloutSwtToRunFailedHnd(void)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">切换运行阶段失败处理。由 MstPostInit 调用（SAFETY_ACTION_ENABLE 使能时参与编译）；集成方实现失败后的安全动作。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_EcuStpShdn_MstPostInit</td></tr>
+  </table>
+</div>
+<h5>6.2.3.25 <code>Gp_EcuStpShdn_CalloutTrapRecov</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutTrapRecov</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutTrapRecov</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_CalloutTrapRecov(uint8 OsStatus_u8)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td><code>OsStatus_u8</code><br><span class="muted">uint8; OS status</span></td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">Trap 恢复。由 TrapRecov 接口转发调用；集成方实现 Trap 发生后的恢复策略。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_EcuStpShdn_TrapRecov</td></tr>
+  </table>
+</div>
+<p class="muted">注：以下宏为固定别名（实现重定义，无可选值，不属于配置项）：<code>GP_ECUSTPSHDN_NOP() → MCAL_NOP()</code></p>
 </main>
 <script>"use strict";var __esbuild_esm_mermaid=(()=>{var cxe=Object.create;var R1=Object.defineProperty;var uxe=Object.getOwnPropertyDescriptor;var hxe=Object.getOwnPropertyNames;var fxe=Object.getPrototypeOf,dxe=Object.prototype.hasOwnProperty;var o=(t,e)=>R1(t,"name",{value:e,configurable:!0});var M=(t,e)=>()=>(t&&(e=t(t=0)),e);var Ni=(t,e)=>()=>(e||t((e={exports:{}}).exports,e),e.exports),vr=(t,e)=>{for(var r in e)R1(t,r,{get:e[r],enumerable:!0})},Cb=(t,e,r,n)=>{if(e&&typeof e=="object"||typeof e=="function")for(let i of hxe(e))!dxe.call(t,i)&&i!==r&&R1(t,i,{get:()=>e[i],enumerable:!(n=uxe(e,i))||n.enumerable});return t},Er=(t,e,r)=>(Cb(t,e,"default"),r&&Cb(r,e,"default")),ka=(t,e,r)=>(r=t!=null?cxe(fxe(t)):{},Cb(e||!t||!t.__esModule?R1(r,"default",{value:t,enumerable:!0}):r,t)),pxe=t=>Cb(R1({},"__esModule",{value:!0}),t);var Ab=Ni((wS,TS)=>{"use strict";(function(t,e){typeof wS=="object"&&typeof TS<"u"?TS.exports=e():typeof define=="function"&&define.amd?define(e):(t=typeof globalThis<"u"?globalThis:t||self).dayjs=e()})(wS,function(){"use strict";var t=1e3,e=6e4,r=36e5,n="millisecond",i="second",a="minute",s="hour",l="day",u="week",h="month",f="quarter",d="year",p="date",m="Invalid Date",g=/^(\d{4})[-/]?(\d{1,2})?[-/]?(\d{0,2})[Tt\s]*(\d{1,2})?:?(\d{1,2})?:?(\d{1,2})?[.:]?(\d+)?$/,y=/\[([^\]]+)]|Y{1,4}|M{1,4}|D{1,2}|d{1,4}|H{1,2}|h{1,2}|a|A|m{1,2}|s{1,2}|Z{1,2}|SSS/g,v={name:"en",weekdays:"Sunday_Monday_Tuesday_Wednesday_Thursday_Friday_Saturday".split("_"),months:"January_February_March_April_May_June_July_August_September_October_November_December".split("_"),ordinal:o(function(k){var R=["th","st","nd","rd"],S=k%100;return"["+k+(R[(S-20)%10]||R[S]||R[0])+"]"},"ordinal")},x=o(function(k,R,S){var O=String(k);return!O||O.length>=R?k:""+Array(R+1-O.length).join(S)+k},"m"),b={s:x,z:o(function(k){var R=-k.utcOffset(),S=Math.abs(R),O=Math.floor(S/60),N=S%60;return(R<=0?"+":"-")+x(O,2,"0")+":"+x(N,2,"0")},"z"),m:o(function k(R,S){if(R.date()<S.date())return-k(S,R);var O=12*(S.year()-R.year())+(S.month()-R.month()),N=R.clone().add(O,h),P=S-N<0,F=R.clone().add(O+(P?-1:1),h);return+(-(O+(S-N)/(P?N-F:F-N))||0)},"t"),a:o(function(k){return k<0?Math.ceil(k)||0:Math.floor(k)},"a"),p:o(function(k){return{M:h,y:d,w:u,d:l,D:p,h:s,m:a,s:i,ms:n,Q:f}[k]||String(k||"").toLowerCase().replace(/s$/,"")},"p"),u:o(function(k){return k===void 0},"u")},w="en",_={};_[w]=v;var T="$isDayjsObject",E=o(function(k){return k instanceof I||!(!k||!k[T])},"S"),L=o(function k(R,S,O){var N;if(!R)return w;if(typeof R=="string"){var P=R.toLowerCase();_[P]&&(N=P),S&&(_[P]=S,N=P);var F=R.split("-");if(!N&&F.length>1)return k(F[0])}else{var B=R.name;_[B]=R,N=B}return!O&&N&&(w=N),N||!O&&w},"t"),C=o(function(k,R){if(E(k))return k.clone();var S=typeof R=="object"?R:{};return S.date=k,S.args=arguments,new I(S)},"O"),A=b;A.l=L,A.i=E,A.w=function(k,R){return C(k,{locale:R.$L,utc:R.$u,x:R.$x,$offset:R.$offset})};var I=function(){function k(S){this.$L=L(S.locale,null,!0),this.parse(S),this.$x=this.$x||S.x||{},this[T]=!0}o(k,"M");var R=k.prototype;return R.parse=function(S){this.$d=function(O){var N=O.date,P=O.utc;if(N===null)return new Date(NaN);if(A.u(N))return new Date;if(N instanceof Date)return new Date(N);if(typeof N=="string"&&!/Z$/i.test(N)){var F=N.match(g);if(F){var B=F[2]-1||0,$=(F[7]||"0").substring(0,3);return P?new Date(Date.UTC(F[1],B,F[3]||1,F[4]||0,F[5]||0,F[6]||0,$)):new Date(F[1],B,F[3]||1,F[4]||0,F[5]||0,F[6]||0,$)}}return new Date(N)}(S),this.init()},R.init=function(){var S=this.$d;this.$y=S.getFullYear(),this.$M=S.getMonth(),this.$D=S.getDate(),this.$W=S.getDay(),this.$H=S.getHours(),this.$m=S.getMinutes(),this.$s=S.getSeconds(),this.$ms=S.getMilliseconds()},R.$utils=function(){return A},R.isValid=function(){return this.$d.toString()!==m},R.isSame=function(S,O){var N=C(S);return this.startOf(O)<=N&&N<=this.endOf(O)},R.isAfter=function(S,O){return C(S)<this.startOf(O)},R.isBefore=function(S,O){return this.endOf(O)<C(S)},R.$g=function(S,O,N){return A.u(S)?this[O]:this.set(N,S)},R.unix=function(){return Math.floor(this.valueOf()/1e3)},R.valueOf=function(){return this.$d.getTime()},R.startOf=function(S,O){var N=this,P=!!A.u(O)||O,F=A.p(S),B=o(function(ee,J){var H=A.w(N.$u?Date.UTC(N.$y,J,ee):new Date(N.$y,J,ee),N);return P?H:H.endOf(l)},"l"),$=o(function(ee,J){return A.w(N.toDate()[ee].apply(N.toDate("s"),(P?[0,0,0,0]:[23,59,59,999]).slice(J)),N)},"$"),z=this.$W,W=this.$M,j=this.$D,K="set"+(this.$u?"UTC":"");switch(F){case d:return P?B(1,0):B(31,11);case h:return P?B(1,W):B(0,W+1);case u:var ie=this.$locale().weekStart||0,Q=(z<ie?z+7:z)-ie;return B(P?j-Q:j+(6-Q),W);case l:case p:return $(K+"Hours",0);case s:return $(K+"Minutes",1);case a:return $(K+"Seconds",2);case i:return $(K+"Milliseconds",3);default:return this.clone()}},R.endOf=function(S){return this.startOf(S,!1)},R.$set=function(S,O){var N,P=A.p(S),F="set"+(this.$u?"UTC":""),B=(N={},N[l]=F+"Date",N[p]=F+"Date",N[h]=F+"Month",N[d]=F+"FullYear",N[s]=F+"Hours",N[a]=F+"Minutes",N[i]=F+"Seconds",N[n]=F+"Milliseconds",N)[P],$=P===l?this.$D+(O-this.$W):O;if(P===h||P===d){var z=this.clone().set(p,1);z.$d[B]($),z.init(),this.$d=z.set(p,Math.min(this.$D,z.daysInMonth())).$d}else B&&this.$d[B]($);return this.init(),this},R.set=function(S,O){return this.clone().$set(S,O)},R.get=function(S){return this[A.p(S)]()},R.add=function(S,O){var N,P=this;S=Number(S);var F=A.p(O),B=o(function(W){var j=C(P);return A.w(j.date(j.date()+Math.round(W*S)),P)},"y");if(F===h)return this.set(h,this.$M+S);if(F===d)return this.set(d,this.$y+S);if(F===l)return B(1);if(F===u)return B(7);var $=(N={},N[a]=e,N[s]=r,N[i]=t,N)[F]||1,z=this.$d.getTime()+S*$;return A.w(z,this)},R.subtract=function(S,O){return this.add(-1*S,O)},R.format=function(S){var O=this,N=this.$locale();if(!this.isValid())return N.invalidDate||m;var P=S||"YYYY-MM-DDTHH:mm:ssZ",F=A.z(this),B=this.$H,$=this.$m,z=this.$M,W=N.weekdays,j=N.months,K=N.meridiem,ie=o(function(J,H,q,Z){return J&&(J[H]||J(O,P))||q[H].slice(0,Z)},"h"),Q=o(function(J){return A.s(B%12||12,J,"0")},"d"),ee=K||function(J,H,q){var Z=J<12?"AM":"PM";return q?Z.toLowerCase():Z};return P.replace(y,function(J,H){return H||function(q){switch(q){case"YY":return String(O.$y).slice(-2);case"YYYY":return A.s(O.$y,4,"0");case"M":return z+1;case"MM":return A.s(z+1,2,"0");case"MMM":return ie(N.monthsShort,z,j,3);case"MMMM":return ie(j,z);case"D":return O.$D;case"DD":return A.s(O.$D,2,"0");case"d":return String(O.$W);case"dd":return ie(N.weekdaysMin,O.$W,W,2);case"ddd":return ie(N.weekdaysShort,O.$W,W,3);case"dddd":return W[O.$W];case"H":return String(B);case"HH":return A.s(B,2,"0");case"h":return Q(1);case"hh":return Q(2);case"a":return ee(B,$,!0);case"A":return ee(B,$,!1);case"m":return String($);case"mm":return A.s($,2,"0");case"s":return String(O.$s);case"ss":return A.s(O.$s,2,"0");case"SSS":return A.s(O.$ms,3,"0");case"Z":return F}return null}(J)||F.replace(":","")})},R.utcOffset=function(){return 15*-Math.round(this.$d.getTimezoneOffset()/15)},R.diff=function(S,O,N){var P,F=this,B=A.p(O),$=C(S),z=($.utcOffset()-this.utcOffset())*e,W=this-$,j=o(function(){return A.m(F,$)},"D");switch(B){case d:P=j()/12;break;case h:P=j();break;case f:P=j()/3;break;case u:P=(W-z)/6048e5;break;case l:P=(W-z)/864e5;break;case s:P=W/r;break;case a:P=W/e;break;case i:P=W/t;break;default:P=W}return N?P:A.a(P)},R.daysInMonth=function(){return this.endOf(h).$D},R.$locale=function(){return _[this.$L]},R.locale=function(S,O){if(!S)return this.$L;var N=this.clone(),P=L(S,O,!0);return P&&(N.$L=P),N},R.clone=function(){return A.w(this.$d,this)},R.toDate=function(){return new Date(this.valueOf())},R.toJSON=function(){return this.isValid()?this.toISOString():null},R.toISOString=function(){return this.$d.toISOString()},R.toString=function(){return this.$d.toUTCString()},k}(),D=I.prototype;return C.prototype=D,[["$ms",n],["$s",i],["$m",a],["$H",s],["$W",l],["$M",h],["$y",d],["$D",p]].forEach(function(k){D[k[1]]=function(R){return this.$g(R,k[0],k[1])}}),C.extend=function(k,R){return k.$i||(k(R,I,C),k.$i=!0),C},C.locale=L,C.isDayjs=E,C.unix=function(k){return C(1e3*k)},C.en=_[w],C.Ls=_,C.p={},C})});var EF,jc,Y,M1,bo,ht=M(()=>{"use strict";EF=ka(Ab(),1),jc={trace:0,debug:1,info:2,warn:3,error:4,fatal:5},Y={trace:o((...t)=>{},"trace"),debug:o((...t)=>{},"debug"),info:o((...t)=>{},"info"),warn:o((...t)=>{},"warn"),error:o((...t)=>{},"error"),fatal:o((...t)=>{},"fatal")},M1=o(function(t="fatal"){let e=jc.fatal;typeof t=="string"?t.toLowerCase()in jc&&(e=jc[t]):typeof t=="number"&&(e=t),Y.trace=()=>{},Y.debug=()=>{},Y.info=()=>{},Y.warn=()=>{},Y.error=()=>{},Y.fatal=()=>{},e<=jc.fatal&&(Y.fatal=console.error?console.error.bind(console,bo("FATAL"),"color: orange"):console.log.bind(console,"\x1B[35m",bo("FATAL"))),e<=jc.error&&(Y.error=console.error?console.error.bind(console,bo("ERROR"),"color: orange"):console.log.bind(console,"\x1B[31m",bo("ERROR"))),e<=jc.warn&&(Y.warn=console.warn?console.warn.bind(console,bo("WARN"),"color: orange"):console.log.bind(console,"\x1B[33m",bo("WARN"))),e<=jc.info&&(Y.info=console.info?console.info.bind(console,bo("INFO"),"color: lightblue"):console.log.bind(console,"\x1B[34m",bo("INFO"))),e<=jc.debug&&(Y.debug=console.debug?console.debug.bind(console,bo("DEBUG"),"color: lightgreen"):console.log.bind(console,"\x1B[32m",bo("DEBUG"))),e<=jc.trace&&(Y.trace=console.debug?console.debug.bind(console,bo("TRACE"),"color: lightgreen"):console.log.bind(console,"\x1B[32m",bo("TRACE")))},"setLogLevel"),bo=o(t=>`%c${(0,EF.default)().format("ss.SSS")} : ${t} : `,"format")});var mxe,Z0,kS,SF,_b=M(()=>{"use strict";mxe=Object.freeze({left:0,top:0,width:16,height:16}),Z0=Object.freeze({rotate:0,vFlip:!1,hFlip:!1}),kS=Object.freeze({...mxe,...Z0}),SF=Object.freeze({...kS,body:"",hidden:!1})});var gxe,CF,AF=M(()=>{"use strict";_b();gxe=Object.freeze({width:null,height:null}),CF=Object.freeze({...gxe,...Z0})});var Lb,ES,Db,_F=M(()=>{"use strict";Lb=/^[a-z0-9]+(-[a-z0-9]+)*$/,ES=o((t,e,r,n="")=>{let i=t.split(":");if(t.slice(0,1)==="@"){if(i.length<2||i.length>3)return null;n=i.shift().slice(1)}if(i.length>3||!i.length)return null;if(i.length>1){let l=i.pop(),u=i.pop(),h={provider:i.length>0?i[0]:n,prefix:u,name:l};return e&&!Db(h)?null:h}let a=i[0],s=a.split("-");if(s.length>1){let l={provider:n,prefix:s.shift(),name:s.join("-")};return e&&!Db(l)?null:l}if(r&&n===""){let l={provider:n,prefix:"",name:a};return e&&!Db(l,r)?null:l}return null},"stringToIcon"),Db=o((t,e)=>t?!!((t.provider===""||t.provider.match(Lb))&&(e&&t.prefix===""||t.prefix.match(Lb))&&t.name.match(Lb)):!1,"validateIconName")});function LF(t,e){let r={};!t.hFlip!=!e.hFlip&&(r.hFlip=!0),!t.vFlip!=!e.vFlip&&(r.vFlip=!0);let n=((t.rotate||0)+(e.rotate||0))%4;return n&&(r.rotate=n),r}var DF=M(()=>{"use strict";o(LF,"mergeIconTransformations")});function SS(t,e){let r=LF(t,e);for(let n in SF)n in Z0?n in t&&!(n in r)&&(r[n]=Z0[n]):n in e?r[n]=e[n]:n in t&&(r[n]=t[n]);return r}var NF=M(()=>{"use strict";_b();DF();o(SS,"mergeIconData")});function RF(t,e){let r=t.icons,n=t.aliases||Object.create(null),i=Object.create(null);function a(s){if(r[s])return i[s]=[];if(!(s in i)){i[s]=null;let l=n[s]&&n[s].parent,u=l&&a(l);u&&(i[s]=[l].concat(u))}return i[s]}return o(a,"resolve"),(e||Object.keys(r).concat(Object.keys(n))).forEach(a),i}var MF=M(()=>{"use strict";o(RF,"getIconsTree")});function IF(t,e,r){let n=t.icons,i=t.aliases||Object.create(null),a={};function s(l){a=SS(n[l]||i[l],a)}return o(s,"parse"),s(e),r.forEach(s),SS(t,a)}function CS(t,e){if(t.icons[e])return IF(t,e,[]);let r=RF(t,[e])[e];return r?IF(t,e,r):null}var OF=M(()=>{"use strict";NF();MF();o(IF,"internalGetIconData");o(CS,"getIconData")});function AS(t,e,r){if(e===1)return t;if(r=r||100,typeof t=="number")return Math.ceil(t*e*r)/r;if(typeof t!="string")return t;let n=t.split(yxe);if(n===null||!n.length)return t;let i=[],a=n.shift(),s=vxe.test(a);for(;;){if(s){let l=parseFloat(a);isNaN(l)?i.push(a):i.push(Math.ceil(l*e*r)/r)}else i.push(a);if(a=n.shift(),a===void 0)return i.join("");s=!s}}var yxe,vxe,PF=M(()=>{"use strict";yxe=/(-?[0-9.]*[0-9]+[0-9.]*)/g,vxe=/^-?[0-9.]*[0-9]+[0-9.]*$/g;o(AS,"calculateSize")});function xxe(t,e="defs"){let r="",n=t.indexOf("<"+e);for(;n>=0;){let i=t.indexOf(">",n),a=t.indexOf("</"+e);if(i===-1||a===-1)break;let s=t.indexOf(">",a);if(s===-1)break;r+=t.slice(i+1,a).trim(),t=t.slice(0,n).trim()+t.slice(s+1)}return{defs:r,content:t}}function bxe(t,e){return t?"<defs>"+t+"</defs>"+e:e}function BF(t,e,r){let n=xxe(t);return bxe(n.defs,e+n.content+r)}var FF=M(()=>{"use strict";o(xxe,"splitSVGDefs");o(bxe,"mergeDefsAndContent");o(BF,"wrapSVGContent")});function _S(t,e){let r={...kS,...t},n={...CF,...e},i={left:r.left,top:r.top,width:r.width,height:r.height},a=r.body;[r,n].forEach(y=>{let v=[],x=y.hFlip,b=y.vFlip,w=y.rotate;x?b?w+=2:(v.push("translate("+(i.width+i.left).toString()+" "+(0-i.top).toString()+")"),v.push("scale(-1 1)"),i.top=i.left=0):b&&(v.push("translate("+(0-i.left).toString()+" "+(i.height+i.top).toString()+")"),v.push("scale(1 -1)"),i.top=i.left=0);let _;switch(w<0&&(w-=Math.floor(w/4)*4),w=w%4,w){case 1:_=i.height/2+i.top,v.unshift("rotate(90 "+_.toString()+" "+_.toString()+")");break;case 2:v.unshift("rotate(180 "+(i.width/2+i.left).toString()+" "+(i.height/2+i.top).toString()+")");break;case 3:_=i.width/2+i.left,v.unshift("rotate(-90 "+_.toString()+" "+_.toString()+")");break}w%2===1&&(i.left!==i.top&&(_=i.left,i.left=i.top,i.top=_),i.width!==i.height&&(_=i.width,i.width=i.height,i.height=_)),v.length&&(a=BF(a,'<g transform="'+v.join(" ")+'">',"</g>"))});let s=n.width,l=n.height,u=i.width,h=i.height,f,d;s===null?(d=l===null?"1em":l==="auto"?h:l,f=AS(d,u/h)):(f=s==="auto"?u:s,d=l===null?AS(f,h/u):l==="auto"?h:l);let p={},m=o((y,v)=>{wxe(v)||(p[y]=v.toString())},"setAttr");m("width",f),m("height",d);let g=[i.left,i.top,u,h];return p.viewBox=g.join(" "),{attributes:p,viewBox:g,body:a}}var wxe,zF=M(()=>{"use strict";_b();AF();PF();FF();wxe=o(t=>t==="unset"||t==="undefined"||t==="none","isUnsetKeyword");o(_S,"iconToSVG")});function LS(t,e=kxe){let r=[],n;for(;n=Txe.exec(t);)r.push(n[1]);if(!r.length)return t;let i="suffix"+(Math.random()*16777216|Date.now()).toString(16);return r.forEach(a=>{let s=typeof e=="function"?e(a):e+(Exe++).toString(),l=a.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");t=t.replace(new RegExp('([#;"])('+l+')([")]|\\.[a-z])',"g"),"$1"+s+i+"$3")}),t=t.replace(new RegExp(i,"g"),""),t}var Txe,kxe,Exe,GF=M(()=>{"use strict";Txe=/\sid="(\S+)"/g,kxe="IconifyId"+Date.now().toString(16)+(Math.random()*16777216|0).toString(16),Exe=0;o(LS,"replaceIDs")});function DS(t,e){let r=t.indexOf("xlink:")===-1?"":' xmlns:xlink="http://www.w3.org/1999/xlink"';for(let n in e)r+=" "+n+'="'+e[n]+'"';return'<svg xmlns="http://www.w3.org/2000/svg"'+r+">"+t+"</svg>"}var $F=M(()=>{"use strict";o(DS,"iconToHTML")});var UF=Ni((lst,VF)=>{"use strict";var J0=1e3,ep=J0*60,tp=ep*60,Ff=tp*24,Sxe=Ff*7,Cxe=Ff*365.25;VF.exports=function(t,e){e=e||{};var r=typeof t;if(r==="string"&&t.length>0)return Axe(t);if(r==="number"&&isFinite(t))return e.long?Lxe(t):_xe(t);throw new Error("val is not a non-empty string or a valid number. val="+JSON.stringify(t))};function Axe(t){if(t=String(t),!(t.length>100)){var e=/^(-?(?:\d+)?\.?\d+) *(milliseconds?|msecs?|ms|seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h|days?|d|weeks?|w|years?|yrs?|y)?$/i.exec(t);if(e){var r=parseFloat(e[1]),n=(e[2]||"ms").toLowerCase();switch(n){case"years":case"year":case"yrs":case"yr":case"y":return r*Cxe;case"weeks":case"week":case"w":return r*Sxe;case"days":case"day":case"d":return r*Ff;case"hours":case"hour":case"hrs":case"hr":case"h":return r*tp;case"minutes":case"minute":case"mins":case"min":case"m":return r*ep;case"seconds":case"second":case"secs":case"sec":case"s":return r*J0;case"milliseconds":case"millisecond":case"msecs":case"msec":case"ms":return r;default:return}}}}o(Axe,"parse");function _xe(t){var e=Math.abs(t);return e>=Ff?Math.round(t/Ff)+"d":e>=tp?Math.round(t/tp)+"h":e>=ep?Math.round(t/ep)+"m":e>=J0?Math.round(t/J0)+"s":t+"ms"}o(_xe,"fmtShort");function Lxe(t){var e=Math.abs(t);return e>=Ff?Nb(t,e,Ff,"day"):e>=tp?Nb(t,e,tp,"hour"):e>=ep?Nb(t,e,ep,"minute"):e>=J0?Nb(t,e,J0,"second"):t+" ms"}o(Lxe,"fmtLong");function Nb(t,e,r,n){var i=e>=r*1.5;return Math.round(t/r)+" "+n+(i?"s":"")}o(Nb,"plural")});var WF=Ni((ust,HF)=>{"use strict";function Dxe(t){r.debug=r,r.default=r,r.coerce=u,r.disable=a,r.enable=i,r.enabled=s,r.humanize=UF(),r.destroy=h,Object.keys(t).forEach(f=>{r[f]=t[f]}),r.names=[],r.skips=[],r.formatters={};function e(f){let d=0;for(let p=0;p<f.length;p++)d=(d<<5)-d+f.charCodeAt(p),d|=0;return r.colors[Math.abs(d)%r.colors.length]}o(e,"selectColor"),r.selectColor=e;function r(f){let d,p=null,m,g;function y(...v){if(!y.enabled)return;let x=y,b=Number(new Date),w=b-(d||b);x.diff=w,x.prev=d,x.curr=b,d=b,v[0]=r.coerce(v[0]),typeof v[0]!="string"&&v.unshift("%O");let _=0;v[0]=v[0].replace(/%([a-zA-Z%])/g,(E,L)=>{if(E==="%%")return"%";_++;let C=r.formatters[L];if(typeof C=="function"){let A=v[_];E=C.call(x,A),v.splice(_,1),_--}return E}),r.formatArgs.call(x,v),(x.log||r.log).apply(x,v)}return o(y,"debug"),y.namespace=f,y.useColors=r.useColors(),y.color=r.selectColor(f),y.extend=n,y.destroy=r.destroy,Object.defineProperty(y,"enabled",{enumerable:!0,configurable:!1,get:o(()=>p!==null?p:(m!==r.namespaces&&(m=r.namespaces,g=r.enabled(f)),g),"get"),set:o(v=>{p=v},"set")}),typeof r.init=="function"&&r.init(y),y}o(r,"createDebug");function n(f,d){let p=r(this.namespace+(typeof d>"u"?":":d)+f);return p.log=this.log,p}o(n,"extend");function i(f){r.save(f),r.namespaces=f,r.names=[],r.skips=[];let d,p=(typeof f=="string"?f:"").split(/[\s,]+/),m=p.length;for(d=0;d<m;d++)p[d]&&(f=p[d].replace(/\*/g,".*?"),f[0]==="-"?r.skips.push(new RegExp("^"+f.slice(1)+"$")):r.names.push(new RegExp("^"+f+"$")))}o(i,"enable");function a(){let f=[...r.names.map(l),...r.skips.map(l).map(d=>"-"+d)].join(",");return r.enable(""),f}o(a,"disable");function s(f){if(f[f.length-1]==="*")return!0;let d,p;for(d=0,p=r.skips.length;d<p;d++)if(r.skips[d].test(f))return!1;for(d=0,p=r.names.length;d<p;d++)if(r.names[d].test(f))return!0;return!1}o(s,"enabled");function l(f){return f.toString().substring(2,f.toString().length-2).replace(/\.\*\?$/,"*")}o(l,"toNamespace");function u(f){return f instanceof Error?f.stack||f.message:f}o(u,"coerce");function h(){console.warn("Instance method `debug.destroy()` is deprecated and no longer does anything. It will be removed in the next major version of `debug`.")}return o(h,"destroy"),r.enable(r.load()),r}o(Dxe,"setup");HF.exports=Dxe});var YF=Ni((Us,Rb)=>{"use strict";Us.formatArgs=Rxe;Us.save=Mxe;Us.load=Ixe;Us.useColors=Nxe;Us.storage=Oxe();Us.destroy=(()=>{let t=!1;return()=>{t||(t=!0,console.warn("Instance method `debug.destroy()` is deprecated and no longer does anything. It will be removed in the next major version of `debug`."))}})();Us.colors=["#0000CC","#0000FF","#0033CC","#0033FF","#0066CC","#0066FF","#0099CC","#0099FF","#00CC00","#00CC33","#00CC66","#00CC99","#00CCCC","#00CCFF","#3300CC","#3300FF","#3333CC","#3333FF","#3366CC","#3366FF","#3399CC","#3399FF","#33CC00","#33CC33","#33CC66","#33CC99","#33CCCC","#33CCFF","#6600CC","#6600FF","#6633CC","#6633FF","#66CC00","#66CC33","#9900CC","#9900FF","#9933CC","#9933FF","#99CC00","#99CC33","#CC0000","#CC0033","#CC0066","#CC0099","#CC00CC","#CC00FF","#CC3300","#CC3333","#CC3366","#CC3399","#CC33CC","#CC33FF","#CC6600","#CC6633","#CC9900","#CC9933","#CCCC00","#CCCC33","#FF0000","#FF0033","#FF0066","#FF0099","#FF00CC","#FF00FF","#FF3300","#FF3333","#FF3366","#FF3399","#FF33CC","#FF33FF","#FF6600","#FF6633","#FF9900","#FF9933","#FFCC00","#FFCC33"];function Nxe(){if(typeof window<"u"&&window.process&&(window.process.type==="renderer"||window.process.__nwjs))return!0;if(typeof navigator<"u"&&navigator.userAgent&&navigator.userAgent.toLowerCase().match(/(edge|trident)\/(\d+)/))return!1;let t;return typeof document<"u"&&document.documentElement&&document.documentElement.style&&document.documentElement.style.WebkitAppearance||typeof window<"u"&&window.console&&(window.console.firebug||window.console.exception&&window.console.table)||typeof navigator<"u"&&navigator.userAgent&&(t=navigator.userAgent.toLowerCase().match(/firefox\/(\d+)/))&&parseInt(t[1],10)>=31||typeof navigator<"u"&&navigator.userAgent&&navigator.userAgent.toLowerCase().match(/applewebkit\/(\d+)/)}o(Nxe,"useColors");function Rxe(t){if(t[0]=(this.useColors?"%c":"")+this.namespace+(this.useColors?" %c":" ")+t[0]+(this.useColors?"%c ":" ")+"+"+Rb.exports.humanize(this.diff),!this.useColors)return;let e="color: "+this.color;t.splice(1,0,e,"color: inherit");let r=0,n=0;t[0].replace(/%[a-zA-Z%]/g,i=>{i!=="%%"&&(r++,i==="%c"&&(n=r))}),t.splice(n,0,e)}o(Rxe,"formatArgs");Us.log=console.debug||console.log||(()=>{});function Mxe(t){try{t?Us.storage.setItem("debug",t):Us.storage.removeItem("debug")}catch{}}o(Mxe,"save");function Ixe(){let t;try{t=Us.storage.getItem("debug")}catch{}return!t&&typeof process<"u"&&"env"in process&&(t=process.env.DEBUG),t}o(Ixe,"load");function Oxe(){try{return localStorage}catch{}}o(Oxe,"localstorage");Rb.exports=WF()(Us);var{formatters:Pxe}=Rb.exports;Pxe.j=function(t){try{return JSON.stringify(t)}catch(e){return"[UnexpectedJSONParseError]: "+e.message}}});var dst,qF=M(()=>{"use strict";_F();OF();zF();GF();$F();dst=ka(YF(),1)});var RS,NS,XF,Mb,Bxe,wo,Kc=M(()=>{"use strict";ht();qF();RS={body:'<g><rect width="80" height="80" style="fill: #087ebf; stroke-width: 0px;"/><text transform="translate(21.16 64.67)" style="fill: #fff; font-family: ArialMT, Arial; font-size: 67.75px;"><tspan x="0" y="0">?</tspan></text></g>',height:80,width:80},NS=new Map,XF=new Map,Mb=o(t=>{for(let e of t){if(!e.name)throw new Error('Invalid icon loader. Must have a "name" property with non-empty string value.');if(Y.debug("Registering icon pack:",e.name),"loader"in e)XF.set(e.name,e.loader);else if("icons"in e)NS.set(e.name,e.icons);else throw Y.error("Invalid icon loader:",e),new Error('Invalid icon loader. Must have either "icons" or "loader" property.')}},"registerIconPacks"),Bxe=o(async(t,e)=>{let r=ES(t,!0,e!==void 0);if(!r)throw new Error(`Invalid icon name: ${t}`);let n=r.prefix||e;if(!n)throw new Error(`Icon name must contain a prefix: ${t}`);let i=NS.get(n);if(!i){let s=XF.get(n);if(!s)throw new Error(`Icon set not found: ${r.prefix}`);try{i={...await s(),prefix:n},NS.set(n,i)}catch(l){throw Y.error(l),new Error(`Failed to load icon set: ${r.prefix}`)}}let a=CS(i,r.name);if(!a)throw new Error(`Icon not found: ${t}`);return a},"getRegisteredIconData"),wo=o(async(t,e)=>{let r;try{r=await Bxe(t,e?.fallbackPrefix)}catch(a){Y.error(a),r=RS}let n=_S(r,e);return DS(LS(n.body),n.attributes)},"getIconSVG")});function Ib(t){for(var e=[],r=1;r<arguments.length;r++)e[r-1]=arguments[r];var n=Array.from(typeof t=="string"?[t]:t);n[n.length-1]=n[n.length-1].replace(/\r?\n([\t ]*)$/,"");var i=n.reduce(function(l,u){var h=u.match(/\n([\t ]+|(?!\s).)/g);return h?l.concat(h.map(function(f){var d,p;return(p=(d=f.match(/[\t ]/g))===null||d===void 0?void 0:d.length)!==null&&p!==void 0?p:0})):l},[]);if(i.length){var a=new RegExp(`
 [	 ]{`+Math.min.apply(Math,i)+"}","g");n=n.map(function(l){return l.replace(a,`

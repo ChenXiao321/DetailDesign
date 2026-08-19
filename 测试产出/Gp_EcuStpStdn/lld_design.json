@@ -2692,5 +2692,16 @@
       "title": "功能接口总图",
       "workItemId": null
     }
+  },
+  "internalCallGraph": {
+    "diagram": "flowchart TD\n    N_Gp_EcuStpShdn_SetSafeState[\"Gp_EcuStpShdn_SetSafeState\"]\n    N_Gp_EcuStpShdn_SetTryPwrShdn[\"Gp_EcuStpShdn_SetTryPwrShdn\"]\n    N_Gp_EcuStpShdn_GetSafeState[\"Gp_EcuStpShdn_GetSafeState\"]\n    N_Gp_EcuStpShdn_TrapRecov[\"Gp_EcuStpShdn_TrapRecov\"]\n    N_Gp_EcuStpShdn_OsErrRecov[\"Gp_EcuStpShdn_OsErrRecov\"]\n    N_Gp_EcuStpShdn_PwrShdnInShdnPhase[\"Gp_EcuStpShdn_PwrShdnInShdnPhase\"]\n    N_Gp_EcuStpShdn_Startup[\"Gp_EcuStpShdn_Startup\"]\n    N_Gp_EcuStpShdn_Mainfunction[\"Gp_EcuStpShdn_Mainfunction\"]\n    N_Gp_EcuStpShdn_CheckInitRslt[\"Gp_EcuStpShdn_CheckInitRslt\"]\n    N_Gp_EcuStpShdn_MstProcMcuPreRunTest[\"Gp_EcuStpShdn_MstProcMcuPreRunTest\"]\n    N_Gp_EcuStpShdn_MstPostInit[\"Gp_EcuStpShdn_MstPostInit\"]\n    N_Gp_EcuStpShdn_GetLastSatTimeStamp[\"Gp_EcuStpShdn_GetLastSatTimeStamp\"]\n    N_Gp_EcuStpShdn_Startup --> N_Gp_EcuStpShdn_MstProcMcuPreRunTest\n    N_Gp_EcuStpShdn_Startup --> N_Gp_EcuStpShdn_MstPostInit\n    N_Gp_EcuStpShdn_Startup --> N_Gp_EcuStpShdn_CheckInitRslt\n    N_Gp_EcuStpShdn_Mainfunction --> N_Gp_EcuStpShdn_GetLastSatTimeStamp\n    N_Gp_EcuStpShdn_MstPostInit --> N_Gp_EcuStpShdn_CheckInitRslt\n    classDef provided fill:#ddf4ff,stroke:#0969da,color:#0a3069\n    classDef internal fill:#f6f8fa,stroke:#57606a\n    class N_Gp_EcuStpShdn_SetSafeState,N_Gp_EcuStpShdn_SetTryPwrShdn,N_Gp_EcuStpShdn_GetSafeState,N_Gp_EcuStpShdn_TrapRecov,N_Gp_EcuStpShdn_OsErrRecov,N_Gp_EcuStpShdn_PwrShdnInShdnPhase,N_Gp_EcuStpShdn_Startup,N_Gp_EcuStpShdn_Mainfunction provided\n    class N_Gp_EcuStpShdn_CheckInitRslt,N_Gp_EcuStpShdn_MstProcMcuPreRunTest,N_Gp_EcuStpShdn_MstPostInit,N_Gp_EcuStpShdn_GetLastSatTimeStamp internal",
+    "diagramFormat": "mermaid",
+    "polarion": {
+      "isWorkItem": true,
+      "chapter": "5.1",
+      "workItemKind": "diagram",
+      "title": "内部函数调用图",
+      "workItemId": null
+    }
   }
 }

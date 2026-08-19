@@ -315,6 +315,12 @@ ${detailTable}`;
 <p class="muted">本模块对外提供 ${model.providedFunctions.length} 个接口函数（左侧为调用方），并调用 ${model.calledExternalFunctions.length} 个外部接口（右侧按来源模块归组，含 Callout 配置代码回调）；箭头方向为调用方向。</p>
 ${diagramBlock(model.interfaceOverview.diagram)}
 <details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">${escRaw(model.interfaceOverview.diagram)}</pre></details>` : '';
+  // 内部函数调用图：analyze 时静态生成并存入模型（工作项 · 5.1），此处仅渲染
+  const callGraphSection = model.internalCallGraph ? `
+<h3>内部函数调用图 <span class="badge">工作项 · ${esc(model.internalCallGraph.polarion.chapter)}</span></h3>
+<p class="muted">模块内函数间的调用关系（蓝色=提供的外部接口，灰色=内部函数；调用外部模块/Callout 的边见功能接口总图与各函数卡片，此处不重复绘制）。</p>
+${diagramBlock(model.internalCallGraph.diagram)}
+<details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">${escRaw(model.internalCallGraph.diagram)}</pre></details>` : '';
 
   // ---- 5.3 动态设计 ----
   const dd = model.dynamicDesign;
@@ -427,6 +433,7 @@ ${includeGraph ? `${diagramBlock(includeGraph)}
 <h2 id="s51">5.1 功能描述</h2>
 ${functionalDescSection}
 ${overviewSection}
+${callGraphSection}
 
 <h2 id="s52">5.2 接口说明</h2>
 <h3 id="s521">5.2.1 数据类型说明</h3>

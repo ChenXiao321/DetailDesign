@@ -554,6 +554,21 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
   ov.push('    Caller --> MOD');
   [...ovGroups.keys()].forEach((_, gi) => ov.push(`    MOD --> G${gi}`));
 
+  // ---------- 5.1 内部函数调用图（静态生成；节点=本模块全部函数，边=模块内调用） ----------
+  const cgId = (name: string) => 'N_' + name.replace(/[^A-Za-z0-9_]/g, '_');
+  const cg: string[] = ['flowchart TD'];
+  for (const f of providedFunctions) cg.push(`    ${cgId(f.name)}["${f.name}"]`);
+  for (const f of internalFunctions) cg.push(`    ${cgId(f.name)}["${f.name}"]`);
+  for (const f of [...providedFunctions, ...internalFunctions]) {
+    for (const callee of f.calls) {
+      if (definedNames.has(callee)) cg.push(`    ${cgId(f.name)} --> ${cgId(callee)}`);
+    }
+  }
+  cg.push('    classDef provided fill:#ddf4ff,stroke:#0969da,color:#0a3069');
+  cg.push('    classDef internal fill:#f6f8fa,stroke:#57606a');
+  if (providedFunctions.length > 0) cg.push(`    class ${providedFunctions.map(f => cgId(f.name)).join(',')} provided`);
+  if (internalFunctions.length > 0) cg.push(`    class ${internalFunctions.map(f => cgId(f.name)).join(',')} internal`);
+
   return {
     module,
     analyzedAt: new Date().toISOString(),
@@ -569,6 +584,11 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
       diagram: ov.join('\n'),
       diagramFormat: 'mermaid',
       polarion: makeMarker('5.1', 'diagram', '功能接口总图', true),
+    },
+    internalCallGraph: {
+      diagram: cg.join('\n'),
+      diagramFormat: 'mermaid',
+      polarion: makeMarker('5.1', 'diagram', '内部函数调用图', true),
     },
   };
 }

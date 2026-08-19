@@ -182,4 +182,6 @@ export interface ModuleModel {
   dynamicDesign?: DynamicDesign;        // 5.3（LLM 生成后填入）
   /** 5.1 功能接口总图（分析时静态生成，工作项，随模型进 diff/同步） */
   interfaceOverview?: { diagram: string; diagramFormat: 'mermaid'; polarion: PolarionMarker };
+  /** 5.1 内部函数调用图（分析时静态生成，工作项；节点=本模块全部函数，边=模块内调用） */
+  internalCallGraph?: { diagram: string; diagramFormat: 'mermaid'; polarion: PolarionMarker };
 }

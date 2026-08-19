@@ -135,6 +135,53 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
     MOD --&gt; G1
     MOD --&gt; G2</pre></details>
 
+<h3>内部函数调用图 <span class="badge">工作项 · 5.1</span></h3>
+<p class="muted">模块内函数间的调用关系（蓝色=提供的外部接口，灰色=内部函数；调用外部模块/Callout 的边见功能接口总图与各函数卡片，此处不重复绘制）。</p>
+<div class="mermaid">flowchart TD
+    N_Gp_EcuStpShdn_SetSafeState["Gp_EcuStpShdn_SetSafeState"]
+    N_Gp_EcuStpShdn_SetTryPwrShdn["Gp_EcuStpShdn_SetTryPwrShdn"]
+    N_Gp_EcuStpShdn_GetSafeState["Gp_EcuStpShdn_GetSafeState"]
+    N_Gp_EcuStpShdn_TrapRecov["Gp_EcuStpShdn_TrapRecov"]
+    N_Gp_EcuStpShdn_OsErrRecov["Gp_EcuStpShdn_OsErrRecov"]
+    N_Gp_EcuStpShdn_PwrShdnInShdnPhase["Gp_EcuStpShdn_PwrShdnInShdnPhase"]
+    N_Gp_EcuStpShdn_Startup["Gp_EcuStpShdn_Startup"]
+    N_Gp_EcuStpShdn_Mainfunction["Gp_EcuStpShdn_Mainfunction"]
+    N_Gp_EcuStpShdn_CheckInitRslt["Gp_EcuStpShdn_CheckInitRslt"]
+    N_Gp_EcuStpShdn_MstProcMcuPreRunTest["Gp_EcuStpShdn_MstProcMcuPreRunTest"]
+    N_Gp_EcuStpShdn_MstPostInit["Gp_EcuStpShdn_MstPostInit"]
+    N_Gp_EcuStpShdn_GetLastSatTimeStamp["Gp_EcuStpShdn_GetLastSatTimeStamp"]
+    N_Gp_EcuStpShdn_Startup --&gt; N_Gp_EcuStpShdn_MstProcMcuPreRunTest
+    N_Gp_EcuStpShdn_Startup --&gt; N_Gp_EcuStpShdn_MstPostInit
+    N_Gp_EcuStpShdn_Startup --&gt; N_Gp_EcuStpShdn_CheckInitRslt
+    N_Gp_EcuStpShdn_Mainfunction --&gt; N_Gp_EcuStpShdn_GetLastSatTimeStamp
+    N_Gp_EcuStpShdn_MstPostInit --&gt; N_Gp_EcuStpShdn_CheckInitRslt
+    classDef provided fill:#ddf4ff,stroke:#0969da,color:#0a3069
+    classDef internal fill:#f6f8fa,stroke:#57606a
+    class N_Gp_EcuStpShdn_SetSafeState,N_Gp_EcuStpShdn_SetTryPwrShdn,N_Gp_EcuStpShdn_GetSafeState,N_Gp_EcuStpShdn_TrapRecov,N_Gp_EcuStpShdn_OsErrRecov,N_Gp_EcuStpShdn_PwrShdnInShdnPhase,N_Gp_EcuStpShdn_Startup,N_Gp_EcuStpShdn_Mainfunction provided
+    class N_Gp_EcuStpShdn_CheckInitRslt,N_Gp_EcuStpShdn_MstProcMcuPreRunTest,N_Gp_EcuStpShdn_MstPostInit,N_Gp_EcuStpShdn_GetLastSatTimeStamp internal</div>
+<details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">flowchart TD
+    N_Gp_EcuStpShdn_SetSafeState["Gp_EcuStpShdn_SetSafeState"]
+    N_Gp_EcuStpShdn_SetTryPwrShdn["Gp_EcuStpShdn_SetTryPwrShdn"]
+    N_Gp_EcuStpShdn_GetSafeState["Gp_EcuStpShdn_GetSafeState"]
+    N_Gp_EcuStpShdn_TrapRecov["Gp_EcuStpShdn_TrapRecov"]
+    N_Gp_EcuStpShdn_OsErrRecov["Gp_EcuStpShdn_OsErrRecov"]
+    N_Gp_EcuStpShdn_PwrShdnInShdnPhase["Gp_EcuStpShdn_PwrShdnInShdnPhase"]
+    N_Gp_EcuStpShdn_Startup["Gp_EcuStpShdn_Startup"]
+    N_Gp_EcuStpShdn_Mainfunction["Gp_EcuStpShdn_Mainfunction"]
+    N_Gp_EcuStpShdn_CheckInitRslt["Gp_EcuStpShdn_CheckInitRslt"]
+    N_Gp_EcuStpShdn_MstProcMcuPreRunTest["Gp_EcuStpShdn_MstProcMcuPreRunTest"]
+    N_Gp_EcuStpShdn_MstPostInit["Gp_EcuStpShdn_MstPostInit"]
+    N_Gp_EcuStpShdn_GetLastSatTimeStamp["Gp_EcuStpShdn_GetLastSatTimeStamp"]
+    N_Gp_EcuStpShdn_Startup --&gt; N_Gp_EcuStpShdn_MstProcMcuPreRunTest
+    N_Gp_EcuStpShdn_Startup --&gt; N_Gp_EcuStpShdn_MstPostInit
+    N_Gp_EcuStpShdn_Startup --&gt; N_Gp_EcuStpShdn_CheckInitRslt
+    N_Gp_EcuStpShdn_Mainfunction --&gt; N_Gp_EcuStpShdn_GetLastSatTimeStamp
+    N_Gp_EcuStpShdn_MstPostInit --&gt; N_Gp_EcuStpShdn_CheckInitRslt
+    classDef provided fill:#ddf4ff,stroke:#0969da,color:#0a3069
+    classDef internal fill:#f6f8fa,stroke:#57606a
+    class N_Gp_EcuStpShdn_SetSafeState,N_Gp_EcuStpShdn_SetTryPwrShdn,N_Gp_EcuStpShdn_GetSafeState,N_Gp_EcuStpShdn_TrapRecov,N_Gp_EcuStpShdn_OsErrRecov,N_Gp_EcuStpShdn_PwrShdnInShdnPhase,N_Gp_EcuStpShdn_Startup,N_Gp_EcuStpShdn_Mainfunction provided
+    class N_Gp_EcuStpShdn_CheckInitRslt,N_Gp_EcuStpShdn_MstProcMcuPreRunTest,N_Gp_EcuStpShdn_MstPostInit,N_Gp_EcuStpShdn_GetLastSatTimeStamp internal</pre></details>
+
 <h2 id="s52">5.2 接口说明</h2>
 <h3 id="s521">5.2.1 数据类型说明</h3>
 <h3>5.2.1.1 引用的数据类型</h3>

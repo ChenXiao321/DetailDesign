@@ -580,8 +580,8 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
     const lines = items.map(e => shortName(e.name));
     ov.push(`    G${gi}["<b>${group}</b>${tag}（${items.length} 个）<br/>──────────<br/>${lines.join('<br/>')}"]`);
   });
-  ov.push('    Caller --> MOD');
-  [...ovGroups.keys()].forEach((_, gi) => ov.push(`    MOD --> G${gi}`));
+  ov.push('    Caller -->|call| MOD');
+  [...ovGroups.keys()].forEach((_, gi) => ov.push(`    MOD -->|call| G${gi}`));
   // 配色：显式指定填充+文字色，保证对比度（与内部调用图同色板）
   ov.push('    classDef caller fill:#eaeef2,stroke:#57606a,color:#1f2328');
   ov.push('    classDef provided fill:#b6e3ff,stroke:#0969da,color:#0a3069');
@@ -600,8 +600,10 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
     .sort((a, b) => a.name.localeCompare(b.name));
   const calloutNameSet = new Set(cgCallouts.map(e => e.name));
   const fnByName = new Map([...providedFunctions, ...internalFunctions].map(f => [f.name, f] as const));
+  // 注意：classDef 命名避开 mermaid 保留类名 root（dagre 布局顶层 <g class="root">），
+  // 否则 .root span{color:#fff} 会命中整个 SVG 的 span（含边标签），导致标签白字不可见
   const CG_CLASSES = [
-    '    classDef root fill:#0a3069,stroke:#0a3069,color:#ffffff',
+    '    classDef entry fill:#0a3069,stroke:#0a3069,color:#ffffff',
     '    classDef internal fill:#eaeef2,stroke:#57606a,color:#1f2328',
     '    classDef callout fill:#ffe9a8,stroke:#bf8700,color:#1f2328',
   ];
@@ -619,11 +621,11 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
       visited.add(cur);
       for (const callee of fnByName.get(cur)?.calls ?? []) {
         if (fnByName.has(callee) && callee !== root.name) {
-          edges.push(`    ${cgId(cur)} --> ${cgId(callee)}`);
+          edges.push(`    ${cgId(cur)} -->|call| ${cgId(callee)}`);
           if (!visited.has(callee) && !usedInternal.includes(callee) && !providedFunctions.some(p => p.name === callee)) usedInternal.push(callee);
           queue.push(callee);
         } else if (calloutNameSet.has(callee)) {
-          edges.push(`    ${cgId(cur)} --> ${cgId(callee)}`);
+          edges.push(`    ${cgId(cur)} -->|call| ${cgId(callee)}`);
           if (!usedCallouts.includes(callee)) usedCallouts.push(callee);
         }
       }
@@ -637,7 +639,7 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
       if (n !== root.name && !usedInternal.includes(n)) lines.push(`    ${cgId(n)}["${n}"]`);
     }
     for (const n of usedCallouts) lines.push(`    ${cgId(n)}["${shortName(n)}"]`);
-    lines.push(...edges, ...CG_CLASSES, `    class ${cgId(root.name)} root`);
+    lines.push(...edges, ...CG_CLASSES, `    class ${cgId(root.name)} entry`);
     if (usedInternal.length > 0) lines.push(`    class ${usedInternal.map(cgId).join(',')} internal`);
     if (usedCallouts.length > 0) lines.push(`    class ${usedCallouts.map(cgId).join(',')} callout`);
     callGraphs.push({
@@ -653,7 +655,7 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
   if (cfgRefCallouts.length > 0) {
     const lines = ['flowchart LR', '    N_CfgTbl["配置表函数指针引用"]'];
     for (const e of cfgRefCallouts) {
-      lines.push(`    ${cgId(e.name)}["${shortName(e.name)}"]`, `    N_CfgTbl --> ${cgId(e.name)}`);
+      lines.push(`    ${cgId(e.name)}["${shortName(e.name)}"]`, `    N_CfgTbl -->|call（函数指针间接调用）| ${cgId(e.name)}`);
     }
     lines.push(...CG_CLASSES, '    class N_CfgTbl internal', `    class ${cfgRefCallouts.map(e => cgId(e.name)).join(',')} callout`);
     callGraphs.push({

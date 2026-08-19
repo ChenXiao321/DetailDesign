@@ -251,7 +251,7 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
     N_Gp_EcuStpShdn_MstPostInit --&gt; N_Gp_EcuStpShdn_CalloutSwtToRunFailedHnd
     N_Gp_EcuStpShdn_MstPostInit --&gt; N_Gp_EcuStpShdn_CalloutChkSbcTest
     N_Gp_EcuStpShdn_MstPostInit --&gt; N_Gp_EcuStpShdn_CalloutSbcTestFailedHnd
-    N_Gp_EcuStpShdn_CalloutGetCoreId ~~~ N_Gp_EcuStpShdn_CalloutInitStageOneCore0 ~~~ N_Gp_EcuStpShdn_CalloutGetSysTimeMs ~~~ N_Gp_EcuStpShdn_CalloutPwrShdnInStpPhase ~~~ N_Gp_EcuStpShdn_CalloutSbcInitInSafeState ~~~ N_Gp_EcuStpShdn_CalloutSafeState ~~~ N_Gp_EcuStpShdn_CalloutSbcInit ~~~ N_Gp_EcuStpShdn_CalloutInitFailedHnd ~~~ N_Gp_EcuStpShdn_CalloutChkMcuPreRunTest ~~~ N_Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd ~~~ N_Gp_EcuStpShdn_CalloutChkSwtToRun ~~~ N_Gp_EcuStpShdn_CalloutSwtToRunFailedHnd ~~~ N_Gp_EcuStpShdn_CalloutChkSbcTest ~~~ N_Gp_EcuStpShdn_CalloutSbcTestFailedHnd
+    N_Gp_EcuStpShdn_MstProcMcuPreRunTest ~~~ N_Gp_EcuStpShdn_MstPostInit ~~~ N_Gp_EcuStpShdn_CheckInitRslt ~~~ N_Gp_EcuStpShdn_CalloutGetCoreId ~~~ N_Gp_EcuStpShdn_CalloutInitStageOneCore0 ~~~ N_Gp_EcuStpShdn_CalloutGetSysTimeMs ~~~ N_Gp_EcuStpShdn_CalloutPwrShdnInStpPhase ~~~ N_Gp_EcuStpShdn_CalloutSbcInitInSafeState ~~~ N_Gp_EcuStpShdn_CalloutSafeState ~~~ N_Gp_EcuStpShdn_CalloutSbcInit ~~~ N_Gp_EcuStpShdn_CalloutInitFailedHnd ~~~ N_Gp_EcuStpShdn_CalloutChkMcuPreRunTest ~~~ N_Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd ~~~ N_Gp_EcuStpShdn_CalloutChkSwtToRun ~~~ N_Gp_EcuStpShdn_CalloutSwtToRunFailedHnd ~~~ N_Gp_EcuStpShdn_CalloutChkSbcTest ~~~ N_Gp_EcuStpShdn_CalloutSbcTestFailedHnd
     classDef root fill:#0a3069,stroke:#0a3069,color:#ffffff
     classDef internal fill:#eaeef2,stroke:#57606a,color:#1f2328
     classDef callout fill:#ffe9a8,stroke:#bf8700,color:#1f2328
@@ -296,7 +296,7 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
     N_Gp_EcuStpShdn_MstPostInit --&gt; N_Gp_EcuStpShdn_CalloutSwtToRunFailedHnd
     N_Gp_EcuStpShdn_MstPostInit --&gt; N_Gp_EcuStpShdn_CalloutChkSbcTest
     N_Gp_EcuStpShdn_MstPostInit --&gt; N_Gp_EcuStpShdn_CalloutSbcTestFailedHnd
-    N_Gp_EcuStpShdn_CalloutGetCoreId ~~~ N_Gp_EcuStpShdn_CalloutInitStageOneCore0 ~~~ N_Gp_EcuStpShdn_CalloutGetSysTimeMs ~~~ N_Gp_EcuStpShdn_CalloutPwrShdnInStpPhase ~~~ N_Gp_EcuStpShdn_CalloutSbcInitInSafeState ~~~ N_Gp_EcuStpShdn_CalloutSafeState ~~~ N_Gp_EcuStpShdn_CalloutSbcInit ~~~ N_Gp_EcuStpShdn_CalloutInitFailedHnd ~~~ N_Gp_EcuStpShdn_CalloutChkMcuPreRunTest ~~~ N_Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd ~~~ N_Gp_EcuStpShdn_CalloutChkSwtToRun ~~~ N_Gp_EcuStpShdn_CalloutSwtToRunFailedHnd ~~~ N_Gp_EcuStpShdn_CalloutChkSbcTest ~~~ N_Gp_EcuStpShdn_CalloutSbcTestFailedHnd
+    N_Gp_EcuStpShdn_MstProcMcuPreRunTest ~~~ N_Gp_EcuStpShdn_MstPostInit ~~~ N_Gp_EcuStpShdn_CheckInitRslt ~~~ N_Gp_EcuStpShdn_CalloutGetCoreId ~~~ N_Gp_EcuStpShdn_CalloutInitStageOneCore0 ~~~ N_Gp_EcuStpShdn_CalloutGetSysTimeMs ~~~ N_Gp_EcuStpShdn_CalloutPwrShdnInStpPhase ~~~ N_Gp_EcuStpShdn_CalloutSbcInitInSafeState ~~~ N_Gp_EcuStpShdn_CalloutSafeState ~~~ N_Gp_EcuStpShdn_CalloutSbcInit ~~~ N_Gp_EcuStpShdn_CalloutInitFailedHnd ~~~ N_Gp_EcuStpShdn_CalloutChkMcuPreRunTest ~~~ N_Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd ~~~ N_Gp_EcuStpShdn_CalloutChkSwtToRun ~~~ N_Gp_EcuStpShdn_CalloutSwtToRunFailedHnd ~~~ N_Gp_EcuStpShdn_CalloutChkSbcTest ~~~ N_Gp_EcuStpShdn_CalloutSbcTestFailedHnd
     classDef root fill:#0a3069,stroke:#0a3069,color:#ffffff
     classDef internal fill:#eaeef2,stroke:#57606a,color:#1f2328
     classDef callout fill:#ffe9a8,stroke:#bf8700,color:#1f2328
@@ -314,7 +314,7 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
     N_Gp_EcuStpShdn_Mainfunction --&gt; N_Gp_EcuStpShdn_GetLastSatTimeStamp
     N_Gp_EcuStpShdn_Mainfunction --&gt; N_Gp_EcuStpShdn_CalloutChkMcuRunTimeTest
     N_Gp_EcuStpShdn_Mainfunction --&gt; N_Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd
-    N_Gp_EcuStpShdn_CalloutGetCoreId ~~~ N_Gp_EcuStpShdn_CalloutChkMcuRunTimeTest ~~~ N_Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd
+    N_Gp_EcuStpShdn_GetLastSatTimeStamp ~~~ N_Gp_EcuStpShdn_CalloutGetCoreId ~~~ N_Gp_EcuStpShdn_CalloutChkMcuRunTimeTest ~~~ N_Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd
     classDef root fill:#0a3069,stroke:#0a3069,color:#ffffff
     classDef internal fill:#eaeef2,stroke:#57606a,color:#1f2328
     classDef callout fill:#ffe9a8,stroke:#bf8700,color:#1f2328
@@ -331,7 +331,7 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
     N_Gp_EcuStpShdn_Mainfunction --&gt; N_Gp_EcuStpShdn_GetLastSatTimeStamp
     N_Gp_EcuStpShdn_Mainfunction --&gt; N_Gp_EcuStpShdn_CalloutChkMcuRunTimeTest
     N_Gp_EcuStpShdn_Mainfunction --&gt; N_Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd
-    N_Gp_EcuStpShdn_CalloutGetCoreId ~~~ N_Gp_EcuStpShdn_CalloutChkMcuRunTimeTest ~~~ N_Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd
+    N_Gp_EcuStpShdn_GetLastSatTimeStamp ~~~ N_Gp_EcuStpShdn_CalloutGetCoreId ~~~ N_Gp_EcuStpShdn_CalloutChkMcuRunTimeTest ~~~ N_Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd
     classDef root fill:#0a3069,stroke:#0a3069,color:#ffffff
     classDef internal fill:#eaeef2,stroke:#57606a,color:#1f2328
     classDef callout fill:#ffe9a8,stroke:#bf8700,color:#1f2328
@@ -353,6 +353,7 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
     N_CfgTbl --&gt; N_Gp_EcuStpShdn_CalloutInitStageTwoCore4
     N_Gp_EcuStpShdn_CalloutInitStageTwoCore5["CalloutInitStageTwoCore5"]
     N_CfgTbl --&gt; N_Gp_EcuStpShdn_CalloutInitStageTwoCore5
+    N_Gp_EcuStpShdn_CalloutInitStageTwoCore0 ~~~ N_Gp_EcuStpShdn_CalloutInitStageTwoCore1 ~~~ N_Gp_EcuStpShdn_CalloutInitStageTwoCore2 ~~~ N_Gp_EcuStpShdn_CalloutInitStageTwoCore3 ~~~ N_Gp_EcuStpShdn_CalloutInitStageTwoCore4 ~~~ N_Gp_EcuStpShdn_CalloutInitStageTwoCore5
     classDef root fill:#0a3069,stroke:#0a3069,color:#ffffff
     classDef internal fill:#eaeef2,stroke:#57606a,color:#1f2328
     classDef callout fill:#ffe9a8,stroke:#bf8700,color:#1f2328
@@ -372,6 +373,7 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
     N_CfgTbl --&gt; N_Gp_EcuStpShdn_CalloutInitStageTwoCore4
     N_Gp_EcuStpShdn_CalloutInitStageTwoCore5["CalloutInitStageTwoCore5"]
     N_CfgTbl --&gt; N_Gp_EcuStpShdn_CalloutInitStageTwoCore5
+    N_Gp_EcuStpShdn_CalloutInitStageTwoCore0 ~~~ N_Gp_EcuStpShdn_CalloutInitStageTwoCore1 ~~~ N_Gp_EcuStpShdn_CalloutInitStageTwoCore2 ~~~ N_Gp_EcuStpShdn_CalloutInitStageTwoCore3 ~~~ N_Gp_EcuStpShdn_CalloutInitStageTwoCore4 ~~~ N_Gp_EcuStpShdn_CalloutInitStageTwoCore5
     classDef root fill:#0a3069,stroke:#0a3069,color:#ffffff
     classDef internal fill:#eaeef2,stroke:#57606a,color:#1f2328
     classDef callout fill:#ffe9a8,stroke:#bf8700,color:#1f2328

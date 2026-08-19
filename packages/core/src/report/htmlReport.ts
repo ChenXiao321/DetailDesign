@@ -190,6 +190,7 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
 .badge { display:inline-block; background:#ddf4ff; color:#0969da; border-radius:10px; padding:1px 8px; font-size:12px; margin-left:8px; }
 .inferred { display:inline-block; background:#fff8c5; color:#9a6700; border:1px solid #eac54f; border-radius:8px; padding:0 6px; font-size:11px; margin-left:6px; }
 .note { background:#fff8c5; border:1px solid #eac54f; border-radius:6px; padding:10px 14px; font-size:13px; margin:12px 0; }
+.mermaid { overflow-x:auto; font-size:13px; }
 @media print { nav { display:none; } .workitem { break-inside:avoid; } }
 `;
 
@@ -293,12 +294,15 @@ ${detailTable}`;
 
   // ---- 4.2 文件包含关系（由 #include 静态生成 Mermaid 图，无需 LLM） ----
   const sanitizeId = (s: string) => s.replace(/[^A-Za-z0-9_]/g, '_');
+  // 长文件名按模块前缀折行，控制节点宽度避免导出超页宽
+  const wrapFileLabel = (base: string) =>
+    base.startsWith(`${model.module}_`) ? `${model.module}_<br/>${base.slice(model.module.length + 1)}` : base;
   const includeEdges: string[] = [];
   for (const f of model.files) {
     const base = f.path.split(/[\\/]/).pop()!;
     for (const inc of f.includes ?? []) {
       const incBase = inc.split(/[\\/]/).pop()!;
-      includeEdges.push(`    ${sanitizeId(base)}["${base}"] --> ${sanitizeId(incBase)}["${incBase}"]`);
+      includeEdges.push(`    ${sanitizeId(base)}["${wrapFileLabel(base)}"] --> ${sanitizeId(incBase)}["${wrapFileLabel(incBase)}"]`);
     }
   }
   const includeGraph = includeEdges.length > 0
@@ -478,7 +482,7 @@ ${calloutCfgSection}
 ${aliasCfgNote}
 </main>
 ${opts?.mermaidJs ? `<script>${opts.mermaidJs}</script>
-<script>mermaid.initialize({ startOnLoad: true, securityLevel: 'loose', theme: 'neutral', flowchart: { useMaxWidth: false }, sequence: { showSequenceNumbers: true } });</script>` : ''}
+<script>mermaid.initialize({ startOnLoad: true, securityLevel: 'loose', theme: 'neutral', themeVariables: { fontSize: '13px' }, flowchart: { useMaxWidth: false }, sequence: { showSequenceNumbers: true } });</script>` : ''}
 </body>
 </html>`;
 }

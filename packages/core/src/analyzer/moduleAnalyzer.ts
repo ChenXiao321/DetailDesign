@@ -531,6 +531,9 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
   }
 
   // ---------- 5.1 功能接口总图（静态生成；作为工作项随模型进 diff/同步） ----------
+  // 长标识符按模块前缀折行/去前缀，控制节点宽度避免导出超页宽
+  const shortName = (n: string) => n.startsWith(`${module}_`) ? n.slice(module.length + 1) : n;
+  const wrapName = (n: string) => n.startsWith(`${module}_`) ? `${module}_<br/>${n.slice(module.length + 1)}` : n;
   // 提供的接口节点分两列平铺（direction TB + 两条隐形竖链 → 2 列 × ⌈n/2⌉ 行），避免单列过长
   const ov: string[] = ['flowchart LR'];
   ov.push('    Caller["外部调用方<br/>（其他 FC / RTE / 集成代码）"]');
@@ -538,7 +541,7 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
   ov.push('        direction TB');
   const ovHalf = Math.ceil(providedFunctions.length / 2);
   const ovChain = (list: FunctionUnit[], offset: number) =>
-    '        ' + list.map((f, i) => `P${offset + i}["${f.name}"]`).join(' ~~~ ');
+    '        ' + list.map((f, i) => `P${offset + i}["${wrapName(f.name)}"]`).join(' ~~~ ');
   if (providedFunctions.length > 0) ov.push(ovChain(providedFunctions.slice(0, ovHalf), 0));
   if (providedFunctions.length > ovHalf) ov.push(ovChain(providedFunctions.slice(ovHalf), ovHalf));
   ov.push('    end');
@@ -549,7 +552,7 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
   }
   [...ovGroups.entries()].forEach(([group, items], gi) => {
     const tag = group === 'Callout' ? '（配置代码回调）' : '';
-    const lines = items.map(e => e.name);
+    const lines = items.map(e => shortName(e.name));
     ov.push(`    G${gi}["<b>${group}</b>${tag}（${items.length} 个）<br/>──────────<br/>${lines.join('<br/>')}"]`);
   });
   ov.push('    Caller --> MOD');
@@ -571,7 +574,6 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
     .filter(e => e.group === 'Callout')
     .sort((a, b) => a.name.localeCompare(b.name));
   const calloutNameSet = new Set(cgCallouts.map(e => e.name));
-  const shortName = (n: string) => n.startsWith(`${module}_`) ? n.slice(module.length + 1) : n;
   const fnByName = new Map([...providedFunctions, ...internalFunctions].map(f => [f.name, f] as const));
   const CG_CLASSES = [
     '    classDef root fill:#0a3069,stroke:#0a3069,color:#ffffff',

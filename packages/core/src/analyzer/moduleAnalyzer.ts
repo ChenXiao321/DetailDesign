@@ -681,6 +681,5 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
       polarion: makeMarker('5.1', 'diagram', '功能接口总图', true),
     },
     callGraphs,
-    evaluation: { polarion: makeMarker('7', 'table', '详细设计规范评估', true) },
   };
 }

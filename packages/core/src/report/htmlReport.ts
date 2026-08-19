@@ -467,9 +467,8 @@ ${callouts.map((e, i) => calloutCard(e, `${calloutSecNo}.${i + 1}`)).join('\n')}
     .sort((a, b) => (b.complexity ?? 0) - (a.complexity ?? 0))
     .map(f => `<tr><td><code>${esc(f.name)}</code></td><td>${f.complexity ?? '—'}</td><td>${f.infiniteLoop ? '含死循环' : ''}</td><td>${(f.complexity ?? 0) > 10 ? '<span class="todo">超过 10，需人工评审</span>' : '<span class="muted">≤10</span>'}</td></tr>`)
     .join('');
-  const evalChapter = model.evaluation?.polarion.chapter ?? '7';
   const evalSection = `
-<h2 id="s7">7 详细设计规范评估 <span class="badge">工作项 · ${esc(evalChapter)}</span></h2>
+<h2 id="s7">7 详细设计规范评估</h2>
 <table class="simple"><tr><th>维度</th><th>序号</th><th>评估内容</th><th>是否评估</th><th>分析结果（事实依据自动生成，结论人工确认）</th></tr>${evalTableRows.join('')}</table>
 <h3>圈复杂度明细（序号 7 事实依据，静态计算）</h3>
 <p class="muted">判定节点计数法：1 + if / for / while / case / &amp;&amp; / || / ?: 数量。阈值 10 为常见评审参考值，最终以项目规范为准。</p>

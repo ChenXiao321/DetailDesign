@@ -182,8 +182,6 @@ export interface ModuleModel {
   types: TypeUnit[];                    // 5.2.1.2
   configMacros: ConfigMacro[];          // 6
   dynamicDesign?: DynamicDesign;        // 5.3（LLM 生成后填入）
-  /** 7 详细设计规范评估（表格类工作项标记；评估内容为模板固定 14 项，事实由报告层从模型自动填） */
-  evaluation?: { polarion: PolarionMarker };
   /** 5.1 功能接口总图（分析时静态生成，工作项，随模型进 diff/同步） */
   interfaceOverview?: { diagram: string; diagramFormat: 'mermaid'; polarion: PolarionMarker };
   /** 5.1 内部函数调用图（分析时静态生成；按对外接口函数逐张拆分，每张一个工作项） */

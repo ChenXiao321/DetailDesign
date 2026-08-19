@@ -2790,14 +2790,5 @@
         "workItemId": null
       }
     }
-  ],
-  "evaluation": {
-    "polarion": {
-      "isWorkItem": true,
-      "chapter": "7",
-      "workItemKind": "table",
-      "title": "详细设计规范评估",
-      "workItemId": null
-    }
-  }
+  ]
 }

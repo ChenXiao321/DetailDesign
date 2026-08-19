@@ -542,14 +542,18 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
   if (providedFunctions.length > 0) ov.push(ovChain(providedFunctions.slice(0, ovHalf), 0));
   if (providedFunctions.length > ovHalf) ov.push(ovChain(providedFunctions.slice(ovHalf), ovHalf));
   ov.push('    end');
-  const ovGroups = new Map<string, string[]>();
+  const ovGroups = new Map<string, ExternalInterface[]>();
   for (const e of [...externalMap.values()].sort((a, b) => a.group.localeCompare(b.group) || a.name.localeCompare(b.name))) {
     if (!ovGroups.has(e.group)) ovGroups.set(e.group, []);
-    ovGroups.get(e.group)!.push(e.name);
+    ovGroups.get(e.group)!.push(e);
   }
-  [...ovGroups.entries()].forEach(([group, names], gi) => {
+  [...ovGroups.entries()].forEach(([group, items], gi) => {
     const tag = group === 'Callout' ? '（配置代码回调）' : '';
-    ov.push(`    G${gi}["<b>${group}</b>${tag}（${names.length} 个）<br/>──────────<br/>${names.join('<br/>')}"]`);
+    // Callout 逐行标注模块内调用者（总图唯一体现调用来源的地方；其余组的调用者见 5.2.2 表）
+    const lines = group === 'Callout'
+      ? items.map(e => `${e.name} ← ${e.calledFrom.join('、')}`)
+      : items.map(e => e.name);
+    ov.push(`    G${gi}["<b>${group}</b>${tag}（${items.length} 个）<br/>──────────<br/>${lines.join('<br/>')}"]`);
   });
   ov.push('    Caller --> MOD');
   [...ovGroups.keys()].forEach((_, gi) => ov.push(`    MOD --> G${gi}`));

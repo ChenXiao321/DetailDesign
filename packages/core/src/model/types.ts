@@ -35,7 +35,7 @@ export interface PolarionMarker {
   isWorkItem: boolean;          // 是否应生成为独立工作项
   chapter: string;              // 模板章节号，如 "5.2.3.2"
   workItemKind: 'function' | 'variable' | 'type' | 'table' | 'statemachine'
-              | 'state' | 'transition' | 'sequence' | 'config' | 'description';
+              | 'state' | 'transition' | 'sequence' | 'config' | 'description' | 'diagram';
   title: string;
   workItemId: string | null;    // 导入后回写，如 "Gp_EcuStpShdn-42"
 }
@@ -180,4 +180,6 @@ export interface ModuleModel {
   types: TypeUnit[];                    // 5.2.1.2
   configMacros: ConfigMacro[];          // 6
   dynamicDesign?: DynamicDesign;        // 5.3（LLM 生成后填入）
+  /** 5.1 功能接口总图（分析时静态生成，工作项，随模型进 diff/同步） */
+  interfaceOverview?: { diagram: string; diagramFormat: 'mermaid'; polarion: PolarionMarker };
 }

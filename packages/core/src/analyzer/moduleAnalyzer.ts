@@ -530,6 +530,30 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
     macro.affects = [...affected].sort();
   }
 
+  // ---------- 5.1 功能接口总图（静态生成；作为工作项随模型进 diff/同步） ----------
+  // 提供的接口节点分两行平铺（上半/下半各一条隐形链），避免单列过长
+  const ov: string[] = ['flowchart LR'];
+  ov.push('    Caller["外部调用方<br/>（其他 FC / RTE / 集成代码）"]');
+  ov.push(`    subgraph MOD["${module} 提供的外部接口（${providedFunctions.length} 个）"]`);
+  ov.push('        direction LR');
+  const ovHalf = Math.ceil(providedFunctions.length / 2);
+  const ovChain = (list: FunctionUnit[], offset: number) =>
+    '        ' + list.map((f, i) => `P${offset + i}["${f.name}"]`).join(' ~~~ ');
+  if (providedFunctions.length > 0) ov.push(ovChain(providedFunctions.slice(0, ovHalf), 0));
+  if (providedFunctions.length > ovHalf) ov.push(ovChain(providedFunctions.slice(ovHalf), ovHalf));
+  ov.push('    end');
+  const ovGroups = new Map<string, string[]>();
+  for (const e of [...externalMap.values()].sort((a, b) => a.group.localeCompare(b.group) || a.name.localeCompare(b.name))) {
+    if (!ovGroups.has(e.group)) ovGroups.set(e.group, []);
+    ovGroups.get(e.group)!.push(e.name);
+  }
+  [...ovGroups.entries()].forEach(([group, names], gi) => {
+    const tag = group === 'Callout' ? '（配置代码回调）' : '';
+    ov.push(`    G${gi}["<b>${group}</b>${tag}（${names.length} 个）<br/>──────────<br/>${names.join('<br/>')}"]`);
+  });
+  ov.push('    Caller --> MOD');
+  [...ovGroups.keys()].forEach((_, gi) => ov.push(`    MOD --> G${gi}`));
+
   return {
     module,
     analyzedAt: new Date().toISOString(),
@@ -541,5 +565,10 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
     calledExternalFunctions: [...externalMap.values()].sort((a, b) => a.group.localeCompare(b.group) || a.name.localeCompare(b.name)),
     types,
     configMacros,
+    interfaceOverview: {
+      diagram: ov.join('\n'),
+      diagramFormat: 'mermaid',
+      polarion: makeMarker('5.1', 'diagram', '功能接口总图', true),
+    },
   };
 }

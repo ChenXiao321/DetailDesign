@@ -485,7 +485,62 @@ ${callouts.map((e, i) => calloutCard(e, `${calloutSecNo}.${i + 1}`)).join('\n')}
 <li>安全性：${safetyIds.length > 0 ? '涉及安全相关接口/配置，是否功能安全输出需人工判定' : '是否涉及功能安全需人工判定'}。<span class="todo">待人工确认</span></li>
 </ul>`;
 
+  // ---- 1~3 章（固定套话 + 术语表自动筛选；文档骨架内容，非工作项） ----
+  const allText = [
+    model.module,
+    ...allFns.map(f => `${f.name} ${f.signature}`),
+    ...model.calledExternalFunctions.map(e => e.name),
+    ...model.configMacros.map(c => c.name),
+    model.functionalDescription ?? '',
+  ].join(' ');
+  // 候选缩写词典：仅列本文档/代码中实际出现的
+  const ABBR_CANDIDATES: [string, string][] = [
+    ['ADC', 'Analog to Digital Converter 模数转换器'],
+    ['ASIL', 'Automotive Safety Integrity Level 汽车安全完整性等级'],
+    ['AUTOSAR', 'AUTomotive Open System ARchitecture 汽车开放系统架构'],
+    ['Callout', '回调接口：由集成方在配置代码中实现，模块通过调用 Callout 适配项目策略'],
+    ['EcuM', 'ECU State Manager ECU 状态管理模块'],
+    ['FC', 'Function Cluster 功能簇'],
+    ['LLD', 'Low Level Design 详细设计'],
+    ['MCAL', 'Microcontroller Abstraction Layer 微控制器抽象层'],
+    ['MCU', 'Microcontroller Unit 微控制器'],
+    ['OS', 'Operating System 操作系统'],
+    ['RTE', 'Runtime Environment 运行时环境'],
+    ['SBC', 'System Basis Chip 系统基础芯片'],
+    ['Wdg', 'Watchdog 看门狗'],
+  ];
+  const abbrRows = ABBR_CANDIDATES
+    .filter(([abbr]) => new RegExp(`\\b${abbr}\\b`, 'i').test(allText))
+    .map(([abbr, desc]) => `<tr><td><code>${esc(abbr)}</code></td><td>${esc(desc)}</td></tr>`)
+    .join('');
+  const DEF_ROWS: [string, string][] = [
+    ['可重入性', '函数在同时多次调用，例如操作系统在进程调度过程中，或者单片机、处理器等中断的时候会发生重入的现象。（可重入函数可以在任意时刻被打断，稍后再继续运行，不会丢失数据；不可重入函数不能由超过一个任务共享，除非能确保函数的互斥）'],
+    ['静态全局变量', 'static 声明的文件作用域变量（内部链接），仅本模块内可见，外部模块不可直接访问；本报告 5.2.4.1 节列出。'],
+  ];
+  const defRows = DEF_ROWS.map(([n, d]) => `<tr><td>${esc(n)}</td><td>${esc(d)}</td></tr>`).join('');
+  const preSection = `
+<h2 id="s1">1 目的</h2>
+<p>本文档描述 ${esc(model.module)} 软件单元的详细设计，作为该单元编码实现、设计评审与单元测试的依据。</p>
+<h2 id="s2">2 适用范围</h2>
+<p>本文档适用于 ${esc(model.module)} 软件单元的开发、评审与维护。</p>
+<h2 id="s3">3 定义和缩写</h2>
+<h3>3.1 缩写</h3>
+<table class="simple"><tr><th>缩写</th><th>描述</th></tr>${abbrRows}</table>
+<p class="muted">注：仅列出本模块文档/代码中实际出现的缩写，可按项目需要补充。</p>
+<h3>3.2 定义</h3>
+<table class="simple"><tr><th>名称</th><th>描述</th></tr>${defRows}</table>`;
+
+  // ---- 8 支持/相关性文件（骨架，编号待人工补充） ----
+  const supportSection = `
+<h2 id="s8">8 支持/相关性文件</h2>
+<table class="simple"><tr><th>序号</th><th>文档名称</th><th>文档编号</th></tr>
+<tr><td>1</td><td>软件详细设计规范（Code）</td><td>G-B035-005</td></tr>
+<tr><td>2</td><td>软件接口命名规范</td><td class="todo">（待补充）</td></tr>
+</table>
+<p class="muted">注：项目级相关文件（软件架构设计、需求规格等）请人工补充。</p>`;
+
   // ---- 文件清单（主文件在前） ----
+
   const fileRows = [...model.files]
     .sort((a, b) => fileSortKey(a).localeCompare(fileSortKey(b)))
     .map(f => `<tr><td><code>${esc(f.path)}</code></td><td>${esc(describeFile(f.path, f.role, model))}</td></tr>`).join('');
@@ -503,6 +558,8 @@ ${callouts.map((e, i) => calloutCard(e, `${calloutSecNo}.${i + 1}`)).join('\n')}
   <div class="meta">LLD Agent 生成评审稿 · 分析时间 ${esc(model.analyzedAt)} · 状态: Draft</div>
 </header>
 <nav>
+  <a href="#s1">1 目的</a>
+  <a href="#s3">3 定义和缩写</a>
   <a href="#s4">4 程序系统结构</a>
   <a href="#s51">5.1 功能描述</a>
   <a href="#s521">5.2.1 数据类型</a>
@@ -512,9 +569,11 @@ ${callouts.map((e, i) => calloutCard(e, `${calloutSecNo}.${i + 1}`)).join('\n')}
   <a href="#s53">5.3 动态设计</a>
   <a href="#s6">6 配置说明</a>
   <a href="#s7">7 详细设计规范评估</a>
+  <a href="#s8">8 支持/相关性文件</a>
 </nav>
 <main>
 <div class="note">本报告由 agent 自动生成，供评审。带 <b>工作项</b> 标记的条目对应 Polarion 工作项颗粒度；函数描述共 ${fnCount} 个，已生成 ${generatedCount} 个。追溯链接（is derived from）按约定留空，入库后人工补充。</div>
+${preSection}
 
 <h2 id="s4">4 程序系统结构</h2>
 <h3>4.1 文件说明</h3>
@@ -571,6 +630,7 @@ ${functionalCfgSection}
 ${calloutCfgSection}
 ${aliasCfgNote}
 ${evalSection}
+${supportSection}
 </main>
 ${opts?.mermaidJs ? `<script>${opts.mermaidJs}</script>
 <script>mermaid.initialize({ startOnLoad: true, securityLevel: 'loose', theme: 'neutral', themeVariables: { fontSize: '13px' }, flowchart: { useMaxWidth: false, padding: 6 }, sequence: { showSequenceNumbers: true } });</script>` : ''}

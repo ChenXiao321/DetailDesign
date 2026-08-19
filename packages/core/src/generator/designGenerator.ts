@@ -9,14 +9,22 @@ import {
 } from '../llm/prompts.js';
 
 /** 从 LLM 输出中提取 Mermaid 源码（剥 ```mermaid 围栏）；非法则抛错 */
-function extractMermaid(expectedStart: RegExp): (output: string) => string {
+function extractMermaid(expectedStart: RegExp, kindHint: string): (output: string) => string {
   return (output: string) => {
     let text = output.trim();
     const fence = text.match(/```(?:mermaid)?\s*\n([\s\S]*?)```/);
-    if (fence) text = fence[1].trim();
+    if (fence) {
+      text = fence[1].trim();
+    } else {
+      // 无围栏时兜底：模型若在图代码前后加了解释文字，从第一个图起始行截取
+      const lines = text.split('\n');
+      const startIdx = lines.findIndex(l => expectedStart.test(l.trim()));
+      if (startIdx > 0) text = lines.slice(startIdx).join('\n').trim();
+    }
     const firstLine = text.split('\n')[0].trim();
     if (!expectedStart.test(firstLine)) {
-      throw new Error(`第一行应匹配 ${expectedStart}，实际为 "${firstLine}"`);
+      // 面向模型的中文反馈（会随重试回喂给 LLM），避免只给正则表达式
+      throw new Error(`你的输出不是有效的 Mermaid 图代码。要求：第一行必须是 ${kindHint}，只输出图代码本身，不要输出任何解释、描述或分析文字。请重新输出。`);
     }
     return text;
   };
@@ -74,7 +82,7 @@ async function enrichFunction(
   if (needsFlowchart(fn)) {
     const fc = buildFlowchartPrompt(model, fn);
     const diagram = await generateWithRetry(
-      provider, fc.system, fc.user, extractMermaid(/^(flowchart|graph)\s+(TD|TB|BT|LR|RL)/),
+      provider, fc.system, fc.user, extractMermaid(/^(flowchart|graph)\s+(TD|TB|BT|LR|RL)/, 'flowchart TD'),
     );
     fn.generated.flowchart = diagram;
     fn.generated.flowchartFormat = 'mermaid';
@@ -91,7 +99,7 @@ async function generateDynamicDesign(
   // ---- 状态机 ----
   const smPrompt = buildStateMachinePrompt(model);
   if (smPrompt) {
-    const diagram = await generateWithRetry(provider, smPrompt.system, smPrompt.user, extractMermaid(/^stateDiagram-v2/));
+    const diagram = await generateWithRetry(provider, smPrompt.system, smPrompt.user, extractMermaid(/^stateDiagram-v2/, 'stateDiagram-v2'));
     const stateType = model.types.find(t => t.kind === 'typedef' && (t.relatedDefines?.length ?? 0) >= 3);
     result.stateMachine = {
       name: `${model.module} 状态机`,
@@ -118,7 +126,7 @@ async function generateDynamicDesign(
     const fn = model.providedFunctions.find(f => f.name === fnName);
     if (!fn) continue;
     const { system, user } = buildSequencePrompt(model, fn, scenario);
-    const diagram = await generateWithRetry(provider, system, user, extractMermaid(/^sequenceDiagram/));
+    const diagram = await generateWithRetry(provider, system, user, extractMermaid(/^sequenceDiagram/, 'sequenceDiagram'));
     result.sequences.push({
       name: scenario,
       diagram,
@@ -141,6 +149,8 @@ export interface GenerateOptions {
   skipExisting?: boolean;
   /** 进度回调 */
   onProgress?: (msg: string) => void;
+  /** 失败收集：单条目失败不中断整批，失败原因 push 进该数组由调用方汇总 */
+  failures?: string[];
 }
 
 /** 生成入口：就地增强 model（函数 generated 字段 + dynamicDesign） */
@@ -164,7 +174,12 @@ export async function generateDesign(
       continue;
     }
     log(`生成描述: ${fn.name}`);
-    await enrichFunction(model, fn, provider);
+    try {
+      await enrichFunction(model, fn, provider);
+    } catch (err) {
+      log(`  ⚠ 失败（已跳过，可 --resume 重试）: ${fn.name} — ${(err as Error).message.split('\n')[0]}`);
+      opts?.failures?.push(`${fn.name}: ${(err as Error).message.split('\n')[0]}`);
+    }
   }
 
   if ((!only || only.includes('dynamic'))) {
@@ -172,7 +187,12 @@ export async function generateDesign(
       log('跳过（已有动态设计）');
     } else {
       log('生成动态设计（状态机/序列图）');
-      model.dynamicDesign = await generateDynamicDesign(model, provider);
+      try {
+        model.dynamicDesign = await generateDynamicDesign(model, provider);
+      } catch (err) {
+        log(`  ⚠ 动态设计失败（已跳过，可 --resume 重试）: ${(err as Error).message.split('\n')[0]}`);
+        opts?.failures?.push(`dynamic: ${(err as Error).message.split('\n')[0]}`);
+      }
     }
   }
 
@@ -185,16 +205,21 @@ export async function generateDesign(
       }
       log(`生成配置说明: ${macro.name}`);
       const { system, user } = buildConfigValueEffectPrompt(model, macro);
-      const text = await generateWithRetry(provider, system, user, (o) => {
-        const cleaned = o.trim();
-        if (cleaned.length < 10) throw new Error('说明过短（<10字符）');
-        return cleaned;
-      });
-      macro.generated = {
-        valueEffect: text,
-        llmModel: provider.name,
-        generatedAt: new Date().toISOString(),
-      };
+      try {
+        const text = await generateWithRetry(provider, system, user, (o) => {
+          const cleaned = o.trim();
+          if (cleaned.length < 10) throw new Error('说明过短（<10字符）');
+          return cleaned;
+        });
+        macro.generated = {
+          valueEffect: text,
+          llmModel: provider.name,
+          generatedAt: new Date().toISOString(),
+        };
+      } catch (err) {
+        log(`  ⚠ 失败（已跳过，可 --resume 重试）: ${macro.name} — ${(err as Error).message.split('\n')[0]}`);
+        opts?.failures?.push(`${macro.name}: ${(err as Error).message.split('\n')[0]}`);
+      }
     }
   }
 
@@ -206,16 +231,21 @@ export async function generateDesign(
       }
       log(`生成 Callout 描述: ${ext.name}`);
       const { system, user } = buildCalloutDescriptionPrompt(model, ext);
-      const text = await generateWithRetry(provider, system, user, (o) => {
-        const cleaned = o.trim();
-        if (cleaned.length < 10) throw new Error('描述过短（<10字符）');
-        return cleaned;
-      });
-      ext.generated = {
-        detailedDescription: text,
-        llmModel: provider.name,
-        generatedAt: new Date().toISOString(),
-      };
+      try {
+        const text = await generateWithRetry(provider, system, user, (o) => {
+          const cleaned = o.trim();
+          if (cleaned.length < 10) throw new Error('描述过短（<10字符）');
+          return cleaned;
+        });
+        ext.generated = {
+          detailedDescription: text,
+          llmModel: provider.name,
+          generatedAt: new Date().toISOString(),
+        };
+      } catch (err) {
+        log(`  ⚠ 失败（已跳过，可 --resume 重试）: ${ext.name} — ${(err as Error).message.split('\n')[0]}`);
+        opts?.failures?.push(`${ext.name}: ${(err as Error).message.split('\n')[0]}`);
+      }
     }
   }
 

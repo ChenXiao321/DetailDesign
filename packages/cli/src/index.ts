@@ -132,15 +132,22 @@ async function cmdGen(dir: string, outDir: string, mock: boolean, only?: string[
   const save = (): void => {
     fs.writeFileSync(designPath, JSON.stringify(model, null, 2), 'utf-8');
   };
+  const failures: string[] = [];
   await generateDesign(model, provider, {
     only,
     skipExisting: resume,
+    failures,
     onProgress: msg => {
       save();
       console.error(`  ${msg}`);
     },
   });
   save();
+
+  if (failures.length > 0) {
+    console.log(`\n⚠ ${failures.length} 个条目生成失败（加 --resume 可只重试这些条目）:`);
+    for (const f of failures) console.log(`  - ${f}`);
+  }
 
   const enriched = [...model.providedFunctions, ...model.internalFunctions].filter(f => f.generated);
   console.log(`\n生成完成: ${enriched.length} 个函数描述`);

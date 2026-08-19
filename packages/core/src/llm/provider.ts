@@ -1,14 +1,15 @@
 /**
  * LLM Provider 抽象：默认 OpenAI 兼容接口（本地 Qwen），可替换其他实现。
- * 配置来源（优先级从高到低）：显式参数 > 环境变量 > lld.config.json
+ * 配置来源（优先级从高到低）：显式参数 > 环境变量 > lld.config.json（由 CLI 读入后作为显式参数传入；core 不碰文件系统）
  */
 
 export interface LLMConfig {
-  baseUrl: string;     // 如 http://qwen-server:8000/v1
+  baseUrl: string;     // 如 http://qwen-server:8000/v1（只给 host:port 时自动补 /v1）
   apiKey: string;      // 本地部署通常任意值即可
   model: string;       // 如 qwen3.6-35b-a3b
   temperature?: number;
   maxTokens?: number;
+  timeoutMs?: number;  // 单次请求超时，默认 180s（35B 级模型长输出较慢）
 }
 
 export interface LLMProvider {
@@ -17,45 +18,87 @@ export interface LLMProvider {
   generate(system: string, user: string, opts?: { temperature?: number; maxTokens?: number }): Promise<string>;
 }
 
+const DEFAULT_TIMEOUT_MS = 180_000;
+const MAX_NETWORK_RETRIES = 2;
+
+/** baseUrl 规范化：只给 host:port（无路径）时自动补 /v1（vLLM 等 OpenAI 兼容服务的惯例挂载点） */
+export function normalizeBaseUrl(baseUrl: string): string {
+  const trimmed = baseUrl.replace(/\/+$/, '');
+  try {
+    const u = new URL(trimmed);
+    if (u.pathname === '' || u.pathname === '/') return `${trimmed}/v1`;
+  } catch {
+    // 非法 URL 原样返回，请求时报错即可
+  }
+  return trimmed;
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 export class OpenAICompatibleProvider implements LLMProvider {
   readonly name: string;
   private config: LLMConfig;
+  private baseUrl: string;
 
   constructor(config: LLMConfig) {
     this.config = config;
+    this.baseUrl = normalizeBaseUrl(config.baseUrl);
     this.name = `openai-compatible:${config.model}`;
   }
 
   async generate(system: string, user: string, opts?: { temperature?: number; maxTokens?: number }): Promise<string> {
-    const url = `${this.config.baseUrl.replace(/\/$/, '')}/chat/completions`;
-    const resp = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.config.apiKey}`,
-      },
-      body: JSON.stringify({
-        model: this.config.model,
-        messages: [
-          { role: 'system', content: system },
-          { role: 'user', content: user },
-        ],
-        temperature: opts?.temperature ?? this.config.temperature ?? 0.2,
-        max_tokens: opts?.maxTokens ?? this.config.maxTokens ?? 4096,
-      }),
+    const url = `${this.baseUrl}/chat/completions`;
+    const body = JSON.stringify({
+      model: this.config.model,
+      messages: [
+        { role: 'system', content: system },
+        { role: 'user', content: user },
+      ],
+      temperature: opts?.temperature ?? this.config.temperature ?? 0.2,
+      max_tokens: opts?.maxTokens ?? this.config.maxTokens ?? 4096,
     });
+    const timeoutMs = this.config.timeoutMs ?? DEFAULT_TIMEOUT_MS;
 
-    if (!resp.ok) {
-      const body = await resp.text();
-      throw new Error(`LLM 请求失败 ${resp.status}: ${body.slice(0, 300)}`);
+    let lastError: Error | null = null;
+    for (let attempt = 0; attempt <= MAX_NETWORK_RETRIES; attempt++) {
+      if (attempt > 0) await sleep(1000 * attempt); // 退避：1s、2s
+      try {
+        const resp = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.config.apiKey}`,
+          },
+          body,
+          signal: AbortSignal.timeout(timeoutMs),
+        });
+
+        if (!resp.ok) {
+          const respBody = await resp.text();
+          // 4xx 是请求本身的问题（模型名错/参数不合法），重试无意义；5xx 与服务中断可重试
+          if (resp.status < 500 || attempt === MAX_NETWORK_RETRIES) {
+            throw new Error(`LLM 请求失败 ${resp.status}: ${respBody.slice(0, 300)}`);
+          }
+          lastError = new Error(`LLM 请求失败 ${resp.status}: ${respBody.slice(0, 300)}`);
+          continue;
+        }
+
+        const data = await resp.json() as {
+          choices?: { message?: { content?: string } }[];
+        };
+        const content = data.choices?.[0]?.message?.content;
+        if (!content) throw new Error('LLM 返回为空');
+        return content.trim();
+      } catch (err) {
+        const e = err as Error;
+        // 已构造的 4xx 错误直接抛；网络错误/超时/5xx 进入重试
+        if (/^LLM 请求失败 4\d\d/.test(e.message)) throw e;
+        lastError = e;
+      }
     }
-
-    const data = await resp.json() as {
-      choices?: { message?: { content?: string } }[];
-    };
-    const content = data.choices?.[0]?.message?.content;
-    if (!content) throw new Error('LLM 返回为空');
-    return content.trim();
+    throw new Error(`LLM 请求失败（网络重试 ${MAX_NETWORK_RETRIES} 次后仍失败）: ${lastError?.message}`);
   }
 }
 
@@ -107,5 +150,6 @@ export function resolveConfig(overrides?: Partial<LLMConfig>): LLMConfig {
     model: overrides?.model ?? process.env.LLD_LLM_MODEL ?? 'qwen3.6-35b-a3b',
     temperature: overrides?.temperature,
     maxTokens: overrides?.maxTokens,
+    timeoutMs: overrides?.timeoutMs ?? (process.env.LLD_LLM_TIMEOUT_MS ? Number(process.env.LLD_LLM_TIMEOUT_MS) : undefined),
   };
 }

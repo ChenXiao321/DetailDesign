@@ -137,6 +137,8 @@ async function generateDynamicDesign(
 export interface GenerateOptions {
   /** 只生成指定条目（函数名或 'dynamic'），空 = 全部 */
   only?: string[];
+  /** 断点续跑：跳过已有 generated 内容的条目（配合 CLI --resume） */
+  skipExisting?: boolean;
   /** 进度回调 */
   onProgress?: (msg: string) => void;
 }
@@ -149,6 +151,7 @@ export async function generateDesign(
 ): Promise<ModuleModel> {
   const log = opts?.onProgress ?? (() => {});
   const only = opts?.only;
+  const skipExisting = opts?.skipExisting ?? false;
 
   const allFunctions = [...model.providedFunctions, ...model.internalFunctions];
   const targets = only
@@ -156,18 +159,30 @@ export async function generateDesign(
     : allFunctions;
 
   for (const fn of targets) {
+    if (skipExisting && fn.generated?.detailedDescription && fn.generated.flowchart) {
+      log(`跳过（已有生成内容）: ${fn.name}`);
+      continue;
+    }
     log(`生成描述: ${fn.name}`);
     await enrichFunction(model, fn, provider);
   }
 
-  if (!only || only.includes('dynamic')) {
-    log('生成动态设计（状态机/序列图）');
-    model.dynamicDesign = await generateDynamicDesign(model, provider);
+  if ((!only || only.includes('dynamic'))) {
+    if (skipExisting && model.dynamicDesign) {
+      log('跳过（已有动态设计）');
+    } else {
+      log('生成动态设计（状态机/序列图）');
+      model.dynamicDesign = await generateDynamicDesign(model, provider);
+    }
   }
 
   if (!only || only.includes('configs')) {
     for (const macro of model.configMacros) {
       if (macro.kind === 'alias') continue;   // 别名宏非配置项，不生成取值说明
+      if (skipExisting && macro.generated?.valueEffect) {
+        log(`跳过（已有配置说明）: ${macro.name}`);
+        continue;
+      }
       log(`生成配置说明: ${macro.name}`);
       const { system, user } = buildConfigValueEffectPrompt(model, macro);
       const text = await generateWithRetry(provider, system, user, (o) => {
@@ -185,6 +200,10 @@ export async function generateDesign(
 
   if (!only || only.includes('callouts')) {
     for (const ext of model.calledExternalFunctions.filter(e => e.group === 'Callout')) {
+      if (skipExisting && ext.generated?.detailedDescription) {
+        log(`跳过（已有 Callout 描述）: ${ext.name}`);
+        continue;
+      }
       log(`生成 Callout 描述: ${ext.name}`);
       const { system, user } = buildCalloutDescriptionPrompt(model, ext);
       const text = await generateWithRetry(provider, system, user, (o) => {

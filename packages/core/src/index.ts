@@ -4,7 +4,7 @@ export { parseCFile, preprocessSource, walkTopLevel, nodeText } from './parser/c
 export { generateDesign, type GenerateOptions } from './generator/designGenerator.js';
 export { generateHtmlReport } from './report/htmlReport.js';
 export {
-  OpenAICompatibleProvider, MockProvider, resolveConfig,
+  OpenAICompatibleProvider, MockProvider, resolveConfig, normalizeBaseUrl,
   type LLMProvider, type LLMConfig,
 } from './llm/provider.js';
 export {

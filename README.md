@@ -28,14 +28,30 @@ node packages/cli/dist/index.js analyze 测试模块/Gp_EcuStpStdn --out 测试�
 
 **方式 A：本地 Qwen（内网环境，正式路径）**
 
+LLM 连接配置三选一（优先级：环境变量 > lld.config.json）：
+
 ```powershell
-# PowerShell 设置环境变量（Qwen 服务器地址）
-$env:LLD_LLM_BASE_URL = "http://<qwen-server>:8000/v1"
+# 方式 1：环境变量
+$env:LLD_LLM_BASE_URL = "http://10.7.29.98:4000"   # 只给 host:port 会自动补 /v1
 $env:LLD_LLM_API_KEY = "local"        # 本地部署通常任意值
 $env:LLD_LLM_MODEL = "qwen3.6-35b-a3b" # 默认值，可不设
 
+# 方式 2：当前目录放 lld.config.json（参照 lld.config.example.json；已 gitignore，不会进仓库）
+```
+
+**先自检连通性**（到新环境第一件事）：
+
+```bash
+node packages/cli/dist/index.js ping
+# ✓ /models 可达 + ✓ chat 调用成功 → 可以跑 gen
+```
+
+```bash
 node packages/cli/dist/index.js gen 测试模块/Gp_EcuStpStdn --out 测试产出/Gp_EcuStpStdn
 ```
+
+`gen` 逐条目增量落盘 `lld_design.json`，中途断网/中断不丢进度，加 `--resume` 续跑（跳过已生成条目）。
+网络抖动自动重试 2 次（退避 1s/2s）；单次请求超时默认 180s，可用 `LLD_LLM_TIMEOUT_MS` 调整。
 
 **方式 B：mock 预览（调试用，不调用任何模型）**
 
@@ -72,6 +88,44 @@ node packages/cli/dist/index.js report 测试模块/Gp_EcuStpStdn --out 测试�
 
 Mermaid 可粘贴到支持 Mermaid 的工具（VS Code Mermaid 插件 / mermaid.live）预览；
 HTML 报告已内嵌 mermaid.min.js，直接打开即可离线渲染。
+
+## 迁移到目标环境运行（Qwen 实测 runbook）
+
+Qwen 服务器（10.7.29.98:4000）只在特定网段可达，实测需在能访问该地址的机器上跑。
+
+**拷贝清单**（整个仓库目录，或至少以下部分）：
+
+```
+packages/            # 产品代码（core + cli）
+测试模块/            # 模块源码（gen 需要重新 analyze 或读取 lld_model.json）
+lld.config.json      # LLM 连接配置（参照 lld.config.example.json 填写）
+package.json / package-lock.json
+```
+
+**目标环境步骤**：
+
+```bash
+npm install          # 或 npm ci；需要 node ≥ 18
+npm run build
+
+# 1. 自检连通性（不通会打印排查方向）
+node packages/cli/dist/index.js ping
+
+# 2. 静态分析（离线）
+node packages/cli/dist/index.js analyze 测试模块/Gp_EcuStpStdn --out 测试产出/Gp_EcuStpStdn_qwen
+
+# 3. 先单点试一个函数，确认 Qwen 输出格式兼容（prompt 有 Mermaid 格式校验+重试）
+node packages/cli/dist/index.js gen 测试模块/Gp_EcuStpStdn --out 测试产出/Gp_EcuStpStdn_qwen --only Gp_EcuStpShdn_Startup
+
+# 4. 全量跑（约 55 次 LLM 调用；中断后加 --resume 续跑）
+node packages/cli/dist/index.js gen 测试模块/Gp_EcuStpStdn --out 测试产出/Gp_EcuStpStdn_qwen
+
+# 5. 出报告（离线，可在本机做——把 lld_design.json 拷回即可）
+node packages/cli/dist/index.js report 测试模块/Gp_EcuStpStdn --out 测试产出/Gp_EcuStpStdn_qwen
+```
+
+产物目录用 `_qwen` 后缀与 samples 基准（`测试产出/Gp_EcuStpStdn/`）区分，方便对照评审。
+评审重点：描述质量 vs samples、流程图 Mermaid 语法正确率、格式校验重试次数（stderr 日志）。
 
 ## 当前状态
 

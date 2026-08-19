@@ -305,6 +305,23 @@ ${detailTable}`;
     ? ['flowchart LR', ...includeEdges].join('\n')
     : '';
 
+  // ---- 5.1 功能接口总图（由 providedFunctions + calledExternalFunctions 静态生成，无需 LLM） ----
+  // 模板要求：功能接口图显示 FC 的接口关系，箭头指向与数据流向一致
+  const overviewLines: string[] = ['flowchart LR'];
+  overviewLines.push('    Caller["外部调用方<br/>（其他 FC / RTE / 集成代码）"]');
+  overviewLines.push(`    subgraph MOD["${model.module} 提供的外部接口（${model.providedFunctions.length} 个）"]`, '        direction TB');
+  model.providedFunctions.forEach((f, i) => overviewLines.push(`        P${i}["${f.name}"]`));
+  overviewLines.push('    end');
+  const extGroupEntries = [...groups.entries()];
+  extGroupEntries.forEach(([group, items], gi) => {
+    const names = items.map(e => e.name).join('<br/>');
+    const tag = group === 'Callout' ? '（配置代码回调）' : '';
+    overviewLines.push(`    G${gi}["<b>${group}</b>${tag}（${items.length} 个）<br/>──────────<br/>${names}"]`);
+  });
+  overviewLines.push('    Caller --> MOD');
+  extGroupEntries.forEach((_, gi) => overviewLines.push(`    MOD --> G${gi}`));
+  const interfaceOverview = overviewLines.join('\n');
+
   // ---- 5.1 功能描述 ----
   const functionalDescSection = model.functionalDescription
     ? `<p>${esc(model.functionalDescription)}</p>`
@@ -419,6 +436,10 @@ ${includeGraph ? `${diagramBlock(includeGraph)}
 <details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">${escRaw(includeGraph)}</pre></details>` : '<p class="todo">（未解析到 include 关系）</p>'}
 
 <h2 id="s51">5.1 功能描述</h2>
+<h3>功能接口总图</h3>
+<p class="muted">本模块对外提供 ${model.providedFunctions.length} 个接口函数（左侧为调用方），并调用 ${model.calledExternalFunctions.length} 个外部接口（右侧按来源模块归组，含 Callout 配置代码回调）；箭头方向为调用方向。</p>
+${diagramBlock(interfaceOverview)}
+<details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">${escRaw(interfaceOverview)}</pre></details>
 ${functionalDescSection}
 
 <h2 id="s52">5.2 接口说明</h2>

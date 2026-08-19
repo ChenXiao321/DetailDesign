@@ -554,6 +554,14 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
   });
   ov.push('    Caller --> MOD');
   [...ovGroups.keys()].forEach((_, gi) => ov.push(`    MOD --> G${gi}`));
+  // 配色：显式指定填充+文字色，保证对比度（与内部调用图同色板）
+  ov.push('    classDef caller fill:#eaeef2,stroke:#57606a,color:#1f2328');
+  ov.push('    classDef provided fill:#b6e3ff,stroke:#0969da,color:#0a3069');
+  ov.push('    classDef extgroup fill:#f6f8fa,stroke:#57606a,color:#1f2328');
+  ov.push('    classDef calloutgrp fill:#ffe9a8,stroke:#bf8700,color:#1f2328');
+  ov.push('    class Caller caller');
+  if (providedFunctions.length > 0) ov.push(`    class ${providedFunctions.map((_, i) => 'P' + i).join(',')} provided`);
+  [...ovGroups.keys()].forEach((group, gi) => ov.push(`    class G${gi} ${group === 'Callout' ? 'calloutgrp' : 'extgroup'}`));
 
   // ---------- 5.1 内部函数调用图（静态生成；按对外接口函数逐张拆分，每张一个工作项） ----------
   // 每张图 = 以某对外接口为根的模块内调用闭包（内部函数传递展开 + 直接命中的 Callout）；
@@ -566,9 +574,9 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
   const shortName = (n: string) => n.startsWith(`${module}_`) ? n.slice(module.length + 1) : n;
   const fnByName = new Map([...providedFunctions, ...internalFunctions].map(f => [f.name, f] as const));
   const CG_CLASSES = [
-    '    classDef root fill:#0969da,stroke:#0a3069,color:#fff',
-    '    classDef internal fill:#f6f8fa,stroke:#57606a',
-    '    classDef callout fill:#fff8c5,stroke:#eac54f',
+    '    classDef root fill:#0a3069,stroke:#0a3069,color:#ffffff',
+    '    classDef internal fill:#eaeef2,stroke:#57606a,color:#1f2328',
+    '    classDef callout fill:#ffe9a8,stroke:#bf8700,color:#1f2328',
   ];
   const callGraphs: NonNullable<ModuleModel['callGraphs']> = [];
 

@@ -482,7 +482,7 @@ ${calloutCfgSection}
 ${aliasCfgNote}
 </main>
 ${opts?.mermaidJs ? `<script>${opts.mermaidJs}</script>
-<script>mermaid.initialize({ startOnLoad: true, securityLevel: 'loose', theme: 'neutral', themeVariables: { fontSize: '13px' }, flowchart: { useMaxWidth: false }, sequence: { showSequenceNumbers: true } });</script>` : ''}
+<script>mermaid.initialize({ startOnLoad: true, securityLevel: 'loose', theme: 'neutral', themeVariables: { fontSize: '13px' }, flowchart: { useMaxWidth: false, padding: 6 }, sequence: { showSequenceNumbers: true } });</script>` : ''}
 </body>
 </html>`;
 }

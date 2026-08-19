@@ -104,6 +104,37 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
 <h2 id="s51">5.1 功能描述</h2>
 <p>Gp_EcuStpShdn 模块负责多核 ECU 启动阶段的时序协调与安全监控，主要功能包括：<br>- 多核启动时序控制：按 STAGE_ONE / STAGE_TWO / STAGE_THREE 三个阶段协调主核（Core0）与从核的初始化<br>- 自检管理：触发并检查 MCU 预运行测试、运行时测试与 SBC 自检结果，失败时按配置执行安全动作<br>- 安全状态管理：提供进入与查询安全状态的接口（SetSafeState / GetSafeState）<br>- 故障恢复：提供 Trap 恢复与 OS 错误恢复接口，具体恢复策略转发至 Callout 函数实现<br>- 断电管理：处理启动阶段（TryPwrShdn 标志）与关闭阶段（PwrShdnInShdnPhase）的断电请求<br>- 时间戳记录：记录启动关键节点时间戳，主核统计最后完成初始化的从核时间<br>模块在 EcuM 的 DriverInitOne 阶段经 Gp_EcuStpShdn_Startup 被调用，是 ECU 启动的关键路径；运行时由 Gp_EcuStpShdn_Mainfunction 周期执行运行时测试。</p>
 
+<h3>功能接口总图 <span class="badge">工作项 · 5.1</span></h3>
+<p class="muted">本模块对外提供 8 个接口函数（左侧为调用方），并调用 33 个外部接口（右侧按来源模块归组，含 Callout 配置代码回调）；箭头方向为调用方向。</p>
+<div class="mermaid">flowchart LR
+    Caller["外部调用方&lt;br/&gt;（其他 FC / RTE / 集成代码）"]
+    subgraph MOD["Gp_EcuStpShdn 提供的外部接口（8 个）"]
+        direction LR
+        P0["Gp_EcuStpShdn_SetSafeState"] ~~~ P1["Gp_EcuStpShdn_SetTryPwrShdn"] ~~~ P2["Gp_EcuStpShdn_GetSafeState"] ~~~ P3["Gp_EcuStpShdn_TrapRecov"]
+        P4["Gp_EcuStpShdn_OsErrRecov"] ~~~ P5["Gp_EcuStpShdn_PwrShdnInShdnPhase"] ~~~ P6["Gp_EcuStpShdn_Startup"] ~~~ P7["Gp_EcuStpShdn_Mainfunction"]
+    end
+    G0["&lt;b&gt;Callout&lt;/b&gt;（配置代码回调）（25 个）&lt;br/&gt;──────────&lt;br/&gt;Gp_EcuStpShdn_CalloutChkMcuPreRunTest&lt;br/&gt;Gp_EcuStpShdn_CalloutChkMcuRunTimeTest&lt;br/&gt;Gp_EcuStpShdn_CalloutChkSbcTest&lt;br/&gt;Gp_EcuStpShdn_CalloutChkSwtToRun&lt;br/&gt;Gp_EcuStpShdn_CalloutGetCoreId&lt;br/&gt;Gp_EcuStpShdn_CalloutGetSysTimeMs&lt;br/&gt;Gp_EcuStpShdn_CalloutInitFailedHnd&lt;br/&gt;Gp_EcuStpShdn_CalloutInitStageOneCore0&lt;br/&gt;Gp_EcuStpShdn_CalloutInitStageTwoCore0&lt;br/&gt;Gp_EcuStpShdn_CalloutInitStageTwoCore1&lt;br/&gt;Gp_EcuStpShdn_CalloutInitStageTwoCore2&lt;br/&gt;Gp_EcuStpShdn_CalloutInitStageTwoCore3&lt;br/&gt;Gp_EcuStpShdn_CalloutInitStageTwoCore4&lt;br/&gt;Gp_EcuStpShdn_CalloutInitStageTwoCore5&lt;br/&gt;Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd&lt;br/&gt;Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd&lt;br/&gt;Gp_EcuStpShdn_CalloutOsErrRecov&lt;br/&gt;Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase&lt;br/&gt;Gp_EcuStpShdn_CalloutPwrShdnInStpPhase&lt;br/&gt;Gp_EcuStpShdn_CalloutSafeState&lt;br/&gt;Gp_EcuStpShdn_CalloutSbcInit&lt;br/&gt;Gp_EcuStpShdn_CalloutSbcInitInSafeState&lt;br/&gt;Gp_EcuStpShdn_CalloutSbcTestFailedHnd&lt;br/&gt;Gp_EcuStpShdn_CalloutSwtToRunFailedHnd&lt;br/&gt;Gp_EcuStpShdn_CalloutTrapRecov"]
+    G1["&lt;b&gt;Gp_RstM&lt;/b&gt;（4 个）&lt;br/&gt;──────────&lt;br/&gt;Gp_RstM_GetLastRstTypeInfo&lt;br/&gt;Gp_RstM_Init&lt;br/&gt;Gp_RstM_InitOne&lt;br/&gt;Gp_RstM_InitTwo"]
+    G2["&lt;b&gt;Gp_TstApp&lt;/b&gt;（4 个）&lt;br/&gt;──────────&lt;br/&gt;Gp_TstApp_PreRunInit&lt;br/&gt;Gp_TstApp_PreRunPhase&lt;br/&gt;Gp_TstApp_RunTimePhase&lt;br/&gt;Gp_TstApp_SwitchToRunPhase"]
+    Caller --&gt; MOD
+    MOD --&gt; G0
+    MOD --&gt; G1
+    MOD --&gt; G2</div>
+<details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">flowchart LR
+    Caller["外部调用方&lt;br/&gt;（其他 FC / RTE / 集成代码）"]
+    subgraph MOD["Gp_EcuStpShdn 提供的外部接口（8 个）"]
+        direction LR
+        P0["Gp_EcuStpShdn_SetSafeState"] ~~~ P1["Gp_EcuStpShdn_SetTryPwrShdn"] ~~~ P2["Gp_EcuStpShdn_GetSafeState"] ~~~ P3["Gp_EcuStpShdn_TrapRecov"]
+        P4["Gp_EcuStpShdn_OsErrRecov"] ~~~ P5["Gp_EcuStpShdn_PwrShdnInShdnPhase"] ~~~ P6["Gp_EcuStpShdn_Startup"] ~~~ P7["Gp_EcuStpShdn_Mainfunction"]
+    end
+    G0["&lt;b&gt;Callout&lt;/b&gt;（配置代码回调）（25 个）&lt;br/&gt;──────────&lt;br/&gt;Gp_EcuStpShdn_CalloutChkMcuPreRunTest&lt;br/&gt;Gp_EcuStpShdn_CalloutChkMcuRunTimeTest&lt;br/&gt;Gp_EcuStpShdn_CalloutChkSbcTest&lt;br/&gt;Gp_EcuStpShdn_CalloutChkSwtToRun&lt;br/&gt;Gp_EcuStpShdn_CalloutGetCoreId&lt;br/&gt;Gp_EcuStpShdn_CalloutGetSysTimeMs&lt;br/&gt;Gp_EcuStpShdn_CalloutInitFailedHnd&lt;br/&gt;Gp_EcuStpShdn_CalloutInitStageOneCore0&lt;br/&gt;Gp_EcuStpShdn_CalloutInitStageTwoCore0&lt;br/&gt;Gp_EcuStpShdn_CalloutInitStageTwoCore1&lt;br/&gt;Gp_EcuStpShdn_CalloutInitStageTwoCore2&lt;br/&gt;Gp_EcuStpShdn_CalloutInitStageTwoCore3&lt;br/&gt;Gp_EcuStpShdn_CalloutInitStageTwoCore4&lt;br/&gt;Gp_EcuStpShdn_CalloutInitStageTwoCore5&lt;br/&gt;Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd&lt;br/&gt;Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd&lt;br/&gt;Gp_EcuStpShdn_CalloutOsErrRecov&lt;br/&gt;Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase&lt;br/&gt;Gp_EcuStpShdn_CalloutPwrShdnInStpPhase&lt;br/&gt;Gp_EcuStpShdn_CalloutSafeState&lt;br/&gt;Gp_EcuStpShdn_CalloutSbcInit&lt;br/&gt;Gp_EcuStpShdn_CalloutSbcInitInSafeState&lt;br/&gt;Gp_EcuStpShdn_CalloutSbcTestFailedHnd&lt;br/&gt;Gp_EcuStpShdn_CalloutSwtToRunFailedHnd&lt;br/&gt;Gp_EcuStpShdn_CalloutTrapRecov"]
+    G1["&lt;b&gt;Gp_RstM&lt;/b&gt;（4 个）&lt;br/&gt;──────────&lt;br/&gt;Gp_RstM_GetLastRstTypeInfo&lt;br/&gt;Gp_RstM_Init&lt;br/&gt;Gp_RstM_InitOne&lt;br/&gt;Gp_RstM_InitTwo"]
+    G2["&lt;b&gt;Gp_TstApp&lt;/b&gt;（4 个）&lt;br/&gt;──────────&lt;br/&gt;Gp_TstApp_PreRunInit&lt;br/&gt;Gp_TstApp_PreRunPhase&lt;br/&gt;Gp_TstApp_RunTimePhase&lt;br/&gt;Gp_TstApp_SwitchToRunPhase"]
+    Caller --&gt; MOD
+    MOD --&gt; G0
+    MOD --&gt; G1
+    MOD --&gt; G2</pre></details>
+
 <h2 id="s52">5.2 接口说明</h2>
 <h3 id="s521">5.2.1 数据类型说明</h3>
 <h3>5.2.1.1 引用的数据类型</h3>

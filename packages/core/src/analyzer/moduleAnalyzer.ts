@@ -555,44 +555,78 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
   ov.push('    Caller --> MOD');
   [...ovGroups.keys()].forEach((_, gi) => ov.push(`    MOD --> G${gi}`));
 
-  // ---------- 5.1 内部函数调用图（静态生成；节点=本模块全部函数，边=模块内调用） ----------
+  // ---------- 5.1 内部函数调用图（静态生成；按对外接口函数逐张拆分，每张一个工作项） ----------
+  // 每张图 = 以某对外接口为根的模块内调用闭包（内部函数传递展开 + 直接命中的 Callout）；
+  // 配置表函数指针引用的 Callout 不属于任何函数，单独成图；无内部调用的平凡函数不出图
   const cgId = (name: string) => 'N_' + name.replace(/[^A-Za-z0-9_]/g, '_');
-  const cg: string[] = ['flowchart TD'];
-  for (const f of providedFunctions) cg.push(`    ${cgId(f.name)}["${f.name}"]`);
-  for (const f of internalFunctions) cg.push(`    ${cgId(f.name)}["${f.name}"]`);
-  for (const f of [...providedFunctions, ...internalFunctions]) {
-    for (const callee of f.calls) {
-      if (definedNames.has(callee)) cg.push(`    ${cgId(f.name)} --> ${cgId(callee)}`);
-    }
-  }
-  // Callout 调用关系在本图展示：子图列出全部 Callout，直接调用画函数→Callout 边，
-  // 配置表函数指针引用（rtSatCont 等）经配置表节点接入
   const cgCallouts = [...externalMap.values()]
     .filter(e => e.group === 'Callout')
     .sort((a, b) => a.name.localeCompare(b.name));
-  if (cgCallouts.length > 0) {
-    const shortName = (n: string) => n.startsWith(`${module}_`) ? n.slice(module.length + 1) : n;
-    cg.push(`    subgraph CO["Callout 配置代码回调（${cgCallouts.length} 个）"]`);
-    cg.push('        direction TB');
-    const cfgRefCallouts = cgCallouts.filter(e => e.calledFrom.some(c => c.startsWith('(')));
-    if (cfgRefCallouts.length > 0) cg.push(`        N_CfgTbl["配置表函数指针引用"]`);
-    for (const e of cgCallouts) cg.push(`        ${cgId(e.name)}["${shortName(e.name)}"]`);
-    cg.push('    end');
-    for (const f of [...providedFunctions, ...internalFunctions]) {
-      for (const callee of f.calls) {
-        if (cgCallouts.some(e => e.name === callee)) cg.push(`    ${cgId(f.name)} --> ${cgId(callee)}`);
+  const calloutNameSet = new Set(cgCallouts.map(e => e.name));
+  const shortName = (n: string) => n.startsWith(`${module}_`) ? n.slice(module.length + 1) : n;
+  const fnByName = new Map([...providedFunctions, ...internalFunctions].map(f => [f.name, f] as const));
+  const CG_CLASSES = [
+    '    classDef root fill:#0969da,stroke:#0a3069,color:#fff',
+    '    classDef internal fill:#f6f8fa,stroke:#57606a',
+    '    classDef callout fill:#fff8c5,stroke:#eac54f',
+  ];
+  const callGraphs: NonNullable<ModuleModel['callGraphs']> = [];
+
+  for (const root of providedFunctions) {
+    const edges: string[] = [];
+    const usedInternal: string[] = [];
+    const usedCallouts: string[] = [];
+    const visited = new Set<string>();
+    const queue = [root.name];
+    while (queue.length > 0) {
+      const cur = queue.shift()!;
+      if (visited.has(cur)) continue;
+      visited.add(cur);
+      for (const callee of fnByName.get(cur)?.calls ?? []) {
+        if (fnByName.has(callee) && callee !== root.name) {
+          edges.push(`    ${cgId(cur)} --> ${cgId(callee)}`);
+          if (!visited.has(callee) && !usedInternal.includes(callee) && !providedFunctions.some(p => p.name === callee)) usedInternal.push(callee);
+          queue.push(callee);
+        } else if (calloutNameSet.has(callee)) {
+          edges.push(`    ${cgId(cur)} --> ${cgId(callee)}`);
+          if (!usedCallouts.includes(callee)) usedCallouts.push(callee);
+        }
       }
     }
-    for (const e of cfgRefCallouts) cg.push(`    N_CfgTbl --> ${cgId(e.name)}`);
+    if (edges.length === 0) continue;  // 平凡函数无模块内调用，不出图
+    const lines = ['flowchart TD', `    ${cgId(root.name)}["${root.name}"]`];
+    for (const n of usedInternal) lines.push(`    ${cgId(n)}["${n}"]`);
+    // 闭包内可能出现的其他对外接口（被内部函数回调）也列为节点
+    for (const n of visited) {
+      if (n !== root.name && !usedInternal.includes(n)) lines.push(`    ${cgId(n)}["${n}"]`);
+    }
+    for (const n of usedCallouts) lines.push(`    ${cgId(n)}["${shortName(n)}"]`);
+    lines.push(...edges, ...CG_CLASSES, `    class ${cgId(root.name)} root`);
+    if (usedInternal.length > 0) lines.push(`    class ${usedInternal.map(cgId).join(',')} internal`);
+    if (usedCallouts.length > 0) lines.push(`    class ${usedCallouts.map(cgId).join(',')} callout`);
+    callGraphs.push({
+      name: root.name,
+      diagram: lines.join('\n'),
+      diagramFormat: 'mermaid',
+      polarion: makeMarker('5.1', 'diagram', `${root.name} 调用图`, true),
+    });
   }
-  cg.push('    classDef provided fill:#ddf4ff,stroke:#0969da,color:#0a3069');
-  cg.push('    classDef internal fill:#f6f8fa,stroke:#57606a');
-  if (cgCallouts.length > 0) {
-    cg.push('    classDef callout fill:#fff8c5,stroke:#eac54f');
-    cg.push(`    class ${cgCallouts.map(e => cgId(e.name)).join(',')} callout`);
+
+  // 配置表函数指针引用（rtSatCont 等）：无直接调用者，单独成图
+  const cfgRefCallouts = cgCallouts.filter(e => e.calledFrom.some(c => c.startsWith('(')));
+  if (cfgRefCallouts.length > 0) {
+    const lines = ['flowchart TD', '    N_CfgTbl["配置表函数指针引用"]'];
+    for (const e of cfgRefCallouts) {
+      lines.push(`    ${cgId(e.name)}["${shortName(e.name)}"]`, `    N_CfgTbl --> ${cgId(e.name)}`);
+    }
+    lines.push(...CG_CLASSES, '    class N_CfgTbl internal', `    class ${cfgRefCallouts.map(e => cgId(e.name)).join(',')} callout`);
+    callGraphs.push({
+      name: '配置表函数指针引用',
+      diagram: lines.join('\n'),
+      diagramFormat: 'mermaid',
+      polarion: makeMarker('5.1', 'diagram', '配置表函数指针引用 调用图', true),
+    });
   }
-  if (providedFunctions.length > 0) cg.push(`    class ${providedFunctions.map(f => cgId(f.name)).join(',')} provided`);
-  if (internalFunctions.length > 0) cg.push(`    class ${internalFunctions.map(f => cgId(f.name)).join(',')} internal`);
 
   return {
     module,
@@ -610,10 +644,6 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
       diagramFormat: 'mermaid',
       polarion: makeMarker('5.1', 'diagram', '功能接口总图', true),
     },
-    internalCallGraph: {
-      diagram: cg.join('\n'),
-      diagramFormat: 'mermaid',
-      polarion: makeMarker('5.1', 'diagram', '内部函数调用图', true),
-    },
+    callGraphs,
   };
 }

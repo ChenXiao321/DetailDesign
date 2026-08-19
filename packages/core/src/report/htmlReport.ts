@@ -315,12 +315,13 @@ ${detailTable}`;
 <p class="muted">本模块对外提供 ${model.providedFunctions.length} 个接口函数（左侧为调用方），并调用 ${model.calledExternalFunctions.length} 个外部接口（右侧按来源模块归组，含 Callout 配置代码回调）；箭头方向为调用方向。各接口的模块内调用者见内部函数调用图与 5.2.2 表。</p>
 ${diagramBlock(model.interfaceOverview.diagram)}
 <details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">${escRaw(model.interfaceOverview.diagram)}</pre></details>` : '';
-  // 内部函数调用图：analyze 时静态生成并存入模型（工作项 · 5.1），此处仅渲染
-  const callGraphSection = model.internalCallGraph ? `
-<h3>内部函数调用图 <span class="badge">工作项 · ${esc(model.internalCallGraph.polarion.chapter)}</span></h3>
-<p class="muted">模块内函数间的调用关系（蓝色=提供的外部接口，灰色=内部函数，黄色=Callout 配置代码回调）；经配置表函数指针间接引用的 Callout 由「配置表函数指针引用」节点接入。其余跨模块调用（Gp_RstM / Gp_TstApp 等）见功能接口总图与 5.2.2 表，此处不重复绘制。</p>
-${diagramBlock(model.internalCallGraph.diagram)}
-<details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">${escRaw(model.internalCallGraph.diagram)}</pre></details>` : '';
+  // 内部函数调用图：analyze 时按对外接口函数逐张静态生成（每张一个工作项 · 5.1），此处仅渲染
+  const callGraphSection = (model.callGraphs?.length ?? 0) > 0 ? `
+<h3>内部函数调用图（每张图一个工作项）</h3>
+<p class="muted">按对外接口函数分别绘制其模块内调用闭包（深蓝=入口函数，灰=内部函数，黄=Callout 配置代码回调）；经配置表函数指针间接引用的 Callout 单独成图。无模块内调用的平凡函数不出图，其余跨模块调用（Gp_RstM / Gp_TstApp 等）见功能接口总图与 5.2.2 表。</p>
+${model.callGraphs!.map(g => `<h4>内部函数调用图：${esc(g.name)} <span class="badge">工作项 · ${esc(g.polarion.chapter)}</span></h4>
+${diagramBlock(g.diagram)}
+<details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">${escRaw(g.diagram)}</pre></details>`).join('\n')}` : '';
 
   // ---- 5.3 动态设计 ----
   const dd = model.dynamicDesign;

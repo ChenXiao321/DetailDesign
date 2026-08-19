@@ -135,168 +135,226 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
     MOD --&gt; G1
     MOD --&gt; G2</pre></details>
 
-<h3>内部函数调用图 <span class="badge">工作项 · 5.1</span></h3>
-<p class="muted">模块内函数间的调用关系（蓝色=提供的外部接口，灰色=内部函数，黄色=Callout 配置代码回调）；经配置表函数指针间接引用的 Callout 由「配置表函数指针引用」节点接入。其余跨模块调用（Gp_RstM / Gp_TstApp 等）见功能接口总图与 5.2.2 表，此处不重复绘制。</p>
+<h3>内部函数调用图（每张图一个工作项）</h3>
+<p class="muted">按对外接口函数分别绘制其模块内调用闭包（深蓝=入口函数，灰=内部函数，黄=Callout 配置代码回调）；经配置表函数指针间接引用的 Callout 单独成图。无模块内调用的平凡函数不出图，其余跨模块调用（Gp_RstM / Gp_TstApp 等）见功能接口总图与 5.2.2 表。</p>
+<h4>内部函数调用图：Gp_EcuStpShdn_TrapRecov <span class="badge">工作项 · 5.1</span></h4>
 <div class="mermaid">flowchart TD
-    N_Gp_EcuStpShdn_SetSafeState["Gp_EcuStpShdn_SetSafeState"]
-    N_Gp_EcuStpShdn_SetTryPwrShdn["Gp_EcuStpShdn_SetTryPwrShdn"]
-    N_Gp_EcuStpShdn_GetSafeState["Gp_EcuStpShdn_GetSafeState"]
     N_Gp_EcuStpShdn_TrapRecov["Gp_EcuStpShdn_TrapRecov"]
-    N_Gp_EcuStpShdn_OsErrRecov["Gp_EcuStpShdn_OsErrRecov"]
-    N_Gp_EcuStpShdn_PwrShdnInShdnPhase["Gp_EcuStpShdn_PwrShdnInShdnPhase"]
-    N_Gp_EcuStpShdn_Startup["Gp_EcuStpShdn_Startup"]
-    N_Gp_EcuStpShdn_Mainfunction["Gp_EcuStpShdn_Mainfunction"]
-    N_Gp_EcuStpShdn_CheckInitRslt["Gp_EcuStpShdn_CheckInitRslt"]
-    N_Gp_EcuStpShdn_MstProcMcuPreRunTest["Gp_EcuStpShdn_MstProcMcuPreRunTest"]
-    N_Gp_EcuStpShdn_MstPostInit["Gp_EcuStpShdn_MstPostInit"]
-    N_Gp_EcuStpShdn_GetLastSatTimeStamp["Gp_EcuStpShdn_GetLastSatTimeStamp"]
-    N_Gp_EcuStpShdn_Startup --&gt; N_Gp_EcuStpShdn_MstProcMcuPreRunTest
-    N_Gp_EcuStpShdn_Startup --&gt; N_Gp_EcuStpShdn_MstPostInit
-    N_Gp_EcuStpShdn_Startup --&gt; N_Gp_EcuStpShdn_CheckInitRslt
-    N_Gp_EcuStpShdn_Mainfunction --&gt; N_Gp_EcuStpShdn_GetLastSatTimeStamp
-    N_Gp_EcuStpShdn_MstPostInit --&gt; N_Gp_EcuStpShdn_CheckInitRslt
-    subgraph CO["Callout 配置代码回调（25 个）"]
-        direction TB
-        N_CfgTbl["配置表函数指针引用"]
-        N_Gp_EcuStpShdn_CalloutChkMcuPreRunTest["CalloutChkMcuPreRunTest"]
-        N_Gp_EcuStpShdn_CalloutChkMcuRunTimeTest["CalloutChkMcuRunTimeTest"]
-        N_Gp_EcuStpShdn_CalloutChkSbcTest["CalloutChkSbcTest"]
-        N_Gp_EcuStpShdn_CalloutChkSwtToRun["CalloutChkSwtToRun"]
-        N_Gp_EcuStpShdn_CalloutGetCoreId["CalloutGetCoreId"]
-        N_Gp_EcuStpShdn_CalloutGetSysTimeMs["CalloutGetSysTimeMs"]
-        N_Gp_EcuStpShdn_CalloutInitFailedHnd["CalloutInitFailedHnd"]
-        N_Gp_EcuStpShdn_CalloutInitStageOneCore0["CalloutInitStageOneCore0"]
-        N_Gp_EcuStpShdn_CalloutInitStageTwoCore0["CalloutInitStageTwoCore0"]
-        N_Gp_EcuStpShdn_CalloutInitStageTwoCore1["CalloutInitStageTwoCore1"]
-        N_Gp_EcuStpShdn_CalloutInitStageTwoCore2["CalloutInitStageTwoCore2"]
-        N_Gp_EcuStpShdn_CalloutInitStageTwoCore3["CalloutInitStageTwoCore3"]
-        N_Gp_EcuStpShdn_CalloutInitStageTwoCore4["CalloutInitStageTwoCore4"]
-        N_Gp_EcuStpShdn_CalloutInitStageTwoCore5["CalloutInitStageTwoCore5"]
-        N_Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd["CalloutMcuPreRunTestFailedHnd"]
-        N_Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd["CalloutMcuRunTimeTestFailedHnd"]
-        N_Gp_EcuStpShdn_CalloutOsErrRecov["CalloutOsErrRecov"]
-        N_Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase["CalloutPwrShdnInShdnPhase"]
-        N_Gp_EcuStpShdn_CalloutPwrShdnInStpPhase["CalloutPwrShdnInStpPhase"]
-        N_Gp_EcuStpShdn_CalloutSafeState["CalloutSafeState"]
-        N_Gp_EcuStpShdn_CalloutSbcInit["CalloutSbcInit"]
-        N_Gp_EcuStpShdn_CalloutSbcInitInSafeState["CalloutSbcInitInSafeState"]
-        N_Gp_EcuStpShdn_CalloutSbcTestFailedHnd["CalloutSbcTestFailedHnd"]
-        N_Gp_EcuStpShdn_CalloutSwtToRunFailedHnd["CalloutSwtToRunFailedHnd"]
-        N_Gp_EcuStpShdn_CalloutTrapRecov["CalloutTrapRecov"]
-    end
+    N_Gp_EcuStpShdn_CalloutTrapRecov["CalloutTrapRecov"]
     N_Gp_EcuStpShdn_TrapRecov --&gt; N_Gp_EcuStpShdn_CalloutTrapRecov
-    N_Gp_EcuStpShdn_OsErrRecov --&gt; N_Gp_EcuStpShdn_CalloutOsErrRecov
-    N_Gp_EcuStpShdn_PwrShdnInShdnPhase --&gt; N_Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase
-    N_Gp_EcuStpShdn_Startup --&gt; N_Gp_EcuStpShdn_CalloutGetCoreId
-    N_Gp_EcuStpShdn_Startup --&gt; N_Gp_EcuStpShdn_CalloutInitStageOneCore0
-    N_Gp_EcuStpShdn_Startup --&gt; N_Gp_EcuStpShdn_CalloutGetSysTimeMs
-    N_Gp_EcuStpShdn_Startup --&gt; N_Gp_EcuStpShdn_CalloutPwrShdnInStpPhase
-    N_Gp_EcuStpShdn_Startup --&gt; N_Gp_EcuStpShdn_CalloutSbcInitInSafeState
-    N_Gp_EcuStpShdn_Startup --&gt; N_Gp_EcuStpShdn_CalloutSafeState
-    N_Gp_EcuStpShdn_Startup --&gt; N_Gp_EcuStpShdn_CalloutSbcInit
-    N_Gp_EcuStpShdn_Startup --&gt; N_Gp_EcuStpShdn_CalloutInitFailedHnd
-    N_Gp_EcuStpShdn_Mainfunction --&gt; N_Gp_EcuStpShdn_CalloutGetCoreId
-    N_Gp_EcuStpShdn_Mainfunction --&gt; N_Gp_EcuStpShdn_CalloutChkMcuRunTimeTest
-    N_Gp_EcuStpShdn_Mainfunction --&gt; N_Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd
-    N_Gp_EcuStpShdn_MstProcMcuPreRunTest --&gt; N_Gp_EcuStpShdn_CalloutChkMcuPreRunTest
-    N_Gp_EcuStpShdn_MstProcMcuPreRunTest --&gt; N_Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd
-    N_Gp_EcuStpShdn_MstPostInit --&gt; N_Gp_EcuStpShdn_CalloutInitFailedHnd
-    N_Gp_EcuStpShdn_MstPostInit --&gt; N_Gp_EcuStpShdn_CalloutChkSwtToRun
-    N_Gp_EcuStpShdn_MstPostInit --&gt; N_Gp_EcuStpShdn_CalloutSwtToRunFailedHnd
-    N_Gp_EcuStpShdn_MstPostInit --&gt; N_Gp_EcuStpShdn_CalloutChkSbcTest
-    N_Gp_EcuStpShdn_MstPostInit --&gt; N_Gp_EcuStpShdn_CalloutSbcTestFailedHnd
-    N_CfgTbl --&gt; N_Gp_EcuStpShdn_CalloutInitStageTwoCore0
-    N_CfgTbl --&gt; N_Gp_EcuStpShdn_CalloutInitStageTwoCore1
-    N_CfgTbl --&gt; N_Gp_EcuStpShdn_CalloutInitStageTwoCore2
-    N_CfgTbl --&gt; N_Gp_EcuStpShdn_CalloutInitStageTwoCore3
-    N_CfgTbl --&gt; N_Gp_EcuStpShdn_CalloutInitStageTwoCore4
-    N_CfgTbl --&gt; N_Gp_EcuStpShdn_CalloutInitStageTwoCore5
-    classDef provided fill:#ddf4ff,stroke:#0969da,color:#0a3069
+    classDef root fill:#0969da,stroke:#0a3069,color:#fff
     classDef internal fill:#f6f8fa,stroke:#57606a
     classDef callout fill:#fff8c5,stroke:#eac54f
-    class N_Gp_EcuStpShdn_CalloutChkMcuPreRunTest,N_Gp_EcuStpShdn_CalloutChkMcuRunTimeTest,N_Gp_EcuStpShdn_CalloutChkSbcTest,N_Gp_EcuStpShdn_CalloutChkSwtToRun,N_Gp_EcuStpShdn_CalloutGetCoreId,N_Gp_EcuStpShdn_CalloutGetSysTimeMs,N_Gp_EcuStpShdn_CalloutInitFailedHnd,N_Gp_EcuStpShdn_CalloutInitStageOneCore0,N_Gp_EcuStpShdn_CalloutInitStageTwoCore0,N_Gp_EcuStpShdn_CalloutInitStageTwoCore1,N_Gp_EcuStpShdn_CalloutInitStageTwoCore2,N_Gp_EcuStpShdn_CalloutInitStageTwoCore3,N_Gp_EcuStpShdn_CalloutInitStageTwoCore4,N_Gp_EcuStpShdn_CalloutInitStageTwoCore5,N_Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd,N_Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd,N_Gp_EcuStpShdn_CalloutOsErrRecov,N_Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase,N_Gp_EcuStpShdn_CalloutPwrShdnInStpPhase,N_Gp_EcuStpShdn_CalloutSafeState,N_Gp_EcuStpShdn_CalloutSbcInit,N_Gp_EcuStpShdn_CalloutSbcInitInSafeState,N_Gp_EcuStpShdn_CalloutSbcTestFailedHnd,N_Gp_EcuStpShdn_CalloutSwtToRunFailedHnd,N_Gp_EcuStpShdn_CalloutTrapRecov callout
-    class N_Gp_EcuStpShdn_SetSafeState,N_Gp_EcuStpShdn_SetTryPwrShdn,N_Gp_EcuStpShdn_GetSafeState,N_Gp_EcuStpShdn_TrapRecov,N_Gp_EcuStpShdn_OsErrRecov,N_Gp_EcuStpShdn_PwrShdnInShdnPhase,N_Gp_EcuStpShdn_Startup,N_Gp_EcuStpShdn_Mainfunction provided
-    class N_Gp_EcuStpShdn_CheckInitRslt,N_Gp_EcuStpShdn_MstProcMcuPreRunTest,N_Gp_EcuStpShdn_MstPostInit,N_Gp_EcuStpShdn_GetLastSatTimeStamp internal</div>
+    class N_Gp_EcuStpShdn_TrapRecov root
+    class N_Gp_EcuStpShdn_CalloutTrapRecov callout</div>
 <details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">flowchart TD
-    N_Gp_EcuStpShdn_SetSafeState["Gp_EcuStpShdn_SetSafeState"]
-    N_Gp_EcuStpShdn_SetTryPwrShdn["Gp_EcuStpShdn_SetTryPwrShdn"]
-    N_Gp_EcuStpShdn_GetSafeState["Gp_EcuStpShdn_GetSafeState"]
     N_Gp_EcuStpShdn_TrapRecov["Gp_EcuStpShdn_TrapRecov"]
+    N_Gp_EcuStpShdn_CalloutTrapRecov["CalloutTrapRecov"]
+    N_Gp_EcuStpShdn_TrapRecov --&gt; N_Gp_EcuStpShdn_CalloutTrapRecov
+    classDef root fill:#0969da,stroke:#0a3069,color:#fff
+    classDef internal fill:#f6f8fa,stroke:#57606a
+    classDef callout fill:#fff8c5,stroke:#eac54f
+    class N_Gp_EcuStpShdn_TrapRecov root
+    class N_Gp_EcuStpShdn_CalloutTrapRecov callout</pre></details>
+<h4>内部函数调用图：Gp_EcuStpShdn_OsErrRecov <span class="badge">工作项 · 5.1</span></h4>
+<div class="mermaid">flowchart TD
     N_Gp_EcuStpShdn_OsErrRecov["Gp_EcuStpShdn_OsErrRecov"]
+    N_Gp_EcuStpShdn_CalloutOsErrRecov["CalloutOsErrRecov"]
+    N_Gp_EcuStpShdn_OsErrRecov --&gt; N_Gp_EcuStpShdn_CalloutOsErrRecov
+    classDef root fill:#0969da,stroke:#0a3069,color:#fff
+    classDef internal fill:#f6f8fa,stroke:#57606a
+    classDef callout fill:#fff8c5,stroke:#eac54f
+    class N_Gp_EcuStpShdn_OsErrRecov root
+    class N_Gp_EcuStpShdn_CalloutOsErrRecov callout</div>
+<details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">flowchart TD
+    N_Gp_EcuStpShdn_OsErrRecov["Gp_EcuStpShdn_OsErrRecov"]
+    N_Gp_EcuStpShdn_CalloutOsErrRecov["CalloutOsErrRecov"]
+    N_Gp_EcuStpShdn_OsErrRecov --&gt; N_Gp_EcuStpShdn_CalloutOsErrRecov
+    classDef root fill:#0969da,stroke:#0a3069,color:#fff
+    classDef internal fill:#f6f8fa,stroke:#57606a
+    classDef callout fill:#fff8c5,stroke:#eac54f
+    class N_Gp_EcuStpShdn_OsErrRecov root
+    class N_Gp_EcuStpShdn_CalloutOsErrRecov callout</pre></details>
+<h4>内部函数调用图：Gp_EcuStpShdn_PwrShdnInShdnPhase <span class="badge">工作项 · 5.1</span></h4>
+<div class="mermaid">flowchart TD
     N_Gp_EcuStpShdn_PwrShdnInShdnPhase["Gp_EcuStpShdn_PwrShdnInShdnPhase"]
+    N_Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase["CalloutPwrShdnInShdnPhase"]
+    N_Gp_EcuStpShdn_PwrShdnInShdnPhase --&gt; N_Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase
+    classDef root fill:#0969da,stroke:#0a3069,color:#fff
+    classDef internal fill:#f6f8fa,stroke:#57606a
+    classDef callout fill:#fff8c5,stroke:#eac54f
+    class N_Gp_EcuStpShdn_PwrShdnInShdnPhase root
+    class N_Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase callout</div>
+<details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">flowchart TD
+    N_Gp_EcuStpShdn_PwrShdnInShdnPhase["Gp_EcuStpShdn_PwrShdnInShdnPhase"]
+    N_Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase["CalloutPwrShdnInShdnPhase"]
+    N_Gp_EcuStpShdn_PwrShdnInShdnPhase --&gt; N_Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase
+    classDef root fill:#0969da,stroke:#0a3069,color:#fff
+    classDef internal fill:#f6f8fa,stroke:#57606a
+    classDef callout fill:#fff8c5,stroke:#eac54f
+    class N_Gp_EcuStpShdn_PwrShdnInShdnPhase root
+    class N_Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase callout</pre></details>
+<h4>内部函数调用图：Gp_EcuStpShdn_Startup <span class="badge">工作项 · 5.1</span></h4>
+<div class="mermaid">flowchart TD
     N_Gp_EcuStpShdn_Startup["Gp_EcuStpShdn_Startup"]
-    N_Gp_EcuStpShdn_Mainfunction["Gp_EcuStpShdn_Mainfunction"]
-    N_Gp_EcuStpShdn_CheckInitRslt["Gp_EcuStpShdn_CheckInitRslt"]
     N_Gp_EcuStpShdn_MstProcMcuPreRunTest["Gp_EcuStpShdn_MstProcMcuPreRunTest"]
     N_Gp_EcuStpShdn_MstPostInit["Gp_EcuStpShdn_MstPostInit"]
-    N_Gp_EcuStpShdn_GetLastSatTimeStamp["Gp_EcuStpShdn_GetLastSatTimeStamp"]
-    N_Gp_EcuStpShdn_Startup --&gt; N_Gp_EcuStpShdn_MstProcMcuPreRunTest
-    N_Gp_EcuStpShdn_Startup --&gt; N_Gp_EcuStpShdn_MstPostInit
-    N_Gp_EcuStpShdn_Startup --&gt; N_Gp_EcuStpShdn_CheckInitRslt
-    N_Gp_EcuStpShdn_Mainfunction --&gt; N_Gp_EcuStpShdn_GetLastSatTimeStamp
-    N_Gp_EcuStpShdn_MstPostInit --&gt; N_Gp_EcuStpShdn_CheckInitRslt
-    subgraph CO["Callout 配置代码回调（25 个）"]
-        direction TB
-        N_CfgTbl["配置表函数指针引用"]
-        N_Gp_EcuStpShdn_CalloutChkMcuPreRunTest["CalloutChkMcuPreRunTest"]
-        N_Gp_EcuStpShdn_CalloutChkMcuRunTimeTest["CalloutChkMcuRunTimeTest"]
-        N_Gp_EcuStpShdn_CalloutChkSbcTest["CalloutChkSbcTest"]
-        N_Gp_EcuStpShdn_CalloutChkSwtToRun["CalloutChkSwtToRun"]
-        N_Gp_EcuStpShdn_CalloutGetCoreId["CalloutGetCoreId"]
-        N_Gp_EcuStpShdn_CalloutGetSysTimeMs["CalloutGetSysTimeMs"]
-        N_Gp_EcuStpShdn_CalloutInitFailedHnd["CalloutInitFailedHnd"]
-        N_Gp_EcuStpShdn_CalloutInitStageOneCore0["CalloutInitStageOneCore0"]
-        N_Gp_EcuStpShdn_CalloutInitStageTwoCore0["CalloutInitStageTwoCore0"]
-        N_Gp_EcuStpShdn_CalloutInitStageTwoCore1["CalloutInitStageTwoCore1"]
-        N_Gp_EcuStpShdn_CalloutInitStageTwoCore2["CalloutInitStageTwoCore2"]
-        N_Gp_EcuStpShdn_CalloutInitStageTwoCore3["CalloutInitStageTwoCore3"]
-        N_Gp_EcuStpShdn_CalloutInitStageTwoCore4["CalloutInitStageTwoCore4"]
-        N_Gp_EcuStpShdn_CalloutInitStageTwoCore5["CalloutInitStageTwoCore5"]
-        N_Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd["CalloutMcuPreRunTestFailedHnd"]
-        N_Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd["CalloutMcuRunTimeTestFailedHnd"]
-        N_Gp_EcuStpShdn_CalloutOsErrRecov["CalloutOsErrRecov"]
-        N_Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase["CalloutPwrShdnInShdnPhase"]
-        N_Gp_EcuStpShdn_CalloutPwrShdnInStpPhase["CalloutPwrShdnInStpPhase"]
-        N_Gp_EcuStpShdn_CalloutSafeState["CalloutSafeState"]
-        N_Gp_EcuStpShdn_CalloutSbcInit["CalloutSbcInit"]
-        N_Gp_EcuStpShdn_CalloutSbcInitInSafeState["CalloutSbcInitInSafeState"]
-        N_Gp_EcuStpShdn_CalloutSbcTestFailedHnd["CalloutSbcTestFailedHnd"]
-        N_Gp_EcuStpShdn_CalloutSwtToRunFailedHnd["CalloutSwtToRunFailedHnd"]
-        N_Gp_EcuStpShdn_CalloutTrapRecov["CalloutTrapRecov"]
-    end
-    N_Gp_EcuStpShdn_TrapRecov --&gt; N_Gp_EcuStpShdn_CalloutTrapRecov
-    N_Gp_EcuStpShdn_OsErrRecov --&gt; N_Gp_EcuStpShdn_CalloutOsErrRecov
-    N_Gp_EcuStpShdn_PwrShdnInShdnPhase --&gt; N_Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase
+    N_Gp_EcuStpShdn_CheckInitRslt["Gp_EcuStpShdn_CheckInitRslt"]
+    N_Gp_EcuStpShdn_CalloutGetCoreId["CalloutGetCoreId"]
+    N_Gp_EcuStpShdn_CalloutInitStageOneCore0["CalloutInitStageOneCore0"]
+    N_Gp_EcuStpShdn_CalloutGetSysTimeMs["CalloutGetSysTimeMs"]
+    N_Gp_EcuStpShdn_CalloutPwrShdnInStpPhase["CalloutPwrShdnInStpPhase"]
+    N_Gp_EcuStpShdn_CalloutSbcInitInSafeState["CalloutSbcInitInSafeState"]
+    N_Gp_EcuStpShdn_CalloutSafeState["CalloutSafeState"]
+    N_Gp_EcuStpShdn_CalloutSbcInit["CalloutSbcInit"]
+    N_Gp_EcuStpShdn_CalloutInitFailedHnd["CalloutInitFailedHnd"]
+    N_Gp_EcuStpShdn_CalloutChkMcuPreRunTest["CalloutChkMcuPreRunTest"]
+    N_Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd["CalloutMcuPreRunTestFailedHnd"]
+    N_Gp_EcuStpShdn_CalloutChkSwtToRun["CalloutChkSwtToRun"]
+    N_Gp_EcuStpShdn_CalloutSwtToRunFailedHnd["CalloutSwtToRunFailedHnd"]
+    N_Gp_EcuStpShdn_CalloutChkSbcTest["CalloutChkSbcTest"]
+    N_Gp_EcuStpShdn_CalloutSbcTestFailedHnd["CalloutSbcTestFailedHnd"]
     N_Gp_EcuStpShdn_Startup --&gt; N_Gp_EcuStpShdn_CalloutGetCoreId
     N_Gp_EcuStpShdn_Startup --&gt; N_Gp_EcuStpShdn_CalloutInitStageOneCore0
     N_Gp_EcuStpShdn_Startup --&gt; N_Gp_EcuStpShdn_CalloutGetSysTimeMs
     N_Gp_EcuStpShdn_Startup --&gt; N_Gp_EcuStpShdn_CalloutPwrShdnInStpPhase
     N_Gp_EcuStpShdn_Startup --&gt; N_Gp_EcuStpShdn_CalloutSbcInitInSafeState
     N_Gp_EcuStpShdn_Startup --&gt; N_Gp_EcuStpShdn_CalloutSafeState
+    N_Gp_EcuStpShdn_Startup --&gt; N_Gp_EcuStpShdn_MstProcMcuPreRunTest
+    N_Gp_EcuStpShdn_Startup --&gt; N_Gp_EcuStpShdn_MstPostInit
     N_Gp_EcuStpShdn_Startup --&gt; N_Gp_EcuStpShdn_CalloutSbcInit
+    N_Gp_EcuStpShdn_Startup --&gt; N_Gp_EcuStpShdn_CheckInitRslt
     N_Gp_EcuStpShdn_Startup --&gt; N_Gp_EcuStpShdn_CalloutInitFailedHnd
-    N_Gp_EcuStpShdn_Mainfunction --&gt; N_Gp_EcuStpShdn_CalloutGetCoreId
-    N_Gp_EcuStpShdn_Mainfunction --&gt; N_Gp_EcuStpShdn_CalloutChkMcuRunTimeTest
-    N_Gp_EcuStpShdn_Mainfunction --&gt; N_Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd
     N_Gp_EcuStpShdn_MstProcMcuPreRunTest --&gt; N_Gp_EcuStpShdn_CalloutChkMcuPreRunTest
     N_Gp_EcuStpShdn_MstProcMcuPreRunTest --&gt; N_Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd
+    N_Gp_EcuStpShdn_MstPostInit --&gt; N_Gp_EcuStpShdn_CheckInitRslt
     N_Gp_EcuStpShdn_MstPostInit --&gt; N_Gp_EcuStpShdn_CalloutInitFailedHnd
     N_Gp_EcuStpShdn_MstPostInit --&gt; N_Gp_EcuStpShdn_CalloutChkSwtToRun
     N_Gp_EcuStpShdn_MstPostInit --&gt; N_Gp_EcuStpShdn_CalloutSwtToRunFailedHnd
     N_Gp_EcuStpShdn_MstPostInit --&gt; N_Gp_EcuStpShdn_CalloutChkSbcTest
     N_Gp_EcuStpShdn_MstPostInit --&gt; N_Gp_EcuStpShdn_CalloutSbcTestFailedHnd
-    N_CfgTbl --&gt; N_Gp_EcuStpShdn_CalloutInitStageTwoCore0
-    N_CfgTbl --&gt; N_Gp_EcuStpShdn_CalloutInitStageTwoCore1
-    N_CfgTbl --&gt; N_Gp_EcuStpShdn_CalloutInitStageTwoCore2
-    N_CfgTbl --&gt; N_Gp_EcuStpShdn_CalloutInitStageTwoCore3
-    N_CfgTbl --&gt; N_Gp_EcuStpShdn_CalloutInitStageTwoCore4
-    N_CfgTbl --&gt; N_Gp_EcuStpShdn_CalloutInitStageTwoCore5
-    classDef provided fill:#ddf4ff,stroke:#0969da,color:#0a3069
+    classDef root fill:#0969da,stroke:#0a3069,color:#fff
     classDef internal fill:#f6f8fa,stroke:#57606a
     classDef callout fill:#fff8c5,stroke:#eac54f
-    class N_Gp_EcuStpShdn_CalloutChkMcuPreRunTest,N_Gp_EcuStpShdn_CalloutChkMcuRunTimeTest,N_Gp_EcuStpShdn_CalloutChkSbcTest,N_Gp_EcuStpShdn_CalloutChkSwtToRun,N_Gp_EcuStpShdn_CalloutGetCoreId,N_Gp_EcuStpShdn_CalloutGetSysTimeMs,N_Gp_EcuStpShdn_CalloutInitFailedHnd,N_Gp_EcuStpShdn_CalloutInitStageOneCore0,N_Gp_EcuStpShdn_CalloutInitStageTwoCore0,N_Gp_EcuStpShdn_CalloutInitStageTwoCore1,N_Gp_EcuStpShdn_CalloutInitStageTwoCore2,N_Gp_EcuStpShdn_CalloutInitStageTwoCore3,N_Gp_EcuStpShdn_CalloutInitStageTwoCore4,N_Gp_EcuStpShdn_CalloutInitStageTwoCore5,N_Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd,N_Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd,N_Gp_EcuStpShdn_CalloutOsErrRecov,N_Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase,N_Gp_EcuStpShdn_CalloutPwrShdnInStpPhase,N_Gp_EcuStpShdn_CalloutSafeState,N_Gp_EcuStpShdn_CalloutSbcInit,N_Gp_EcuStpShdn_CalloutSbcInitInSafeState,N_Gp_EcuStpShdn_CalloutSbcTestFailedHnd,N_Gp_EcuStpShdn_CalloutSwtToRunFailedHnd,N_Gp_EcuStpShdn_CalloutTrapRecov callout
-    class N_Gp_EcuStpShdn_SetSafeState,N_Gp_EcuStpShdn_SetTryPwrShdn,N_Gp_EcuStpShdn_GetSafeState,N_Gp_EcuStpShdn_TrapRecov,N_Gp_EcuStpShdn_OsErrRecov,N_Gp_EcuStpShdn_PwrShdnInShdnPhase,N_Gp_EcuStpShdn_Startup,N_Gp_EcuStpShdn_Mainfunction provided
-    class N_Gp_EcuStpShdn_CheckInitRslt,N_Gp_EcuStpShdn_MstProcMcuPreRunTest,N_Gp_EcuStpShdn_MstPostInit,N_Gp_EcuStpShdn_GetLastSatTimeStamp internal</pre></details>
+    class N_Gp_EcuStpShdn_Startup root
+    class N_Gp_EcuStpShdn_MstProcMcuPreRunTest,N_Gp_EcuStpShdn_MstPostInit,N_Gp_EcuStpShdn_CheckInitRslt internal
+    class N_Gp_EcuStpShdn_CalloutGetCoreId,N_Gp_EcuStpShdn_CalloutInitStageOneCore0,N_Gp_EcuStpShdn_CalloutGetSysTimeMs,N_Gp_EcuStpShdn_CalloutPwrShdnInStpPhase,N_Gp_EcuStpShdn_CalloutSbcInitInSafeState,N_Gp_EcuStpShdn_CalloutSafeState,N_Gp_EcuStpShdn_CalloutSbcInit,N_Gp_EcuStpShdn_CalloutInitFailedHnd,N_Gp_EcuStpShdn_CalloutChkMcuPreRunTest,N_Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd,N_Gp_EcuStpShdn_CalloutChkSwtToRun,N_Gp_EcuStpShdn_CalloutSwtToRunFailedHnd,N_Gp_EcuStpShdn_CalloutChkSbcTest,N_Gp_EcuStpShdn_CalloutSbcTestFailedHnd callout</div>
+<details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">flowchart TD
+    N_Gp_EcuStpShdn_Startup["Gp_EcuStpShdn_Startup"]
+    N_Gp_EcuStpShdn_MstProcMcuPreRunTest["Gp_EcuStpShdn_MstProcMcuPreRunTest"]
+    N_Gp_EcuStpShdn_MstPostInit["Gp_EcuStpShdn_MstPostInit"]
+    N_Gp_EcuStpShdn_CheckInitRslt["Gp_EcuStpShdn_CheckInitRslt"]
+    N_Gp_EcuStpShdn_CalloutGetCoreId["CalloutGetCoreId"]
+    N_Gp_EcuStpShdn_CalloutInitStageOneCore0["CalloutInitStageOneCore0"]
+    N_Gp_EcuStpShdn_CalloutGetSysTimeMs["CalloutGetSysTimeMs"]
+    N_Gp_EcuStpShdn_CalloutPwrShdnInStpPhase["CalloutPwrShdnInStpPhase"]
+    N_Gp_EcuStpShdn_CalloutSbcInitInSafeState["CalloutSbcInitInSafeState"]
+    N_Gp_EcuStpShdn_CalloutSafeState["CalloutSafeState"]
+    N_Gp_EcuStpShdn_CalloutSbcInit["CalloutSbcInit"]
+    N_Gp_EcuStpShdn_CalloutInitFailedHnd["CalloutInitFailedHnd"]
+    N_Gp_EcuStpShdn_CalloutChkMcuPreRunTest["CalloutChkMcuPreRunTest"]
+    N_Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd["CalloutMcuPreRunTestFailedHnd"]
+    N_Gp_EcuStpShdn_CalloutChkSwtToRun["CalloutChkSwtToRun"]
+    N_Gp_EcuStpShdn_CalloutSwtToRunFailedHnd["CalloutSwtToRunFailedHnd"]
+    N_Gp_EcuStpShdn_CalloutChkSbcTest["CalloutChkSbcTest"]
+    N_Gp_EcuStpShdn_CalloutSbcTestFailedHnd["CalloutSbcTestFailedHnd"]
+    N_Gp_EcuStpShdn_Startup --&gt; N_Gp_EcuStpShdn_CalloutGetCoreId
+    N_Gp_EcuStpShdn_Startup --&gt; N_Gp_EcuStpShdn_CalloutInitStageOneCore0
+    N_Gp_EcuStpShdn_Startup --&gt; N_Gp_EcuStpShdn_CalloutGetSysTimeMs
+    N_Gp_EcuStpShdn_Startup --&gt; N_Gp_EcuStpShdn_CalloutPwrShdnInStpPhase
+    N_Gp_EcuStpShdn_Startup --&gt; N_Gp_EcuStpShdn_CalloutSbcInitInSafeState
+    N_Gp_EcuStpShdn_Startup --&gt; N_Gp_EcuStpShdn_CalloutSafeState
+    N_Gp_EcuStpShdn_Startup --&gt; N_Gp_EcuStpShdn_MstProcMcuPreRunTest
+    N_Gp_EcuStpShdn_Startup --&gt; N_Gp_EcuStpShdn_MstPostInit
+    N_Gp_EcuStpShdn_Startup --&gt; N_Gp_EcuStpShdn_CalloutSbcInit
+    N_Gp_EcuStpShdn_Startup --&gt; N_Gp_EcuStpShdn_CheckInitRslt
+    N_Gp_EcuStpShdn_Startup --&gt; N_Gp_EcuStpShdn_CalloutInitFailedHnd
+    N_Gp_EcuStpShdn_MstProcMcuPreRunTest --&gt; N_Gp_EcuStpShdn_CalloutChkMcuPreRunTest
+    N_Gp_EcuStpShdn_MstProcMcuPreRunTest --&gt; N_Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd
+    N_Gp_EcuStpShdn_MstPostInit --&gt; N_Gp_EcuStpShdn_CheckInitRslt
+    N_Gp_EcuStpShdn_MstPostInit --&gt; N_Gp_EcuStpShdn_CalloutInitFailedHnd
+    N_Gp_EcuStpShdn_MstPostInit --&gt; N_Gp_EcuStpShdn_CalloutChkSwtToRun
+    N_Gp_EcuStpShdn_MstPostInit --&gt; N_Gp_EcuStpShdn_CalloutSwtToRunFailedHnd
+    N_Gp_EcuStpShdn_MstPostInit --&gt; N_Gp_EcuStpShdn_CalloutChkSbcTest
+    N_Gp_EcuStpShdn_MstPostInit --&gt; N_Gp_EcuStpShdn_CalloutSbcTestFailedHnd
+    classDef root fill:#0969da,stroke:#0a3069,color:#fff
+    classDef internal fill:#f6f8fa,stroke:#57606a
+    classDef callout fill:#fff8c5,stroke:#eac54f
+    class N_Gp_EcuStpShdn_Startup root
+    class N_Gp_EcuStpShdn_MstProcMcuPreRunTest,N_Gp_EcuStpShdn_MstPostInit,N_Gp_EcuStpShdn_CheckInitRslt internal
+    class N_Gp_EcuStpShdn_CalloutGetCoreId,N_Gp_EcuStpShdn_CalloutInitStageOneCore0,N_Gp_EcuStpShdn_CalloutGetSysTimeMs,N_Gp_EcuStpShdn_CalloutPwrShdnInStpPhase,N_Gp_EcuStpShdn_CalloutSbcInitInSafeState,N_Gp_EcuStpShdn_CalloutSafeState,N_Gp_EcuStpShdn_CalloutSbcInit,N_Gp_EcuStpShdn_CalloutInitFailedHnd,N_Gp_EcuStpShdn_CalloutChkMcuPreRunTest,N_Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd,N_Gp_EcuStpShdn_CalloutChkSwtToRun,N_Gp_EcuStpShdn_CalloutSwtToRunFailedHnd,N_Gp_EcuStpShdn_CalloutChkSbcTest,N_Gp_EcuStpShdn_CalloutSbcTestFailedHnd callout</pre></details>
+<h4>内部函数调用图：Gp_EcuStpShdn_Mainfunction <span class="badge">工作项 · 5.1</span></h4>
+<div class="mermaid">flowchart TD
+    N_Gp_EcuStpShdn_Mainfunction["Gp_EcuStpShdn_Mainfunction"]
+    N_Gp_EcuStpShdn_GetLastSatTimeStamp["Gp_EcuStpShdn_GetLastSatTimeStamp"]
+    N_Gp_EcuStpShdn_CalloutGetCoreId["CalloutGetCoreId"]
+    N_Gp_EcuStpShdn_CalloutChkMcuRunTimeTest["CalloutChkMcuRunTimeTest"]
+    N_Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd["CalloutMcuRunTimeTestFailedHnd"]
+    N_Gp_EcuStpShdn_Mainfunction --&gt; N_Gp_EcuStpShdn_CalloutGetCoreId
+    N_Gp_EcuStpShdn_Mainfunction --&gt; N_Gp_EcuStpShdn_GetLastSatTimeStamp
+    N_Gp_EcuStpShdn_Mainfunction --&gt; N_Gp_EcuStpShdn_CalloutChkMcuRunTimeTest
+    N_Gp_EcuStpShdn_Mainfunction --&gt; N_Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd
+    classDef root fill:#0969da,stroke:#0a3069,color:#fff
+    classDef internal fill:#f6f8fa,stroke:#57606a
+    classDef callout fill:#fff8c5,stroke:#eac54f
+    class N_Gp_EcuStpShdn_Mainfunction root
+    class N_Gp_EcuStpShdn_GetLastSatTimeStamp internal
+    class N_Gp_EcuStpShdn_CalloutGetCoreId,N_Gp_EcuStpShdn_CalloutChkMcuRunTimeTest,N_Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd callout</div>
+<details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">flowchart TD
+    N_Gp_EcuStpShdn_Mainfunction["Gp_EcuStpShdn_Mainfunction"]
+    N_Gp_EcuStpShdn_GetLastSatTimeStamp["Gp_EcuStpShdn_GetLastSatTimeStamp"]
+    N_Gp_EcuStpShdn_CalloutGetCoreId["CalloutGetCoreId"]
+    N_Gp_EcuStpShdn_CalloutChkMcuRunTimeTest["CalloutChkMcuRunTimeTest"]
+    N_Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd["CalloutMcuRunTimeTestFailedHnd"]
+    N_Gp_EcuStpShdn_Mainfunction --&gt; N_Gp_EcuStpShdn_CalloutGetCoreId
+    N_Gp_EcuStpShdn_Mainfunction --&gt; N_Gp_EcuStpShdn_GetLastSatTimeStamp
+    N_Gp_EcuStpShdn_Mainfunction --&gt; N_Gp_EcuStpShdn_CalloutChkMcuRunTimeTest
+    N_Gp_EcuStpShdn_Mainfunction --&gt; N_Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd
+    classDef root fill:#0969da,stroke:#0a3069,color:#fff
+    classDef internal fill:#f6f8fa,stroke:#57606a
+    classDef callout fill:#fff8c5,stroke:#eac54f
+    class N_Gp_EcuStpShdn_Mainfunction root
+    class N_Gp_EcuStpShdn_GetLastSatTimeStamp internal
+    class N_Gp_EcuStpShdn_CalloutGetCoreId,N_Gp_EcuStpShdn_CalloutChkMcuRunTimeTest,N_Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd callout</pre></details>
+<h4>内部函数调用图：配置表函数指针引用 <span class="badge">工作项 · 5.1</span></h4>
+<div class="mermaid">flowchart TD
+    N_CfgTbl["配置表函数指针引用"]
+    N_Gp_EcuStpShdn_CalloutInitStageTwoCore0["CalloutInitStageTwoCore0"]
+    N_CfgTbl --&gt; N_Gp_EcuStpShdn_CalloutInitStageTwoCore0
+    N_Gp_EcuStpShdn_CalloutInitStageTwoCore1["CalloutInitStageTwoCore1"]
+    N_CfgTbl --&gt; N_Gp_EcuStpShdn_CalloutInitStageTwoCore1
+    N_Gp_EcuStpShdn_CalloutInitStageTwoCore2["CalloutInitStageTwoCore2"]
+    N_CfgTbl --&gt; N_Gp_EcuStpShdn_CalloutInitStageTwoCore2
+    N_Gp_EcuStpShdn_CalloutInitStageTwoCore3["CalloutInitStageTwoCore3"]
+    N_CfgTbl --&gt; N_Gp_EcuStpShdn_CalloutInitStageTwoCore3
+    N_Gp_EcuStpShdn_CalloutInitStageTwoCore4["CalloutInitStageTwoCore4"]
+    N_CfgTbl --&gt; N_Gp_EcuStpShdn_CalloutInitStageTwoCore4
+    N_Gp_EcuStpShdn_CalloutInitStageTwoCore5["CalloutInitStageTwoCore5"]
+    N_CfgTbl --&gt; N_Gp_EcuStpShdn_CalloutInitStageTwoCore5
+    classDef root fill:#0969da,stroke:#0a3069,color:#fff
+    classDef internal fill:#f6f8fa,stroke:#57606a
+    classDef callout fill:#fff8c5,stroke:#eac54f
+    class N_CfgTbl internal
+    class N_Gp_EcuStpShdn_CalloutInitStageTwoCore0,N_Gp_EcuStpShdn_CalloutInitStageTwoCore1,N_Gp_EcuStpShdn_CalloutInitStageTwoCore2,N_Gp_EcuStpShdn_CalloutInitStageTwoCore3,N_Gp_EcuStpShdn_CalloutInitStageTwoCore4,N_Gp_EcuStpShdn_CalloutInitStageTwoCore5 callout</div>
+<details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">flowchart TD
+    N_CfgTbl["配置表函数指针引用"]
+    N_Gp_EcuStpShdn_CalloutInitStageTwoCore0["CalloutInitStageTwoCore0"]
+    N_CfgTbl --&gt; N_Gp_EcuStpShdn_CalloutInitStageTwoCore0
+    N_Gp_EcuStpShdn_CalloutInitStageTwoCore1["CalloutInitStageTwoCore1"]
+    N_CfgTbl --&gt; N_Gp_EcuStpShdn_CalloutInitStageTwoCore1
+    N_Gp_EcuStpShdn_CalloutInitStageTwoCore2["CalloutInitStageTwoCore2"]
+    N_CfgTbl --&gt; N_Gp_EcuStpShdn_CalloutInitStageTwoCore2
+    N_Gp_EcuStpShdn_CalloutInitStageTwoCore3["CalloutInitStageTwoCore3"]
+    N_CfgTbl --&gt; N_Gp_EcuStpShdn_CalloutInitStageTwoCore3
+    N_Gp_EcuStpShdn_CalloutInitStageTwoCore4["CalloutInitStageTwoCore4"]
+    N_CfgTbl --&gt; N_Gp_EcuStpShdn_CalloutInitStageTwoCore4
+    N_Gp_EcuStpShdn_CalloutInitStageTwoCore5["CalloutInitStageTwoCore5"]
+    N_CfgTbl --&gt; N_Gp_EcuStpShdn_CalloutInitStageTwoCore5
+    classDef root fill:#0969da,stroke:#0a3069,color:#fff
+    classDef internal fill:#f6f8fa,stroke:#57606a
+    classDef callout fill:#fff8c5,stroke:#eac54f
+    class N_CfgTbl internal
+    class N_Gp_EcuStpShdn_CalloutInitStageTwoCore0,N_Gp_EcuStpShdn_CalloutInitStageTwoCore1,N_Gp_EcuStpShdn_CalloutInitStageTwoCore2,N_Gp_EcuStpShdn_CalloutInitStageTwoCore3,N_Gp_EcuStpShdn_CalloutInitStageTwoCore4,N_Gp_EcuStpShdn_CalloutInitStageTwoCore5 callout</pre></details>
 
 <h2 id="s52">5.2 接口说明</h2>
 <h3 id="s521">5.2.1 数据类型说明</h3>

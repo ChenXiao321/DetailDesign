@@ -2693,15 +2693,78 @@
       "workItemId": null
     }
   },
-  "internalCallGraph": {
-    "diagram": "flowchart TD\n    N_Gp_EcuStpShdn_SetSafeState[\"Gp_EcuStpShdn_SetSafeState\"]\n    N_Gp_EcuStpShdn_SetTryPwrShdn[\"Gp_EcuStpShdn_SetTryPwrShdn\"]\n    N_Gp_EcuStpShdn_GetSafeState[\"Gp_EcuStpShdn_GetSafeState\"]\n    N_Gp_EcuStpShdn_TrapRecov[\"Gp_EcuStpShdn_TrapRecov\"]\n    N_Gp_EcuStpShdn_OsErrRecov[\"Gp_EcuStpShdn_OsErrRecov\"]\n    N_Gp_EcuStpShdn_PwrShdnInShdnPhase[\"Gp_EcuStpShdn_PwrShdnInShdnPhase\"]\n    N_Gp_EcuStpShdn_Startup[\"Gp_EcuStpShdn_Startup\"]\n    N_Gp_EcuStpShdn_Mainfunction[\"Gp_EcuStpShdn_Mainfunction\"]\n    N_Gp_EcuStpShdn_CheckInitRslt[\"Gp_EcuStpShdn_CheckInitRslt\"]\n    N_Gp_EcuStpShdn_MstProcMcuPreRunTest[\"Gp_EcuStpShdn_MstProcMcuPreRunTest\"]\n    N_Gp_EcuStpShdn_MstPostInit[\"Gp_EcuStpShdn_MstPostInit\"]\n    N_Gp_EcuStpShdn_GetLastSatTimeStamp[\"Gp_EcuStpShdn_GetLastSatTimeStamp\"]\n    N_Gp_EcuStpShdn_Startup --> N_Gp_EcuStpShdn_MstProcMcuPreRunTest\n    N_Gp_EcuStpShdn_Startup --> N_Gp_EcuStpShdn_MstPostInit\n    N_Gp_EcuStpShdn_Startup --> N_Gp_EcuStpShdn_CheckInitRslt\n    N_Gp_EcuStpShdn_Mainfunction --> N_Gp_EcuStpShdn_GetLastSatTimeStamp\n    N_Gp_EcuStpShdn_MstPostInit --> N_Gp_EcuStpShdn_CheckInitRslt\n    subgraph CO[\"Callout 配置代码回调（25 个）\"]\n        direction TB\n        N_CfgTbl[\"配置表函数指针引用\"]\n        N_Gp_EcuStpShdn_CalloutChkMcuPreRunTest[\"CalloutChkMcuPreRunTest\"]\n        N_Gp_EcuStpShdn_CalloutChkMcuRunTimeTest[\"CalloutChkMcuRunTimeTest\"]\n        N_Gp_EcuStpShdn_CalloutChkSbcTest[\"CalloutChkSbcTest\"]\n        N_Gp_EcuStpShdn_CalloutChkSwtToRun[\"CalloutChkSwtToRun\"]\n        N_Gp_EcuStpShdn_CalloutGetCoreId[\"CalloutGetCoreId\"]\n        N_Gp_EcuStpShdn_CalloutGetSysTimeMs[\"CalloutGetSysTimeMs\"]\n        N_Gp_EcuStpShdn_CalloutInitFailedHnd[\"CalloutInitFailedHnd\"]\n        N_Gp_EcuStpShdn_CalloutInitStageOneCore0[\"CalloutInitStageOneCore0\"]\n        N_Gp_EcuStpShdn_CalloutInitStageTwoCore0[\"CalloutInitStageTwoCore0\"]\n        N_Gp_EcuStpShdn_CalloutInitStageTwoCore1[\"CalloutInitStageTwoCore1\"]\n        N_Gp_EcuStpShdn_CalloutInitStageTwoCore2[\"CalloutInitStageTwoCore2\"]\n        N_Gp_EcuStpShdn_CalloutInitStageTwoCore3[\"CalloutInitStageTwoCore3\"]\n        N_Gp_EcuStpShdn_CalloutInitStageTwoCore4[\"CalloutInitStageTwoCore4\"]\n        N_Gp_EcuStpShdn_CalloutInitStageTwoCore5[\"CalloutInitStageTwoCore5\"]\n        N_Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd[\"CalloutMcuPreRunTestFailedHnd\"]\n        N_Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd[\"CalloutMcuRunTimeTestFailedHnd\"]\n        N_Gp_EcuStpShdn_CalloutOsErrRecov[\"CalloutOsErrRecov\"]\n        N_Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase[\"CalloutPwrShdnInShdnPhase\"]\n        N_Gp_EcuStpShdn_CalloutPwrShdnInStpPhase[\"CalloutPwrShdnInStpPhase\"]\n        N_Gp_EcuStpShdn_CalloutSafeState[\"CalloutSafeState\"]\n        N_Gp_EcuStpShdn_CalloutSbcInit[\"CalloutSbcInit\"]\n        N_Gp_EcuStpShdn_CalloutSbcInitInSafeState[\"CalloutSbcInitInSafeState\"]\n        N_Gp_EcuStpShdn_CalloutSbcTestFailedHnd[\"CalloutSbcTestFailedHnd\"]\n        N_Gp_EcuStpShdn_CalloutSwtToRunFailedHnd[\"CalloutSwtToRunFailedHnd\"]\n        N_Gp_EcuStpShdn_CalloutTrapRecov[\"CalloutTrapRecov\"]\n    end\n    N_Gp_EcuStpShdn_TrapRecov --> N_Gp_EcuStpShdn_CalloutTrapRecov\n    N_Gp_EcuStpShdn_OsErrRecov --> N_Gp_EcuStpShdn_CalloutOsErrRecov\n    N_Gp_EcuStpShdn_PwrShdnInShdnPhase --> N_Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase\n    N_Gp_EcuStpShdn_Startup --> N_Gp_EcuStpShdn_CalloutGetCoreId\n    N_Gp_EcuStpShdn_Startup --> N_Gp_EcuStpShdn_CalloutInitStageOneCore0\n    N_Gp_EcuStpShdn_Startup --> N_Gp_EcuStpShdn_CalloutGetSysTimeMs\n    N_Gp_EcuStpShdn_Startup --> N_Gp_EcuStpShdn_CalloutPwrShdnInStpPhase\n    N_Gp_EcuStpShdn_Startup --> N_Gp_EcuStpShdn_CalloutSbcInitInSafeState\n    N_Gp_EcuStpShdn_Startup --> N_Gp_EcuStpShdn_CalloutSafeState\n    N_Gp_EcuStpShdn_Startup --> N_Gp_EcuStpShdn_CalloutSbcInit\n    N_Gp_EcuStpShdn_Startup --> N_Gp_EcuStpShdn_CalloutInitFailedHnd\n    N_Gp_EcuStpShdn_Mainfunction --> N_Gp_EcuStpShdn_CalloutGetCoreId\n    N_Gp_EcuStpShdn_Mainfunction --> N_Gp_EcuStpShdn_CalloutChkMcuRunTimeTest\n    N_Gp_EcuStpShdn_Mainfunction --> N_Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd\n    N_Gp_EcuStpShdn_MstProcMcuPreRunTest --> N_Gp_EcuStpShdn_CalloutChkMcuPreRunTest\n    N_Gp_EcuStpShdn_MstProcMcuPreRunTest --> N_Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd\n    N_Gp_EcuStpShdn_MstPostInit --> N_Gp_EcuStpShdn_CalloutInitFailedHnd\n    N_Gp_EcuStpShdn_MstPostInit --> N_Gp_EcuStpShdn_CalloutChkSwtToRun\n    N_Gp_EcuStpShdn_MstPostInit --> N_Gp_EcuStpShdn_CalloutSwtToRunFailedHnd\n    N_Gp_EcuStpShdn_MstPostInit --> N_Gp_EcuStpShdn_CalloutChkSbcTest\n    N_Gp_EcuStpShdn_MstPostInit --> N_Gp_EcuStpShdn_CalloutSbcTestFailedHnd\n    N_CfgTbl --> N_Gp_EcuStpShdn_CalloutInitStageTwoCore0\n    N_CfgTbl --> N_Gp_EcuStpShdn_CalloutInitStageTwoCore1\n    N_CfgTbl --> N_Gp_EcuStpShdn_CalloutInitStageTwoCore2\n    N_CfgTbl --> N_Gp_EcuStpShdn_CalloutInitStageTwoCore3\n    N_CfgTbl --> N_Gp_EcuStpShdn_CalloutInitStageTwoCore4\n    N_CfgTbl --> N_Gp_EcuStpShdn_CalloutInitStageTwoCore5\n    classDef provided fill:#ddf4ff,stroke:#0969da,color:#0a3069\n    classDef internal fill:#f6f8fa,stroke:#57606a\n    classDef callout fill:#fff8c5,stroke:#eac54f\n    class N_Gp_EcuStpShdn_CalloutChkMcuPreRunTest,N_Gp_EcuStpShdn_CalloutChkMcuRunTimeTest,N_Gp_EcuStpShdn_CalloutChkSbcTest,N_Gp_EcuStpShdn_CalloutChkSwtToRun,N_Gp_EcuStpShdn_CalloutGetCoreId,N_Gp_EcuStpShdn_CalloutGetSysTimeMs,N_Gp_EcuStpShdn_CalloutInitFailedHnd,N_Gp_EcuStpShdn_CalloutInitStageOneCore0,N_Gp_EcuStpShdn_CalloutInitStageTwoCore0,N_Gp_EcuStpShdn_CalloutInitStageTwoCore1,N_Gp_EcuStpShdn_CalloutInitStageTwoCore2,N_Gp_EcuStpShdn_CalloutInitStageTwoCore3,N_Gp_EcuStpShdn_CalloutInitStageTwoCore4,N_Gp_EcuStpShdn_CalloutInitStageTwoCore5,N_Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd,N_Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd,N_Gp_EcuStpShdn_CalloutOsErrRecov,N_Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase,N_Gp_EcuStpShdn_CalloutPwrShdnInStpPhase,N_Gp_EcuStpShdn_CalloutSafeState,N_Gp_EcuStpShdn_CalloutSbcInit,N_Gp_EcuStpShdn_CalloutSbcInitInSafeState,N_Gp_EcuStpShdn_CalloutSbcTestFailedHnd,N_Gp_EcuStpShdn_CalloutSwtToRunFailedHnd,N_Gp_EcuStpShdn_CalloutTrapRecov callout\n    class N_Gp_EcuStpShdn_SetSafeState,N_Gp_EcuStpShdn_SetTryPwrShdn,N_Gp_EcuStpShdn_GetSafeState,N_Gp_EcuStpShdn_TrapRecov,N_Gp_EcuStpShdn_OsErrRecov,N_Gp_EcuStpShdn_PwrShdnInShdnPhase,N_Gp_EcuStpShdn_Startup,N_Gp_EcuStpShdn_Mainfunction provided\n    class N_Gp_EcuStpShdn_CheckInitRslt,N_Gp_EcuStpShdn_MstProcMcuPreRunTest,N_Gp_EcuStpShdn_MstPostInit,N_Gp_EcuStpShdn_GetLastSatTimeStamp internal",
-    "diagramFormat": "mermaid",
-    "polarion": {
-      "isWorkItem": true,
-      "chapter": "5.1",
-      "workItemKind": "diagram",
-      "title": "内部函数调用图",
-      "workItemId": null
+  "callGraphs": [
+    {
+      "name": "Gp_EcuStpShdn_TrapRecov",
+      "diagram": "flowchart TD\n    N_Gp_EcuStpShdn_TrapRecov[\"Gp_EcuStpShdn_TrapRecov\"]\n    N_Gp_EcuStpShdn_CalloutTrapRecov[\"CalloutTrapRecov\"]\n    N_Gp_EcuStpShdn_TrapRecov --> N_Gp_EcuStpShdn_CalloutTrapRecov\n    classDef root fill:#0969da,stroke:#0a3069,color:#fff\n    classDef internal fill:#f6f8fa,stroke:#57606a\n    classDef callout fill:#fff8c5,stroke:#eac54f\n    class N_Gp_EcuStpShdn_TrapRecov root\n    class N_Gp_EcuStpShdn_CalloutTrapRecov callout",
+      "diagramFormat": "mermaid",
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.1",
+        "workItemKind": "diagram",
+        "title": "Gp_EcuStpShdn_TrapRecov 调用图",
+        "workItemId": null
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_OsErrRecov",
+      "diagram": "flowchart TD\n    N_Gp_EcuStpShdn_OsErrRecov[\"Gp_EcuStpShdn_OsErrRecov\"]\n    N_Gp_EcuStpShdn_CalloutOsErrRecov[\"CalloutOsErrRecov\"]\n    N_Gp_EcuStpShdn_OsErrRecov --> N_Gp_EcuStpShdn_CalloutOsErrRecov\n    classDef root fill:#0969da,stroke:#0a3069,color:#fff\n    classDef internal fill:#f6f8fa,stroke:#57606a\n    classDef callout fill:#fff8c5,stroke:#eac54f\n    class N_Gp_EcuStpShdn_OsErrRecov root\n    class N_Gp_EcuStpShdn_CalloutOsErrRecov callout",
+      "diagramFormat": "mermaid",
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.1",
+        "workItemKind": "diagram",
+        "title": "Gp_EcuStpShdn_OsErrRecov 调用图",
+        "workItemId": null
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_PwrShdnInShdnPhase",
+      "diagram": "flowchart TD\n    N_Gp_EcuStpShdn_PwrShdnInShdnPhase[\"Gp_EcuStpShdn_PwrShdnInShdnPhase\"]\n    N_Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase[\"CalloutPwrShdnInShdnPhase\"]\n    N_Gp_EcuStpShdn_PwrShdnInShdnPhase --> N_Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase\n    classDef root fill:#0969da,stroke:#0a3069,color:#fff\n    classDef internal fill:#f6f8fa,stroke:#57606a\n    classDef callout fill:#fff8c5,stroke:#eac54f\n    class N_Gp_EcuStpShdn_PwrShdnInShdnPhase root\n    class N_Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase callout",
+      "diagramFormat": "mermaid",
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.1",
+        "workItemKind": "diagram",
+        "title": "Gp_EcuStpShdn_PwrShdnInShdnPhase 调用图",
+        "workItemId": null
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_Startup",
+      "diagram": "flowchart TD\n    N_Gp_EcuStpShdn_Startup[\"Gp_EcuStpShdn_Startup\"]\n    N_Gp_EcuStpShdn_MstProcMcuPreRunTest[\"Gp_EcuStpShdn_MstProcMcuPreRunTest\"]\n    N_Gp_EcuStpShdn_MstPostInit[\"Gp_EcuStpShdn_MstPostInit\"]\n    N_Gp_EcuStpShdn_CheckInitRslt[\"Gp_EcuStpShdn_CheckInitRslt\"]\n    N_Gp_EcuStpShdn_CalloutGetCoreId[\"CalloutGetCoreId\"]\n    N_Gp_EcuStpShdn_CalloutInitStageOneCore0[\"CalloutInitStageOneCore0\"]\n    N_Gp_EcuStpShdn_CalloutGetSysTimeMs[\"CalloutGetSysTimeMs\"]\n    N_Gp_EcuStpShdn_CalloutPwrShdnInStpPhase[\"CalloutPwrShdnInStpPhase\"]\n    N_Gp_EcuStpShdn_CalloutSbcInitInSafeState[\"CalloutSbcInitInSafeState\"]\n    N_Gp_EcuStpShdn_CalloutSafeState[\"CalloutSafeState\"]\n    N_Gp_EcuStpShdn_CalloutSbcInit[\"CalloutSbcInit\"]\n    N_Gp_EcuStpShdn_CalloutInitFailedHnd[\"CalloutInitFailedHnd\"]\n    N_Gp_EcuStpShdn_CalloutChkMcuPreRunTest[\"CalloutChkMcuPreRunTest\"]\n    N_Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd[\"CalloutMcuPreRunTestFailedHnd\"]\n    N_Gp_EcuStpShdn_CalloutChkSwtToRun[\"CalloutChkSwtToRun\"]\n    N_Gp_EcuStpShdn_CalloutSwtToRunFailedHnd[\"CalloutSwtToRunFailedHnd\"]\n    N_Gp_EcuStpShdn_CalloutChkSbcTest[\"CalloutChkSbcTest\"]\n    N_Gp_EcuStpShdn_CalloutSbcTestFailedHnd[\"CalloutSbcTestFailedHnd\"]\n    N_Gp_EcuStpShdn_Startup --> N_Gp_EcuStpShdn_CalloutGetCoreId\n    N_Gp_EcuStpShdn_Startup --> N_Gp_EcuStpShdn_CalloutInitStageOneCore0\n    N_Gp_EcuStpShdn_Startup --> N_Gp_EcuStpShdn_CalloutGetSysTimeMs\n    N_Gp_EcuStpShdn_Startup --> N_Gp_EcuStpShdn_CalloutPwrShdnInStpPhase\n    N_Gp_EcuStpShdn_Startup --> N_Gp_EcuStpShdn_CalloutSbcInitInSafeState\n    N_Gp_EcuStpShdn_Startup --> N_Gp_EcuStpShdn_CalloutSafeState\n    N_Gp_EcuStpShdn_Startup --> N_Gp_EcuStpShdn_MstProcMcuPreRunTest\n    N_Gp_EcuStpShdn_Startup --> N_Gp_EcuStpShdn_MstPostInit\n    N_Gp_EcuStpShdn_Startup --> N_Gp_EcuStpShdn_CalloutSbcInit\n    N_Gp_EcuStpShdn_Startup --> N_Gp_EcuStpShdn_CheckInitRslt\n    N_Gp_EcuStpShdn_Startup --> N_Gp_EcuStpShdn_CalloutInitFailedHnd\n    N_Gp_EcuStpShdn_MstProcMcuPreRunTest --> N_Gp_EcuStpShdn_CalloutChkMcuPreRunTest\n    N_Gp_EcuStpShdn_MstProcMcuPreRunTest --> N_Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd\n    N_Gp_EcuStpShdn_MstPostInit --> N_Gp_EcuStpShdn_CheckInitRslt\n    N_Gp_EcuStpShdn_MstPostInit --> N_Gp_EcuStpShdn_CalloutInitFailedHnd\n    N_Gp_EcuStpShdn_MstPostInit --> N_Gp_EcuStpShdn_CalloutChkSwtToRun\n    N_Gp_EcuStpShdn_MstPostInit --> N_Gp_EcuStpShdn_CalloutSwtToRunFailedHnd\n    N_Gp_EcuStpShdn_MstPostInit --> N_Gp_EcuStpShdn_CalloutChkSbcTest\n    N_Gp_EcuStpShdn_MstPostInit --> N_Gp_EcuStpShdn_CalloutSbcTestFailedHnd\n    classDef root fill:#0969da,stroke:#0a3069,color:#fff\n    classDef internal fill:#f6f8fa,stroke:#57606a\n    classDef callout fill:#fff8c5,stroke:#eac54f\n    class N_Gp_EcuStpShdn_Startup root\n    class N_Gp_EcuStpShdn_MstProcMcuPreRunTest,N_Gp_EcuStpShdn_MstPostInit,N_Gp_EcuStpShdn_CheckInitRslt internal\n    class N_Gp_EcuStpShdn_CalloutGetCoreId,N_Gp_EcuStpShdn_CalloutInitStageOneCore0,N_Gp_EcuStpShdn_CalloutGetSysTimeMs,N_Gp_EcuStpShdn_CalloutPwrShdnInStpPhase,N_Gp_EcuStpShdn_CalloutSbcInitInSafeState,N_Gp_EcuStpShdn_CalloutSafeState,N_Gp_EcuStpShdn_CalloutSbcInit,N_Gp_EcuStpShdn_CalloutInitFailedHnd,N_Gp_EcuStpShdn_CalloutChkMcuPreRunTest,N_Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd,N_Gp_EcuStpShdn_CalloutChkSwtToRun,N_Gp_EcuStpShdn_CalloutSwtToRunFailedHnd,N_Gp_EcuStpShdn_CalloutChkSbcTest,N_Gp_EcuStpShdn_CalloutSbcTestFailedHnd callout",
+      "diagramFormat": "mermaid",
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.1",
+        "workItemKind": "diagram",
+        "title": "Gp_EcuStpShdn_Startup 调用图",
+        "workItemId": null
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_Mainfunction",
+      "diagram": "flowchart TD\n    N_Gp_EcuStpShdn_Mainfunction[\"Gp_EcuStpShdn_Mainfunction\"]\n    N_Gp_EcuStpShdn_GetLastSatTimeStamp[\"Gp_EcuStpShdn_GetLastSatTimeStamp\"]\n    N_Gp_EcuStpShdn_CalloutGetCoreId[\"CalloutGetCoreId\"]\n    N_Gp_EcuStpShdn_CalloutChkMcuRunTimeTest[\"CalloutChkMcuRunTimeTest\"]\n    N_Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd[\"CalloutMcuRunTimeTestFailedHnd\"]\n    N_Gp_EcuStpShdn_Mainfunction --> N_Gp_EcuStpShdn_CalloutGetCoreId\n    N_Gp_EcuStpShdn_Mainfunction --> N_Gp_EcuStpShdn_GetLastSatTimeStamp\n    N_Gp_EcuStpShdn_Mainfunction --> N_Gp_EcuStpShdn_CalloutChkMcuRunTimeTest\n    N_Gp_EcuStpShdn_Mainfunction --> N_Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd\n    classDef root fill:#0969da,stroke:#0a3069,color:#fff\n    classDef internal fill:#f6f8fa,stroke:#57606a\n    classDef callout fill:#fff8c5,stroke:#eac54f\n    class N_Gp_EcuStpShdn_Mainfunction root\n    class N_Gp_EcuStpShdn_GetLastSatTimeStamp internal\n    class N_Gp_EcuStpShdn_CalloutGetCoreId,N_Gp_EcuStpShdn_CalloutChkMcuRunTimeTest,N_Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd callout",
+      "diagramFormat": "mermaid",
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.1",
+        "workItemKind": "diagram",
+        "title": "Gp_EcuStpShdn_Mainfunction 调用图",
+        "workItemId": null
+      }
+    },
+    {
+      "name": "配置表函数指针引用",
+      "diagram": "flowchart TD\n    N_CfgTbl[\"配置表函数指针引用\"]\n    N_Gp_EcuStpShdn_CalloutInitStageTwoCore0[\"CalloutInitStageTwoCore0\"]\n    N_CfgTbl --> N_Gp_EcuStpShdn_CalloutInitStageTwoCore0\n    N_Gp_EcuStpShdn_CalloutInitStageTwoCore1[\"CalloutInitStageTwoCore1\"]\n    N_CfgTbl --> N_Gp_EcuStpShdn_CalloutInitStageTwoCore1\n    N_Gp_EcuStpShdn_CalloutInitStageTwoCore2[\"CalloutInitStageTwoCore2\"]\n    N_CfgTbl --> N_Gp_EcuStpShdn_CalloutInitStageTwoCore2\n    N_Gp_EcuStpShdn_CalloutInitStageTwoCore3[\"CalloutInitStageTwoCore3\"]\n    N_CfgTbl --> N_Gp_EcuStpShdn_CalloutInitStageTwoCore3\n    N_Gp_EcuStpShdn_CalloutInitStageTwoCore4[\"CalloutInitStageTwoCore4\"]\n    N_CfgTbl --> N_Gp_EcuStpShdn_CalloutInitStageTwoCore4\n    N_Gp_EcuStpShdn_CalloutInitStageTwoCore5[\"CalloutInitStageTwoCore5\"]\n    N_CfgTbl --> N_Gp_EcuStpShdn_CalloutInitStageTwoCore5\n    classDef root fill:#0969da,stroke:#0a3069,color:#fff\n    classDef internal fill:#f6f8fa,stroke:#57606a\n    classDef callout fill:#fff8c5,stroke:#eac54f\n    class N_CfgTbl internal\n    class N_Gp_EcuStpShdn_CalloutInitStageTwoCore0,N_Gp_EcuStpShdn_CalloutInitStageTwoCore1,N_Gp_EcuStpShdn_CalloutInitStageTwoCore2,N_Gp_EcuStpShdn_CalloutInitStageTwoCore3,N_Gp_EcuStpShdn_CalloutInitStageTwoCore4,N_Gp_EcuStpShdn_CalloutInitStageTwoCore5 callout",
+      "diagramFormat": "mermaid",
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.1",
+        "workItemKind": "diagram",
+        "title": "配置表函数指针引用 调用图",
+        "workItemId": null
+      }
     }
-  }
+  ]
 }

@@ -156,7 +156,7 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
 <h3>内部函数调用图（每张图一个工作项）</h3>
 <p class="muted">按对外接口函数分别绘制其模块内调用闭包（深蓝=入口函数，灰=内部函数，黄=Callout 配置代码回调）；经配置表函数指针间接引用的 Callout 单独成图。无模块内调用的平凡函数不出图，其余跨模块调用（Gp_RstM / Gp_TstApp 等）见功能接口总图与 5.2.2 表。</p>
 <h4>内部函数调用图：Gp_EcuStpShdn_TrapRecov <span class="badge">工作项 · 5.1</span></h4>
-<div class="mermaid">flowchart TD
+<div class="mermaid">flowchart LR
     N_Gp_EcuStpShdn_TrapRecov["Gp_EcuStpShdn_TrapRecov"]
     N_Gp_EcuStpShdn_CalloutTrapRecov["CalloutTrapRecov"]
     N_Gp_EcuStpShdn_TrapRecov --&gt; N_Gp_EcuStpShdn_CalloutTrapRecov
@@ -165,7 +165,7 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
     classDef callout fill:#ffe9a8,stroke:#bf8700,color:#1f2328
     class N_Gp_EcuStpShdn_TrapRecov root
     class N_Gp_EcuStpShdn_CalloutTrapRecov callout</div>
-<details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">flowchart TD
+<details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">flowchart LR
     N_Gp_EcuStpShdn_TrapRecov["Gp_EcuStpShdn_TrapRecov"]
     N_Gp_EcuStpShdn_CalloutTrapRecov["CalloutTrapRecov"]
     N_Gp_EcuStpShdn_TrapRecov --&gt; N_Gp_EcuStpShdn_CalloutTrapRecov
@@ -175,7 +175,7 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
     class N_Gp_EcuStpShdn_TrapRecov root
     class N_Gp_EcuStpShdn_CalloutTrapRecov callout</pre></details>
 <h4>内部函数调用图：Gp_EcuStpShdn_OsErrRecov <span class="badge">工作项 · 5.1</span></h4>
-<div class="mermaid">flowchart TD
+<div class="mermaid">flowchart LR
     N_Gp_EcuStpShdn_OsErrRecov["Gp_EcuStpShdn_OsErrRecov"]
     N_Gp_EcuStpShdn_CalloutOsErrRecov["CalloutOsErrRecov"]
     N_Gp_EcuStpShdn_OsErrRecov --&gt; N_Gp_EcuStpShdn_CalloutOsErrRecov
@@ -184,7 +184,7 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
     classDef callout fill:#ffe9a8,stroke:#bf8700,color:#1f2328
     class N_Gp_EcuStpShdn_OsErrRecov root
     class N_Gp_EcuStpShdn_CalloutOsErrRecov callout</div>
-<details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">flowchart TD
+<details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">flowchart LR
     N_Gp_EcuStpShdn_OsErrRecov["Gp_EcuStpShdn_OsErrRecov"]
     N_Gp_EcuStpShdn_CalloutOsErrRecov["CalloutOsErrRecov"]
     N_Gp_EcuStpShdn_OsErrRecov --&gt; N_Gp_EcuStpShdn_CalloutOsErrRecov
@@ -194,7 +194,7 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
     class N_Gp_EcuStpShdn_OsErrRecov root
     class N_Gp_EcuStpShdn_CalloutOsErrRecov callout</pre></details>
 <h4>内部函数调用图：Gp_EcuStpShdn_PwrShdnInShdnPhase <span class="badge">工作项 · 5.1</span></h4>
-<div class="mermaid">flowchart TD
+<div class="mermaid">flowchart LR
     N_Gp_EcuStpShdn_PwrShdnInShdnPhase["Gp_EcuStpShdn_PwrShdnInShdnPhase"]
     N_Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase["CalloutPwrShdnInShdnPhase"]
     N_Gp_EcuStpShdn_PwrShdnInShdnPhase --&gt; N_Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase
@@ -203,7 +203,7 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
     classDef callout fill:#ffe9a8,stroke:#bf8700,color:#1f2328
     class N_Gp_EcuStpShdn_PwrShdnInShdnPhase root
     class N_Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase callout</div>
-<details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">flowchart TD
+<details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">flowchart LR
     N_Gp_EcuStpShdn_PwrShdnInShdnPhase["Gp_EcuStpShdn_PwrShdnInShdnPhase"]
     N_Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase["CalloutPwrShdnInShdnPhase"]
     N_Gp_EcuStpShdn_PwrShdnInShdnPhase --&gt; N_Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase
@@ -213,7 +213,7 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
     class N_Gp_EcuStpShdn_PwrShdnInShdnPhase root
     class N_Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase callout</pre></details>
 <h4>内部函数调用图：Gp_EcuStpShdn_Startup <span class="badge">工作项 · 5.1</span></h4>
-<div class="mermaid">flowchart TD
+<div class="mermaid">flowchart LR
     N_Gp_EcuStpShdn_Startup["Gp_EcuStpShdn_Startup"]
     N_Gp_EcuStpShdn_MstProcMcuPreRunTest["Gp_EcuStpShdn_MstProcMcuPreRunTest"]
     N_Gp_EcuStpShdn_MstPostInit["Gp_EcuStpShdn_MstPostInit"]
@@ -251,14 +251,13 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
     N_Gp_EcuStpShdn_MstPostInit --&gt; N_Gp_EcuStpShdn_CalloutSwtToRunFailedHnd
     N_Gp_EcuStpShdn_MstPostInit --&gt; N_Gp_EcuStpShdn_CalloutChkSbcTest
     N_Gp_EcuStpShdn_MstPostInit --&gt; N_Gp_EcuStpShdn_CalloutSbcTestFailedHnd
-    N_Gp_EcuStpShdn_MstProcMcuPreRunTest ~~~ N_Gp_EcuStpShdn_MstPostInit ~~~ N_Gp_EcuStpShdn_CheckInitRslt ~~~ N_Gp_EcuStpShdn_CalloutGetCoreId ~~~ N_Gp_EcuStpShdn_CalloutInitStageOneCore0 ~~~ N_Gp_EcuStpShdn_CalloutGetSysTimeMs ~~~ N_Gp_EcuStpShdn_CalloutPwrShdnInStpPhase ~~~ N_Gp_EcuStpShdn_CalloutSbcInitInSafeState ~~~ N_Gp_EcuStpShdn_CalloutSafeState ~~~ N_Gp_EcuStpShdn_CalloutSbcInit ~~~ N_Gp_EcuStpShdn_CalloutInitFailedHnd ~~~ N_Gp_EcuStpShdn_CalloutChkMcuPreRunTest ~~~ N_Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd ~~~ N_Gp_EcuStpShdn_CalloutChkSwtToRun ~~~ N_Gp_EcuStpShdn_CalloutSwtToRunFailedHnd ~~~ N_Gp_EcuStpShdn_CalloutChkSbcTest ~~~ N_Gp_EcuStpShdn_CalloutSbcTestFailedHnd
     classDef root fill:#0a3069,stroke:#0a3069,color:#ffffff
     classDef internal fill:#eaeef2,stroke:#57606a,color:#1f2328
     classDef callout fill:#ffe9a8,stroke:#bf8700,color:#1f2328
     class N_Gp_EcuStpShdn_Startup root
     class N_Gp_EcuStpShdn_MstProcMcuPreRunTest,N_Gp_EcuStpShdn_MstPostInit,N_Gp_EcuStpShdn_CheckInitRslt internal
     class N_Gp_EcuStpShdn_CalloutGetCoreId,N_Gp_EcuStpShdn_CalloutInitStageOneCore0,N_Gp_EcuStpShdn_CalloutGetSysTimeMs,N_Gp_EcuStpShdn_CalloutPwrShdnInStpPhase,N_Gp_EcuStpShdn_CalloutSbcInitInSafeState,N_Gp_EcuStpShdn_CalloutSafeState,N_Gp_EcuStpShdn_CalloutSbcInit,N_Gp_EcuStpShdn_CalloutInitFailedHnd,N_Gp_EcuStpShdn_CalloutChkMcuPreRunTest,N_Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd,N_Gp_EcuStpShdn_CalloutChkSwtToRun,N_Gp_EcuStpShdn_CalloutSwtToRunFailedHnd,N_Gp_EcuStpShdn_CalloutChkSbcTest,N_Gp_EcuStpShdn_CalloutSbcTestFailedHnd callout</div>
-<details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">flowchart TD
+<details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">flowchart LR
     N_Gp_EcuStpShdn_Startup["Gp_EcuStpShdn_Startup"]
     N_Gp_EcuStpShdn_MstProcMcuPreRunTest["Gp_EcuStpShdn_MstProcMcuPreRunTest"]
     N_Gp_EcuStpShdn_MstPostInit["Gp_EcuStpShdn_MstPostInit"]
@@ -296,7 +295,6 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
     N_Gp_EcuStpShdn_MstPostInit --&gt; N_Gp_EcuStpShdn_CalloutSwtToRunFailedHnd
     N_Gp_EcuStpShdn_MstPostInit --&gt; N_Gp_EcuStpShdn_CalloutChkSbcTest
     N_Gp_EcuStpShdn_MstPostInit --&gt; N_Gp_EcuStpShdn_CalloutSbcTestFailedHnd
-    N_Gp_EcuStpShdn_MstProcMcuPreRunTest ~~~ N_Gp_EcuStpShdn_MstPostInit ~~~ N_Gp_EcuStpShdn_CheckInitRslt ~~~ N_Gp_EcuStpShdn_CalloutGetCoreId ~~~ N_Gp_EcuStpShdn_CalloutInitStageOneCore0 ~~~ N_Gp_EcuStpShdn_CalloutGetSysTimeMs ~~~ N_Gp_EcuStpShdn_CalloutPwrShdnInStpPhase ~~~ N_Gp_EcuStpShdn_CalloutSbcInitInSafeState ~~~ N_Gp_EcuStpShdn_CalloutSafeState ~~~ N_Gp_EcuStpShdn_CalloutSbcInit ~~~ N_Gp_EcuStpShdn_CalloutInitFailedHnd ~~~ N_Gp_EcuStpShdn_CalloutChkMcuPreRunTest ~~~ N_Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd ~~~ N_Gp_EcuStpShdn_CalloutChkSwtToRun ~~~ N_Gp_EcuStpShdn_CalloutSwtToRunFailedHnd ~~~ N_Gp_EcuStpShdn_CalloutChkSbcTest ~~~ N_Gp_EcuStpShdn_CalloutSbcTestFailedHnd
     classDef root fill:#0a3069,stroke:#0a3069,color:#ffffff
     classDef internal fill:#eaeef2,stroke:#57606a,color:#1f2328
     classDef callout fill:#ffe9a8,stroke:#bf8700,color:#1f2328
@@ -304,7 +302,7 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
     class N_Gp_EcuStpShdn_MstProcMcuPreRunTest,N_Gp_EcuStpShdn_MstPostInit,N_Gp_EcuStpShdn_CheckInitRslt internal
     class N_Gp_EcuStpShdn_CalloutGetCoreId,N_Gp_EcuStpShdn_CalloutInitStageOneCore0,N_Gp_EcuStpShdn_CalloutGetSysTimeMs,N_Gp_EcuStpShdn_CalloutPwrShdnInStpPhase,N_Gp_EcuStpShdn_CalloutSbcInitInSafeState,N_Gp_EcuStpShdn_CalloutSafeState,N_Gp_EcuStpShdn_CalloutSbcInit,N_Gp_EcuStpShdn_CalloutInitFailedHnd,N_Gp_EcuStpShdn_CalloutChkMcuPreRunTest,N_Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd,N_Gp_EcuStpShdn_CalloutChkSwtToRun,N_Gp_EcuStpShdn_CalloutSwtToRunFailedHnd,N_Gp_EcuStpShdn_CalloutChkSbcTest,N_Gp_EcuStpShdn_CalloutSbcTestFailedHnd callout</pre></details>
 <h4>内部函数调用图：Gp_EcuStpShdn_Mainfunction <span class="badge">工作项 · 5.1</span></h4>
-<div class="mermaid">flowchart TD
+<div class="mermaid">flowchart LR
     N_Gp_EcuStpShdn_Mainfunction["Gp_EcuStpShdn_Mainfunction"]
     N_Gp_EcuStpShdn_GetLastSatTimeStamp["Gp_EcuStpShdn_GetLastSatTimeStamp"]
     N_Gp_EcuStpShdn_CalloutGetCoreId["CalloutGetCoreId"]
@@ -314,14 +312,13 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
     N_Gp_EcuStpShdn_Mainfunction --&gt; N_Gp_EcuStpShdn_GetLastSatTimeStamp
     N_Gp_EcuStpShdn_Mainfunction --&gt; N_Gp_EcuStpShdn_CalloutChkMcuRunTimeTest
     N_Gp_EcuStpShdn_Mainfunction --&gt; N_Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd
-    N_Gp_EcuStpShdn_GetLastSatTimeStamp ~~~ N_Gp_EcuStpShdn_CalloutGetCoreId ~~~ N_Gp_EcuStpShdn_CalloutChkMcuRunTimeTest ~~~ N_Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd
     classDef root fill:#0a3069,stroke:#0a3069,color:#ffffff
     classDef internal fill:#eaeef2,stroke:#57606a,color:#1f2328
     classDef callout fill:#ffe9a8,stroke:#bf8700,color:#1f2328
     class N_Gp_EcuStpShdn_Mainfunction root
     class N_Gp_EcuStpShdn_GetLastSatTimeStamp internal
     class N_Gp_EcuStpShdn_CalloutGetCoreId,N_Gp_EcuStpShdn_CalloutChkMcuRunTimeTest,N_Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd callout</div>
-<details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">flowchart TD
+<details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">flowchart LR
     N_Gp_EcuStpShdn_Mainfunction["Gp_EcuStpShdn_Mainfunction"]
     N_Gp_EcuStpShdn_GetLastSatTimeStamp["Gp_EcuStpShdn_GetLastSatTimeStamp"]
     N_Gp_EcuStpShdn_CalloutGetCoreId["CalloutGetCoreId"]
@@ -331,7 +328,6 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
     N_Gp_EcuStpShdn_Mainfunction --&gt; N_Gp_EcuStpShdn_GetLastSatTimeStamp
     N_Gp_EcuStpShdn_Mainfunction --&gt; N_Gp_EcuStpShdn_CalloutChkMcuRunTimeTest
     N_Gp_EcuStpShdn_Mainfunction --&gt; N_Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd
-    N_Gp_EcuStpShdn_GetLastSatTimeStamp ~~~ N_Gp_EcuStpShdn_CalloutGetCoreId ~~~ N_Gp_EcuStpShdn_CalloutChkMcuRunTimeTest ~~~ N_Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd
     classDef root fill:#0a3069,stroke:#0a3069,color:#ffffff
     classDef internal fill:#eaeef2,stroke:#57606a,color:#1f2328
     classDef callout fill:#ffe9a8,stroke:#bf8700,color:#1f2328
@@ -339,7 +335,7 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
     class N_Gp_EcuStpShdn_GetLastSatTimeStamp internal
     class N_Gp_EcuStpShdn_CalloutGetCoreId,N_Gp_EcuStpShdn_CalloutChkMcuRunTimeTest,N_Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd callout</pre></details>
 <h4>内部函数调用图：配置表函数指针引用 <span class="badge">工作项 · 5.1</span></h4>
-<div class="mermaid">flowchart TD
+<div class="mermaid">flowchart LR
     N_CfgTbl["配置表函数指针引用"]
     N_Gp_EcuStpShdn_CalloutInitStageTwoCore0["CalloutInitStageTwoCore0"]
     N_CfgTbl --&gt; N_Gp_EcuStpShdn_CalloutInitStageTwoCore0
@@ -353,13 +349,12 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
     N_CfgTbl --&gt; N_Gp_EcuStpShdn_CalloutInitStageTwoCore4
     N_Gp_EcuStpShdn_CalloutInitStageTwoCore5["CalloutInitStageTwoCore5"]
     N_CfgTbl --&gt; N_Gp_EcuStpShdn_CalloutInitStageTwoCore5
-    N_Gp_EcuStpShdn_CalloutInitStageTwoCore0 ~~~ N_Gp_EcuStpShdn_CalloutInitStageTwoCore1 ~~~ N_Gp_EcuStpShdn_CalloutInitStageTwoCore2 ~~~ N_Gp_EcuStpShdn_CalloutInitStageTwoCore3 ~~~ N_Gp_EcuStpShdn_CalloutInitStageTwoCore4 ~~~ N_Gp_EcuStpShdn_CalloutInitStageTwoCore5
     classDef root fill:#0a3069,stroke:#0a3069,color:#ffffff
     classDef internal fill:#eaeef2,stroke:#57606a,color:#1f2328
     classDef callout fill:#ffe9a8,stroke:#bf8700,color:#1f2328
     class N_CfgTbl internal
     class N_Gp_EcuStpShdn_CalloutInitStageTwoCore0,N_Gp_EcuStpShdn_CalloutInitStageTwoCore1,N_Gp_EcuStpShdn_CalloutInitStageTwoCore2,N_Gp_EcuStpShdn_CalloutInitStageTwoCore3,N_Gp_EcuStpShdn_CalloutInitStageTwoCore4,N_Gp_EcuStpShdn_CalloutInitStageTwoCore5 callout</div>
-<details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">flowchart TD
+<details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">flowchart LR
     N_CfgTbl["配置表函数指针引用"]
     N_Gp_EcuStpShdn_CalloutInitStageTwoCore0["CalloutInitStageTwoCore0"]
     N_CfgTbl --&gt; N_Gp_EcuStpShdn_CalloutInitStageTwoCore0
@@ -373,7 +368,6 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
     N_CfgTbl --&gt; N_Gp_EcuStpShdn_CalloutInitStageTwoCore4
     N_Gp_EcuStpShdn_CalloutInitStageTwoCore5["CalloutInitStageTwoCore5"]
     N_CfgTbl --&gt; N_Gp_EcuStpShdn_CalloutInitStageTwoCore5
-    N_Gp_EcuStpShdn_CalloutInitStageTwoCore0 ~~~ N_Gp_EcuStpShdn_CalloutInitStageTwoCore1 ~~~ N_Gp_EcuStpShdn_CalloutInitStageTwoCore2 ~~~ N_Gp_EcuStpShdn_CalloutInitStageTwoCore3 ~~~ N_Gp_EcuStpShdn_CalloutInitStageTwoCore4 ~~~ N_Gp_EcuStpShdn_CalloutInitStageTwoCore5
     classDef root fill:#0a3069,stroke:#0a3069,color:#ffffff
     classDef internal fill:#eaeef2,stroke:#57606a,color:#1f2328
     classDef callout fill:#ffe9a8,stroke:#bf8700,color:#1f2328

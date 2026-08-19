@@ -602,18 +602,15 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
       }
     }
     if (edges.length === 0) continue;  // 平凡函数无模块内调用，不出图
-    const lines = ['flowchart TD', `    ${cgId(root.name)}["${root.name}"]`];
+    // 左右结构（LR）：根节点在左，callee 纵向展开，宽度不随 callee 数量增长，避免导出超页宽
+    const lines = ['flowchart LR', `    ${cgId(root.name)}["${root.name}"]`];
     for (const n of usedInternal) lines.push(`    ${cgId(n)}["${n}"]`);
     // 闭包内可能出现的其他对外接口（被内部函数回调）也列为节点
     for (const n of visited) {
       if (n !== root.name && !usedInternal.includes(n)) lines.push(`    ${cgId(n)}["${n}"]`);
     }
     for (const n of usedCallouts) lines.push(`    ${cgId(n)}["${shortName(n)}"]`);
-    lines.push(...edges);
-    // 全部 callee（内部函数+Callout）串成一条竖向隐形链：图严格单节点宽，避免导出时超页宽
-    const allCallees = [...usedInternal, ...usedCallouts];
-    if (allCallees.length > 1) lines.push(`    ${allCallees.map(cgId).join(' ~~~ ')}`);
-    lines.push(...CG_CLASSES, `    class ${cgId(root.name)} root`);
+    lines.push(...edges, ...CG_CLASSES, `    class ${cgId(root.name)} root`);
     if (usedInternal.length > 0) lines.push(`    class ${usedInternal.map(cgId).join(',')} internal`);
     if (usedCallouts.length > 0) lines.push(`    class ${usedCallouts.map(cgId).join(',')} callout`);
     callGraphs.push({
@@ -627,12 +624,10 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
   // 配置表函数指针引用（rtSatCont 等）：无直接调用者，单独成图
   const cfgRefCallouts = cgCallouts.filter(e => e.calledFrom.some(c => c.startsWith('(')));
   if (cfgRefCallouts.length > 0) {
-    const lines = ['flowchart TD', '    N_CfgTbl["配置表函数指针引用"]'];
+    const lines = ['flowchart LR', '    N_CfgTbl["配置表函数指针引用"]'];
     for (const e of cfgRefCallouts) {
       lines.push(`    ${cgId(e.name)}["${shortName(e.name)}"]`, `    N_CfgTbl --> ${cgId(e.name)}`);
     }
-    // 竖向隐形链：单节点宽，避免导出超页宽
-    if (cfgRefCallouts.length > 1) lines.push(`    ${cfgRefCallouts.map(e => cgId(e.name)).join(' ~~~ ')}`);
     lines.push(...CG_CLASSES, '    class N_CfgTbl internal', `    class ${cfgRefCallouts.map(e => cgId(e.name)).join(',')} callout`);
     callGraphs.push({
       name: '配置表函数指针引用',

@@ -531,11 +531,11 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
   }
 
   // ---------- 5.1 功能接口总图（静态生成；作为工作项随模型进 diff/同步） ----------
-  // 提供的接口节点分两行平铺（上半/下半各一条隐形链），避免单列过长
+  // 提供的接口节点分两列平铺（direction TB + 两条隐形竖链 → 2 列 × ⌈n/2⌉ 行），避免单列过长
   const ov: string[] = ['flowchart LR'];
   ov.push('    Caller["外部调用方<br/>（其他 FC / RTE / 集成代码）"]');
   ov.push(`    subgraph MOD["${module} 提供的外部接口（${providedFunctions.length} 个）"]`);
-  ov.push('        direction LR');
+  ov.push('        direction TB');
   const ovHalf = Math.ceil(providedFunctions.length / 2);
   const ovChain = (list: FunctionUnit[], offset: number) =>
     '        ' + list.map((f, i) => `P${offset + i}["${f.name}"]`).join(' ~~~ ');

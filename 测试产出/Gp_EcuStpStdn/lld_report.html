@@ -109,7 +109,7 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
 <div class="mermaid">flowchart LR
     Caller["外部调用方&lt;br/&gt;（其他 FC / RTE / 集成代码）"]
     subgraph MOD["Gp_EcuStpShdn 提供的外部接口（8 个）"]
-        direction LR
+        direction TB
         P0["Gp_EcuStpShdn_SetSafeState"] ~~~ P1["Gp_EcuStpShdn_SetTryPwrShdn"] ~~~ P2["Gp_EcuStpShdn_GetSafeState"] ~~~ P3["Gp_EcuStpShdn_TrapRecov"]
         P4["Gp_EcuStpShdn_OsErrRecov"] ~~~ P5["Gp_EcuStpShdn_PwrShdnInShdnPhase"] ~~~ P6["Gp_EcuStpShdn_Startup"] ~~~ P7["Gp_EcuStpShdn_Mainfunction"]
     end
@@ -123,7 +123,7 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
 <details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">flowchart LR
     Caller["外部调用方&lt;br/&gt;（其他 FC / RTE / 集成代码）"]
     subgraph MOD["Gp_EcuStpShdn 提供的外部接口（8 个）"]
-        direction LR
+        direction TB
         P0["Gp_EcuStpShdn_SetSafeState"] ~~~ P1["Gp_EcuStpShdn_SetTryPwrShdn"] ~~~ P2["Gp_EcuStpShdn_GetSafeState"] ~~~ P3["Gp_EcuStpShdn_TrapRecov"]
         P4["Gp_EcuStpShdn_OsErrRecov"] ~~~ P5["Gp_EcuStpShdn_PwrShdnInShdnPhase"] ~~~ P6["Gp_EcuStpShdn_Startup"] ~~~ P7["Gp_EcuStpShdn_Mainfunction"]
     end

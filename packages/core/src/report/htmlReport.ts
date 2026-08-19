@@ -192,7 +192,13 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
 .inferred { display:inline-block; background:#fff8c5; color:#9a6700; border:1px solid #eac54f; border-radius:8px; padding:0 6px; font-size:11px; margin-left:6px; }
 .note { background:#fff8c5; border:1px solid #eac54f; border-radius:6px; padding:10px 14px; font-size:13px; margin:12px 0; }
 .mermaid { overflow-x:auto; font-size:13px; }
-@media print { nav { display:none; } .workitem { break-inside:avoid; } }
+@media print {
+  nav { display:none; }
+  .workitem { break-inside:avoid; }
+  .mermaid { overflow-x:visible; }
+  .mermaid svg { max-width:100% !important; height:auto !important; }
+}
+@page { size:A4; margin:12mm; }
 `;
 
 /** 生成完整 HTML 评审报告；传入 mermaidJs（mermaid.min.js 内容）则离线渲染图 */

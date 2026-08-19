@@ -549,10 +549,7 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
   }
   [...ovGroups.entries()].forEach(([group, items], gi) => {
     const tag = group === 'Callout' ? '（配置代码回调）' : '';
-    // Callout 逐行标注模块内调用者（总图唯一体现调用来源的地方；其余组的调用者见 5.2.2 表）
-    const lines = group === 'Callout'
-      ? items.map(e => `${e.name} ← ${e.calledFrom.join('、')}`)
-      : items.map(e => e.name);
+    const lines = items.map(e => e.name);
     ov.push(`    G${gi}["<b>${group}</b>${tag}（${items.length} 个）<br/>──────────<br/>${lines.join('<br/>')}"]`);
   });
   ov.push('    Caller --> MOD');
@@ -568,8 +565,32 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
       if (definedNames.has(callee)) cg.push(`    ${cgId(f.name)} --> ${cgId(callee)}`);
     }
   }
+  // Callout 调用关系在本图展示：子图列出全部 Callout，直接调用画函数→Callout 边，
+  // 配置表函数指针引用（rtSatCont 等）经配置表节点接入
+  const cgCallouts = [...externalMap.values()]
+    .filter(e => e.group === 'Callout')
+    .sort((a, b) => a.name.localeCompare(b.name));
+  if (cgCallouts.length > 0) {
+    const shortName = (n: string) => n.startsWith(`${module}_`) ? n.slice(module.length + 1) : n;
+    cg.push(`    subgraph CO["Callout 配置代码回调（${cgCallouts.length} 个）"]`);
+    cg.push('        direction TB');
+    const cfgRefCallouts = cgCallouts.filter(e => e.calledFrom.some(c => c.startsWith('(')));
+    if (cfgRefCallouts.length > 0) cg.push(`        N_CfgTbl["配置表函数指针引用"]`);
+    for (const e of cgCallouts) cg.push(`        ${cgId(e.name)}["${shortName(e.name)}"]`);
+    cg.push('    end');
+    for (const f of [...providedFunctions, ...internalFunctions]) {
+      for (const callee of f.calls) {
+        if (cgCallouts.some(e => e.name === callee)) cg.push(`    ${cgId(f.name)} --> ${cgId(callee)}`);
+      }
+    }
+    for (const e of cfgRefCallouts) cg.push(`    N_CfgTbl --> ${cgId(e.name)}`);
+  }
   cg.push('    classDef provided fill:#ddf4ff,stroke:#0969da,color:#0a3069');
   cg.push('    classDef internal fill:#f6f8fa,stroke:#57606a');
+  if (cgCallouts.length > 0) {
+    cg.push('    classDef callout fill:#fff8c5,stroke:#eac54f');
+    cg.push(`    class ${cgCallouts.map(e => cgId(e.name)).join(',')} callout`);
+  }
   if (providedFunctions.length > 0) cg.push(`    class ${providedFunctions.map(f => cgId(f.name)).join(',')} provided`);
   if (internalFunctions.length > 0) cg.push(`    class ${internalFunctions.map(f => cgId(f.name)).join(',')} internal`);
 

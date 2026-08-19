@@ -478,7 +478,7 @@ ${calloutCfgSection}
 ${aliasCfgNote}
 </main>
 ${opts?.mermaidJs ? `<script>${opts.mermaidJs}</script>
-<script>mermaid.initialize({ startOnLoad: true, securityLevel: 'loose', theme: 'neutral', sequence: { showSequenceNumbers: true } });</script>` : ''}
+<script>mermaid.initialize({ startOnLoad: true, securityLevel: 'loose', theme: 'neutral', flowchart: { useMaxWidth: false }, sequence: { showSequenceNumbers: true } });</script>` : ''}
 </body>
 </html>`;
 }

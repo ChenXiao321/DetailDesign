@@ -609,7 +609,10 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
       if (n !== root.name && !usedInternal.includes(n)) lines.push(`    ${cgId(n)}["${n}"]`);
     }
     for (const n of usedCallouts) lines.push(`    ${cgId(n)}["${shortName(n)}"]`);
-    lines.push(...edges, ...CG_CLASSES, `    class ${cgId(root.name)} root`);
+    lines.push(...edges);
+    // Callout 多于 1 个时串成竖向隐形链，强制窄长竖排，避免同级横向摊开导致图被缩得过小
+    if (usedCallouts.length > 1) lines.push(`    ${usedCallouts.map(cgId).join(' ~~~ ')}`);
+    lines.push(...CG_CLASSES, `    class ${cgId(root.name)} root`);
     if (usedInternal.length > 0) lines.push(`    class ${usedInternal.map(cgId).join(',')} internal`);
     if (usedCallouts.length > 0) lines.push(`    class ${usedCallouts.map(cgId).join(',')} callout`);
     callGraphs.push({

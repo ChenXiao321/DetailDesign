@@ -114,6 +114,8 @@ interface RawFunction {
   conditionalFlags: string[];
   bodyText: string;
   signature: string;
+  complexity: number;         // 圈复杂度（仅定义函数有；原型为 0）
+  infiniteLoop: boolean;      // 含 while(1)/for(;;) 死循环
 }
 
 type TSNode = import('web-tree-sitter').SyntaxNode;
@@ -208,11 +210,32 @@ function extractFunction(
     comment, calls, identifiers,
     conditionalFlags: condFlags,
     bodyText, signature,
+    complexity: bodyText ? cyclomaticComplexity(bodyText) : 0,
+    infiniteLoop: bodyText ? hasInfiniteLoop(bodyText) : false,
   };
 }
 
 function makeMarker(chapter: string, kind: PolarionMarker['workItemKind'], title: string, isWorkItem = true): PolarionMarker {
   return { isWorkItem, chapter, workItemKind: kind, title, workItemId: null };
+}
+
+/** 圈复杂度（判定节点计数法）：1 + if/for/while/case/&&/||/?: 数量；注释与字符串先剥离 */
+export function cyclomaticComplexity(body: string): number {
+  const clean = body
+    .replace(/\/\*[\s\S]*?\*\//g, ' ')
+    .replace(/\/\/[^\n]*/g, ' ')
+    .replace(/"(?:\\.|[^"\\])*"/g, ' ')
+    .replace(/'(?:\\.|[^'\\])'/g, ' ');
+  const count = (re: RegExp) => (clean.match(re) ?? []).length;
+  return 1
+    + count(/\bif\b/g) + count(/\bfor\b/g) + count(/\bwhile\b/g) + count(/\bcase\b/g)
+    + count(/&&/g) + count(/\|\|/g) + count(/\?/g);
+}
+
+/** 死循环探测：while(1)/while(TRUE)/for(;;) */
+export function hasInfiniteLoop(body: string): boolean {
+  const clean = body.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/\/\/[^\n]*/g, ' ');
+  return /\bwhile\s*\(\s*(1|TRUE|true)\s*\)/.test(clean) || /\bfor\s*\(\s*;\s*;?\s*\)/.test(clean);
 }
 
 /** 从原始源码按行扫描宏定义（#define），含注释与生效条件 */
@@ -505,6 +528,8 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
     bodyText: fn.bodyText.length > 8000 ? fn.bodyText.slice(0, 8000) + '\n/* ...(截断) */' : fn.bodyText,
     bodyHash: sha256(normalizeCode(fn.bodyText)),
     sigHash: sha256(normalizeCode(fn.signature)),
+    complexity: fn.complexity,
+    infiniteLoop: fn.infiniteLoop,
     polarion: makeMarker(chapter, kind, fn.name, true),
   });
 
@@ -656,5 +681,6 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
       polarion: makeMarker('5.1', 'diagram', '功能接口总图', true),
     },
     callGraphs,
+    evaluation: { polarion: makeMarker('7', 'table', '详细设计规范评估', true) },
   };
 }

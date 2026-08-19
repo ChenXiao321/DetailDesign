@@ -75,6 +75,7 @@ function functionCard(fn: FunctionUnit, diagramBlock?: (src: string) => string, 
   </table>
   <div class="wi-footer">
     <span>源: ${esc(fn.file)}:${fn.lineStart}-${fn.lineEnd}</span>
+    ${fn.complexity != null ? `<span>圈复杂度: ${fn.complexity}${fn.infiniteLoop ? '（含死循环）' : ''}</span>` : ''}
     <span>bodyHash: ${fn.bodyHash} · sigHash: ${fn.sigHash}</span>
     ${fn.generated ? `<span>描述生成: ${esc(fn.generated.llmModel)}</span>` : ''}
   </div>
@@ -396,6 +397,95 @@ ${callouts.map((e, i) => calloutCard(e, `${calloutSecNo}.${i + 1}`)).join('\n')}
   const aliasCfgNote = aliasCfgs.length === 0 ? '' :
     `<p class="muted">注：以下宏为固定别名（实现重定义，无可选值，不属于配置项）：${aliasCfgs.map(c => `<code>${esc(c.name)}${c.isFunctionLike ? '()' : ''} → ${esc(c.value)}</code>`).join('，')}</p>`;
 
+  // ---- 7 详细设计规范评估（模板固定 14 项；事实依据自动填，结论人工确认） ----
+  const allFns = [...model.providedFunctions, ...model.internalFunctions];
+  const extGroupNames = [...groups.keys()];
+  const nonCalloutGroups = extGroupNames.filter(g => g !== 'Callout');
+  const commIfs = model.calledExternalFunctions.filter(e =>
+    /\b(Spi|Can(Fd)?|Lin|Eth|Com_|PduR|Dcm|SoAd|Fr)(_|$|\b)/i.test(e.name));
+  const maxComplexity = Math.max(0, ...allFns.map(f => f.complexity ?? 0));
+  const highComplexity = allFns.filter(f => (f.complexity ?? 0) > 10);
+  const loopFns = allFns.filter(f => f.infiniteLoop);
+  const condCfgs = model.configMacros.filter(c => c.usages.some(u => u.kind === 'condCompile'));
+  const safetyIds = [
+    ...allFns.filter(f => /safe|safety/i.test(f.name)).map(f => f.name),
+    ...model.configMacros.filter(c => /safe|safety/i.test(c.name)).map(c => c.name),
+  ];
+  const TODO_CONCLUSION = '<span class="todo">结论待人工确认</span>';
+  const evalRows: { dim: string; no: number; content: string; fact: string }[] = [
+    { dim: '互操作性/交互', no: 1, content: '对软件单元的接口一致性进行分析',
+      fact: `本模块提供 ${model.providedFunctions.length} 个接口函数（5.2.3.2），调用外部接口 ${model.calledExternalFunctions.length} 个（${extGroupNames.join('、')}），签名与调用点均已由静态分析提取；与软件架构接口的一致性需对照架构文档确认。${TODO_CONCLUSION}` },
+    { dim: '互操作性/交互', no: 2, content: '软件单元对全局变量引用的正确性',
+      fact: `模块内静态全局变量 ${model.internalVariables.length} 个（5.2.4.1），外部链接全局变量 ${model.providedVariables.length} 个（5.2.3.1）；各函数的全局变量访问已在函数卡片逐条列出。${TODO_CONCLUSION}` },
+    { dim: '互操作性/交互', no: 3, content: '对涉及通讯协议的软件单元分析协议的一致性',
+      fact: commIfs.length === 0
+        ? '静态分析未探测到通讯协议相关接口（Spi/Can/Lin/Eth/Com/PduR 等）调用，本模块不涉及通讯协议。<span class="muted">（自动判定，如有遗漏请人工更正）</span>'
+        : `探测到通讯协议相关调用：${commIfs.map(e => `<code>${esc(e.name)}</code>`).join('、')}。${TODO_CONCLUSION}` },
+    { dim: '互操作性/交互', no: 4, content: '分析软件单元是否能够体现动态行为和交互',
+      fact: model.dynamicDesign
+        ? `5.3 已生成${model.dynamicDesign.stateMachine ? `状态机「${esc(model.dynamicDesign.stateMachine.name)}」（${model.dynamicDesign.stateMachine.states.length} 状态 / ${model.dynamicDesign.stateMachine.transitions.length} 迁移）` : ''}${model.dynamicDesign.sequences.length > 0 ? `与 ${model.dynamicDesign.sequences.length} 张序列图` : ''}；5.1 功能接口总图与各函数调用图体现交互关系。${TODO_CONCLUSION}`
+        : `5.3 动态设计（状态机/序列图）尚未生成；5.1 已提供功能接口总图与内部函数调用图。${TODO_CONCLUSION}` },
+    { dim: '关键性', no: 5, content: '分析与其他单元/组件的依赖关系',
+      fact: `外部依赖模块：${nonCalloutGroups.length > 0 ? nonCalloutGroups.join('、') : '无'}（接口明细见 5.2.2）；Callout 回调 ${calloutCount} 个由集成方在配置代码中实现（见 6.2）。${TODO_CONCLUSION}` },
+    { dim: '关键性', no: 6, content: '其他关键性的分析维度(如任务、算法等)',
+      fact: condCfgs.length > 0
+        ? `条件编译配置项 ${condCfgs.length} 个（${condCfgs.map(c => `<code>${esc(c.name)}</code>`).join('、')}）直接裁剪参与编译的函数/变量（影响范围见第 6 章）。${TODO_CONCLUSION}`
+        : `本模块无条件编译裁剪点。${TODO_CONCLUSION}` },
+    { dim: '技术复杂性', no: 7, content: '分析详细设计单元的复杂度（模型复杂度、圈复杂度）',
+      fact: `已静态计算全部 ${allFns.length} 个函数的圈复杂度（明细见下表）：最大 ${maxComplexity}${highComplexity.length > 0 ? `，超过 10 的函数 ${highComplexity.length} 个（${highComplexity.map(f => `<code>${esc(f.name)}</code>`).join('、')}）` : '，无超过 10 的函数'}。${TODO_CONCLUSION}` },
+    { dim: '可实现性', no: 8, content: '从时间周期、实现条件（人员、设备等）下分析相应功能的实现能力，分析出风险、并制定处理措施',
+      fact: `（项目管理层面的评估，无代码事实可自动提取）${TODO_CONCLUSION}` },
+    { dim: '可测试性', no: 9, content: '分析软件单元的可控性（是否存在死循环、复杂度过高的情况）',
+      fact: `死循环（while(1)/for(;;)）探测：${loopFns.length === 0 ? '未发现' : `发现 ${loopFns.length} 处（${loopFns.map(f => `<code>${esc(f.name)}</code>`).join('、')}）`}；圈复杂度最大 ${maxComplexity}${highComplexity.length > 0 ? `，${highComplexity.length} 个函数超过 10` : ''}。${TODO_CONCLUSION}` },
+    { dim: '可测试性', no: 10, content: '分析单元输入、输出的可观测性',
+      fact: `全部 ${allFns.length} 个函数的输入/输出参数与返回值已在 5.2.3.2 / 5.2.4.2 函数卡片中逐项列出（含取值范围说明）。${TODO_CONCLUSION}` },
+    { dim: '可复用性', no: 11, content: '分析详细设计单元是否能够被本系统或其他系统使用的可能性',
+      fact: `本模块含 ${calloutCount} 个 Callout 项目适配点与 ${model.configMacros.filter(c => c.kind !== 'alias').length} 个配置宏，平台化/复用策略需人工评估。${TODO_CONCLUSION}` },
+    { dim: '安全性', no: 12, content: '分析软件设计单元是否是功能安全输出',
+      fact: safetyIds.length > 0
+        ? `探测到安全相关标识符：${safetyIds.map(s => `<code>${esc(s)}</code>`).join('、')}；是否构成功能安全输出需人工判定。${TODO_CONCLUSION}`
+        : `未探测到安全相关标识符。${TODO_CONCLUSION}` },
+    { dim: '安全性', no: 13, content: '分析违反功能安全目标的风险可控性',
+      fact: `（需结合系统级安全分析人工评估）${TODO_CONCLUSION}` },
+    { dim: '安全性', no: 14, content: '分析是否违背功能安全',
+      fact: `（需结合系统级安全分析人工评估）${TODO_CONCLUSION}` },
+  ];
+  // 维度列合并（rowspan）
+  const evalTableRows: string[] = [];
+  let i = 0;
+  while (i < evalRows.length) {
+    const dim = evalRows[i].dim;
+    let span = 0;
+    while (i + span < evalRows.length && evalRows[i + span].dim === dim) span++;
+    evalRows.slice(i, i + span).forEach((r, j) => {
+      evalTableRows.push(`<tr>${j === 0 ? `<td rowspan="${span}"><b>${esc(dim)}</b></td>` : ''}<td>${r.no}</td><td>${esc(r.content)}</td><td>是</td><td>${r.fact}</td></tr>`);
+    });
+    i += span;
+  }
+  // 序号 7 的事实明细：圈复杂度表（按复杂度降序）
+  const complexityRows = [...allFns]
+    .sort((a, b) => (b.complexity ?? 0) - (a.complexity ?? 0))
+    .map(f => `<tr><td><code>${esc(f.name)}</code></td><td>${f.complexity ?? '—'}</td><td>${f.infiniteLoop ? '含死循环' : ''}</td><td>${(f.complexity ?? 0) > 10 ? '<span class="todo">超过 10，需人工评审</span>' : '<span class="muted">≤10</span>'}</td></tr>`)
+    .join('');
+  const evalChapter = model.evaluation?.polarion.chapter ?? '7';
+  const evalSection = `
+<h2 id="s7">7 详细设计规范评估 <span class="badge">工作项 · ${esc(evalChapter)}</span></h2>
+<table class="simple"><tr><th>维度</th><th>序号</th><th>评估内容</th><th>是否评估</th><th>分析结果（事实依据自动生成，结论人工确认）</th></tr>${evalTableRows.join('')}</table>
+<h3>圈复杂度明细（序号 7 事实依据，静态计算）</h3>
+<p class="muted">判定节点计数法：1 + if / for / while / case / &amp;&amp; / || / ?: 数量。阈值 10 为常见评审参考值，最终以项目规范为准。</p>
+<table class="simple"><tr><th>函数</th><th>圈复杂度</th><th>死循环</th><th>参考评估</th></tr>${complexityRows}</table>
+<h3>总结</h3>
+<p class="muted">本模块设计过程中已对上述内容进行评估，各维度说明如下（骨架自动生成，需人工补全/确认）：</p>
+<ul class="muted">
+<li>互操作性/交互：接口与全局变量的定义、调用关系详见 5.2；通讯协议${commIfs.length === 0 ? '不涉及' : '一致性待确认'}。<span class="todo">待人工确认</span></li>
+<li>关键性：外部依赖（${nonCalloutGroups.join('、') || '无'}）与任务调度考虑。<span class="todo">待人工确认</span></li>
+<li>技术复杂性：圈复杂度最大 ${maxComplexity}${highComplexity.length > 0 ? `，${highComplexity.length} 个函数超过 10` : '，均在 10 以内'}。<span class="todo">待人工确认</span></li>
+<li>可实现性：按项目时间安排与既往经验评估。<span class="todo">待人工补充</span></li>
+<li>可测试性：函数输入输出及范围均已列出，圈复杂度已控制。<span class="todo">待人工确认</span></li>
+<li>可复用性：是否平台化需人工说明。<span class="todo">待人工补充</span></li>
+<li>安全性：${safetyIds.length > 0 ? '涉及安全相关接口/配置，是否功能安全输出需人工判定' : '是否涉及功能安全需人工判定'}。<span class="todo">待人工确认</span></li>
+</ul>`;
+
   // ---- 文件清单（主文件在前） ----
   const fileRows = [...model.files]
     .sort((a, b) => fileSortKey(a).localeCompare(fileSortKey(b)))
@@ -422,6 +512,7 @@ ${callouts.map((e, i) => calloutCard(e, `${calloutSecNo}.${i + 1}`)).join('\n')}
   <a href="#s524">5.2.4 内部接口</a>
   <a href="#s53">5.3 动态设计</a>
   <a href="#s6">6 配置说明</a>
+  <a href="#s7">7 详细设计规范评估</a>
 </nav>
 <main>
 <div class="note">本报告由 agent 自动生成，供评审。带 <b>工作项</b> 标记的条目对应 Polarion 工作项颗粒度；函数描述共 ${fnCount} 个，已生成 ${generatedCount} 个。追溯链接（is derived from）按约定留空，入库后人工补充。</div>
@@ -480,6 +571,7 @@ ${generalCfgSection}
 ${functionalCfgSection}
 ${calloutCfgSection}
 ${aliasCfgNote}
+${evalSection}
 </main>
 ${opts?.mermaidJs ? `<script>${opts.mermaidJs}</script>
 <script>mermaid.initialize({ startOnLoad: true, securityLevel: 'loose', theme: 'neutral', themeVariables: { fontSize: '13px' }, flowchart: { useMaxWidth: false, padding: 6 }, sequence: { showSequenceNumbers: true } });</script>` : ''}

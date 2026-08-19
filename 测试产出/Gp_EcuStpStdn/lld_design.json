@@ -117,7 +117,9 @@
         "flowchartFormat": "mermaid",
         "llmModel": "claude-sample",
         "generatedAt": "2026-08-13T02:35:01.397Z"
-      }
+      },
+      "complexity": 1,
+      "infiniteLoop": false
     },
     {
       "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_SetTryPwrShdn",
@@ -162,7 +164,9 @@
         "flowchartFormat": "mermaid",
         "llmModel": "claude-sample",
         "generatedAt": "2026-08-13T02:35:01.397Z"
-      }
+      },
+      "complexity": 1,
+      "infiniteLoop": false
     },
     {
       "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_GetSafeState",
@@ -207,7 +211,9 @@
         "flowchartFormat": "mermaid",
         "llmModel": "claude-sample",
         "generatedAt": "2026-08-13T02:35:01.397Z"
-      }
+      },
+      "complexity": 1,
+      "infiniteLoop": false
     },
     {
       "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_TrapRecov",
@@ -265,7 +271,9 @@
         "flowchartFormat": "mermaid",
         "llmModel": "claude-sample",
         "generatedAt": "2026-08-13T02:35:01.397Z"
-      }
+      },
+      "complexity": 1,
+      "infiniteLoop": false
     },
     {
       "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_OsErrRecov",
@@ -323,7 +331,9 @@
         "flowchartFormat": "mermaid",
         "llmModel": "claude-sample",
         "generatedAt": "2026-08-13T02:35:01.397Z"
-      }
+      },
+      "complexity": 1,
+      "infiniteLoop": false
     },
     {
       "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_PwrShdnInShdnPhase",
@@ -368,7 +378,9 @@
         "flowchartFormat": "mermaid",
         "llmModel": "claude-sample",
         "generatedAt": "2026-08-13T02:35:01.397Z"
-      }
+      },
+      "complexity": 1,
+      "infiniteLoop": false
     },
     {
       "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_Startup",
@@ -435,7 +447,9 @@
         "flowchartFormat": "mermaid",
         "llmModel": "claude-sample",
         "generatedAt": "2026-08-13T02:35:01.397Z"
-      }
+      },
+      "complexity": 13,
+      "infiniteLoop": false
     },
     {
       "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_Mainfunction",
@@ -486,7 +500,9 @@
         "flowchartFormat": "mermaid",
         "llmModel": "claude-sample",
         "generatedAt": "2026-08-13T02:35:01.397Z"
-      }
+      },
+      "complexity": 7,
+      "infiniteLoop": false
     }
   ],
   "internalFunctions": [
@@ -549,7 +565,9 @@
         "flowchartFormat": "mermaid",
         "llmModel": "claude-sample",
         "generatedAt": "2026-08-13T02:35:01.397Z"
-      }
+      },
+      "complexity": 3,
+      "infiniteLoop": false
     },
     {
       "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_MstProcMcuPreRunTest",
@@ -601,7 +619,9 @@
         "flowchartFormat": "mermaid",
         "llmModel": "claude-sample",
         "generatedAt": "2026-08-13T02:35:01.397Z"
-      }
+      },
+      "complexity": 2,
+      "infiniteLoop": false
     },
     {
       "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_MstPostInit",
@@ -659,7 +679,9 @@
         "flowchartFormat": "mermaid",
         "llmModel": "claude-sample",
         "generatedAt": "2026-08-13T02:35:01.397Z"
-      }
+      },
+      "complexity": 4,
+      "infiniteLoop": false
     },
     {
       "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_GetLastSatTimeStamp",
@@ -710,7 +732,9 @@
         "flowchartFormat": "mermaid",
         "llmModel": "claude-sample",
         "generatedAt": "2026-08-13T02:35:01.397Z"
-      }
+      },
+      "complexity": 3,
+      "infiniteLoop": false
     }
   ],
   "internalVariables": [
@@ -2766,5 +2790,14 @@
         "workItemId": null
       }
     }
-  ]
+  ],
+  "evaluation": {
+    "polarion": {
+      "isWorkItem": true,
+      "chapter": "7",
+      "workItemKind": "table",
+      "title": "详细设计规范评估",
+      "workItemId": null
+    }
+  }
 }

@@ -294,21 +294,53 @@ ${detailTable}`;
         `<tr><td><code>${esc(v.name)}</code></td><td><code>${esc(v.type)}</code></td><td>${esc(v.comment)}</td></tr>`).join('')}</table>`;
 
   // ---- 4.2 文件包含关系（由 #include 静态生成 Mermaid 图，无需 LLM） ----
+  // 样式对齐模板：UML 版型节点（«header»/«Source» + 加粗文件名），虚线 «include» 箭头，
+  // BT 布局——源文件在底部，箭头朝上指向被包含的头文件（模板约定：箭头指向被调用的元素）
   const sanitizeId = (s: string) => s.replace(/[^A-Za-z0-9_]/g, '_');
   // 长文件名按模块前缀折行，控制节点宽度避免导出超页宽
   const wrapFileLabel = (base: string) =>
     base.startsWith(`${model.module}_`) ? `${model.module}_<br/>${base.slice(model.module.length + 1)}` : base;
+  const moduleFileBases = new Set(model.files.map(f => f.path.split(/[\\/]/).pop()!));
+  const isMemmap = (base: string) => /memmap/i.test(base);
+  const includeNodes: string[] = [];
   const includeEdges: string[] = [];
+  const seenNodes = new Set<string>();
+  const droppedExternals = new Set<string>();
+  const addIncludeNode = (base: string): void => {
+    if (seenNodes.has(base)) return;
+    seenNodes.add(base);
+    const stereotype = /\.c$/i.test(base) ? '«Source»' : '«header»';
+    includeNodes.push(`    ${sanitizeId(base)}["${stereotype}<br/><b>${wrapFileLabel(base)}</b>"]`);
+  };
   for (const f of model.files) {
     const base = f.path.split(/[\\/]/).pop()!;
+    if (isMemmap(base)) continue;   // Memmap 文件不出图（纯 pragma 包装）
     for (const inc of f.includes ?? []) {
       const incBase = inc.split(/[\\/]/).pop()!;
-      includeEdges.push(`    ${sanitizeId(base)}["${wrapFileLabel(base)}"] --> ${sanitizeId(incBase)}["${wrapFileLabel(incBase)}"]`);
+      if (isMemmap(incBase)) continue;   // MemMap.h 默认被各文件包含，不画出
+      if (!moduleFileBases.has(incBase) && incBase !== 'Std_Types.h') {
+        droppedExternals.add(incBase);   // 外部模块头文件不画出（Std_Types.h 除外）
+        continue;
+      }
+      addIncludeNode(base);
+      addIncludeNode(incBase);
+      includeEdges.push(`    ${sanitizeId(base)} -.->|"«include»"| ${sanitizeId(incBase)}`);
     }
   }
   const includeGraph = includeEdges.length > 0
-    ? ['flowchart LR', ...includeEdges].join('\n')
+    ? [
+        'flowchart BT',
+        ...includeNodes,
+        ...includeEdges,
+        '    classDef header fill:#dae8fc,stroke:#6c8ebf,color:#1a1a1a',
+        '    classDef source fill:#d5e8d4,stroke:#82b366,color:#1a1a1a',
+        `    class ${[...seenNodes].filter(b => !/\.c$/i.test(b)).map(sanitizeId).join(',')} header`,
+        `    class ${[...seenNodes].filter(b => /\.c$/i.test(b)).map(sanitizeId).join(',')} source`,
+      ].join('\n')
     : '';
+  const includeNote = droppedExternals.size > 0
+    ? `注：箭头指向被包含的头文件（模板约定：箭头指向被调用的元素）。MemMap.h 为内存映射包装文件，默认被本模块各文件包含，图中不再画出；外部模块头文件（${[...droppedExternals].sort().join('、')}）不在图中展示，标准类型头文件 Std_Types.h 除外。`
+    : '注：箭头指向被包含的头文件（模板约定：箭头指向被调用的元素）。MemMap.h 为内存映射包装文件，默认被本模块各文件包含，图中不再画出。';
 
   // ---- 5.1 功能描述 ----
   const functionalDescSection = model.functionalDescription
@@ -580,7 +612,7 @@ ${preSection}
 <table class="simple"><tr><th>文件</th><th>说明</th></tr>${fileRows}</table>
 
 <h3>4.2 文件包含关系</h3>
-<p class="muted">模块内部文件间的包含关系如下图所示（由 #include 静态分析生成）。</p>
+<p class="muted">模块内部文件间的包含关系如下图所示（由 #include 静态分析生成）。${includeNote}</p>
 ${includeGraph ? `${diagramBlock(includeGraph)}
 <details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">${escRaw(includeGraph)}</pre></details>` : '<p class="todo">（未解析到 include 关系）</p>'}
 

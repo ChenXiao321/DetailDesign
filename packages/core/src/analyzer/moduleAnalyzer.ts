@@ -597,56 +597,71 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
   ov.push('    style MOD fill:#fbfcfd,stroke:#d0d7de,stroke-width:1px');
 
   // ---------- 5.1 内部函数调用图（静态生成；按对外接口函数逐张拆分，每张一个工作项） ----------
-  // 每张图 = 以某对外接口为根的模块内调用闭包（内部函数传递展开 + 直接命中的 Callout）；
-  // 配置表函数指针引用的 Callout 不属于任何函数，单独成图；无内部调用的平凡函数不出图
-  const cgId = (name: string) => 'N_' + name.replace(/[^A-Za-z0-9_]/g, '_');
+  // 每张图 = 以某对外接口为根的调用树（内部函数逐层展开 + 命中的 Callout）；
+  // 被多处调用的节点沿调用路径重复出现（同名副本），换无交叉的树形布局；
+  // 递归/循环调用沿路径截断防死循环；配置表函数指针引用的 Callout 不属于任何函数，单独成图；
+  // 无模块内调用的平凡函数不出图；其余跨模块调用（Gp_RstM / Gp_TstApp 等）见总图与 5.2.2
   const cgCallouts = [...externalMap.values()]
     .filter(e => e.group === 'Callout')
     .sort((a, b) => a.name.localeCompare(b.name));
   const calloutNameSet = new Set(cgCallouts.map(e => e.name));
   const fnByName = new Map([...providedFunctions, ...internalFunctions].map(f => [f.name, f] as const));
+  const providedNameSet = new Set(providedFunctions.map(f => f.name));
   // 注意：classDef 命名避开 mermaid 保留类名 root（dagre 布局顶层 <g class="root">），
   // 否则 .root span{color:#fff} 会命中整个 SVG 的 span（含边标签），导致标签白字不可见
   const CG_CLASSES = [
     '    classDef entry fill:#0a3069,stroke:#0a3069,color:#ffffff',
     '    classDef internal fill:#eaeef2,stroke:#57606a,color:#1f2328',
+    '    classDef provided fill:#b6e3ff,stroke:#0969da,color:#0a3069',
     '    classDef callout fill:#ffe9a8,stroke:#bf8700,color:#1f2328',
   ];
+  const CG_MAX_NODES = 60;  // 树展开安全上限，防止病态模块节点爆炸
   const callGraphs: NonNullable<ModuleModel['callGraphs']> = [];
 
   for (const root of providedFunctions) {
-    const edges: string[] = [];
-    const usedInternal: string[] = [];
-    const usedCallouts: string[] = [];
-    const visited = new Set<string>();
-    const queue = [root.name];
-    while (queue.length > 0) {
-      const cur = queue.shift()!;
-      if (visited.has(cur)) continue;
-      visited.add(cur);
-      for (const callee of fnByName.get(cur)?.calls ?? []) {
-        if (fnByName.has(callee) && callee !== root.name) {
-          edges.push(`    ${cgId(cur)} -->|call| ${cgId(callee)}`);
-          if (!visited.has(callee) && !usedInternal.includes(callee) && !providedFunctions.some(p => p.name === callee)) usedInternal.push(callee);
-          queue.push(callee);
-        } else if (calloutNameSet.has(callee)) {
-          edges.push(`    ${cgId(cur)} -->|call| ${cgId(callee)}`);
-          if (!usedCallouts.includes(callee)) usedCallouts.push(callee);
+    const lines: string[] = ['flowchart LR'];
+    const idsByClass: Record<'entry' | 'internal' | 'provided' | 'callout', string[]> =
+      { entry: [], internal: [], provided: [], callout: [] };
+    let nodeCount = 0;
+    let edgeCount = 0;
+    const addNode = (name: string, kind: keyof typeof idsByClass, label?: string): string => {
+      const id = `N${nodeCount++}`;
+      lines.push(`    ${id}["${label ?? name}"]`);
+      idsByClass[kind].push(id);
+      return id;
+    };
+    const rootId = addNode(root.name, 'entry');
+    // 按代码中的调用顺序逐层展开；同一父节点下去重，调用路径上的节点不再进入（截断递归）。
+    // 子节点排序：叶子（Callout / 无模块内调用的函数）在前、带子树的函数在后（各自保持代码顺序），
+    // 使初始布局即为平面树序——子树带不会跨到后续兄弟节点的走线区，dagre 不再产生交叉边
+    const hasVisibleChildren = (fn: string, path: ReadonlySet<string>): boolean =>
+      (fnByName.get(fn)?.calls ?? []).some(c => calloutNameSet.has(c) || (fnByName.has(c) && !path.has(c)));
+    const expand = (parentId: string, fnName: string, path: ReadonlySet<string>): void => {
+      if (nodeCount >= CG_MAX_NODES) return;
+      const callees = [...new Set(fnByName.get(fnName)?.calls ?? [])];
+      const isLeaf = (c: string) =>
+        calloutNameSet.has(c) || !fnByName.has(c) || path.has(c) || !hasVisibleChildren(c, path);
+      const ordered = [...callees.filter(isLeaf), ...callees.filter(c => !isLeaf(c))];
+      for (const callee of ordered) {
+        if (nodeCount >= CG_MAX_NODES) break;
+        if (calloutNameSet.has(callee)) {
+          lines.push(`    ${parentId} -->|call| ${addNode(callee, 'callout', shortName(callee))}`);
+          edgeCount++;
+        } else if (fnByName.has(callee) && !path.has(callee)) {
+          const kind = providedNameSet.has(callee) ? 'provided' : 'internal';
+          const cid = addNode(callee, kind);
+          lines.push(`    ${parentId} -->|call| ${cid}`);
+          edgeCount++;
+          expand(cid, callee, new Set([...path, callee]));
         }
       }
+    };
+    expand(rootId, root.name, new Set([root.name]));
+    if (edgeCount === 0) continue;  // 平凡函数无模块内调用，不出图
+    lines.push(...CG_CLASSES);
+    for (const [kind, ids] of Object.entries(idsByClass)) {
+      if (ids.length > 0) lines.push(`    class ${ids.join(',')} ${kind}`);
     }
-    if (edges.length === 0) continue;  // 平凡函数无模块内调用，不出图
-    // 左右结构（LR）：根节点在左，callee 纵向展开，宽度不随 callee 数量增长，避免导出超页宽
-    const lines = ['flowchart LR', `    ${cgId(root.name)}["${root.name}"]`];
-    for (const n of usedInternal) lines.push(`    ${cgId(n)}["${n}"]`);
-    // 闭包内可能出现的其他对外接口（被内部函数回调）也列为节点
-    for (const n of visited) {
-      if (n !== root.name && !usedInternal.includes(n)) lines.push(`    ${cgId(n)}["${n}"]`);
-    }
-    for (const n of usedCallouts) lines.push(`    ${cgId(n)}["${shortName(n)}"]`);
-    lines.push(...edges, ...CG_CLASSES, `    class ${cgId(root.name)} entry`);
-    if (usedInternal.length > 0) lines.push(`    class ${usedInternal.map(cgId).join(',')} internal`);
-    if (usedCallouts.length > 0) lines.push(`    class ${usedCallouts.map(cgId).join(',')} callout`);
     callGraphs.push({
       name: root.name,
       diagram: lines.join('\n'),
@@ -656,6 +671,7 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
   }
 
   // 配置表函数指针引用（rtSatCont 等）：无直接调用者，单独成图
+  const cgId = (name: string) => 'N_' + name.replace(/[^A-Za-z0-9_]/g, '_');
   const cfgRefCallouts = cgCallouts.filter(e => e.calledFrom.some(c => c.startsWith('(')));
   if (cfgRefCallouts.length > 0) {
     const lines = ['flowchart LR', '    N_CfgTbl["配置表函数指针引用"]'];

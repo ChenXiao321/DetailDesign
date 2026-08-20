@@ -563,7 +563,7 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
   // 提供的接口节点按列平铺（direction TB + 每列一条隐形竖链），列数随接口数自适应，避免单列过长
   const ov: string[] = ['flowchart LR'];
   ov.push('    Caller(["外部调用方<br/>（其他 FC / RTE / 集成代码）"])');
-  ov.push(`    subgraph MOD["${module} 提供的外部接口（${providedFunctions.length} 个）"]`);
+  ov.push(`    subgraph MOD["${module} 提供的外部接口<br/>（${providedFunctions.length} 个）"]`);
   ov.push('        direction TB');
   const ovCols = providedFunctions.length <= 4 ? 1 : Math.ceil(providedFunctions.length / 4);
   const ovRows = Math.ceil(providedFunctions.length / Math.max(ovCols, 1));

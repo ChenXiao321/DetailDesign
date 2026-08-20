@@ -191,7 +191,8 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
 .badge { display:inline-block; background:#ddf4ff; color:#0969da; border-radius:10px; padding:1px 8px; font-size:12px; margin-left:8px; }
 .inferred { display:inline-block; background:#fff8c5; color:#9a6700; border:1px solid #eac54f; border-radius:8px; padding:0 6px; font-size:11px; margin-left:6px; }
 .note { background:#fff8c5; border:1px solid #eac54f; border-radius:6px; padding:10px 14px; font-size:13px; margin:12px 0; }
-.mermaid { overflow-x:auto; font-size:13px; }
+.mermaid { overflow-x:auto; font-size:13px; text-align:center; }
+.mermaid svg, .mermaid img { display:block; margin:0 auto; }
 @media print {
   nav { display:none; }
   .workitem { break-inside:avoid; }
@@ -355,7 +356,7 @@ ${detailTable}`;
   // 功能接口总图：analyze 时静态生成并存入模型（工作项 · 5.1），此处仅渲染
   const overviewSection = model.interfaceOverview ? `
 <h3>功能接口总图 <span class="badge">工作项 · ${esc(model.interfaceOverview.polarion.chapter)}</span></h3>
-<p class="muted">本模块对外提供 ${model.providedFunctions.length} 个接口函数（左侧为调用方），并调用 ${model.calledExternalFunctions.length} 个外部接口（右侧按来源模块归组，含 Callout 配置代码回调）；箭头方向为调用方向。各接口的模块内调用者见内部函数调用图与 5.2.2 表。</p>
+<p class="muted">本模块对外提供 ${model.providedFunctions.length} 个接口函数（左侧为调用方），并调用 ${model.calledExternalFunctions.length - calloutCount} 个外部接口（右侧按来源模块归组）；箭头方向为调用方向。Callout 配置代码回调属本模块配置点，不在本图展示，其调用关系见下方内部函数调用图与 6.2；各接口的模块内调用者见内部函数调用图与 5.2.2 表。</p>
 ${diagramBlock(model.interfaceOverview.diagram)}
 <details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">${escRaw(model.interfaceOverview.diagram)}</pre></details>` : '';
   // 内部函数调用图：analyze 时按对外接口函数逐张静态生成（每张一个工作项 · 5.1），此处仅渲染
@@ -671,7 +672,7 @@ ${evalSection}
 ${supportSection}
 </main>
 ${opts?.mermaidJs ? `<script>${opts.mermaidJs}</script>
-<script>mermaid.initialize({ startOnLoad: true, securityLevel: 'loose', theme: 'neutral', themeVariables: { fontSize: '13px' }, flowchart: { useMaxWidth: false, padding: 6 }, sequence: { showSequenceNumbers: true } });</script>` : ''}
+<script>mermaid.initialize({ startOnLoad: true, securityLevel: 'loose', theme: 'neutral', themeVariables: { fontSize: '13px' }, flowchart: { useMaxWidth: false, padding: 6, rankSpacing: 36, nodeSpacing: 24 }, sequence: { showSequenceNumbers: true } });</script>` : ''}
 </body>
 </html>`;
 }

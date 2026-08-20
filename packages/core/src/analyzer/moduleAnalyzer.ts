@@ -556,29 +556,34 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
   }
 
   // ---------- 5.1 功能接口总图（静态生成；作为工作项随模型进 diff/同步） ----------
+  // Callout 属本模块配置代码回调，不进总图（其调用关系见内部函数调用图与 6.2 Callout function）
   // 长标识符按模块前缀折行/去前缀，控制节点宽度避免导出超页宽
   const shortName = (n: string) => n.startsWith(`${module}_`) ? n.slice(module.length + 1) : n;
   const wrapName = (n: string) => n.startsWith(`${module}_`) ? `${module}_<br/>${n.slice(module.length + 1)}` : n;
-  // 提供的接口节点分两列平铺（direction TB + 两条隐形竖链 → 2 列 × ⌈n/2⌉ 行），避免单列过长
+  // 提供的接口节点按列平铺（direction TB + 每列一条隐形竖链），列数随接口数自适应，避免单列过长
   const ov: string[] = ['flowchart LR'];
-  ov.push('    Caller["外部调用方<br/>（其他 FC / RTE / 集成代码）"]');
+  ov.push('    Caller(["外部调用方<br/>（其他 FC / RTE / 集成代码）"])');
   ov.push(`    subgraph MOD["${module} 提供的外部接口（${providedFunctions.length} 个）"]`);
   ov.push('        direction TB');
-  const ovHalf = Math.ceil(providedFunctions.length / 2);
-  const ovChain = (list: FunctionUnit[], offset: number) =>
-    '        ' + list.map((f, i) => `P${offset + i}["${wrapName(f.name)}"]`).join(' ~~~ ');
-  if (providedFunctions.length > 0) ov.push(ovChain(providedFunctions.slice(0, ovHalf), 0));
-  if (providedFunctions.length > ovHalf) ov.push(ovChain(providedFunctions.slice(ovHalf), ovHalf));
+  const ovCols = providedFunctions.length <= 4 ? 1 : Math.ceil(providedFunctions.length / 4);
+  const ovRows = Math.ceil(providedFunctions.length / Math.max(ovCols, 1));
+  for (let c = 0; c < ovCols; c++) {
+    const col = providedFunctions.slice(c * ovRows, (c + 1) * ovRows);
+    if (col.length > 0) {
+      ov.push('        ' + col.map(f => `P${c * ovRows + col.indexOf(f)}("${wrapName(f.name)}")`).join(' ~~~ '));
+    }
+  }
   ov.push('    end');
   const ovGroups = new Map<string, ExternalInterface[]>();
-  for (const e of [...externalMap.values()].sort((a, b) => a.group.localeCompare(b.group) || a.name.localeCompare(b.name))) {
+  for (const e of [...externalMap.values()]
+    .filter(e => e.group !== 'Callout')
+    .sort((a, b) => a.group.localeCompare(b.group) || a.name.localeCompare(b.name))) {
     if (!ovGroups.has(e.group)) ovGroups.set(e.group, []);
     ovGroups.get(e.group)!.push(e);
   }
   [...ovGroups.entries()].forEach(([group, items], gi) => {
-    const tag = group === 'Callout' ? '（配置代码回调）' : '';
     const lines = items.map(e => shortName(e.name));
-    ov.push(`    G${gi}["<b>${group}</b>${tag}（${items.length} 个）<br/>──────────<br/>${lines.join('<br/>')}"]`);
+    ov.push(`    G${gi}["<b>${group}</b>（${items.length} 个）<br/>──────────<br/>${lines.join('<br/>')}"]`);
   });
   ov.push('    Caller -->|call| MOD');
   [...ovGroups.keys()].forEach((_, gi) => ov.push(`    MOD -->|call| G${gi}`));
@@ -586,10 +591,10 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
   ov.push('    classDef caller fill:#eaeef2,stroke:#57606a,color:#1f2328');
   ov.push('    classDef provided fill:#b6e3ff,stroke:#0969da,color:#0a3069');
   ov.push('    classDef extgroup fill:#f6f8fa,stroke:#57606a,color:#1f2328');
-  ov.push('    classDef calloutgrp fill:#ffe9a8,stroke:#bf8700,color:#1f2328');
   ov.push('    class Caller caller');
   if (providedFunctions.length > 0) ov.push(`    class ${providedFunctions.map((_, i) => 'P' + i).join(',')} provided`);
-  [...ovGroups.keys()].forEach((group, gi) => ov.push(`    class G${gi} ${group === 'Callout' ? 'calloutgrp' : 'extgroup'}`));
+  [...ovGroups.keys()].forEach((_, gi) => ov.push(`    class G${gi} extgroup`));
+  ov.push('    style MOD fill:#fbfcfd,stroke:#d0d7de,stroke-width:1px');
 
   // ---------- 5.1 内部函数调用图（静态生成；按对外接口函数逐张拆分，每张一个工作项） ----------
   // 每张图 = 以某对外接口为根的模块内调用闭包（内部函数传递展开 + 直接命中的 Callout）；

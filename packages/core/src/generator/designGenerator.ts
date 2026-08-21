@@ -60,6 +60,24 @@ function needsFlowchart(_fn: FunctionUnit): boolean {
   return true;
 }
 
+/** 为单个函数生成流程图 */
+async function genFlowchart(
+  model: ModuleModel,
+  fn: FunctionUnit,
+  provider: LLMProvider,
+): Promise<void> {
+  if (!needsFlowchart(fn)) return;
+  const fc = buildFlowchartPrompt(model, fn);
+  const diagram = await generateWithRetry(
+    provider, fc.system, fc.user, extractMermaid(/^(flowchart|graph)\s+(TD|TB|BT|LR|RL)/, 'flowchart TD'),
+  );
+  fn.generated = fn.generated ?? {
+    detailedDescription: '', llmModel: provider.name, generatedAt: new Date().toISOString(),
+  };
+  fn.generated.flowchart = diagram;
+  fn.generated.flowchartFormat = 'mermaid';
+}
+
 /** 为单个函数生成增强描述（+ 流程图） */
 async function enrichFunction(
   model: ModuleModel,
@@ -78,15 +96,7 @@ async function enrichFunction(
     generatedAt: new Date().toISOString(),
   };
 
-  // 流程图：仅有控制流的函数
-  if (needsFlowchart(fn)) {
-    const fc = buildFlowchartPrompt(model, fn);
-    const diagram = await generateWithRetry(
-      provider, fc.system, fc.user, extractMermaid(/^(flowchart|graph)\s+(TD|TB|BT|LR|RL)/, 'flowchart TD'),
-    );
-    fn.generated.flowchart = diagram;
-    fn.generated.flowchartFormat = 'mermaid';
-  }
+  await genFlowchart(model, fn, provider);
 }
 
 /** 生成动态设计（5.3 状态机 + 序列图） */
@@ -143,7 +153,7 @@ async function generateDynamicDesign(
 }
 
 export interface GenerateOptions {
-  /** 只生成指定条目（函数名或 'dynamic'），空 = 全部 */
+  /** 只生成指定条目（函数名或 'dynamic'/'configs'/'callouts'/'flowcharts'），空 = 全部 */
   only?: string[];
   /** 断点续跑：跳过已有 generated 内容的条目（配合 CLI --resume） */
   skipExisting?: boolean;
@@ -162,6 +172,22 @@ export async function generateDesign(
   const log = opts?.onProgress ?? (() => {});
   const only = opts?.only;
   const skipExisting = opts?.skipExisting ?? false;
+
+  // --only flowcharts：只重刷各函数的流程图，保留已生成的描述等其余内容
+  if (only?.includes('flowcharts')) {
+    const fnFilter = only.filter(o => o !== 'flowcharts');
+    for (const fn of [...model.providedFunctions, ...model.internalFunctions]) {
+      if (fnFilter.length > 0 && !fnFilter.includes(fn.name)) continue;
+      log(`重新生成流程图: ${fn.name}`);
+      try {
+        await genFlowchart(model, fn, provider);
+      } catch (err) {
+        log(`  ⚠ 失败（已跳过，可 --resume 重试）: ${fn.name} — ${(err as Error).message.split('\n')[0]}`);
+        opts?.failures?.push(`${fn.name}: ${(err as Error).message.split('\n')[0]}`);
+      }
+    }
+    return model;
+  }
 
   const allFunctions = [...model.providedFunctions, ...model.internalFunctions];
   const targets = only

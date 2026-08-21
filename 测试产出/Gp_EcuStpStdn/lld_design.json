@@ -113,7 +113,7 @@
       },
       "generated": {
         "detailedDescription": "设置主核本地缓冲区中的安全状态标志（SafeState_b = TRUE）。当系统经历多次非预期复位后，由 Gp_RstM 或 ASW 调用本接口请求进入安全状态。该标志在 Gp_EcuStpShdn_Startup 阶段二中被检查：一旦置位，程序在安全状态下初始化 SBC，并通过 Gp_EcuStpShdn_CalloutSafeState 进入安全状态处理；该标志同时在 Gp_EcuStpShdn_Mainfunction 中被检查，用于抑制 MCU 运行时测试。本函数无参数、无返回值。",
-        "flowchart": "flowchart TD\n    A([\"开始\"]) --> B[\"SafeState_b 置 TRUE<br>（写主核本地缓冲区）\"]\n    B --> Z([\"结束\"])",
+        "flowchart": "flowchart TD\n    START([\"开始\"]) --> W[/\"写 SafeState_b 为 TRUE\"/]\n    W --> END([\"结束\"])",
         "flowchartFormat": "mermaid",
         "llmModel": "claude-sample",
         "generatedAt": "2026-08-13T02:35:01.397Z"
@@ -160,7 +160,7 @@
       },
       "generated": {
         "detailedDescription": "设置主核本地缓冲区中的尝试断电标志（TryPwrShdn_b = TRUE）。当检测到断电请求时由 Gp_RstM 调用本接口。该标志在 Gp_EcuStpShdn_Startup 阶段二中被检查：一旦置位，立即调用 Gp_EcuStpShdn_CalloutPwrShdnInStpPhase 执行启动阶段断电，程序不预期返回。本函数无参数、无返回值。",
-        "flowchart": "flowchart TD\n    A([\"开始\"]) --> B[\"TryPwrShdn_b 置 TRUE<br>（写主核本地缓冲区）\"]\n    B --> Z([\"结束\"])",
+        "flowchart": "flowchart TD\n    START([\"开始\"]) --> W[/\"写 TryPwrShdn_b 为 TRUE\"/]\n    W --> END([\"结束\"])",
         "flowchartFormat": "mermaid",
         "llmModel": "claude-sample",
         "generatedAt": "2026-08-13T02:35:01.397Z"
@@ -207,7 +207,7 @@
       },
       "generated": {
         "detailedDescription": "返回主核本地缓冲区中的当前安全状态标志（SafeState_b）。本接口提供给 ASW，用于查询 ECU 是否已进入安全状态（例如多次非预期复位之后）。返回值：TRUE 表示安全状态标志已置位，否则返回 FALSE。",
-        "flowchart": "flowchart TD\n    A([\"开始\"]) --> B[\"读取 SafeState_b<br>（主核本地缓冲区）\"]\n    B --> C[\"返回该值\"]\n    C --> Z([\"结束\"])",
+        "flowchart": "flowchart TD\n    START([\"开始\"]) --> R[/\"读 SafeState_b\"/]\n    R --> END([\"返回 SafeState_b\"])",
         "flowchartFormat": "mermaid",
         "llmModel": "claude-sample",
         "generatedAt": "2026-08-13T02:35:01.397Z"
@@ -267,7 +267,7 @@
       },
       "generated": {
         "detailedDescription": "Trap 恢复接口。将 OS 状态码（OsStatus_u8）透传给 Gp_EcuStpShdn_CalloutTrapRecov，具体的恢复行为由集成方在 Callout 函数中实现。本函数预期在系统发生 Trap 时由 Trap 处理程序调用。",
-        "flowchart": "flowchart TD\n    A([\"开始\"]) --> B[\"透传 OsStatus_u8<br>调用 CalloutTrapRecov\"]\n    B --> Z([\"结束\"])",
+        "flowchart": "flowchart TD\n    START([\"开始\"]) --> C[[\"Gp_EcuStpShdn_CalloutTrapRecov<br>透传 OsStatus_u8\"]]\n    C --> END([\"结束\"])",
         "flowchartFormat": "mermaid",
         "llmModel": "claude-sample",
         "generatedAt": "2026-08-13T02:35:01.397Z"
@@ -327,7 +327,7 @@
       },
       "generated": {
         "detailedDescription": "OS 错误恢复接口。将 OS 状态码（OsStatus_u8）透传给 Gp_EcuStpShdn_CalloutOsErrRecov，具体的恢复行为由集成方在 Callout 函数中实现。本函数预期在 OS 发生错误时由 OS 错误钩子调用。",
-        "flowchart": "flowchart TD\n    A([\"开始\"]) --> B[\"透传 OsStatus_u8<br>调用 CalloutOsErrRecov\"]\n    B --> Z([\"结束\"])",
+        "flowchart": "flowchart TD\n    START([\"开始\"]) --> C[[\"Gp_EcuStpShdn_CalloutOsErrRecov<br>透传 OsStatus_u8\"]]\n    C --> END([\"结束\"])",
         "flowchartFormat": "mermaid",
         "llmModel": "claude-sample",
         "generatedAt": "2026-08-13T02:35:01.397Z"
@@ -374,7 +374,7 @@
       },
       "generated": {
         "detailedDescription": "在关闭阶段调用 Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase，执行 ECU 断电序列。本函数仅允许 Core0 调用。无参数、无返回值。",
-        "flowchart": "flowchart TD\n    A([\"开始\"]) --> B[\"调用 CalloutPwrShdnInShdnPhase<br>（仅 Core0 调用）\"]\n    B --> Z([\"结束\"])",
+        "flowchart": "flowchart TD\n    START([\"开始\"]) --> C[[\"Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase\"]]\n    C --> END([\"结束\"])",
         "flowchartFormat": "mermaid",
         "llmModel": "claude-sample",
         "generatedAt": "2026-08-13T02:35:01.397Z"
@@ -443,7 +443,7 @@
       },
       "generated": {
         "detailedDescription": "实现 ECU 多核启动序列，分三个阶段执行，主核（Core0）与从核之间通过屏障同步。阶段一：主核初始化运行时缓冲区并调用 Gp_EcuStpShdn_CalloutInitStageOneCore0，随后将阶段置为 STAGE_TWO；从核自旋等待直至进入 STAGE_TWO。阶段二：所有核执行 SafeTpack 预运行初始化与测试（安全功能使能时）；主核调用 Gp_RstM 初始化并读取上次复位信息，随后评估 TryPwrShdn 与 SafeState 标志——若 TryPwrShdn 置位则调用 Gp_EcuStpShdn_CalloutPwrShdnInStpPhase（不返回）；若 SafeState 置位则执行 Core0 初始化、安全状态下的 SBC 初始化并进入安全状态处理；否则依次执行 MCU 预运行测试检查、经从核运行时容器函数指针完成 Core0 初始化、主核后初始化与 SBC 初始化，然后将阶段置为 STAGE_THREE。阶段三：从核完成自身初始化并记录完成时间戳；非安全状态下检查初始化结果，失败经 Gp_EcuStpShdn_CalloutInitFailedHnd 上报。启动关键节点的时间戳记录在主核本地缓冲区中供观测。本函数在 EcuM DriverInitOne 阶段每核各调用一次。",
-        "flowchart": "flowchart TD\n    A([\"开始\"]) --> B[\"CalloutGetCoreId 获取核 ID<br>取本核 satellite 运行时缓冲区\"]\n    B --> C{\"CoreId 为 core0\"}\n    C -- master --> D[\"初始化运行时缓冲区<br>CalloutInitStageOneCore0<br>RstM_InitOne（条件编译）<br>StpStage_t 置为 STAGE_TWO\"]\n    C -- satellite --> E[\"初始化本核缓冲区<br>自旋等待 STAGE_TWO\"]\n    D --> F[\"SafeTpack PreRunInit 与 PreRunPhase（条件编译）<br>记录 PreRun 完成时间戳\"]\n    E --> F\n    F --> G{\"CoreId 为 core0\"}\n    G -- master --> H[\"RstM_Init 或 InitTwo<br>GetLastRstTypeInfo 读取复位信息\"]\n    H --> I{\"TryPwrShdn_b 已置位\"}\n    I -- 是 --> J[\"CalloutPwrShdnInStpPhase<br>程序不再返回\"]\n    I -- 否 --> K{\"SafeState_b 已置位\"}\n    K -- 是 --> L[\"core0 初始化<br>CalloutSbcInitInSafeState<br>CalloutSafeState 进入安全状态\"]\n    K -- 否 --> M[\"MstProcMcuPreRunTest（条件编译）<br>core0 初始化 StpStageTwo_pf<br>MstPostInit（条件编译）<br>CalloutSbcInit\"]\n    M --> N[\"StpStage_t 置为 STAGE_THREE\"]\n    L --> N\n    G -- satellite --> O[\"自旋等待 STAGE_THREE\"]\n    N --> P{\"CoreId 为 core0\"}\n    O --> P\n    P -- master --> Z([\"结束\"])\n    P -- satellite --> Q[\"StpStageTwo_pf satellite 初始化<br>记录初始化完成时间戳<br>非安全状态时检查初始化结果（条件编译）\"]\n    Q --> Z",
+        "flowchart": "flowchart TD\n    START([\"开始\"]) --> GETCORE[[\"CalloutGetCoreId<br>取本核 CoreId\"]]\n    GETCORE --> PREP[\"按 CoreId 取本核卫星运行缓冲区<br>Rt_cptst 与 SatImpl_ptst\"]\n    PREP --> D_CORE1{\"本核是 Core0 主核\"}\n    D_CORE1 -- 是 --> S1M_P1\n    subgraph LANE_S1M[\" \"]\n        direction TB\n        S1M_P1[\"InitRsltAllBits_u32 清 0\"] --> S1M_H1{{\"Cnt_u32 置 0\"}}\n        S1M_H1 --> S1M_D1{\"Cnt_u32 小于<br>INIT_RSLT_REC_NUM\"}\n        S1M_D1 -- 是 --> S1M_B1[\"InitCheckRslt_t[Cnt_u32] 置 E_OK\"]\n        S1M_B1 --> S1M_I1[\"Cnt_u32 加 1\"]\n        S1M_I1 --> S1M_D1\n        S1M_D1 -- 否 --> S1M_H2{{\"Cnt_u32 置 0\"}}\n        S1M_H2 --> S1M_D2{\"Cnt_u32 小于<br>MST_TIME_STAMP_NUM\"}\n        S1M_D2 -- 是 --> S1M_B2[\"MstImpl TimeStamp_u32[Cnt_u32] 清 0\"]\n        S1M_B2 --> S1M_I2[\"Cnt_u32 加 1\"]\n        S1M_I2 --> S1M_D2\n        S1M_D2 -- 否 --> S1M_A[\"初始化主核变量<br>测试结果 自检状态 复位信息<br>SafeState 与 TryPwrShdn 标志\"]\n        S1M_A --> S1M_C1[[\"CalloutInitStageOneCore0\"]]\n        subgraph SG_RST1[\" \"]\n            SG_RST1_NOTE[\"注：仅在 RSTM_PROJ_TYPE_SEL 为 APP_NO_BOOT 时参与编译\"]\n            SG_RST1_NOTE ~~~ S1M_C2\n            S1M_C2[[\"Gp_RstM_InitOne\"]]\n        end\n        S1M_C1 --> S1M_C2\n        S1M_C2 --> S1M_S[\"StpStage_t 置 STAGE_TWO\"]\n    end\n    D_CORE1 -- 否 --> S1S_P1\n    subgraph LANE_S1S[\" \"]\n        direction TB\n        S1S_P1[\"InitRsltAllBits_u32 清 0\"] --> S1S_H1{{\"Cnt_u32 置 0\"}}\n        S1S_H1 --> S1S_D1{\"Cnt_u32 小于<br>INIT_RSLT_REC_NUM\"}\n        S1S_D1 -- 是 --> S1S_B1[\"InitCheckRslt_t[Cnt_u32] 置 E_OK\"]\n        S1S_B1 --> S1S_I1[\"Cnt_u32 加 1\"]\n        S1S_I1 --> S1S_D1\n        S1S_D1 -- 否 --> S1S_P2[\"SatImpl TimeStamp_u32 清 0\"]\n        S1S_P2 --> S1S_J[\" \"]\n        S1S_J --> S1S_W{\"StpStage_t 已到 STAGE_TWO\"}\n        S1S_W -- 否 --- S1S_J\n    end\n    style LANE_S1M fill:transparent,stroke:transparent\n    style LANE_S1S fill:transparent,stroke:transparent\n    style S1S_J fill:transparent,stroke:transparent\n    subgraph SG_PRE[\" \"]\n        direction TB\n        SG_PRE_NOTE[\"注：仅在 SAFETY_ENABLE 时参与编译\"]\n        SG_PRE_NOTE ~~~ S2_C1\n        S2_C1[[\"Gp_TstApp_PreRunInit\"]]\n        S2_C1 --> S2_C2[[\"Gp_TstApp_PreRunPhase\"]]\n    end\n    S1M_S --> S2_C1\n    S1S_W -- 是 --> S2_C1\n    S2_C2 --> S2_TS[[\"CalloutGetSysTimeMs\"]]\n    S2_TS --> S2_W[/\"记录 PRERUN 时间戳\"/]\n    S2_W --> D_CORE2{\"本核是 Core0 主核\"}\n    D_CORE2 -- 是 --> S2M_C1\n    subgraph LANE_S2M[\" \"]\n        direction TB\n        subgraph SG_RST2[\" \"]\n            SG_RST2_NOTE[\"注：InitTwo 或 Init 由 RSTM_PROJ_TYPE_SEL 条件编译二选一\"]\n            SG_RST2_NOTE ~~~ S2M_C1\n            S2M_C1[[\"Gp_RstM_InitTwo 或 Gp_RstM_Init\"]]\n        end\n        S2M_C1 --> S2M_C2[[\"Gp_RstM_GetLastRstTypeInfo<br>取复位原因\"]]\n        S2M_C2 --> S2M_W[/\"复位信息写入 MstImpl\"/]\n        subgraph SG_ACT[\" \"]\n            direction TB\n            SG_ACT_NOTE[\"注：本分支仅在 SAFETY_ENABLE 且 SAFETY_ACTION_ENABLE 时参与编译\"]\n            SG_ACT_NOTE ~~~ S2M_D1\n            S2M_D1{\"TryPwrShdn_b 为 TRUE\"}\n            S2M_D1 -- 是 --> S2M_PD[[\"CalloutPwrShdnInStpPhase<br>进入下电 不再返回\"]]\n            S2M_PD --> END_PD([\"下电\"])\n            S2M_D1 -- 否 --> S2M_D2{\"SafeState_b 为 TRUE\"}\n            S2M_D2 -- 是 --> S2M_SF1[[\"StpStageTwo_pf<br>Core0 初始化（函数指针）\"]]\n            S2M_SF1 --> S2M_SF2[[\"CalloutSbcInitInSafeState\"]]\n            S2M_SF2 --> S2M_SF3[/\"写 SbcInfo_u32\"/]\n            S2M_SF3 --> S2M_SF4[[\"CalloutSafeState\"]]\n            S2M_SF4 --> S2M_S3[\"StpStage_t 置 STAGE_THREE\"]\n        end\n        S2M_W --> S2M_D1\n        subgraph SG_PRE2[\" \"]\n            SG_PRE2_NOTE[\"注：仅在 SAFETY_ENABLE 时参与编译\"]\n            SG_PRE2_NOTE ~~~ S2M_N1\n            S2M_N1[[\"Gp_EcuStpShdn_MstProcMcuPreRunTest\"]]\n        end\n        S2M_D2 -- 否 --> S2M_N1\n        S2M_N1 --> S2M_N2[[\"StpStageTwo_pf<br>Core0 初始化（函数指针）\"]]\n        S2M_N2 --> S2M_N3[[\"CalloutGetSysTimeMs\"]]\n        S2M_N3 --> S2M_N4[/\"记录 MST_INIT 时间戳\"/]\n        subgraph SG_POST[\" \"]\n            SG_POST_NOTE[\"注：仅在 SAFETY_ENABLE 时参与编译\"]\n            SG_POST_NOTE ~~~ S2M_N5\n            S2M_N5[[\"Gp_EcuStpShdn_MstPostInit\"]]\n        end\n        S2M_N4 --> S2M_N5\n        S2M_N5 --> S2M_N6[[\"CalloutSbcInit\"]]\n        S2M_N6 --> S2M_N7[/\"写 SbcInfo_u32\"/]\n        S2M_N7 --> S2M_N8[[\"CalloutGetSysTimeMs\"]]\n        S2M_N8 --> S2M_N9[/\"记录 MST_POST_INIT 时间戳\"/]\n        S2M_N9 --> S2M_S3\n    end\n    D_CORE2 -- 否 --> S2S_J\n    subgraph LANE_S2S[\" \"]\n        direction TB\n        S2S_J[\" \"]\n        S2S_J --> S2S_W{\"StpStage_t 已到 STAGE_THREE\"}\n        S2S_W -- 否 --- S2S_J\n    end\n    style LANE_S2M fill:transparent,stroke:transparent\n    style LANE_S2S fill:transparent,stroke:transparent\n    style S2S_J fill:transparent,stroke:transparent\n    S2M_S3 --> D_CORE3{\"本核是 Core0 主核\"}\n    S2S_W -- 是 --> D_CORE3\n    D_CORE3 -- 是 --> END([\"结束\"])\n    D_CORE3 -- 否 --> S3S_C1\n    subgraph LANE_S3S[\" \"]\n        direction TB\n        S3S_C1[[\"StpStageTwo_pf<br>卫星核初始化（函数指针）\"]] --> S3S_TS[[\"CalloutGetSysTimeMs\"]]\n        S3S_TS --> S3S_W[/\"记录卫星初始化完成时间戳\"/]\n        subgraph SG_S3[\" \"]\n            direction TB\n            SG_S3_NOTE[\"注：本段仅在 SAFETY_ENABLE 时参与编译<br>InitFailedHnd 另需 SAFETY_ACTION_ENABLE\"]\n            SG_S3_NOTE ~~~ S3S_D1\n            S3S_D1{\"SafeState_b 为 FALSE\"}\n            S3S_D1 -- 是 --> S3S_C2[[\"Gp_EcuStpShdn_CheckInitRslt\"]]\n            S3S_C2 --> S3S_D2{\"InitRsltAllBits_u32 不为 0\"}\n            S3S_D2 -- 是 --> S3S_C3[[\"CalloutInitFailedHnd\"]]\n        end\n        S3S_W --> S3S_D1\n    end\n    style LANE_S3S fill:transparent,stroke:transparent\n    S3S_C3 --> END\n    S3S_D2 -- 否 --> END\n    S3S_D1 -- 否 --> END\n    style SG_RST1 fill:transparent,stroke:#888888,stroke-dasharray:6 4\n    style SG_PRE fill:transparent,stroke:#888888,stroke-dasharray:6 4\n    style SG_RST2 fill:transparent,stroke:#888888,stroke-dasharray:6 4\n    style SG_ACT fill:transparent,stroke:#888888,stroke-dasharray:6 4\n    style SG_PRE2 fill:transparent,stroke:#888888,stroke-dasharray:6 4\n    style SG_POST fill:transparent,stroke:#888888,stroke-dasharray:6 4\n    style SG_S3 fill:transparent,stroke:#888888,stroke-dasharray:6 4\n    classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700\n    class SG_RST1_NOTE,SG_PRE_NOTE,SG_RST2_NOTE,SG_ACT_NOTE,SG_PRE2_NOTE,SG_POST_NOTE,SG_S3_NOTE condNote",
         "flowchartFormat": "mermaid",
         "llmModel": "claude-sample",
         "generatedAt": "2026-08-13T02:35:01.397Z"
@@ -496,7 +496,7 @@
       },
       "generated": {
         "detailedDescription": "模块周期主函数，由需要执行 MCU 运行时测试的核循环调用。首次调用时，Core0 通过 Gp_EcuStpShdn_GetLastSatTimeStamp 计算并记录最后完成初始化的从核时间戳。若 TryPwrShdn 与 SafeState 标志均未置位，则执行 MCU 运行时测试（安全功能使能时经 Gp_TstApp_RunTimePhase）；随后 Core0 经 Gp_EcuStpShdn_CalloutChkMcuRunTimeTest 检查运行时测试结果，失败时调用 Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd。本函数无参数、无返回值。",
-        "flowchart": "flowchart TD\n    A([\"开始\"]) --> B[\"CalloutGetCoreId 获取核 ID\"]\n    B --> C{\"core0 且未记录过<br>最后 satellite 时间戳\"}\n    C -- 是 --> D[\"GetLastSatTimeStamp 计算并记录\"]\n    C -- 否 --> E[\"跳过\"]\n    D --> F{\"TryPwrShdn 与 SafeState<br>均为 FALSE（条件编译）\"}\n    E --> F\n    F -- 是 --> G[\"Gp_TstApp_RunTimePhase 执行运行时测试\"]\n    F -- 否 --> Z([\"结束\"])\n    G --> H{\"CoreId 为 core0\"}\n    H -- 是 --> I{\"CalloutChkMcuRunTimeTest 返回 FALSE\"}\n    H -- 否 --> Z\n    I -- 是 --> J[\"CalloutMcuRunTimeTestFailedHnd（条件编译）\"]\n    I -- 否 --> Z\n    J --> Z",
+        "flowchart": "flowchart TD\n    START([\"开始\"]) --> GETCORE[[\"CalloutGetCoreId<br>取本核 CoreId\"]]\n    GETCORE --> D1{\"本核是 Core0 主核\"}\n    D1 -- 是 --> D2{\"LAST_SAT_INIT 时间戳为 0<br>（仅取一次）\"}\n    D2 -- 是 --> C1[[\"Gp_EcuStpShdn_GetLastSatTimeStamp\"]]\n    C1 --> W1[/\"写 LAST_SAT_INIT 时间戳\"/]\n    subgraph SG_SAFE[\" \"]\n        direction TB\n        SG_SAFE_NOTE[\"注：本段仅在 SAFETY_ENABLE 时参与编译<br>McuRunTimeTestFailedHnd 另需 SAFETY_ACTION_ENABLE\"]\n        SG_SAFE_NOTE ~~~ D3\n        D3{\"TryPwrShdn 与 SafeState 均为 FALSE\"}\n        D3 -- 是 --> C2[[\"Gp_TstApp_RunTimePhase<br>MCU 运行时测试\"]]\n        C2 --> D4{\"本核是 Core0 主核\"}\n        D4 -- 是 --> C3[[\"CalloutChkMcuRunTimeTest\"]]\n        C3 --> D5{\"运行时测试通过\"}\n        D5 -- 否 --> C4[[\"CalloutMcuRunTimeTestFailedHnd\"]]\n    end\n    style SG_SAFE fill:transparent,stroke:#888888,stroke-dasharray:6 4\n    classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700\n    class SG_SAFE_NOTE condNote\n    D1 -- 否 --> D3\n    D2 -- 否 --> D3\n    W1 --> D3\n    C4 --> END([\"结束\"])\n    D5 -- 是 --> END\n    D4 -- 否 --> END\n    D3 -- 否 --> END",
         "flowchartFormat": "mermaid",
         "llmModel": "claude-sample",
         "generatedAt": "2026-08-13T02:35:01.397Z"
@@ -561,7 +561,7 @@
       },
       "generated": {
         "detailedDescription": "汇总从核本地缓冲区的初始化检查结果。遍历 InitCheckRslt_t 结果数组，对值为 E_NOT_OK 的每一项，将 InitRsltAllBits_u32 中的对应位置 1，使调用方可按位识别所有失败的初始化步骤。仅在 GP_ECUSTPSHDN_SAFETY_ENABLE 为 STD_ON 时参与编译。由 Gp_EcuStpShdn_MstPostInit 及 Gp_EcuStpShdn_Startup（从核路径）调用。",
-        "flowchart": "flowchart TD\n    A([\"开始\"]) --> B[\"Cnt 置 0\"]\n    B --> C{\"Cnt 小于 INIT_RSLT_REC_NUM 32\"}\n    C -- 是 --> D{\"InitCheckRslt_t[Cnt]<br>等于 E_NOT_OK\"}\n    D -- 是 --> E[\"InitRsltAllBits_u32 第 Cnt 位置 1\"]\n    D -- 否 --> F[\"不处理\"]\n    E --> G[\"Cnt 加 1\"]\n    F --> G\n    G --> C\n    C -- 否 --> Z([\"结束\"])",
+        "flowchart": "flowchart TD\n    subgraph SG[\" \"]\n        direction TB\n        SG_NOTE[\"注：本函数仅在 SAFETY_ENABLE 时参与编译\"]\n        SG_NOTE ~~~ START\n        START([\"开始\"]) --> H{{\"Cnt_u32 置 0\"}}\n        H --> D1{\"Cnt_u32 小于<br>INIT_RSLT_REC_NUM\"}\n        D1 -- 是 --> R[/\"读 InitCheckRslt_t[Cnt_u32]\"/]\n        R --> D2{\"结果为 E_NOT_OK\"}\n        D2 -- 是 --> P[\"InitRsltAllBits_u32<br>对应位 Cnt_u32 置 1\"]\n        P --> I[\"Cnt_u32 加 1\"]\n        I --> D1\n        D2 -- 否 --> I\n        D1 -- 否 --> END([\"结束\"])\n    end\n    style SG fill:transparent,stroke:#888888,stroke-dasharray:6 4\n    classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700\n    class SG_NOTE condNote",
         "flowchartFormat": "mermaid",
         "llmModel": "claude-sample",
         "generatedAt": "2026-08-13T02:35:01.397Z"
@@ -615,7 +615,7 @@
       },
       "generated": {
         "detailedDescription": "在主核上检查 MCU 预运行测试结果。测试结果经 Gp_EcuStpShdn_CalloutChkMcuPreRunTest 查询并记录到主核本地缓冲区（McuSelfTest_t：SELFTEST_PASS 或 SELFTEST_FAIL）。失败时在 GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE 为 STD_ON 的条件下调用 Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd 执行失败处理。仅在 GP_ECUSTPSHDN_SAFETY_ENABLE 为 STD_ON 时参与编译。由 Gp_EcuStpShdn_Startup 在阶段二中调用。",
-        "flowchart": "flowchart TD\n    A([\"开始\"]) --> B{\"CalloutChkMcuPreRunTest<br>返回 FALSE\"}\n    B -- 是 --> C[\"McuSelfTest_t 置为 SELFTEST_FAIL\"]\n    C --> D[\"CalloutMcuPreRunTestFailedHnd<br>（条件编译 SAFETY_ACTION_ENABLE）\"]\n    B -- 否 --> E[\"McuSelfTest_t 置为 SELFTEST_PASS\"]\n    D --> Z([\"结束\"])\n    E --> Z",
+        "flowchart": "flowchart TD\n    subgraph SG[\" \"]\n        direction TB\n        SG_NOTE[\"注：本函数仅在 SAFETY_ENABLE 时参与编译<br>McuPreRunTestFailedHnd 另需 SAFETY_ACTION_ENABLE\"]\n        SG_NOTE ~~~ START\n        START([\"开始\"]) --> C[[\"CalloutChkMcuPreRunTest\"]]\n        C --> D{\"PreRun 测试通过\"}\n        D -- 否 --> W1[/\"McuSelfTest_t 置 SELFTEST_FAIL\"/]\n        W1 --> C2[[\"CalloutMcuPreRunTestFailedHnd\"]]\n        C2 --> END([\"结束\"])\n        D -- 是 --> W2[/\"McuSelfTest_t 置 SELFTEST_PASS\"/]\n        W2 --> END\n    end\n    style SG fill:transparent,stroke:#888888,stroke-dasharray:6 4\n    classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700\n    class SG_NOTE condNote",
         "flowchartFormat": "mermaid",
         "llmModel": "claude-sample",
         "generatedAt": "2026-08-13T02:35:01.397Z"
@@ -675,7 +675,7 @@
       },
       "generated": {
         "detailedDescription": "Core0 初始化之后执行主核后初始化检查。首先经 Gp_EcuStpShdn_CheckInitRslt 汇总初始化结果，失败经 Gp_EcuStpShdn_CalloutInitFailedHnd 上报；随后将测试应用切换到运行阶段（Gp_TstApp_SwitchToRunPhase），并经 Gp_EcuStpShdn_CalloutChkSwtToRun 检查切换结果，失败时调用 Gp_EcuStpShdn_CalloutSwtToRunFailedHnd；最后经 Gp_EcuStpShdn_CalloutChkSbcTest 检查 SBC 自检结果并记录到主核本地缓冲区（SbcSelfTest_t），失败时调用 Gp_EcuStpShdn_CalloutSbcTestFailedHnd。仅在 GP_ECUSTPSHDN_SAFETY_ENABLE 为 STD_ON 时参与编译。由 Gp_EcuStpShdn_Startup 在阶段二中调用。",
-        "flowchart": "flowchart TD\n    A([\"开始\"]) --> B[\"CheckInitRslt 汇总初始化结果\"]\n    B --> C{\"InitRsltAllBits_u32 非 0\"}\n    C -- 是 --> D[\"CalloutInitFailedHnd<br>（条件编译 SAFETY_ACTION_ENABLE）\"]\n    C -- 否 --> E[\"继续\"]\n    D --> F[\"Gp_TstApp_SwitchToRunPhase 切换到运行阶段\"]\n    E --> F\n    F --> G{\"CalloutChkSwtToRun 返回 FALSE\"}\n    G -- 是 --> H[\"CalloutSwtToRunFailedHnd（条件编译）\"]\n    G -- 否 --> I[\"继续\"]\n    H --> J{\"CalloutChkSbcTest 返回 FALSE\"}\n    I --> J\n    J -- 是 --> K[\"SbcSelfTest_t 置为 FAIL<br>CalloutSbcTestFailedHnd（条件编译）\"]\n    J -- 否 --> L[\"SbcSelfTest_t 置为 PASS\"]\n    K --> Z([\"结束\"])\n    L --> Z",
+        "flowchart": "flowchart TD\n    subgraph SG[\" \"]\n        direction TB\n        SG_NOTE[\"注：本函数仅在 SAFETY_ENABLE 时参与编译<br>三个 FailedHnd Callout 另需 SAFETY_ACTION_ENABLE\"]\n        SG_NOTE ~~~ START\n        START([\"开始\"]) --> C1[[\"Gp_EcuStpShdn_CheckInitRslt\"]]\n        C1 --> D1{\"InitRsltAllBits_u32 不为 0\"}\n        D1 -- 是 --> C2[[\"CalloutInitFailedHnd\"]]\n        C2 --> C3[[\"Gp_TstApp_SwitchToRunPhase\"]]\n        D1 -- 否 --> C3\n        C3 --> C4[[\"CalloutChkSwtToRun\"]]\n        C4 --> D2{\"切换运行阶段成功\"}\n        D2 -- 否 --> C5[[\"CalloutSwtToRunFailedHnd\"]]\n        C5 --> C6[[\"CalloutChkSbcTest\"]]\n        D2 -- 是 --> C6\n        C6 --> D3{\"SBC 自测通过\"}\n        D3 -- 否 --> W1[/\"SbcSelfTest_t 置 SELFTEST_FAIL\"/]\n        W1 --> C7[[\"CalloutSbcTestFailedHnd\"]]\n        C7 --> END([\"结束\"])\n        D3 -- 是 --> W2[/\"SbcSelfTest_t 置 SELFTEST_PASS\"/]\n        W2 --> END\n    end\n    style SG fill:transparent,stroke:#888888,stroke-dasharray:6 4\n    classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700\n    class SG_NOTE condNote",
         "flowchartFormat": "mermaid",
         "llmModel": "claude-sample",
         "generatedAt": "2026-08-13T02:35:01.397Z"
@@ -728,7 +728,7 @@
       },
       "generated": {
         "detailedDescription": "计算所有激活从核中最大的初始化完成时间戳。主核时间戳不记录在从核缓冲区中，因此索引 0 按 0 处理。按 GP_ECUSTPSHDN_ACTIVE_CORE_NUM 遍历各激活从核，从对应从核本地缓冲区读取时间戳，返回最大值。由 Gp_EcuStpShdn_Mainfunction 在 Core0 上调用一次。",
-        "flowchart": "flowchart TD\n    A([\"开始\"]) --> B[\"时间戳数组初始化<br>master 核索引 0 置 0\"]\n    B --> C[\"逐核读取 satellite 时间戳<br>（按激活核数，条件编译）\"]\n    C --> D[\"Cnt 置 0<br>MaxTimeStamp 置 0\"]\n    D --> E{\"Cnt 小于激活核数\"}\n    E -- 是 --> F{\"TimeStamp[Cnt] 大于 Max\"}\n    F -- 是 --> G[\"MaxTimeStamp 更新为该值\"]\n    F -- 否 --> H[\"不处理\"]\n    G --> I[\"Cnt 加 1\"]\n    H --> I\n    I --> E\n    E -- 否 --> J[\"返回 MaxTimeStamp\"]\n    J --> Z([\"结束\"])",
+        "flowchart": "flowchart TD\n    subgraph SG[\" \"]\n        SG_NOTE[\"注：各核时间戳读取分别在 ACTIVE_CORE_NUM 大于对应核号时参与编译\"]\n        SG_NOTE ~~~ R1\n        R1[/\"读各核卫星 TimeStamp_u32 到本地数组\"/]\n    end\n    style SG fill:transparent,stroke:#888888,stroke-dasharray:6 4\n    classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700\n    class SG_NOTE condNote\n    START([\"开始\"]) --> R1\n    R1 --> H{{\"Cnt_u32 与 MaxTimeStamp_u32 置 0\"}}\n    H --> D1{\"Cnt_u32 小于<br>ACTIVE_CORE_NUM\"}\n    D1 -- 是 --> D2{\"MaxTimeStamp_u32 小于<br>TimeStamp_u32[Cnt_u32]\"}\n    D2 -- 是 --> P[\"更新 MaxTimeStamp_u32\"]\n    P --> I[\"Cnt_u32 加 1\"]\n    I --> D1\n    D2 -- 否 --> I\n    D1 -- 否 --> END([\"返回 MaxTimeStamp_u32\"])",
         "flowchartFormat": "mermaid",
         "llmModel": "claude-sample",
         "generatedAt": "2026-08-13T02:35:01.397Z"

@@ -76,11 +76,40 @@ export function buildFlowchartPrompt(
   lines.push(``);
   lines.push(`# 输出要求`);
   lines.push(`1. 第一行必须是 flowchart TD，只输出图代码本身，不要用 \`\`\` 包裹，不要输出任何解释`);
-  lines.push(`2. 节点格式: 处理步骤用矩形 id["说明"]，判断用菱形 id{"条件"}，开始/结束用 id(["开始"])`);
-  lines.push(`3. 分支格式: A --> B，带条件用 A -- 是 --> B / A -- 否 --> C`);
-  lines.push(`4. 节点说明用中文简述行为（可含英文函数名），合并连续赋值等琐碎步骤，节点总数控制在 20 个以内`);
+  lines.push(`2. 节点符号遵循 ISO 5807 / ANSI 流程图标准（Mermaid 形状映射）：`);
+  lines.push(`   - 处理步骤（赋值、计算、标志操作）: 矩形 id["说明"]`);
+  lines.push(`   - 判断/分支条件: 菱形 id{"条件"}，流出线标注 是/否 或具体取值`);
+  lines.push(`   - 开始/结束（端子）: 胶囊形 id(["开始"]) / id(["结束"])`);
+  lines.push(`   - 调用其他函数（预定义过程，含本模块内部函数与外部接口）: 双边矩形 id[["函数名 简述"]]`);
+  lines.push(`   - 准备/初始化（如循环计数器置初值）: 六边形 id{{"说明"}}`);
+  lines.push(`   - 数据读写（读全局/数组/硬件寄存器、写输出）: 平行四边形 id[/"说明"/]`);
+  lines.push(`3. 控制流保真：if/else、switch、for/while 循环必须完整展开——循环画成 准备（置初值）→ 菱形（循环条件）→ 循环体 → 回边 → 退出 的结构，不得把循环合并成一个节点`);
+  lines.push(`4. 仅合并纯顺序的琐碎细节（如连续多个局部变量赋值可合一个矩形）；不限节点总数，以完整表达控制流为准`);
   lines.push(`5. 所有节点标签必须用双引号包裹，标签内不要出现双引号、冒号、分号；换行用 <br>`);
-  lines.push(`6. 条件编译包裹的代码段，在节点说明中注明（条件编译）`);
+  lines.push(`6. 仅在特定条件编译下参与编译的代码段，用虚线框加注释节点圈出：把该段节点放进一个无标题 subgraph 并设虚线样式，`);
+  lines.push(`   框内顶部放一个注释节点写明编译条件，用 ~~~ 不可见连线与该段第一个节点相连固定位置`);
+  lines.push(`   例: subgraph SG1[" "]`);
+  lines.push(`           SG1_NOTE["注：仅在 XXX_ENABLE 等于 STD_ON 时参与编译"]`);
+  lines.push(`           SG1_NOTE ~~~ FIRST_NODE`);
+  lines.push(`           FIRST_NODE["..."] ...`);
+  lines.push(`       end`);
+  lines.push(`       style SG1 fill:transparent,stroke:#888888,stroke-dasharray:6 4`);
+  lines.push(`       classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700`);
+  lines.push(`       class SG1_NOTE condNote`);
+  lines.push(`   整个函数都在条件编译内时，虚线框包住从开始到结束的全部节点；不要在节点文字里写（条件编译）`);
+  lines.push(`   注意 subgraph 标题必须留空（[" "]），注释一律用框内注释节点，不要用 subgraph 标题写注释`);
+  lines.push(`7. 流向自上而下；分支线用 A -- 是 --> B / A -- 否 --> C 标注条件`);
+  lines.push(`8. 存在两条以上较长的并行分支时（如主核/卫星核两条路径），每条分支包一层无标题泳道 subgraph，`);
+  lines.push(`   分支内部写 direction TB，出入口连线写在 subgraph 外，泳道样式设透明，避免跨分支连线交叉`);
+  lines.push(`   例: D -- 是 --> M1`);
+  lines.push(`       subgraph LANE_M[" "]`);
+  lines.push(`           direction TB`);
+  lines.push(`           M1["..."] --> M2["..."]`);
+  lines.push(`       end`);
+  lines.push(`       style LANE_M fill:transparent,stroke:transparent`);
+  lines.push(`9. 空循环体的自旋等待（while 条件空转），不要画 W -- 否 --> W 自回边；画成回边并入顶端流线的经典回环：`);
+  lines.push(`   PRE --> J / J --> W / W -- 否 --- J（回边用无箭头连线 ---，呈 T 形并入），其中 J 是标签为一个空格的隐形节点`);
+  lines.push(`   （配 style J fill:transparent,stroke:transparent），J 位于菱形上方流线上，回边从上方回到判断之前`);
   return { system: SYSTEM_DESIGNER, user: lines.join('\n') };
 }
 
@@ -91,7 +120,7 @@ export function buildCalloutDescriptionPrompt(
 ): { system: string; user: string } {
   const lines: string[] = [];
   lines.push(`# 任务`);
-  lines.push(`为以下 Callout 回调函数撰写详细设计文档第 6 章的主要功能描述。`);
+  lines.push(`为以下 Callout 函数撰写详细设计文档第 6 章的主要功能描述。`);
   lines.push(`Callout 由集成方在配置代码中实现，是本模块的功能配置点；描述重点是"集成方需要实现什么"。`);
   lines.push(``);
   lines.push(`# Callout 信息`);

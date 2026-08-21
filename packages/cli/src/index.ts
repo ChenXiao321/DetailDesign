@@ -219,8 +219,9 @@ async function main(): Promise<void> {
   console.error(`用法:
   lld ping                              LLM 连通性自检（/models + 最小 chat 调用）
   lld analyze <模块目录> [--out 产物目录]   静态分析，产出 lld_model.json
-  lld gen <模块目录> [--out 产物目录] [--mock] [--resume] [--only 函数名,dynamic,configs,callouts]
+  lld gen <模块目录> [--out 产物目录] [--mock] [--resume] [--only 函数名,dynamic,configs,callouts,flowcharts]
                                         LLM 生成设计内容，产出 lld_design.json（增量落盘，中断可 --resume 续跑）
+                                        --only flowcharts 仅重刷各函数流程图（可叠加函数名缩小范围），保留描述
   lld report <模块目录> [--out 产物目录]    生成 HTML 评审报告 lld_report.html
   （不带 --out 时产物写在模块目录内；report 只需 --out 指向产物目录，模块目录仅作占位）
 LLM 配置: 环境变量 LLD_LLM_BASE_URL / LLD_LLM_API_KEY / LLD_LLM_MODEL / LLD_LLM_TIMEOUT_MS，

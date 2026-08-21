@@ -14,6 +14,54 @@ function escRaw(s: string | undefined | null): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+/**
+ * 流程图 label 预折行：节点文字靠浏览器对 foreignObject 内 HTML 自动折行（mermaid label max-width 200px），
+ * 个别浏览器中该折行失效，超长单行会被裁剪/溢出节点框。这里按估算像素宽度把每个 <br> 分段
+ * 预先折到 200px 以内（优先在空格处断开，无空格长 token 硬断），渲染结果不再依赖浏览器折行。
+ */
+function wrapFlowchartLabels(src: string): string {
+  if (!/^\s*flowchart/.test(src)) return src;
+  const MAX_W = 185;  // px @13px 字号，对 200px 上限留余量
+  const charW = (ch: string) => (ch.charCodeAt(0) < 0x7f ? 7 : 13.5);  // ASCII ≈7px，全角/CJK ≈13.5px
+  const segWidth = (s: string) => [...s.replace(/<[^>]+>/g, '')].reduce((w, c) => w + charW(c), 0);
+  const wrapSeg = (seg: string): string => {
+    if (segWidth(seg) <= MAX_W) return seg;
+    const atoms = seg.match(/<[^>]+>|[\s\S]/g) ?? [];   // HTML 标签作为整体原子，不计宽、不在内部断
+    const lines: string[] = [];
+    let line = '', w = 0, lastSpace = -1, lastParen = -1;  // lastParen：（的下标，次优断点（断在其前）
+    for (const atom of atoms) {
+      if (atom.length > 1 && atom.startsWith('<')) { line += atom; continue; }
+      const cw = charW(atom);
+      if (w + cw > MAX_W && line) {
+        if (lastSpace > 0) {                 // 回退到本行最后一个空格处断开
+          lines.push(line.slice(0, lastSpace));
+          line = line.slice(lastSpace + 1);
+        } else if (lastParen > 0) {          // 无空格时优先断在（前，避免拆散括号词
+          lines.push(line.slice(0, lastParen));
+          line = line.slice(lastParen);
+        } else {                             // 无空格长 token：硬断
+          lines.push(line);
+          line = '';
+        }
+        w = segWidth(line);
+        lastSpace = line.lastIndexOf(' ');
+        lastParen = line.lastIndexOf('（');
+        if (atom === ' ') continue;          // 断点处的空格丢弃
+      }
+      if (atom === ' ') lastSpace = line.length;
+      if (atom === '（') lastParen = line.length;
+      line += atom; w += cw;
+    }
+    if (line) lines.push(line);
+    return lines.join('<br>');
+  };
+  return src.split('\n').map(l =>
+    // subgraph 标题（条件编译注释）不折行：mermaid 按单行计算框顶高度，多行标题会压到框内节点
+    /^\s*subgraph\s/.test(l) ? l : l.replace(/"([^"\n]*)"/g, (_m, label: string) =>
+      `"${label.split(/<br\s*\/?>/i).map(wrapSeg).join('<br>')}"`),
+  ).join('\n');
+}
+
 /** 参数行（模板格式：变量名 + 说明含范围） */
 function paramRows(params: ParamDoc[], dir: string): string {
   if (params.length === 0) {
@@ -133,8 +181,8 @@ function describeFile(path: string, role: string, model: ModuleModel): string {
     case 'callout': {
       const n = model.calledExternalFunctions.filter(e => e.group === 'Callout').length;
       return isC
-        ? `Callout 实现文件（配置代码）：由集成方实现 ${n} 个回调接口的具体策略`
-        : `Callout 声明头文件（配置代码）：声明 ${n} 个由集成方实现的回调接口`;
+        ? `Callout 实现文件（配置代码）：由集成方实现 ${n} 个 Callout 函数的具体策略`
+        : `Callout 声明头文件（配置代码）：声明 ${n} 个由集成方实现的 Callout 函数`;
     }
     case 'config': {
       if (isC) return '配置数据文件（配置代码）：定义模块配置数据（核运行时容器、函数指针表等）';
@@ -192,7 +240,11 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
 .inferred { display:inline-block; background:#fff8c5; color:#9a6700; border:1px solid #eac54f; border-radius:8px; padding:0 6px; font-size:11px; margin-left:6px; }
 .note { background:#fff8c5; border:1px solid #eac54f; border-radius:6px; padding:10px 14px; font-size:13px; margin:12px 0; }
 .mermaid { overflow-x:auto; font-size:13px; text-align:center; }
-.mermaid svg, .mermaid img { display:block; margin:0 auto; }
+/* useMaxWidth:false 时 svg 按自然宽度输出，超宽的图（如 Startup 双分支）会溢出页面被裁；
+   这里限制最大宽度随容器缩小（viewBox 等比缩放），小图不放大 */
+.mermaid svg, .mermaid img { display:block; margin:0 auto; max-width:100%; height:auto; }
+/* 个别浏览器中节点文字未按预期折行时会被 foreignObject 截断，放开裁剪兜底（宁可轻微溢出节点框，不可截字） */
+.mermaid foreignObject { overflow:visible; }
 @media print {
   nav { display:none; }
   .workitem { break-inside:avoid; }
@@ -208,7 +260,7 @@ export function generateHtmlReport(model: ModuleModel, opts?: { mermaidJs?: stri
   const generatedCount = [...model.providedFunctions, ...model.internalFunctions].filter(f => f.generated).length;
 
   const diagramBlock = (src: string) => opts?.mermaidJs
-    ? `<div class="mermaid">${escRaw(src)}</div>`
+    ? `<div class="mermaid">${escRaw(wrapFlowchartLabels(src))}</div>`
     : `<pre class="plantuml">${escRaw(src)}</pre>`;
 
   // ---- 外部接口按组归类（5.2.1.1 与 5.2.2 共用） ----
@@ -356,13 +408,13 @@ ${detailTable}`;
   // 功能接口总图：analyze 时静态生成并存入模型（工作项 · 5.1），此处仅渲染
   const overviewSection = model.interfaceOverview ? `
 <h3>功能接口总图 <span class="badge">工作项 · ${esc(model.interfaceOverview.polarion.chapter)}</span></h3>
-<p class="muted">本模块对外提供 ${model.providedFunctions.length} 个接口函数（左侧为调用方），并调用 ${model.calledExternalFunctions.length - calloutCount} 个外部接口（右侧按来源模块归组）；箭头方向为调用方向。Callout 配置代码回调属本模块配置点，不在本图展示，其调用关系见下方内部函数调用图与 6.2；各接口的模块内调用者见内部函数调用图与 5.2.2 表。</p>
+<p class="muted">本模块对外提供 ${model.providedFunctions.length} 个接口函数（左侧为调用方），并调用 ${model.calledExternalFunctions.length - calloutCount} 个外部接口（右侧按来源模块归组）；箭头方向为调用方向。Callout 函数属本模块配置点，不在本图展示，其调用关系见下方内部函数调用图与 6.2；各接口的模块内调用者见内部函数调用图与 5.2.2 表。</p>
 ${diagramBlock(model.interfaceOverview.diagram)}
 <details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">${escRaw(model.interfaceOverview.diagram)}</pre></details>` : '';
   // 内部函数调用图：analyze 时按对外接口函数逐张静态生成（每张一个工作项 · 5.1），此处仅渲染
   const callGraphSection = (model.callGraphs?.length ?? 0) > 0 ? `
 <h3>内部函数调用图（每张图一个工作项）</h3>
-<p class="muted">按对外接口函数分别绘制其模块内调用树（深蓝=入口函数，灰=内部函数，蓝=被内部回调的对外接口，黄=Callout 配置代码回调）；同一函数被多处调用时按调用路径重复出现，保证布局无交叉。经配置表函数指针间接引用的 Callout 单独成图。无模块内调用的平凡函数不出图，其余跨模块调用（Gp_RstM / Gp_TstApp 等）见功能接口总图与 5.2.2 表。</p>
+<p class="muted">按对外接口函数分别绘制其模块内调用树（深蓝=入口函数，灰=内部函数，蓝=被内部调用的对外接口，黄=Callout 函数（配置代码））；同一函数被多处调用时按调用路径重复出现，保证布局无交叉。经配置表函数指针间接引用的 Callout 单独成图。无模块内调用的平凡函数不出图，其余跨模块调用（Gp_RstM / Gp_TstApp 等）见功能接口总图与 5.2.2 表。</p>
 ${model.callGraphs!.map(g => `<h4>内部函数调用图：${esc(g.name)} <span class="badge">工作项 · ${esc(g.polarion.chapter)}</span></h4>
 ${diagramBlock(g.diagram)}
 <details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">${escRaw(g.diagram)}</pre></details>`).join('\n')}` : '';
@@ -426,11 +478,11 @@ ${c.affects.length > 0 ? `<p><b>影响范围（条件编译直接作用的函数
   const generalCfgSection = configSections(model.configMacros.filter(c => c.kind === 'general'), '6.1');
   const functionalCfgs = model.configMacros.filter(c => c.kind === 'functional');
   const functionalCfgSection = configSections(functionalCfgs, '6.2');
-  // Callout 回调函数：由集成方在配置代码中实现，属于功能配置点
+  // Callout 函数：由集成方在配置代码中实现，属于功能配置点
   const callouts = model.calledExternalFunctions.filter(e => e.group === 'Callout');
   const calloutSecNo = `6.2.${functionalCfgs.length + 1}`;
   const calloutCfgSection = callouts.length === 0 ? '' : `<h4>${calloutSecNo} Callout function</h4>
-<p class="muted">Callout 回调函数由集成方在配置代码（ConfTemplate）中实现，是本模块的功能配置点：通过编写/修改 Callout 实现来适配项目策略（核ID获取、阶段初始化、故障处理等）。每个 Callout 为一个独立工作项。</p>
+<p class="muted">Callout 函数由集成方在配置代码（ConfTemplate）中实现，是本模块的功能配置点：通过编写/修改 Callout 实现来适配项目策略（核ID获取、阶段初始化、故障处理等）。每个 Callout 为一个独立工作项。</p>
 ${callouts.map((e, i) => calloutCard(e, `${calloutSecNo}.${i + 1}`)).join('\n')}`;
   const aliasCfgs = model.configMacros.filter(c => c.kind === 'alias');
   const aliasCfgNote = aliasCfgs.length === 0 ? '' :
@@ -465,7 +517,7 @@ ${callouts.map((e, i) => calloutCard(e, `${calloutSecNo}.${i + 1}`)).join('\n')}
         ? `5.3 已生成${model.dynamicDesign.stateMachine ? `状态机「${esc(model.dynamicDesign.stateMachine.name)}」（${model.dynamicDesign.stateMachine.states.length} 状态 / ${model.dynamicDesign.stateMachine.transitions.length} 迁移）` : ''}${model.dynamicDesign.sequences.length > 0 ? `与 ${model.dynamicDesign.sequences.length} 张序列图` : ''}；5.1 功能接口总图与各函数调用图体现交互关系。${TODO_CONCLUSION}`
         : `5.3 动态设计（状态机/序列图）尚未生成；5.1 已提供功能接口总图与内部函数调用图。${TODO_CONCLUSION}` },
     { dim: '关键性', no: 5, content: '分析与其他单元/组件的依赖关系',
-      fact: `外部依赖模块：${nonCalloutGroups.length > 0 ? nonCalloutGroups.join('、') : '无'}（接口明细见 5.2.2）；Callout 回调 ${calloutCount} 个由集成方在配置代码中实现（见 6.2）。${TODO_CONCLUSION}` },
+      fact: `外部依赖模块：${nonCalloutGroups.length > 0 ? nonCalloutGroups.join('、') : '无'}（接口明细见 5.2.2）；Callout 函数 ${calloutCount} 个由集成方在配置代码中实现（见 6.2）。${TODO_CONCLUSION}` },
     { dim: '关键性', no: 6, content: '其他关键性的分析维度(如任务、算法等)',
       fact: condCfgs.length > 0
         ? `条件编译配置项 ${condCfgs.length} 个（${condCfgs.map(c => `<code>${esc(c.name)}</code>`).join('、')}）直接裁剪参与编译的函数/变量（影响范围见第 6 章）。${TODO_CONCLUSION}`
@@ -537,7 +589,7 @@ ${callouts.map((e, i) => calloutCard(e, `${calloutSecNo}.${i + 1}`)).join('\n')}
     ['ADC', 'Analog to Digital Converter 模数转换器'],
     ['ASIL', 'Automotive Safety Integrity Level 汽车安全完整性等级'],
     ['AUTOSAR', 'AUTomotive Open System ARchitecture 汽车开放系统架构'],
-    ['Callout', '回调接口：由集成方在配置代码中实现，模块通过调用 Callout 适配项目策略'],
+    ['Callout', 'Callout 函数：由集成方在配置代码中实现，模块通过调用 Callout 适配项目策略'],
     ['EcuM', 'ECU State Manager ECU 状态管理模块'],
     ['FC', 'Function Cluster 功能簇'],
     ['LLD', 'Low Level Design 详细设计'],
@@ -582,7 +634,7 @@ ${callouts.map((e, i) => calloutCard(e, `${calloutSecNo}.${i + 1}`)).join('\n')}
 
   const fileRows = [...model.files]
     .sort((a, b) => fileSortKey(a).localeCompare(fileSortKey(b)))
-    .map(f => `<tr><td><code>${esc(f.path)}</code></td><td>${esc(describeFile(f.path, f.role, model))}</td></tr>`).join('');
+    .map(f => `<tr><td><code>${esc(f.path.split(/[\\/]/).pop()!)}</code></td><td>${esc(describeFile(f.path, f.role, model))}</td></tr>`).join('');
 
   return `<!DOCTYPE html>
 <html lang="zh-CN">
@@ -639,7 +691,7 @@ ${typesSection}
 <h3>5.2.2.1 全局变量</h3>
 <p class="muted">注：本模块未引用外部模块的全局变量，跨模块数据交互均通过函数接口完成。</p>
 <h3>5.2.2.2 接口函数</h3>
-<p class="muted">注：Callout 回调接口（${calloutCount} 个）属于本模块配置代码（ConfTemplate），由集成方实现，不属于外部接口，未列入本节；其作为功能配置点见 ${calloutSecNo} Callout function，声明见 4.1 文件说明，调用关系见各接口函数卡片的「调用」行。</p>
+<p class="muted">注：Callout 函数（${calloutCount} 个）属于本模块配置代码（ConfTemplate），由集成方实现，不属于外部接口，未列入本节；其作为功能配置点见 ${calloutSecNo} Callout function，声明见 4.1 文件说明，调用关系见各接口函数卡片的「调用」行。</p>
 ${calledSection}
 
 <h3 id="s523">5.2.3 提供的外部接口</h3>
@@ -672,7 +724,51 @@ ${evalSection}
 ${supportSection}
 </main>
 ${opts?.mermaidJs ? `<script>${opts.mermaidJs}</script>
-<script>mermaid.initialize({ startOnLoad: true, securityLevel: 'loose', theme: 'neutral', themeVariables: { fontSize: '13px' }, flowchart: { useMaxWidth: false, padding: 6, rankSpacing: 36, nodeSpacing: 24 }, sequence: { showSequenceNumbers: true } });</script>` : ''}
+<script>mermaid.initialize({ startOnLoad: false, securityLevel: 'loose', theme: 'neutral', themeVariables: { fontSize: '13px' }, flowchart: { useMaxWidth: false, padding: 6, rankSpacing: 36, nodeSpacing: 24 }, sequence: { showSequenceNumbers: true } });</script>
+<script>
+// 直角折线后处理。前提：mermaid.min.js 已打补丁（_patch_curve.js），边按 dagre 路径点输出折线。
+// 这里把每条边规范化为横平竖直且最多拐两次：保留 dagre 的出边/入边方向，
+// 同向走 竖-横-竖 或 横-竖-横（两拐），异向一拐，端点对齐则直线。
+window.addEventListener('DOMContentLoaded', async () => {
+  await mermaid.run({ querySelector: '.mermaid' });
+  const dirOf = (a, b) => (Math.abs(b[1] - a[1]) >= Math.abs(b[0] - a[0]) ? 'V' : 'H');
+  const ortho = (pts) => {
+    const S = pts[0], E = pts[pts.length - 1];
+    const dx = E[0] - S[0], dy = E[1] - S[1];
+    if (Math.abs(dx) < 0.6 || Math.abs(dy) < 0.6) return [S, E];
+    let d0 = 'V', d1 = 'V';
+    for (let i = 1; i < pts.length; i++) {
+      if (Math.hypot(pts[i][0] - S[0], pts[i][1] - S[1]) > 0.6) { d0 = dirOf(S, pts[i]); break; }
+    }
+    for (let i = pts.length - 2; i >= 0; i--) {
+      if (Math.hypot(pts[i][0] - E[0], pts[i][1] - E[1]) > 0.6) { d1 = dirOf(pts[i], E); break; }
+    }
+    if (d0 === 'V' && d1 === 'V') {
+      const my = Math.round(((S[1] + E[1]) / 2) * 100) / 100;
+      return [S, [S[0], my], [E[0], my], E];
+    }
+    if (d0 === 'H' && d1 === 'H') {
+      const mx = Math.round(((S[0] + E[0]) / 2) * 100) / 100;
+      return [S, [mx, S[1]], [mx, E[1]], E];
+    }
+    if (d0 === 'V') return [S, [S[0], E[1]], E];
+    return [S, [E[0], S[1]], E];
+  };
+  document.querySelectorAll('svg path.flowchart-link').forEach((p) => {
+    const d = p.getAttribute('d');
+    if (!d) return;
+    const segs = d.match(/[A-Za-z][^A-Za-z]*/g) || [];
+    const pts = [];
+    for (const seg of segs) {
+      const nums = seg.slice(1).trim().split(/[ ,]+/).filter(Boolean).map(Number);
+      if (nums.length >= 2) pts.push([nums[nums.length - 2], nums[nums.length - 1]]);
+    }
+    if (pts.length < 2) return;
+    const sp = ortho(pts);
+    p.setAttribute('d', 'M' + sp.map((q) => q[0] + ',' + q[1]).join('L'));
+  });
+});
+</script>` : ''}
 </body>
 </html>`;
 }

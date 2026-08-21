@@ -556,7 +556,7 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
   }
 
   // ---------- 5.1 功能接口总图（静态生成；作为工作项随模型进 diff/同步） ----------
-  // Callout 属本模块配置代码回调，不进总图（其调用关系见内部函数调用图与 6.2 Callout function）
+  // Callout 属本模块配置代码，不进总图（其调用关系见内部函数调用图与 6.2 Callout function）
   // 长标识符按模块前缀折行/去前缀，控制节点宽度避免导出超页宽
   const shortName = (n: string) => n.startsWith(`${module}_`) ? n.slice(module.length + 1) : n;
   const wrapName = (n: string) => n.startsWith(`${module}_`) ? `${module}_<br/>${n.slice(module.length + 1)}` : n;

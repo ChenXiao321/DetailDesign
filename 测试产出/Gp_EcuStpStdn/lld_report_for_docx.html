@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN"><head>
 <meta charset="UTF-8">
 <title>Gp_EcuStpShdn 软件详细设计规范（Code）- 评审稿</title>
@@ -3893,8 +3893,9 @@ globalThis.mermaid = globalThis.__esbuild_esm_mermaid.default;
 // 像端点中点法那样把干线折进节点列（D1--否-->END 被截断），也不会判错先行方向
 // （D2--否-->I 被判成先竖后横，竖线直接穿过 P 节点框）。
 // 另加箭头朝向约束：从边 id 找到目标节点，端点贴在哪条边上，末段就必须沿该边法线
-// （顶/底边竖直进▼、左右边水平进），否则罚分——否则并列时会选出横着扎进顶边的
-// 旋转箭头（P-->I 进 Cnt_u32加1 顶边）。菱形斜边/角部距离相近判不出来，不约束。
+// （顶/底边竖直进▼、左右边水平进）——方向不符的候选直接淘汰，只在方向正确的候选里
+// 按拟合度选优，否则会选出横着扎进顶边的躺平箭头（P-->I 进 Cnt_u32加1 顶边、
+// D1--否-->C3 横进 SwitchToRunPhase 顶边）。菱形斜边/角部距离相近判不出来，不约束。
 window.addEventListener('DOMContentLoaded', async () => {
   await mermaid.run({ querySelector: '.mermaid' });
   const median = (vals) => { const v = [...vals].sort((a, b) => a - b); return v[v.length >> 1]; };
@@ -3955,17 +3956,21 @@ window.addEventListener('DOMContentLoaded', async () => {
       ...mxs.map((mx) => [S, [mx, S[1]], [mx, E[1]], E]),
       ...mys.map((my) => [S, [S[0], my], [E[0], my], E]),
     ];
-    let best = cands[0], bs = Infinity;
+    let best = null, bs = Infinity;
     for (const c of cands) {
-      let s = fitScore(c, pts);
       if (endDir) {
+        // 末段方向必须沿目标边法线（顶/底竖直进▼、左右水平进），否则箭头躺着——硬过滤：
+        // 一拐候选天然各有一个 H、一个 V 末段，过滤后必有剩余，再按拟合度选优。
+        // （曾用罚分 900，但贴住 dagre 远端干线的拟合收益可达数万分，罚分压不住：
+        // D1--否-->C3 端点在顶边却横着扎进 Gp_TstApp_SwitchToRunPhase）
         const a = c[c.length - 2], b = c[c.length - 1];
         const dir = Math.abs(b[0] - a[0]) >= Math.abs(b[1] - a[1]) ? 'H' : 'V';
-        if (dir !== endDir) s += 900;  // 末段方向与目标边法线不符（箭头会旋转），罚 30px²
+        if (dir !== endDir) continue;
       }
+      const s = fitScore(c, pts);
       if (s < bs - 1e-6) { bs = s; best = c; }
     }
-    return best;
+    return best || cands[0];
   };
   document.querySelectorAll('svg path.flowchart-link').forEach((p) => {
     const d = p.getAttribute('d');

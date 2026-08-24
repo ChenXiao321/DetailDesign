@@ -1,6 +1,6 @@
 // 全图扫描：渲染后 HTML 中所有 flowchart 边（已直角化）两两查严格 X 交叉
 const fs = require('fs');
-const html = fs.readFileSync('测试产出/Gp_EcuStpStdn/lld_report_rendered.html', 'utf-8');
+const html = fs.readFileSync('测试产出/Gp_EcuStpStdn/lld_report.html', 'utf-8');
 const svgs = [...html.matchAll(/<svg[\s\S]*?<\/svg>/g)].map(m => m[0]);
 let total = 0;
 svgs.forEach((svg, si) => {

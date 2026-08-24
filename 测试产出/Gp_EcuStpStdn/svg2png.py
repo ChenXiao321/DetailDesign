@@ -8,7 +8,7 @@ EDGE = r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
 FIGDIR = os.path.join(BASE, "figs")
 os.makedirs(FIGDIR, exist_ok=True)
 
-html = open(os.path.join(BASE, "lld_report_rendered.html"), encoding="utf-8").read()
+html = open(os.path.join(BASE, "lld_report.html"), encoding="utf-8").read()
 
 svgs = list(re.finditer(r"<svg.*?</svg>", html, re.S))
 print("svg count:", len(svgs))

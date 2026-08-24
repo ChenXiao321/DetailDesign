@@ -43,7 +43,7 @@ const AUDIT = `(function(){
   document.body.appendChild(div);
 })();`;
 
-const dom = fs.readFileSync(BASE + '/lld_report_rendered.html', 'utf-8');
+const dom = fs.readFileSync(BASE + '/lld_report.html', 'utf-8');
 // 注意：文件里 script 字符串中也含 "</body>"，必须插到最后一个 </body> 前
 const i = dom.lastIndexOf('</body>');
 const page = dom.slice(0, i) + '<scr' + 'ipt>' + AUDIT + '</scr' + 'ipt>' + dom.slice(i);

@@ -1,0 +1,33 @@
+// 从 lld_report.html 提取全部 mermaid 图：1) 全量 parse 校验页 2) Startup 单图截图页
+const fs = require('fs');
+const mermaidJs = fs.readFileSync('packages/cli/assets/mermaid.min.js', 'utf-8');
+const report = fs.readFileSync('测试产出/Gp_EcuStpStdn/lld_report.html', 'utf-8');
+
+const unesc = s => s.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&');
+const srcs = [...report.matchAll(/<(?:pre|div) class="mermaid[^"]*">([\s\S]*?)<\/(?:pre|div)>/g)].map(m => unesc(m[1].trim()));
+console.log('提取到图数量:', srcs.length);
+
+const INIT = 'mermaid.initialize({startOnLoad:false,securityLevel:"loose",theme:"neutral",themeVariables:{fontSize:"13px"},flowchart:{useMaxWidth:false,htmlLabels:true,padding:6,rankSpacing:36,nodeSpacing:24}})';
+// mermaid bundle 已打补丁（_patch_curve.js）输出折线；此处与 htmlReport.ts 一致做直角化（最多两拐）
+const ORTHO = "const median = (vals) => { const v = [...vals].sort((a, b) => a - b); return v[v.length >> 1]; };\n  const round2 = (n) => Math.round(n * 100) / 100;\n  const distToSeg = (p, a, b) => {\n    const vx = b[0] - a[0], vy = b[1] - a[1];\n    const wx = p[0] - a[0], wy = p[1] - a[1];\n    const len2 = vx * vx + vy * vy;\n    let t = len2 ? (wx * vx + wy * vy) / len2 : 0;\n    t = Math.max(0, Math.min(1, t));\n    return Math.hypot(a[0] + t * vx - p[0], a[1] + t * vy - p[1]);\n  };\n  const fitScore = (route, pts) => {\n    let s = 0;\n    for (let i = 1; i < pts.length - 1; i++) {\n      let d = Infinity;\n      for (let j = 0; j < route.length - 1; j++) d = Math.min(d, distToSeg(pts[i], route[j], route[j + 1]));\n      s += d * d;\n    }\n    return s;\n  };\n  // 各 svg 的节点包围盒缓存（getBBox 本地坐标 + 自身 translate）\n  const boxCache = new Map();\n  const boxesOf = (svg) => {\n    if (boxCache.has(svg)) return boxCache.get(svg);\n    const map = {};\n    svg.querySelectorAll('g.node[id^=\"flowchart-\"]').forEach((g) => {\n      const m = g.getAttribute('id').match(/^flowchart-(.+)-\\d+$/);\n      const t = (g.getAttribute('transform') || '').match(/translate\\(\\s*(-?[\\d.]+)[ ,]\\s*(-?[\\d.]+)\\s*\\)/);\n      if (!m || !t) return;\n      const b = g.getBBox();\n      map[m[1]] = { x: b.x + +t[1], y: b.y + +t[2], w: b.width, h: b.height };\n    });\n    boxCache.set(svg, map);\n    return map;\n  };\n  // 端点贴在哪条边→末段方向约束（顶/底='V'，左/右='H'）；角部或菱形斜边判不出→null\n  const endConstraint = (p, box) => {\n    const ds = [\n      ['V', distToSeg(p, [box.x, box.y], [box.x + box.w, box.y])],\n      ['V', distToSeg(p, [box.x, box.y + box.h], [box.x + box.w, box.y + box.h])],\n      ['H', distToSeg(p, [box.x, box.y], [box.x, box.y + box.h])],\n      ['H', distToSeg(p, [box.x + box.w, box.y], [box.x + box.w, box.y + box.h])],\n    ].sort((a, b) => a[1] - b[1]);\n    return ds[0][1] <= 12 && ds[1][1] - ds[0][1] > 8 ? ds[0][0] : null;\n  };\n  const ortho = (pts, endDir) => {\n    const S = pts[0], E = pts[pts.length - 1];\n    const dx = E[0] - S[0], dy = E[1] - S[1];\n    if (Math.abs(dx) < 0.6 || Math.abs(dy) < 0.6) return [S, E];\n    const mids = pts.slice(1, -1);\n    const uniq = (arr) => [...new Set(arr)];\n    const mxs = uniq([round2((S[0] + E[0]) / 2), ...(mids.length ? [round2(median(mids.map((p) => p[0])))] : [])]);\n    const mys = uniq([round2((S[1] + E[1]) / 2), ...(mids.length ? [round2(median(mids.map((p) => p[1])))] : [])]);\n    const cands = [\n      [S, [S[0], E[1]], E],\n      [S, [E[0], S[1]], E],\n      ...mxs.map((mx) => [S, [mx, S[1]], [mx, E[1]], E]),\n      ...mys.map((my) => [S, [S[0], my], [E[0], my], E]),\n    ];\n    let best = cands[0], bs = Infinity;\n    for (const c of cands) {\n      let s = fitScore(c, pts);\n      if (endDir) {\n        const a = c[c.length - 2], b = c[c.length - 1];\n        const dir = Math.abs(b[0] - a[0]) >= Math.abs(b[1] - a[1]) ? 'H' : 'V';\n        if (dir !== endDir) s += 900;  // 末段方向与目标边法线不符（箭头会旋转），罚 30px²\n      }\n      if (s < bs - 1e-6) { bs = s; best = c; }\n    }\n    return best;\n  };\n  document.querySelectorAll('svg path.flowchart-link').forEach((p) => {\n    const d = p.getAttribute('d');\n    if (!d) return;\n    const segs = d.match(/[A-Za-z][^A-Za-z]*/g) || [];\n    const pts = [];\n    for (const seg of segs) {\n      const nums = seg.slice(1).trim().split(/[ ,]+/).filter(Boolean).map(Number);\n      if (nums.length >= 2) pts.push([nums[nums.length - 2], nums[nums.length - 1]]);\n    }\n    if (pts.length < 2) return;\n    // 边 id L_<源>_<目标>_<n>：按下划线拆出目标节点（节点 id 本身含下划线，逐位试拆），取端点所在边的法线约束\n    let endDir = null;\n    const em = (p.getAttribute('id') || '').match(/^L_(.+)_\\d+$/);\n    if (em) {\n      const boxes = boxesOf(p.closest('svg'));\n      const core = em[1];\n      for (let i = 1; i < core.length - 1; i++) {\n        if (core[i] !== '_') continue;\n        if (boxes[core.slice(0, i)] && boxes[core.slice(i + 1)]) {\n          endDir = endConstraint(pts[pts.length - 1], boxes[core.slice(i + 1)]);\n          break;\n        }\n      }\n    }\n    const sp = ortho(pts, endDir);\n    p.setAttribute('d', 'M' + sp.map((q) => q[0] + ',' + q[1]).join('L'));\n  });";
+
+// 1) parse 校验页：把结果写进 #result
+const parsePage = '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body><div id="result">RUNNING</div>'
+  + '<script>' + mermaidJs + '</scr' + 'ipt>'
+  + '<script>' + INIT + ';(async()=>{const srcs=' + JSON.stringify(srcs) + ';'
+  + 'let bad=[];for(let i=0;i<srcs.length;i++){try{await mermaid.parse(srcs[i])}catch(e){bad.push(i+":"+String(e).slice(0,120))}}'
+  + 'document.getElementById("result").textContent=bad.length?("FAIL "+bad.join(" | ")):("OK "+srcs.length);})()</scr' + 'ipt>'
+  + '</body></html>';
+fs.writeFileSync('测试产出/Gp_EcuStpStdn/_verify.html', parsePage, 'utf-8');
+
+// 2) Startup 单图截图页（找含 LANE_S1M 的 flowchart）
+const st = srcs.find(s => s.includes('flowchart TD') && s.includes('LANE_S1M'));
+if (!st) { console.error('未找到 Startup 流程图'); process.exit(1); }
+const esc = st.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const shotPage = '<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{margin:0;background:#fff}.mermaid{font-size:13px}</style></head><body>'
+  + '<div class="mermaid">' + esc + '</div>'
+  + '<script>' + mermaidJs + '</scr' + 'ipt>'
+  + '<script>' + INIT + ';(async()=>{await mermaid.run({querySelector:".mermaid"});' + ORTHO + '})()</scr' + 'ipt>'
+  + '</body></html>';
+fs.writeFileSync('测试产出/Gp_EcuStpStdn/_startup.html', shotPage, 'utf-8');
+console.log('ok');

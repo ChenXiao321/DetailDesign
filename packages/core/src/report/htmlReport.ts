@@ -791,11 +791,14 @@ ${opts?.mermaidJs ? `<script>${opts.mermaidJs}</script>
 <script>
 // 直角折线后处理。前提：mermaid.min.js 已打补丁（_patch_curve.js），边按 dagre 路径点输出折线。
 // 这里把每条边规范化为横平竖直且最多拐两次。端部斜线段的方向不可靠（dagre 在跨层时给出
-// 斜线，横竖占比接近时方向会判错），所以不再按出边/入边方向套固定模板，而是生成全部
+// 斜线，横竖占比接近时方向会判错），所以不按出边/入边方向套固定模板，而是生成全部
 // 候选直角路由（一拐两种 + 两拐横竖干线各取端点中点/dagre中间点中位数），按“dagre 原始
 // 路径点到候选路由的距离平方和”选最贴合的一条——dagre 的干线走节点间空隙，贴住它就不会
 // 像端点中点法那样把干线折进节点列（D1--否-->END 被截断），也不会判错先行方向
 // （D2--否-->I 被判成先竖后横，竖线直接穿过 P 节点框）。
+// 另加箭头朝向约束：从边 id 找到目标节点，端点贴在哪条边上，末段就必须沿该边法线
+// （顶/底边竖直进▼、左右边水平进），否则罚分——否则并列时会选出横着扎进顶边的
+// 旋转箭头（P-->I 进 Cnt_u32加1 顶边）。菱形斜边/角部距离相近判不出来，不约束。
 window.addEventListener('DOMContentLoaded', async () => {
   await mermaid.run({ querySelector: '.mermaid' });
   const median = (vals) => { const v = [...vals].sort((a, b) => a - b); return v[v.length >> 1]; };
@@ -817,7 +820,32 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
     return s;
   };
-  const ortho = (pts) => {
+  // 各 svg 的节点包围盒缓存（getBBox 本地坐标 + 自身 translate）
+  const boxCache = new Map();
+  const boxesOf = (svg) => {
+    if (boxCache.has(svg)) return boxCache.get(svg);
+    const map = {};
+    svg.querySelectorAll('g.node[id^="flowchart-"]').forEach((g) => {
+      const m = g.getAttribute('id').match(/^flowchart-(.+)-\\d+$/);
+      const t = (g.getAttribute('transform') || '').match(/translate\\(\\s*(-?[\\d.]+)[ ,]\\s*(-?[\\d.]+)\\s*\\)/);
+      if (!m || !t) return;
+      const b = g.getBBox();
+      map[m[1]] = { x: b.x + +t[1], y: b.y + +t[2], w: b.width, h: b.height };
+    });
+    boxCache.set(svg, map);
+    return map;
+  };
+  // 端点贴在哪条边→末段方向约束（顶/底='V'，左/右='H'）；角部或菱形斜边判不出→null
+  const endConstraint = (p, box) => {
+    const ds = [
+      ['V', distToSeg(p, [box.x, box.y], [box.x + box.w, box.y])],
+      ['V', distToSeg(p, [box.x, box.y + box.h], [box.x + box.w, box.y + box.h])],
+      ['H', distToSeg(p, [box.x, box.y], [box.x, box.y + box.h])],
+      ['H', distToSeg(p, [box.x + box.w, box.y], [box.x + box.w, box.y + box.h])],
+    ].sort((a, b) => a[1] - b[1]);
+    return ds[0][1] <= 12 && ds[1][1] - ds[0][1] > 8 ? ds[0][0] : null;
+  };
+  const ortho = (pts, endDir) => {
     const S = pts[0], E = pts[pts.length - 1];
     const dx = E[0] - S[0], dy = E[1] - S[1];
     if (Math.abs(dx) < 0.6 || Math.abs(dy) < 0.6) return [S, E];
@@ -833,7 +861,12 @@ window.addEventListener('DOMContentLoaded', async () => {
     ];
     let best = cands[0], bs = Infinity;
     for (const c of cands) {
-      const s = fitScore(c, pts);
+      let s = fitScore(c, pts);
+      if (endDir) {
+        const a = c[c.length - 2], b = c[c.length - 1];
+        const dir = Math.abs(b[0] - a[0]) >= Math.abs(b[1] - a[1]) ? 'H' : 'V';
+        if (dir !== endDir) s += 900;  // 末段方向与目标边法线不符（箭头会旋转），罚 30px²
+      }
       if (s < bs - 1e-6) { bs = s; best = c; }
     }
     return best;
@@ -848,7 +881,21 @@ window.addEventListener('DOMContentLoaded', async () => {
       if (nums.length >= 2) pts.push([nums[nums.length - 2], nums[nums.length - 1]]);
     }
     if (pts.length < 2) return;
-    const sp = ortho(pts);
+    // 边 id L_<源>_<目标>_<n>：按下划线拆出目标节点（节点 id 本身含下划线，逐位试拆），取端点所在边的法线约束
+    let endDir = null;
+    const em = (p.getAttribute('id') || '').match(/^L_(.+)_\\d+$/);
+    if (em) {
+      const boxes = boxesOf(p.closest('svg'));
+      const core = em[1];
+      for (let i = 1; i < core.length - 1; i++) {
+        if (core[i] !== '_') continue;
+        if (boxes[core.slice(0, i)] && boxes[core.slice(i + 1)]) {
+          endDir = endConstraint(pts[pts.length - 1], boxes[core.slice(i + 1)]);
+          break;
+        }
+      }
+    }
+    const sp = ortho(pts, endDir);
     p.setAttribute('d', 'M' + sp.map((q) => q[0] + ',' + q[1]).join('L'));
   });
 });

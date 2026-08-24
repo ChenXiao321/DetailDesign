@@ -890,14 +890,45 @@ window.addEventListener('DOMContentLoaded', async () => {
     let endDir = null;
     const em = (p.getAttribute('id') || '').match(/^L_(.+)_\\d+$/);
     if (em) {
-      const boxes = boxesOf(p.closest('svg'));
+      const svg = p.closest('svg');
+      const boxes = boxesOf(svg);
       const core = em[1];
       for (let i = 1; i < core.length - 1; i++) {
         if (core[i] !== '_') continue;
-        if (boxes[core.slice(0, i)] && boxes[core.slice(i + 1)]) {
-          endDir = endConstraint(pts[pts.length - 1], boxes[core.slice(i + 1)]);
-          break;
+        const srcId = core.slice(0, i), dstId = core.slice(i + 1);
+        if (!boxes[srcId] || !boxes[dstId]) continue;
+        const tBox = boxes[dstId];
+        endDir = endConstraint(pts[pts.length - 1], tBox);
+        // 侧向汇合改侧缘进：目标是矩形族节点（无 polygon 子元素；菱形/平行四边形的包围盒边
+        // 不贴实际形状，不能平移）、端点落在顶/底边、来源列与目标 x 区间不重叠时，dagre 会给
+        // 下-横-下 两拐扎进顶边的走法（W2-->END 类汇合，用户要求与对侧兄弟边一样横进）。
+        // 把端点平移到靠来源一侧的竖边（y 不变，与兄弟边同高），改按水平末段约束选一拐路由；
+        // 平移后的路由穿过其他节点盒则放弃。
+        const dstG = svg.querySelector('g.node[id^="flowchart-' + dstId + '-"]');
+        if (dstG && !dstG.querySelector('polygon')) {
+          const S0 = pts[0], E0 = pts[pts.length - 1];
+          const onTb = Math.abs(E0[1] - tBox.y) <= 6 || Math.abs(E0[1] - (tBox.y + tBox.h)) <= 6;
+          const side = S0[0] < tBox.x - 4 ? -1 : S0[0] > tBox.x + tBox.w + 4 ? 1 : 0;
+          if (onTb && side) {
+            const nx = side > 0 ? tBox.x + tBox.w : tBox.x;
+            const corner = [S0[0], E0[1]];
+            const hitBox = (a, b) => {
+              const x1 = Math.min(a[0], b[0]), x2 = Math.max(a[0], b[0]);
+              const y1 = Math.min(a[1], b[1]), y2 = Math.max(a[1], b[1]);
+              for (const id in boxes) {
+                if (id === srcId || id === dstId) continue;
+                const bx = boxes[id];
+                if (x1 < bx.x + bx.w - 2 && x2 > bx.x + 2 && y1 < bx.y + bx.h - 2 && y2 > bx.y + 2) return true;
+              }
+              return false;
+            };
+            if (!hitBox(S0, corner) && !hitBox(corner, [nx, E0[1]])) {
+              pts[pts.length - 1] = [nx, E0[1]];
+              endDir = 'H';
+            }
+          }
         }
+        break;
       }
     }
     const sp = ortho(pts, endDir);

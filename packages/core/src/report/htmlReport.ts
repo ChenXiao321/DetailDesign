@@ -790,37 +790,53 @@ ${opts?.mermaidJs ? `<script>${opts.mermaidJs}</script>
 <script>mermaid.initialize({ startOnLoad: false, securityLevel: 'loose', theme: 'neutral', themeVariables: { fontSize: '13px' }, flowchart: { useMaxWidth: false, padding: 6, rankSpacing: 36, nodeSpacing: 24 }, sequence: { showSequenceNumbers: true } });</script>
 <script>
 // 直角折线后处理。前提：mermaid.min.js 已打补丁（_patch_curve.js），边按 dagre 路径点输出折线。
-// 这里把每条边规范化为横平竖直且最多拐两次：保留 dagre 的出边/入边方向，
-// 同向走 竖-横-竖 或 横-竖-横（两拐），异向一拐，端点对齐则直线。
-// 干线坐标取 dagre 中间点的中位数（dagre 的干线走在节点间空隙），不取端点中点——
-// 端点都贴节点时中点会把干线折进节点列，长边被节点截断（如 D1--否-->END）。
+// 这里把每条边规范化为横平竖直且最多拐两次。端部斜线段的方向不可靠（dagre 在跨层时给出
+// 斜线，横竖占比接近时方向会判错），所以不再按出边/入边方向套固定模板，而是生成全部
+// 候选直角路由（一拐两种 + 两拐横竖干线各取端点中点/dagre中间点中位数），按“dagre 原始
+// 路径点到候选路由的距离平方和”选最贴合的一条——dagre 的干线走节点间空隙，贴住它就不会
+// 像端点中点法那样把干线折进节点列（D1--否-->END 被截断），也不会判错先行方向
+// （D2--否-->I 被判成先竖后横，竖线直接穿过 P 节点框）。
 window.addEventListener('DOMContentLoaded', async () => {
   await mermaid.run({ querySelector: '.mermaid' });
-  const dirOf = (a, b) => (Math.abs(b[1] - a[1]) >= Math.abs(b[0] - a[0]) ? 'V' : 'H');
   const median = (vals) => { const v = [...vals].sort((a, b) => a - b); return v[v.length >> 1]; };
+  const round2 = (n) => Math.round(n * 100) / 100;
+  const distToSeg = (p, a, b) => {
+    const vx = b[0] - a[0], vy = b[1] - a[1];
+    const wx = p[0] - a[0], wy = p[1] - a[1];
+    const len2 = vx * vx + vy * vy;
+    let t = len2 ? (wx * vx + wy * vy) / len2 : 0;
+    t = Math.max(0, Math.min(1, t));
+    return Math.hypot(a[0] + t * vx - p[0], a[1] + t * vy - p[1]);
+  };
+  const fitScore = (route, pts) => {
+    let s = 0;
+    for (let i = 1; i < pts.length - 1; i++) {
+      let d = Infinity;
+      for (let j = 0; j < route.length - 1; j++) d = Math.min(d, distToSeg(pts[i], route[j], route[j + 1]));
+      s += d * d;
+    }
+    return s;
+  };
   const ortho = (pts) => {
     const S = pts[0], E = pts[pts.length - 1];
     const dx = E[0] - S[0], dy = E[1] - S[1];
     if (Math.abs(dx) < 0.6 || Math.abs(dy) < 0.6) return [S, E];
-    let d0 = 'V', d1 = 'V';
-    for (let i = 1; i < pts.length; i++) {
-      if (Math.hypot(pts[i][0] - S[0], pts[i][1] - S[1]) > 0.6) { d0 = dirOf(S, pts[i]); break; }
-    }
-    for (let i = pts.length - 2; i >= 0; i--) {
-      if (Math.hypot(pts[i][0] - E[0], pts[i][1] - E[1]) > 0.6) { d1 = dirOf(pts[i], E); break; }
-    }
     const mids = pts.slice(1, -1);
-    const round2 = (n) => Math.round(n * 100) / 100;
-    if (d0 === 'V' && d1 === 'V') {
-      const my = round2(mids.length ? median(mids.map((p) => p[1])) : (S[1] + E[1]) / 2);
-      return [S, [S[0], my], [E[0], my], E];
+    const uniq = (arr) => [...new Set(arr)];
+    const mxs = uniq([round2((S[0] + E[0]) / 2), ...(mids.length ? [round2(median(mids.map((p) => p[0])))] : [])]);
+    const mys = uniq([round2((S[1] + E[1]) / 2), ...(mids.length ? [round2(median(mids.map((p) => p[1])))] : [])]);
+    const cands = [
+      [S, [S[0], E[1]], E],
+      [S, [E[0], S[1]], E],
+      ...mxs.map((mx) => [S, [mx, S[1]], [mx, E[1]], E]),
+      ...mys.map((my) => [S, [S[0], my], [E[0], my], E]),
+    ];
+    let best = cands[0], bs = Infinity;
+    for (const c of cands) {
+      const s = fitScore(c, pts);
+      if (s < bs - 1e-6) { bs = s; best = c; }
     }
-    if (d0 === 'H' && d1 === 'H') {
-      const mx = round2(mids.length ? median(mids.map((p) => p[0])) : (S[0] + E[0]) / 2);
-      return [S, [mx, S[1]], [mx, E[1]], E];
-    }
-    if (d0 === 'V') return [S, [S[0], E[1]], E];
-    return [S, [E[0], S[1]], E];
+    return best;
   };
   document.querySelectorAll('svg path.flowchart-link').forEach((p) => {
     const d = p.getAttribute('d');

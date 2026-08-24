@@ -792,9 +792,12 @@ ${opts?.mermaidJs ? `<script>${opts.mermaidJs}</script>
 // 直角折线后处理。前提：mermaid.min.js 已打补丁（_patch_curve.js），边按 dagre 路径点输出折线。
 // 这里把每条边规范化为横平竖直且最多拐两次：保留 dagre 的出边/入边方向，
 // 同向走 竖-横-竖 或 横-竖-横（两拐），异向一拐，端点对齐则直线。
+// 干线坐标取 dagre 中间点的中位数（dagre 的干线走在节点间空隙），不取端点中点——
+// 端点都贴节点时中点会把干线折进节点列，长边被节点截断（如 D1--否-->END）。
 window.addEventListener('DOMContentLoaded', async () => {
   await mermaid.run({ querySelector: '.mermaid' });
   const dirOf = (a, b) => (Math.abs(b[1] - a[1]) >= Math.abs(b[0] - a[0]) ? 'V' : 'H');
+  const median = (vals) => { const v = [...vals].sort((a, b) => a - b); return v[v.length >> 1]; };
   const ortho = (pts) => {
     const S = pts[0], E = pts[pts.length - 1];
     const dx = E[0] - S[0], dy = E[1] - S[1];
@@ -806,12 +809,14 @@ window.addEventListener('DOMContentLoaded', async () => {
     for (let i = pts.length - 2; i >= 0; i--) {
       if (Math.hypot(pts[i][0] - E[0], pts[i][1] - E[1]) > 0.6) { d1 = dirOf(pts[i], E); break; }
     }
+    const mids = pts.slice(1, -1);
+    const round2 = (n) => Math.round(n * 100) / 100;
     if (d0 === 'V' && d1 === 'V') {
-      const my = Math.round(((S[1] + E[1]) / 2) * 100) / 100;
+      const my = round2(mids.length ? median(mids.map((p) => p[1])) : (S[1] + E[1]) / 2);
       return [S, [S[0], my], [E[0], my], E];
     }
     if (d0 === 'H' && d1 === 'H') {
-      const mx = Math.round(((S[0] + E[0]) / 2) * 100) / 100;
+      const mx = round2(mids.length ? median(mids.map((p) => p[0])) : (S[0] + E[0]) / 2);
       return [S, [mx, S[1]], [mx, E[1]], E];
     }
     if (d0 === 'V') return [S, [S[0], E[1]], E];

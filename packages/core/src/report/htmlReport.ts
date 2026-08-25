@@ -980,6 +980,62 @@ window.addEventListener('DOMContentLoaded', async () => {
     labelCache.set(svg, list);
     return list;
   };
+  // 自旋回环整形（在主循环之前）：J 是隐形汇合节点（id 以 _J 结尾、标签空白，结构
+  // PRE-->J / J-->W / W---J，W 为菱形）。dagre 把 J 当普通节点，为避免对向两边重叠会把
+  // J-->W 绕到菱形左上斜边进、回边贴在右上斜边——与参考画法（用户供图定稿）不符：
+  // J 钉在 W 竖直中轴上、J-->W 竖直 ▼ 进顶角、否回边从右角出 右-上-左 进 J 右侧（T 形并入）。
+  // 整形后主线竖直、回边横平竖直，主循环对直线早退/拟合分 0 均原样保留。
+  document.querySelectorAll('svg').forEach((svg) => {
+    const boxes = boxesOf(svg);
+    svg.querySelectorAll('g.node[id^="flowchart-"]').forEach((g) => {
+      const m = g.getAttribute('id').match(/^flowchart-(.+)-\\d+$/);
+      if (!m || !/_J$/.test(m[1]) || g.textContent.trim() !== '') return;
+      const jId = m[1];
+      // 收集与 J 相连的全部边，再按方向分出 入边/出边/回边（与 DOM 顺序无关）
+      const touching = [];
+      svg.querySelectorAll('path.flowchart-link').forEach((p) => {
+        const em = (p.getAttribute('id') || '').match(/^L_(.+)_\\d+$/);
+        if (!em) return;
+        const core = em[1];
+        for (let i = 1; i < core.length - 1; i++) {
+          if (core[i] !== '_') continue;
+          const s = core.slice(0, i), t = core.slice(i + 1);
+          if (!boxes[s] || !boxes[t]) continue;
+          if (s === jId || t === jId) touching.push({ p, s, t });
+          break;
+        }
+      });
+      const outE = touching.find((e) => e.s === jId);
+      if (!outE) return;
+      const wId = outE.t;
+      const backE = touching.find((e) => e.s === wId && e.t === jId);
+      const inE = touching.find((e) => e.t === jId && e.s !== jId && e.s !== wId);
+      const wG = svg.querySelector('g.node[id^="flowchart-' + wId + '-"]');
+      if (!backE || !inE || !wG || !wG.querySelector('polygon')) return;  // W 非菱形不整
+      const jBox = boxes[jId], wBox = boxes[wId];
+      // J 钉到 W 中轴（水平居中，y 不动）；同步改 boxes 缓存让主循环看到新位置
+      const jt = (g.getAttribute('transform') || '').match(/translate\\(\\s*(-?[\\d.]+)[ ,]\\s*(-?[\\d.]+)\\s*\\)/);
+      const wcx = wBox.x + wBox.w / 2;
+      const dxc = wcx - (jBox.x + jBox.w / 2);
+      if (jt) g.setAttribute('transform', 'translate(' + (+jt[1] + dxc) + ', ' + jt[2] + ')');
+      jBox.x += dxc;
+      const jcx = jBox.x + jBox.w / 2, jcy = jBox.y + jBox.h / 2;
+      // J-->W：竖直 ▼ 进顶角（直线，主循环早退原样保留；菱形不做端点贴形）
+      outE.p.setAttribute('d', 'M' + jcx + ',' + (jBox.y + jBox.h) + 'L' + wcx + ',' + wBox.y);
+      // 否回边：右角 → 右 → 上 → 左进 J 右侧；竖通道沿用 dagre 原路径的 max-x（已避开节点），
+      // 主循环对这条 H-V-H 干线拟合分 0 原样保留，端点贴形在右侧边上移动量 0
+      const bp = [...(backE.p.getAttribute('d') || '').matchAll(/([\\d.]+),([\\d.]+)/g)].map((q) => [+q[1], +q[2]]);
+      const rvx = wBox.x + wBox.w, rvy = wBox.y + wBox.h / 2;
+      const gapX = Math.max(rvx + 48, ...bp.map((q) => q[0]));
+      backE.p.setAttribute('d', 'M' + rvx + ',' + rvy + 'L' + gapX + ',' + rvy + 'L' + gapX + ',' + jcy + 'L' + (jBox.x + jBox.w) + ',' + jcy);
+      // 入边端点改 J 顶边中点：主循环按新端点重拟合，端点法线约束竖直进顶
+      const ip = [...(inE.p.getAttribute('d') || '').matchAll(/([\\d.]+),([\\d.]+)/g)].map((q) => [+q[1], +q[2]]);
+      if (ip.length >= 2) {
+        ip[ip.length - 1] = [jcx, jBox.y];
+        inE.p.setAttribute('d', 'M' + ip.map((q) => q[0] + ',' + q[1]).join('L'));
+      }
+    });
+  });
   document.querySelectorAll('svg path.flowchart-link').forEach((p) => {
     const d = p.getAttribute('d');
     if (!d) return;

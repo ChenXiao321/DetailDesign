@@ -934,30 +934,28 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
 <table class="simple"><tbody><tr><th>从</th><th>到</th><th>触发条件</th><th>说明</th></tr>
 <tr><td><code>UNDEF</code></td><td><code>STAGE_ONE</code></td><td>各核进入 Gp_EcuStpShdn_Startup</td><td>master 在阶段一初始化运行时缓冲区后将 StpStage_t 置为 STAGE_TWO</td></tr><tr><td><code>STAGE_ONE</code></td><td><code>STAGE_TWO</code></td><td>master 完成阶段一初始化</td><td>satellite 核通过自旋等待 StpStage_t == STAGE_TWO 实现屏障同步</td></tr><tr><td><code>STAGE_TWO</code></td><td><code>STAGE_THREE</code></td><td>master 完成阶段二全部处理</td><td>master 完成初始化检查后 StpStage_t 置为 STAGE_THREE，satellite 解除等待开始自身初始化</td></tr><tr><td><code>STAGE_TWO</code></td><td><code>[*]</code></td><td>TryPwrShdn_b == TRUE</td><td>调用 Gp_EcuStpShdn_CalloutPwrShdnInStpPhase，程序不再返回</td></tr><tr><td><code>STAGE_TWO</code></td><td><code>[*]</code></td><td>SafeState_b == TRUE</td><td>安全状态初始化（SBC 安全状态初始化）后进入 Gp_EcuStpShdn_CalloutSafeState</td></tr></tbody></table>
 
-<h3>5.3.2 序列图：Initialization <span class="badge">工作项 · 5.3.2</span></h3>
-<p class="muted">Gp_EcuStpShdn_Startup 初始化序列：master（core0）与 satellite 核的三阶段启动过程</p>
-<div class="mermaid" data-processed="true"><p align="center" style="text-align:center"><img src="figs/fig_21.png" style="width:700px;height:1001px"/></p></div>
+<h3>5.3.2 序列图：Initialization（主核 Core0） <span class="badge">工作项 · 5.3.2</span></h3>
+<p class="muted">Gp_EcuStpShdn_Startup 初始化序列（主核 Core0）：三阶段启动过程中主核侧的交互顺序</p>
+<div class="mermaid" data-processed="true"><p align="center" style="text-align:center"><img src="figs/fig_21.png" style="width:700px;height:1086px"/></p></div>
 <details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">sequenceDiagram
     actor EcuM
-    participant M as Gp_EcuStpShdn_Startup(master core0)
-    participant S as Gp_EcuStpShdn_Startup(satellite)
+    participant M as Gp_EcuStpShdn_Startup(Core0)
     participant CO as Callout
     participant TA as Gp_TstApp
     participant RM as Gp_RstM
     EcuM-&gt;&gt;M: Startup()
-    EcuM-&gt;&gt;S: Startup()
     M-&gt;&gt;CO: CalloutGetCoreId()
-    S-&gt;&gt;CO: CalloutGetCoreId()
-    Note over M,S: Stage One
-    M-&gt;&gt;M: 初始化运行时缓冲区
+    Note over M: Stage One 主核
+    M-&gt;&gt;M: 初始化主核运行时缓冲区
     M-&gt;&gt;CO: CalloutInitStageOneCore0(SatImpl)
     M-&gt;&gt;RM: InitOne() 仅限 APP_NO_BOOT 配置
     M-&gt;&gt;M: StpStage_t 置为 STAGE_TWO
-    S-&gt;&gt;S: 自旋等待 STAGE_TWO
-    Note over M,S: Stage Two
+    Note right of M: 解除 satellite 阶段一自旋等待
+    Note over M: Stage Two 主核
     M-&gt;&gt;TA: PreRunInit() 和 PreRunPhase()
-    S-&gt;&gt;TA: PreRunInit() 和 PreRunPhase()
+    Note right of M: 仅 SAFETY_ENABLE 时参与编译
     M-&gt;&gt;CO: CalloutGetSysTimeMs()
+    M-&gt;&gt;M: 记录 PRERUN 完成时间戳
     M-&gt;&gt;RM: Init() 或 InitTwo()
     M-&gt;&gt;RM: GetLastRstTypeInfo()
     alt TryPwrShdn_b 为 TRUE
@@ -974,36 +972,74 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
         M-&gt;&gt;CO: CalloutSbcInit(SbcInfo)
     end
     M-&gt;&gt;M: StpStage_t 置为 STAGE_THREE
-    Note over M,S: Stage Three
+    Note right of M: 解除 satellite 阶段二自旋等待</pre></details>
+
+<h3>5.3.2 序列图：Initialization（从核 satellite） <span class="badge">工作项 · 5.3.2</span></h3>
+<p class="muted">Gp_EcuStpShdn_Startup 初始化序列（从核 satellite）：三阶段启动过程中从核侧的交互顺序，自旋等待与 master 屏障同步</p>
+<div class="mermaid" data-processed="true"><p align="center" style="text-align:center"><img src="figs/fig_22.png" style="width:700px;height:934px"/></p></div>
+<details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">sequenceDiagram
+    actor EcuM
+    participant S as Gp_EcuStpShdn_Startup(satellite)
+    participant CO as Callout
+    participant TA as Gp_TstApp
+    EcuM-&gt;&gt;S: Startup()
+    S-&gt;&gt;CO: CalloutGetCoreId()
+    Note over S: Stage One 从核
+    S-&gt;&gt;S: InitCheckRslt 与 SatImpl 时间戳清 0
+    S-&gt;&gt;S: 自旋等待 STAGE_TWO
+    Note right of S: 等待 master 完成阶段一并置位
+    Note over S: Stage Two 从核
+    S-&gt;&gt;TA: PreRunInit() 和 PreRunPhase()
+    Note right of S: 仅 SAFETY_ENABLE 时参与编译
+    S-&gt;&gt;CO: CalloutGetSysTimeMs()
+    S-&gt;&gt;S: 记录 PRERUN 完成时间戳
     S-&gt;&gt;S: 自旋等待 STAGE_THREE
+    Note right of S: 等待 master 完成阶段二并置位
+    Note over S: Stage Three 从核
     S-&gt;&gt;CO: StpStageTwo_pf(SatImpl) satellite初始化
     S-&gt;&gt;CO: CalloutGetSysTimeMs()
-    alt 非安全状态且初始化失败
+    S-&gt;&gt;S: 记录初始化完成时间戳
+    alt SafeState_b 为 FALSE 且初始化失败
+        S-&gt;&gt;S: CheckInitRslt()
         S-&gt;&gt;CO: CalloutInitFailedHnd(InitRsltAllBits)
     end</pre></details>
 
-<h3>5.3.2 序列图：Runtime <span class="badge">工作项 · 5.3.2</span></h3>
-<p class="muted">Gp_EcuStpShdn_Mainfunction 周期运行序列：MCU 运行时测试与结果检查</p>
-<div class="mermaid" data-processed="true"><p align="center" style="text-align:center"><img src="figs/fig_22.png" style="width:700px;height:629px"/></p></div>
+<h3>5.3.2 序列图：Runtime（主核 Core0） <span class="badge">工作项 · 5.3.2</span></h3>
+<p class="muted">Gp_EcuStpShdn_Mainfunction 周期运行序列（主核 Core0）：含最后 satellite 初始化时间戳记录与 MCU 运行时测试结果检查</p>
+<div class="mermaid" data-processed="true"><p align="center" style="text-align:center"><img src="figs/fig_23.png" style="width:700px;height:574px"/></p></div>
 <details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">sequenceDiagram
     actor OS
-    participant MF as Gp_EcuStpShdn_Mainfunction
+    participant MF as Gp_EcuStpShdn_Mainfunction(Core0)
     participant CO as Callout
     participant TA as Gp_TstApp
     OS-&gt;&gt;MF: Mainfunction() 周期调度
     MF-&gt;&gt;CO: CalloutGetCoreId()
-    alt core0 且首次执行
+    alt LAST_SAT_INIT 时间戳为 0（仅取一次）
         MF-&gt;&gt;MF: GetLastSatTimeStamp()
         Note right of MF: 记录最后 satellite 初始化时间戳
     end
-    alt TryPwrShdn 和 SafeState 均为 FALSE
+    alt TryPwrShdn 与 SafeState 均为 FALSE
         MF-&gt;&gt;TA: RunTimePhase()
-        alt core0
-            MF-&gt;&gt;CO: CalloutChkMcuRunTimeTest()
-            alt 测试失败
-                MF-&gt;&gt;CO: CalloutMcuRunTimeTestFailedHnd()
-            end
+        MF-&gt;&gt;CO: CalloutChkMcuRunTimeTest()
+        alt 运行时测试失败
+            MF-&gt;&gt;CO: CalloutMcuRunTimeTestFailedHnd()
         end
+    else 安全状态或尝试下电
+        Note right of MF: 跳过 MCU 运行时测试
+    end</pre></details>
+
+<h3>5.3.2 序列图：Runtime（从核 satellite） <span class="badge">工作项 · 5.3.2</span></h3>
+<p class="muted">Gp_EcuStpShdn_Mainfunction 周期运行序列（从核 satellite）：仅执行 MCU 运行时测试</p>
+<div class="mermaid" data-processed="true"><p align="center" style="text-align:center"><img src="figs/fig_24.png" style="width:700px;height:346px"/></p></div>
+<details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">sequenceDiagram
+    actor OS
+    participant MF as Gp_EcuStpShdn_Mainfunction(satellite)
+    participant CO as Callout
+    participant TA as Gp_TstApp
+    OS-&gt;&gt;MF: Mainfunction() 周期调度
+    MF-&gt;&gt;CO: CalloutGetCoreId()
+    alt TryPwrShdn 与 SafeState 均为 FALSE
+        MF-&gt;&gt;TA: RunTimePhase()
     else 安全状态或尝试下电
         Note right of MF: 跳过 MCU 运行时测试
     end</pre></details>
@@ -1545,7 +1581,7 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
 <p class="muted">注：以下宏为固定别名（实现重定义，无可选值，不属于配置项）：<code>GP_ECUSTPSHDN_NOP() → MCAL_NOP()</code></p>
 
 <h2 id="s7">7 详细设计规范评估</h2>
-<table class="simple"><tbody><tr><th>维度</th><th>序号</th><th>评估内容</th><th>是否评估</th><th>分析结果（事实依据自动生成，结论人工确认）</th></tr><tr><td rowspan="4"><b>互操作性/交互</b></td><td>1</td><td>对软件单元的接口一致性进行分析</td><td>是</td><td>本模块提供 8 个接口函数（5.2.3.2），调用外部接口 33 个（Callout、Gp_RstM、Gp_TstApp），签名与调用点均已由静态分析提取；与软件架构接口的一致性需对照架构文档确认。<span class="todo">结论待人工确认</span></td></tr><tr><td>2</td><td>软件单元对全局变量引用的正确性</td><td>是</td><td>模块内静态全局变量 8 个（5.2.4.1），外部链接全局变量 0 个（5.2.3.1）；各函数的全局变量访问已在函数卡片逐条列出。<span class="todo">结论待人工确认</span></td></tr><tr><td>3</td><td>对涉及通讯协议的软件单元分析协议的一致性</td><td>是</td><td>静态分析未探测到通讯协议相关接口（Spi/Can/Lin/Eth/Com/PduR 等）调用，本模块不涉及通讯协议。<span class="muted">（自动判定，如有遗漏请人工更正）</span></td></tr><tr><td>4</td><td>分析软件单元是否能够体现动态行为和交互</td><td>是</td><td>5.3 已生成状态机「Gp_EcuStpShdn 启动阶段状态机」（4 状态 / 5 迁移）与 2 张序列图；5.1 功能接口总图与各函数调用图体现交互关系。<span class="todo">结论待人工确认</span></td></tr><tr><td rowspan="2"><b>关键性</b></td><td>5</td><td>分析与其他单元/组件的依赖关系</td><td>是</td><td>外部依赖模块：Gp_RstM、Gp_TstApp（接口明细见 5.2.2）；Callout 函数 25 个由集成方在配置代码中实现（见 6.2）。<span class="todo">结论待人工确认</span></td></tr><tr><td>6</td><td>其他关键性的分析维度(如任务、算法等)</td><td>是</td><td>条件编译配置项 3 个（<code>GP_ECUSTPSHDN_ACTIVE_CORE_NUM</code>、<code>GP_ECUSTPSHDN_SAFETY_ENABLE</code>、<code>GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE</code>）直接裁剪参与编译的函数/变量（影响范围见第 6 章）。<span class="todo">结论待人工确认</span></td></tr><tr><td rowspan="1"><b>技术复杂性</b></td><td>7</td><td>分析详细设计单元的复杂度（模型复杂度、圈复杂度）</td><td>是</td><td>已静态计算全部 12 个函数的圈复杂度（明细见下表）：最大 13，超过 10 的函数 1 个（<code>Gp_EcuStpShdn_Startup</code>）。<span class="todo">结论待人工确认</span></td></tr><tr><td rowspan="1"><b>可实现性</b></td><td>8</td><td>从时间周期、实现条件（人员、设备等）下分析相应功能的实现能力，分析出风险、并制定处理措施</td><td>是</td><td>（项目管理层面的评估，无代码事实可自动提取）<span class="todo">结论待人工确认</span></td></tr><tr><td rowspan="2"><b>可测试性</b></td><td>9</td><td>分析软件单元的可控性（是否存在死循环、复杂度过高的情况）</td><td>是</td><td>死循环（while(1)/for(;;)）探测：未发现；圈复杂度最大 13，1 个函数超过 10。<span class="todo">结论待人工确认</span></td></tr><tr><td>10</td><td>分析单元输入、输出的可观测性</td><td>是</td><td>全部 12 个函数的输入/输出参数与返回值已在 5.2.3.2 / 5.2.4.2 函数卡片中逐项列出（含取值范围说明）。<span class="todo">结论待人工确认</span></td></tr><tr><td rowspan="1"><b>可复用性</b></td><td>11</td><td>分析详细设计单元是否能够被本系统或其他系统使用的可能性</td><td>是</td><td>本模块含 25 个 Callout 项目适配点与 3 个配置宏，平台化/复用策略需人工评估。<span class="todo">结论待人工确认</span></td></tr><tr><td rowspan="3"><b>安全性</b></td><td>12</td><td>分析软件设计单元是否是功能安全输出</td><td>是</td><td>探测到安全相关标识符：<code>Gp_EcuStpShdn_SetSafeState</code>、<code>Gp_EcuStpShdn_GetSafeState</code>、<code>GP_ECUSTPSHDN_SAFETY_ENABLE</code>、<code>GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE</code>；是否构成功能安全输出需人工判定。<span class="todo">结论待人工确认</span></td></tr><tr><td>13</td><td>分析违反功能安全目标的风险可控性</td><td>是</td><td>（需结合系统级安全分析人工评估）<span class="todo">结论待人工确认</span></td></tr><tr><td>14</td><td>分析是否违背功能安全</td><td>是</td><td>（需结合系统级安全分析人工评估）<span class="todo">结论待人工确认</span></td></tr></tbody></table>
+<table class="simple"><tbody><tr><th>维度</th><th>序号</th><th>评估内容</th><th>是否评估</th><th>分析结果（事实依据自动生成，结论人工确认）</th></tr><tr><td rowspan="4"><b>互操作性/交互</b></td><td>1</td><td>对软件单元的接口一致性进行分析</td><td>是</td><td>本模块提供 8 个接口函数（5.2.3.2），调用外部接口 33 个（Callout、Gp_RstM、Gp_TstApp），签名与调用点均已由静态分析提取；与软件架构接口的一致性需对照架构文档确认。<span class="todo">结论待人工确认</span></td></tr><tr><td>2</td><td>软件单元对全局变量引用的正确性</td><td>是</td><td>模块内静态全局变量 8 个（5.2.4.1），外部链接全局变量 0 个（5.2.3.1）；各函数的全局变量访问已在函数卡片逐条列出。<span class="todo">结论待人工确认</span></td></tr><tr><td>3</td><td>对涉及通讯协议的软件单元分析协议的一致性</td><td>是</td><td>静态分析未探测到通讯协议相关接口（Spi/Can/Lin/Eth/Com/PduR 等）调用，本模块不涉及通讯协议。<span class="muted">（自动判定，如有遗漏请人工更正）</span></td></tr><tr><td>4</td><td>分析软件单元是否能够体现动态行为和交互</td><td>是</td><td>5.3 已生成状态机「Gp_EcuStpShdn 启动阶段状态机」（4 状态 / 5 迁移）与 4 张序列图；5.1 功能接口总图与各函数调用图体现交互关系。<span class="todo">结论待人工确认</span></td></tr><tr><td rowspan="2"><b>关键性</b></td><td>5</td><td>分析与其他单元/组件的依赖关系</td><td>是</td><td>外部依赖模块：Gp_RstM、Gp_TstApp（接口明细见 5.2.2）；Callout 函数 25 个由集成方在配置代码中实现（见 6.2）。<span class="todo">结论待人工确认</span></td></tr><tr><td>6</td><td>其他关键性的分析维度(如任务、算法等)</td><td>是</td><td>条件编译配置项 3 个（<code>GP_ECUSTPSHDN_ACTIVE_CORE_NUM</code>、<code>GP_ECUSTPSHDN_SAFETY_ENABLE</code>、<code>GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE</code>）直接裁剪参与编译的函数/变量（影响范围见第 6 章）。<span class="todo">结论待人工确认</span></td></tr><tr><td rowspan="1"><b>技术复杂性</b></td><td>7</td><td>分析详细设计单元的复杂度（模型复杂度、圈复杂度）</td><td>是</td><td>已静态计算全部 12 个函数的圈复杂度（明细见下表）：最大 13，超过 10 的函数 1 个（<code>Gp_EcuStpShdn_Startup</code>）。<span class="todo">结论待人工确认</span></td></tr><tr><td rowspan="1"><b>可实现性</b></td><td>8</td><td>从时间周期、实现条件（人员、设备等）下分析相应功能的实现能力，分析出风险、并制定处理措施</td><td>是</td><td>（项目管理层面的评估，无代码事实可自动提取）<span class="todo">结论待人工确认</span></td></tr><tr><td rowspan="2"><b>可测试性</b></td><td>9</td><td>分析软件单元的可控性（是否存在死循环、复杂度过高的情况）</td><td>是</td><td>死循环（while(1)/for(;;)）探测：未发现；圈复杂度最大 13，1 个函数超过 10。<span class="todo">结论待人工确认</span></td></tr><tr><td>10</td><td>分析单元输入、输出的可观测性</td><td>是</td><td>全部 12 个函数的输入/输出参数与返回值已在 5.2.3.2 / 5.2.4.2 函数卡片中逐项列出（含取值范围说明）。<span class="todo">结论待人工确认</span></td></tr><tr><td rowspan="1"><b>可复用性</b></td><td>11</td><td>分析详细设计单元是否能够被本系统或其他系统使用的可能性</td><td>是</td><td>本模块含 25 个 Callout 项目适配点与 3 个配置宏，平台化/复用策略需人工评估。<span class="todo">结论待人工确认</span></td></tr><tr><td rowspan="3"><b>安全性</b></td><td>12</td><td>分析软件设计单元是否是功能安全输出</td><td>是</td><td>探测到安全相关标识符：<code>Gp_EcuStpShdn_SetSafeState</code>、<code>Gp_EcuStpShdn_GetSafeState</code>、<code>GP_ECUSTPSHDN_SAFETY_ENABLE</code>、<code>GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE</code>；是否构成功能安全输出需人工判定。<span class="todo">结论待人工确认</span></td></tr><tr><td>13</td><td>分析违反功能安全目标的风险可控性</td><td>是</td><td>（需结合系统级安全分析人工评估）<span class="todo">结论待人工确认</span></td></tr><tr><td>14</td><td>分析是否违背功能安全</td><td>是</td><td>（需结合系统级安全分析人工评估）<span class="todo">结论待人工确认</span></td></tr></tbody></table>
 <h3>圈复杂度明细（序号 7 事实依据，静态计算）</h3>
 <p class="muted">判定节点计数法：1 + if / for / while / case / &amp;&amp; / || / ?: 数量。阈值 10 为常见评审参考值，最终以项目规范为准。</p>
 <table class="simple"><tbody><tr><th>函数</th><th>圈复杂度</th><th>死循环</th><th>参考评估</th></tr><tr><td><code>Gp_EcuStpShdn_Startup</code></td><td>13</td><td></td><td><span class="todo">超过 10，需人工评审</span></td></tr><tr><td><code>Gp_EcuStpShdn_Mainfunction</code></td><td>7</td><td></td><td><span class="muted">≤10</span></td></tr><tr><td><code>Gp_EcuStpShdn_MstPostInit</code></td><td>4</td><td></td><td><span class="muted">≤10</span></td></tr><tr><td><code>Gp_EcuStpShdn_CheckInitRslt</code></td><td>3</td><td></td><td><span class="muted">≤10</span></td></tr><tr><td><code>Gp_EcuStpShdn_GetLastSatTimeStamp</code></td><td>3</td><td></td><td><span class="muted">≤10</span></td></tr><tr><td><code>Gp_EcuStpShdn_MstProcMcuPreRunTest</code></td><td>2</td><td></td><td><span class="muted">≤10</span></td></tr><tr><td><code>Gp_EcuStpShdn_SetSafeState</code></td><td>1</td><td></td><td><span class="muted">≤10</span></td></tr><tr><td><code>Gp_EcuStpShdn_SetTryPwrShdn</code></td><td>1</td><td></td><td><span class="muted">≤10</span></td></tr><tr><td><code>Gp_EcuStpShdn_GetSafeState</code></td><td>1</td><td></td><td><span class="muted">≤10</span></td></tr><tr><td><code>Gp_EcuStpShdn_TrapRecov</code></td><td>1</td><td></td><td><span class="muted">≤10</span></td></tr><tr><td><code>Gp_EcuStpShdn_OsErrRecov</code></td><td>1</td><td></td><td><span class="muted">≤10</span></td></tr><tr><td><code>Gp_EcuStpShdn_PwrShdnInShdnPhase</code></td><td>1</td><td></td><td><span class="muted">≤10</span></td></tr></tbody></table>

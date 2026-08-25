@@ -93,28 +93,54 @@
     },
     "sequences": [
       {
-        "name": "Initialization",
-        "description": "Gp_EcuStpShdn_Startup 初始化序列：master（core0）与 satellite 核的三阶段启动过程",
-        "diagram": "sequenceDiagram\n    actor EcuM\n    participant M as Gp_EcuStpShdn_Startup(master core0)\n    participant S as Gp_EcuStpShdn_Startup(satellite)\n    participant CO as Callout\n    participant TA as Gp_TstApp\n    participant RM as Gp_RstM\n    EcuM->>M: Startup()\n    EcuM->>S: Startup()\n    M->>CO: CalloutGetCoreId()\n    S->>CO: CalloutGetCoreId()\n    Note over M,S: Stage One\n    M->>M: 初始化运行时缓冲区\n    M->>CO: CalloutInitStageOneCore0(SatImpl)\n    M->>RM: InitOne() 仅限 APP_NO_BOOT 配置\n    M->>M: StpStage_t 置为 STAGE_TWO\n    S->>S: 自旋等待 STAGE_TWO\n    Note over M,S: Stage Two\n    M->>TA: PreRunInit() 和 PreRunPhase()\n    S->>TA: PreRunInit() 和 PreRunPhase()\n    M->>CO: CalloutGetSysTimeMs()\n    M->>RM: Init() 或 InitTwo()\n    M->>RM: GetLastRstTypeInfo()\n    alt TryPwrShdn_b 为 TRUE\n        M->>CO: CalloutPwrShdnInStpPhase()\n        Note right of M: 程序不再返回\n    else SafeState_b 为 TRUE\n        M->>CO: StpStageTwo_pf(SatImpl) core0初始化\n        M->>CO: CalloutSbcInitInSafeState(SbcInfo)\n        M->>CO: CalloutSafeState()\n    else 正常路径\n        M->>M: MstProcMcuPreRunTest()\n        M->>CO: StpStageTwo_pf(SatImpl) core0初始化\n        M->>M: MstPostInit()\n        M->>CO: CalloutSbcInit(SbcInfo)\n    end\n    M->>M: StpStage_t 置为 STAGE_THREE\n    Note over M,S: Stage Three\n    S->>S: 自旋等待 STAGE_THREE\n    S->>CO: StpStageTwo_pf(SatImpl) satellite初始化\n    S->>CO: CalloutGetSysTimeMs()\n    alt 非安全状态且初始化失败\n        S->>CO: CalloutInitFailedHnd(InitRsltAllBits)\n    end",
+        "name": "Initialization（主核 Core0）",
+        "description": "Gp_EcuStpShdn_Startup 初始化序列（主核 Core0）：三阶段启动过程中主核侧的交互顺序",
+        "diagram": "sequenceDiagram\n    actor EcuM\n    participant M as Gp_EcuStpShdn_Startup(Core0)\n    participant CO as Callout\n    participant TA as Gp_TstApp\n    participant RM as Gp_RstM\n    EcuM->>M: Startup()\n    M->>CO: CalloutGetCoreId()\n    Note over M: Stage One 主核\n    M->>M: 初始化主核运行时缓冲区\n    M->>CO: CalloutInitStageOneCore0(SatImpl)\n    M->>RM: InitOne() 仅限 APP_NO_BOOT 配置\n    M->>M: StpStage_t 置为 STAGE_TWO\n    Note right of M: 解除 satellite 阶段一自旋等待\n    Note over M: Stage Two 主核\n    M->>TA: PreRunInit() 和 PreRunPhase()\n    Note right of M: 仅 SAFETY_ENABLE 时参与编译\n    M->>CO: CalloutGetSysTimeMs()\n    M->>M: 记录 PRERUN 完成时间戳\n    M->>RM: Init() 或 InitTwo()\n    M->>RM: GetLastRstTypeInfo()\n    alt TryPwrShdn_b 为 TRUE\n        M->>CO: CalloutPwrShdnInStpPhase()\n        Note right of M: 程序不再返回\n    else SafeState_b 为 TRUE\n        M->>CO: StpStageTwo_pf(SatImpl) core0初始化\n        M->>CO: CalloutSbcInitInSafeState(SbcInfo)\n        M->>CO: CalloutSafeState()\n    else 正常路径\n        M->>M: MstProcMcuPreRunTest()\n        M->>CO: StpStageTwo_pf(SatImpl) core0初始化\n        M->>M: MstPostInit()\n        M->>CO: CalloutSbcInit(SbcInfo)\n    end\n    M->>M: StpStage_t 置为 STAGE_THREE\n    Note right of M: 解除 satellite 阶段二自旋等待",
         "diagramFormat": "mermaid",
         "polarion": {
           "isWorkItem": true,
           "chapter": "5.3.2",
           "workItemKind": "sequence",
-          "title": "Gp_EcuStpShdn Initialization 序列图",
+          "title": "Gp_EcuStpShdn Initialization 序列图（主核 Core0）",
           "workItemId": null
         }
       },
       {
-        "name": "Runtime",
-        "description": "Gp_EcuStpShdn_Mainfunction 周期运行序列：MCU 运行时测试与结果检查",
-        "diagram": "sequenceDiagram\n    actor OS\n    participant MF as Gp_EcuStpShdn_Mainfunction\n    participant CO as Callout\n    participant TA as Gp_TstApp\n    OS->>MF: Mainfunction() 周期调度\n    MF->>CO: CalloutGetCoreId()\n    alt core0 且首次执行\n        MF->>MF: GetLastSatTimeStamp()\n        Note right of MF: 记录最后 satellite 初始化时间戳\n    end\n    alt TryPwrShdn 和 SafeState 均为 FALSE\n        MF->>TA: RunTimePhase()\n        alt core0\n            MF->>CO: CalloutChkMcuRunTimeTest()\n            alt 测试失败\n                MF->>CO: CalloutMcuRunTimeTestFailedHnd()\n            end\n        end\n    else 安全状态或尝试下电\n        Note right of MF: 跳过 MCU 运行时测试\n    end",
+        "name": "Initialization（从核 satellite）",
+        "description": "Gp_EcuStpShdn_Startup 初始化序列（从核 satellite）：三阶段启动过程中从核侧的交互顺序，自旋等待与 master 屏障同步",
+        "diagram": "sequenceDiagram\n    actor EcuM\n    participant S as Gp_EcuStpShdn_Startup(satellite)\n    participant CO as Callout\n    participant TA as Gp_TstApp\n    EcuM->>S: Startup()\n    S->>CO: CalloutGetCoreId()\n    Note over S: Stage One 从核\n    S->>S: InitCheckRslt 与 SatImpl 时间戳清 0\n    S->>S: 自旋等待 STAGE_TWO\n    Note right of S: 等待 master 完成阶段一并置位\n    Note over S: Stage Two 从核\n    S->>TA: PreRunInit() 和 PreRunPhase()\n    Note right of S: 仅 SAFETY_ENABLE 时参与编译\n    S->>CO: CalloutGetSysTimeMs()\n    S->>S: 记录 PRERUN 完成时间戳\n    S->>S: 自旋等待 STAGE_THREE\n    Note right of S: 等待 master 完成阶段二并置位\n    Note over S: Stage Three 从核\n    S->>CO: StpStageTwo_pf(SatImpl) satellite初始化\n    S->>CO: CalloutGetSysTimeMs()\n    S->>S: 记录初始化完成时间戳\n    alt SafeState_b 为 FALSE 且初始化失败\n        S->>S: CheckInitRslt()\n        S->>CO: CalloutInitFailedHnd(InitRsltAllBits)\n    end",
         "diagramFormat": "mermaid",
         "polarion": {
           "isWorkItem": true,
           "chapter": "5.3.2",
           "workItemKind": "sequence",
-          "title": "Gp_EcuStpShdn Runtime 序列图",
+          "title": "Gp_EcuStpShdn Initialization 序列图（从核 satellite）",
+          "workItemId": null
+        }
+      },
+      {
+        "name": "Runtime（主核 Core0）",
+        "description": "Gp_EcuStpShdn_Mainfunction 周期运行序列（主核 Core0）：含最后 satellite 初始化时间戳记录与 MCU 运行时测试结果检查",
+        "diagram": "sequenceDiagram\n    actor OS\n    participant MF as Gp_EcuStpShdn_Mainfunction(Core0)\n    participant CO as Callout\n    participant TA as Gp_TstApp\n    OS->>MF: Mainfunction() 周期调度\n    MF->>CO: CalloutGetCoreId()\n    alt LAST_SAT_INIT 时间戳为 0（仅取一次）\n        MF->>MF: GetLastSatTimeStamp()\n        Note right of MF: 记录最后 satellite 初始化时间戳\n    end\n    alt TryPwrShdn 与 SafeState 均为 FALSE\n        MF->>TA: RunTimePhase()\n        MF->>CO: CalloutChkMcuRunTimeTest()\n        alt 运行时测试失败\n            MF->>CO: CalloutMcuRunTimeTestFailedHnd()\n        end\n    else 安全状态或尝试下电\n        Note right of MF: 跳过 MCU 运行时测试\n    end",
+        "diagramFormat": "mermaid",
+        "polarion": {
+          "isWorkItem": true,
+          "chapter": "5.3.2",
+          "workItemKind": "sequence",
+          "title": "Gp_EcuStpShdn Runtime 序列图（主核 Core0）",
+          "workItemId": null
+        }
+      },
+      {
+        "name": "Runtime（从核 satellite）",
+        "description": "Gp_EcuStpShdn_Mainfunction 周期运行序列（从核 satellite）：仅执行 MCU 运行时测试",
+        "diagram": "sequenceDiagram\n    actor OS\n    participant MF as Gp_EcuStpShdn_Mainfunction(satellite)\n    participant CO as Callout\n    participant TA as Gp_TstApp\n    OS->>MF: Mainfunction() 周期调度\n    MF->>CO: CalloutGetCoreId()\n    alt TryPwrShdn 与 SafeState 均为 FALSE\n        MF->>TA: RunTimePhase()\n    else 安全状态或尝试下电\n        Note right of MF: 跳过 MCU 运行时测试\n    end",
+        "diagramFormat": "mermaid",
+        "polarion": {
+          "isWorkItem": true,
+          "chapter": "5.3.2",
+          "workItemKind": "sequence",
+          "title": "Gp_EcuStpShdn Runtime 序列图（从核 satellite）",
           "workItemId": null
         }
       }

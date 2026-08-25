@@ -240,5 +240,7 @@ export function buildSequencePrompt(
   lines.push(`3. 消息格式: A->>B: 消息名，按调用顺序排列`);
   lines.push(`4. 条件分支用 alt/else/end，自调用用 A->>A: 说明，注释用 Note over/right of`);
   lines.push(`5. 消息文本中不要出现冒号、分号、# 号`);
+  lines.push(`6. 若函数行为依赖核角色（主核 master/Core0 与从核 satellite 路径不同，如按 GetCoreId 返回值分支），不要画在一张图里——按核角色分别绘制：每个角色一张完整 sequenceDiagram，每张图前一行写 ### 角色名（如 ### 主核 Core0、### 从核 satellite）；角色图内只保留该角色的参与者，跨核同步（自旋等待、屏障置位）用 Note 说明，不为另一角色建参与者`);
+  lines.push(`7. 行为无核角色差异时只出一张图，不写 ### 行`);
   return { system: SYSTEM_DESIGNER, user: lines.join('\n') };
 }

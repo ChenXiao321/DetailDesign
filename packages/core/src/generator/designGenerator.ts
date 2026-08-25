@@ -54,6 +54,33 @@ async function generateWithRetry(
   throw new Error(`LLM 生成失败（重试 ${maxRetries} 次）: ${lastError}`);
 }
 
+/** 序列图输出校验：允许「### 角色名」分段的多张图（多核模块按角色分图），剥围栏/前言后整体返回 */
+function extractSequenceSet(output: string): string {
+  let text = output.trim();
+  const fence = text.match(/```(?:mermaid)?\s*\n([\s\S]*?)```/);
+  if (fence) text = fence[1].trim();
+  const lines = text.split('\n');
+  const startIdx = lines.findIndex(l => /^sequenceDiagram/.test(l.trim()) || /^### .+/.test(l.trim()));
+  if (startIdx > 0) text = lines.slice(startIdx).join('\n').trim();
+  if (!/^(### .+\n+)?sequenceDiagram/.test(text)) {
+    throw new Error(`你的输出不是有效的 Mermaid 图代码。要求：第一行必须是 sequenceDiagram（多角色分图时每张图前一行写 ### 角色名），只输出图代码本身，不要输出任何解释、描述或分析文字。请重新输出。`);
+  }
+  return text;
+}
+
+/** 把「### 角色名」分段的多张序列图拆成 {role, diagram} 列表；无分段则单图 role=null */
+function splitSequenceRoles(text: string): { role: string | null; diagram: string }[] {
+  const marks: { role: string; start: number; bodyStart: number }[] = [];
+  for (const m of text.matchAll(/^### (.+)$/gm)) {
+    marks.push({ role: m[1].trim(), start: m.index, bodyStart: m.index + m[0].length });
+  }
+  if (marks.length === 0) return [{ role: null, diagram: text.trim() }];
+  return marks.map((mk, i) => ({
+    role: mk.role,
+    diagram: text.slice(mk.bodyStart, i + 1 < marks.length ? marks[i + 1].start : undefined).trim(),
+  }));
+}
+
 /** 判断函数是否需要流程图：有分支/循环且非单行透传 */
 function needsFlowchart(_fn: FunctionUnit): boolean {
   // 参照既有详细设计文档颗粒度：每个函数工作项都配流程图（含平凡 setter）
@@ -136,17 +163,22 @@ async function generateDynamicDesign(
     const fn = model.providedFunctions.find(f => f.name === fnName);
     if (!fn) continue;
     const { system, user } = buildSequencePrompt(model, fn, scenario);
-    const diagram = await generateWithRetry(provider, system, user, extractMermaid(/^sequenceDiagram/, 'sequenceDiagram'));
-    result.sequences.push({
-      name: scenario,
-      diagram,
-      diagramFormat: 'mermaid',
-      description: fn.comment?.description?.split('\n')[0] ?? '',
-      polarion: {
-        isWorkItem: true, chapter: '5.3.2', workItemKind: 'sequence',
-        title: `${model.module} ${scenario} 序列图`, workItemId: null,
-      },
-    } satisfies SequenceDesign);
+    const text = await generateWithRetry(provider, system, user, extractSequenceSet);
+    // 多核模块按角色分图：### 主核 Core0 / ### 从核 satellite 各成一张工作项
+    for (const part of splitSequenceRoles(text)) {
+      const name = part.role ? `${scenario}（${part.role}）` : scenario;
+      result.sequences.push({
+        name,
+        diagram: part.diagram,
+        diagramFormat: 'mermaid',
+        description: fn.comment?.description?.split('\n')[0] ?? '',
+        polarion: {
+          isWorkItem: true, chapter: '5.3.2', workItemKind: 'sequence',
+          title: part.role ? `${model.module} ${scenario} 序列图（${part.role}）` : `${model.module} ${scenario} 序列图`,
+          workItemId: null,
+        },
+      } satisfies SequenceDesign);
+    }
   }
 
   return result;

@@ -4374,7 +4374,9 @@ globalThis.mermaid = globalThis.__esbuild_esm_mermaid.default;
 // 另加箭头朝向约束：从边 id 找到目标节点，端点贴在哪条边上，末段就必须沿该边法线
 // （顶/底边竖直进▼、左右边水平进）——方向不符的候选直接淘汰，只在方向正确的候选里
 // 按拟合度选优，否则会选出横着扎进顶边的躺平箭头（P-->I 进 Cnt_u32加1 顶边、
-// D1--否-->C3 横进 SwitchToRunPhase 顶边）。菱形斜边/角部距离相近判不出来，不约束。
+// D1--否-->C3 横进 SwitchToRunPhase 顶边）。端点落在角部（顶/底边与侧边距离相近）时
+// 按来源方位决策：来源在角侧盒外且该侧边无其他入边→端点平移到侧缘一拐横进（汇合对称感），
+// 否则竖直进；菱形等 polygon 节点的包围盒边不贴实际形状，不平移。
 window.addEventListener('DOMContentLoaded', async () => {
   await mermaid.run({ querySelector: '.mermaid' });
   const median = (vals) => { const v = [...vals].sort((a, b) => a - b); return v[v.length >> 1]; };
@@ -4411,15 +4413,37 @@ window.addEventListener('DOMContentLoaded', async () => {
     boxCache.set(svg, map);
     return map;
   };
-  // 端点贴在哪条边→末段方向约束（顶/底='V'，左/右='H'）；角部或菱形斜边判不出→null
-  const endConstraint = (p, box) => {
-    const ds = [
-      ['V', distToSeg(p, [box.x, box.y], [box.x + box.w, box.y])],
-      ['V', distToSeg(p, [box.x, box.y + box.h], [box.x + box.w, box.y + box.h])],
-      ['H', distToSeg(p, [box.x, box.y], [box.x, box.y + box.h])],
-      ['H', distToSeg(p, [box.x + box.w, box.y], [box.x + box.w, box.y + box.h])],
-    ].sort((a, b) => a[1] - b[1]);
-    return ds[0][1] <= 12 && ds[1][1] - ds[0][1] > 8 ? ds[0][0] : null;
+  // 各 svg 的入边占边缓存：目标节点 id → [{id, side}]（按各入边端点的最近边归边，≤12px 才算占）
+  const occCache = new Map();
+  const occOf = (svg) => {
+    if (occCache.has(svg)) return occCache.get(svg);
+    const boxes = boxesOf(svg);
+    const occ = {};
+    svg.querySelectorAll('path.flowchart-link').forEach((p) => {
+      const id = p.getAttribute('id') || '';
+      const em = id.match(/^L_(.+)_\d+$/);
+      const d = p.getAttribute('d');
+      if (!em || !d) return;
+      const q = [...d.matchAll(/([\d.]+),([\d.]+)/g)].map((n) => [+n[1], +n[2]]);
+      if (q.length < 2) return;
+      const core = em[1];
+      for (let i = 1; i < core.length - 1; i++) {
+        if (core[i] !== '_') continue;
+        const tBox = boxes[core.slice(i + 1)];
+        if (!boxes[core.slice(0, i)] || !tBox) continue;
+        const E = q[q.length - 1];
+        const ds = [
+          ['T', distToSeg(E, [tBox.x, tBox.y], [tBox.x + tBox.w, tBox.y])],
+          ['B', distToSeg(E, [tBox.x, tBox.y + tBox.h], [tBox.x + tBox.w, tBox.y + tBox.h])],
+          ['L', distToSeg(E, [tBox.x, tBox.y], [tBox.x, tBox.y + tBox.h])],
+          ['R', distToSeg(E, [tBox.x + tBox.w, tBox.y], [tBox.x + tBox.w, tBox.y + tBox.h])],
+        ].sort((a, b) => a[1] - b[1]);
+        if (ds[0][1] <= 12) (occ[core.slice(i + 1)] = occ[core.slice(i + 1)] || []).push({ id, side: ds[0][0] });
+        break;
+      }
+    });
+    occCache.set(svg, occ);
+    return occ;
   };
   const ortho = (pts, endDir) => {
     const S = pts[0], E = pts[pts.length - 1];
@@ -4473,19 +4497,34 @@ window.addEventListener('DOMContentLoaded', async () => {
         const srcId = core.slice(0, i), dstId = core.slice(i + 1);
         if (!boxes[srcId] || !boxes[dstId]) continue;
         const tBox = boxes[dstId];
-        endDir = endConstraint(pts[pts.length - 1], tBox);
-        // 侧向汇合改侧缘进：目标是矩形族节点（无 polygon 子元素；菱形/平行四边形的包围盒边
-        // 不贴实际形状，不能平移）、端点落在顶/底边、来源列与目标 x 区间不重叠时，dagre 会给
-        // 下-横-下 两拐扎进顶边的走法（W2-->END 类汇合，用户要求与对侧兄弟边一样横进）。
-        // 把端点平移到靠来源一侧的竖边（y 不变，与兄弟边同高），改按水平末段约束选一拐路由；
-        // 平移后的路由穿过其他节点盒则放弃。
-        const dstG = svg.querySelector('g.node[id^="flowchart-' + dstId + '-"]');
-        if (dstG && !dstG.querySelector('polygon')) {
-          const S0 = pts[0], E0 = pts[pts.length - 1];
-          const onTb = Math.abs(E0[1] - tBox.y) <= 6 || Math.abs(E0[1] - (tBox.y + tBox.h)) <= 6;
-          const side = S0[0] < tBox.x - 4 ? -1 : S0[0] > tBox.x + tBox.w + 4 ? 1 : 0;
-          if (onTb && side) {
-            const nx = side > 0 ? tBox.x + tBox.w : tBox.x;
+        const S0 = pts[0], E0 = pts[pts.length - 1];
+        const ds = [
+          ['T', distToSeg(E0, [tBox.x, tBox.y], [tBox.x + tBox.w, tBox.y])],
+          ['B', distToSeg(E0, [tBox.x, tBox.y + tBox.h], [tBox.x + tBox.w, tBox.y + tBox.h])],
+          ['L', distToSeg(E0, [tBox.x, tBox.y], [tBox.x, tBox.y + tBox.h])],
+          ['R', distToSeg(E0, [tBox.x + tBox.w, tBox.y], [tBox.x + tBox.w, tBox.y + tBox.h])],
+        ].sort((a, b) => a[1] - b[1]);
+        const axis = (s) => (s === 'T' || s === 'B' ? 'V' : 'H');
+        if (ds[0][1] <= 12 && ds[1][1] - ds[0][1] > 8) {
+          // 明确贴某条边：末段沿该边法线（顶/底竖直进▼、左右水平进）
+          endDir = axis(ds[0][0]);
+        } else if (ds[0][1] <= 12 && axis(ds[0][0]) !== axis(ds[1][0])) {
+          // 角部模糊（一顶/底边 + 一侧边距离相近）：不能放任——dagre 的横进顶边会原样
+          // 保留成躺平箭头（D2--否-->I 端点在 I 顶边距左角 4px，用户反馈"箭头躺着"）。
+          // 来源在角侧盒外、且该侧边没有其他入边时，端点平移到侧边一拐横进
+          // （W2-->END 类汇合，与对侧兄弟边同高对称，用户明确要这种）；
+          // 侧边已被兄弟入边占用（I 左边已有 P-->I）或来源在盒内时竖直进顶/底边。
+          const sideCh = axis(ds[0][0]) === 'H' ? ds[0][0] : ds[1][0];
+          const sgn = sideCh === 'L' ? -1 : 1;
+          const outSide = sgn < 0 ? S0[0] < tBox.x - 4 : S0[0] > tBox.x + tBox.w + 4;
+          const dstG = svg.querySelector('g.node[id^="flowchart-' + dstId + '-"]');
+          // 仅矩形族节点（无 polygon 子元素）可平移；菱形/平行四边形包围盒边不贴实际形状
+          const rectFam = dstG && !dstG.querySelector('polygon');
+          const occ = occOf(svg)[dstId] || [];
+          const edgeId = p.getAttribute('id') || '';
+          const sideFree = !occ.some((o) => o.side === sideCh && o.id !== edgeId);
+          if (rectFam && outSide && sideFree) {
+            const nx = sgn > 0 ? tBox.x + tBox.w : tBox.x;
             const corner = [S0[0], E0[1]];
             const hitBox = (a, b) => {
               const x1 = Math.min(a[0], b[0]), x2 = Math.max(a[0], b[0]);
@@ -4498,10 +4537,10 @@ window.addEventListener('DOMContentLoaded', async () => {
               return false;
             };
             if (!hitBox(S0, corner) && !hitBox(corner, [nx, E0[1]])) {
-              pts[pts.length - 1] = [nx, E0[1]];
+              pts[pts.length - 1] = [nx, E0[1]];  // 平移到侧缘（y 不变，与兄弟边同高）
               endDir = 'H';
-            }
-          }
+            } else endDir = 'V';  // 平移路由穿节点盒则放弃，竖进
+          } else endDir = 'V';
         }
         break;
       }

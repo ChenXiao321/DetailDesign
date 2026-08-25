@@ -510,7 +510,7 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
     <tr><td class="label">Parameters(out)</td><td>None</td></tr>
     <tr><td class="label">Return value</td><td>void</td></tr>
     <tr><td class="label">Description</td><td class="desc">实现 ECU 多核启动序列，分三个阶段执行，主核（Core0）与从核之间通过屏障同步。阶段一：主核初始化运行时缓冲区并调用 Gp_EcuStpShdn_CalloutInitStageOneCore0，随后将阶段置为 STAGE_TWO；从核自旋等待直至进入 STAGE_TWO。阶段二：所有核执行 SafeTpack 预运行初始化与测试（安全功能使能时）；主核调用 Gp_RstM 初始化并读取上次复位信息，随后评估 TryPwrShdn 与 SafeState 标志——若 TryPwrShdn 置位则调用 Gp_EcuStpShdn_CalloutPwrShdnInStpPhase（不返回）；若 SafeState 置位则执行 Core0 初始化、安全状态下的 SBC 初始化并进入安全状态处理；否则依次执行 MCU 预运行测试检查、经从核运行时容器函数指针完成 Core0 初始化、主核后初始化与 SBC 初始化，然后将阶段置为 STAGE_THREE。阶段三：从核完成自身初始化并记录完成时间戳；非安全状态下检查初始化结果，失败经 Gp_EcuStpShdn_CalloutInitFailedHnd 上报。启动关键节点的时间戳记录在主核本地缓冲区中供观测。本函数在 EcuM DriverInitOne 阶段每核各调用一次。</td></tr>
-    <tr><td class="label">流程图</td><td><div class="mermaid" data-processed="true"><p align="center" style="text-align:center"><img src="figs/fig_14.png" style="width:700px;height:1607px"/></p></div>
+    <tr><td class="label">流程图</td><td><div class="mermaid" data-processed="true"><p align="center" style="text-align:center"><img src="figs/fig_14.png" style="width:700px;height:1589px"/></p></div>
 <details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">flowchart TD
     START(["开始"]) --&gt; GETCORE[["CalloutGetCoreId&lt;br&gt;取本核 CoreId"]]
     GETCORE --&gt; PREP["按 CoreId 取本核卫星运行缓冲区&lt;br&gt;Rt_cptst 与 SatImpl_ptst"]
@@ -4124,6 +4124,14 @@ window.addEventListener('DOMContentLoaded', async () => {
       const rvx = wBox.x + wBox.w, rvy = wBox.y + wBox.h / 2;
       const gapX = Math.max(rvx + 48, ...bp.map((q) => q[0]));
       backE.p.setAttribute('d', 'M' + rvx + ',' + rvy + 'L' + gapX + ',' + rvy + 'L' + gapX + ',' + jcy + 'L' + (jBox.x + jBox.w) + ',' + jcy);
+      // 回边右通道可能超出 mermaid 原始 viewBox——SVG 不渲染 viewBox 外内容（回路右竖线被截），按需右扩
+      const vb = svg.viewBox && svg.viewBox.baseVal;
+      if (vb && gapX + 8 > vb.x + vb.width) {
+        vb.width = gapX + 8 - vb.x;
+        const wa = svg.getAttribute('width');
+        if (wa && wa.indexOf('%') < 0) svg.setAttribute('width', String(vb.width));
+        if (svg.style && /px$/.test(svg.style.maxWidth)) svg.style.maxWidth = vb.width + 'px';
+      }
       // 入边端点改 J 顶边中点：主循环按新端点重拟合，端点法线约束竖直进顶
       const ip = [...(inE.p.getAttribute('d') || '').matchAll(/([\d.]+),([\d.]+)/g)].map((q) => [+q[1], +q[2]]);
       if (ip.length >= 2) {

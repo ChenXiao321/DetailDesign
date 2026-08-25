@@ -78,6 +78,20 @@ svgs.forEach((svg, si) => {
       }
     }
   }
+  // ③ 边越出 viewBox（SVG 不渲染 viewBox 外内容，如自旋回边右扩后回路被截）
+  const vbm = svg.match(/viewBox="(-?[\d.]+)[ ,]+(-?[\d.]+)[ ,]+([\d.]+)[ ,]+([\d.]+)"/);
+  if (vbm) {
+    const [vx, vy, vw, vh] = [+vbm[1], +vbm[2], +vbm[3], +vbm[4]];
+    for (const e of edges) {
+      if (e.invisible) continue;
+      for (const [px, py] of e.pts) {
+        if (px < vx - 0.5 || px > vx + vw + 0.5 || py < vy - 0.5 || py > vy + vh + 0.5) {
+          boxHits++; console.log(`svg#${si} 边越出 viewBox: ${e.id} @(${px.toFixed(1)},${py.toFixed(1)})`);
+          break;
+        }
+      }
+    }
+  }
   if (bhits.length) { boxHits += bhits.length; console.log(`svg#${si} 边穿节点盒:`); bhits.forEach(h => console.log('  ' + h)); }
 });
 console.log((total || boxHits) ? `共 ${total} 处严格交叉、${boxHits} 处边穿节点盒` : '全部图无严格交叉、无边穿节点盒');

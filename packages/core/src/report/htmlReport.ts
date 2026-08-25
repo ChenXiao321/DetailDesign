@@ -1028,6 +1028,14 @@ window.addEventListener('DOMContentLoaded', async () => {
       const rvx = wBox.x + wBox.w, rvy = wBox.y + wBox.h / 2;
       const gapX = Math.max(rvx + 48, ...bp.map((q) => q[0]));
       backE.p.setAttribute('d', 'M' + rvx + ',' + rvy + 'L' + gapX + ',' + rvy + 'L' + gapX + ',' + jcy + 'L' + (jBox.x + jBox.w) + ',' + jcy);
+      // 回边右通道可能超出 mermaid 原始 viewBox——SVG 不渲染 viewBox 外内容（回路右竖线被截），按需右扩
+      const vb = svg.viewBox && svg.viewBox.baseVal;
+      if (vb && gapX + 8 > vb.x + vb.width) {
+        vb.width = gapX + 8 - vb.x;
+        const wa = svg.getAttribute('width');
+        if (wa && wa.indexOf('%') < 0) svg.setAttribute('width', String(vb.width));
+        if (svg.style && /px$/.test(svg.style.maxWidth)) svg.style.maxWidth = vb.width + 'px';
+      }
       // 入边端点改 J 顶边中点：主循环按新端点重拟合，端点法线约束竖直进顶
       const ip = [...(inE.p.getAttribute('d') || '').matchAll(/([\\d.]+),([\\d.]+)/g)].map((q) => [+q[1], +q[2]]);
       if (ip.length >= 2) {

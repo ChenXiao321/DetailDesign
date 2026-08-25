@@ -4371,12 +4371,21 @@ globalThis.mermaid = globalThis.__esbuild_esm_mermaid.default;
 // 路径点到候选路由的距离平方和”选最贴合的一条——dagre 的干线走节点间空隙，贴住它就不会
 // 像端点中点法那样把干线折进节点列（D1--否-->END 被截断），也不会判错先行方向
 // （D2--否-->I 被判成先竖后横，竖线直接穿过 P 节点框）。
-// 另加箭头朝向约束：从边 id 找到目标节点，端点贴在哪条边上，末段就必须沿该边法线
+// 两道硬闸（拟合分不能凌驾其上）：
+// ① 穿盒淘汰：候选任一段穿过其他节点包围盒（2px 缩边 AABB）即淘汰，选优优先级
+//    “方向合规且不穿盒 > 任意不穿盒 > 方向合规 > 任意”——D1--否-->END 曾拟合出
+//    干线 x=129 竖穿「读 InitCheckRslt」盒（拟合分最低但线穿节点，用户截图发现）。
+// ② 箭头朝向约束：从边 id 找到目标节点，端点贴在哪条边上，末段就必须沿该边法线
 // （顶/底边竖直进▼、左右边水平进）——方向不符的候选直接淘汰，只在方向正确的候选里
 // 按拟合度选优，否则会选出横着扎进顶边的躺平箭头（P-->I 进 Cnt_u32加1 顶边、
 // D1--否-->C3 横进 SwitchToRunPhase 顶边）。端点落在角部（顶/底边与侧边距离相近）时
-// 按来源方位决策：来源在角侧盒外且该侧边无其他入边→端点平移到侧缘一拐横进（汇合对称感），
-// 否则竖直进；菱形等 polygon 节点的包围盒边不贴实际形状，不平移。
+// 按来源方位决策：矩形族节点 + 来源在角侧盒外 + 该侧边无其他入边 → 端点平移到侧缘横进，
+// 但仅当平移后存在不穿盒的横进候选才采用，否则竖直进；菱形等 polygon 节点不平移。
+// 选定后两件收尾：
+// ③ 端点贴形：贴边（≤12px）端点的箭头尖贴到盒边——dagre 按原始斜向求的交点在直角化后
+//    会悬空（D1-->END 尖浮在「结束」胶囊左肩外 6px）；胶囊（rx>0）进点卡入平直段。
+// ④ 标签重挂：边标签投影到原路径取弧长占比，平移到新路径同占比处——否则路由大改后
+//    标签留在旧干线旁（D1--否-->END 的「否」字离新线 87px）。
 window.addEventListener('DOMContentLoaded', async () => {
   await mermaid.run({ querySelector: '.mermaid' });
   const median = (vals) => { const v = [...vals].sort((a, b) => a - b); return v[v.length >> 1]; };
@@ -4445,7 +4454,25 @@ window.addEventListener('DOMContentLoaded', async () => {
     occCache.set(svg, occ);
     return occ;
   };
-  const ortho = (pts, endDir) => {
+  const dirOf = (c) => {
+    const a = c[c.length - 2], b = c[c.length - 1];
+    return Math.abs(b[0] - a[0]) >= Math.abs(b[1] - a[1]) ? 'H' : 'V';
+  };
+  // 候选路由穿盒检查：任一段与其他节点包围盒（2px 缩边 AABB）相交即算穿盒（源/目标自身除外）
+  const crossesOf = (boxes, srcId, dstId) => (cand) => {
+    for (let i = 0; i < cand.length - 1; i++) {
+      const a = cand[i], b = cand[i + 1];
+      const x1 = Math.min(a[0], b[0]), x2 = Math.max(a[0], b[0]);
+      const y1 = Math.min(a[1], b[1]), y2 = Math.max(a[1], b[1]);
+      for (const id in boxes) {
+        if (id === srcId || id === dstId) continue;
+        const bx = boxes[id];
+        if (x1 < bx.x + bx.w - 2 && x2 > bx.x + 2 && y1 < bx.y + bx.h - 2 && y2 > bx.y + 2) return true;
+      }
+    }
+    return false;
+  };
+  const ortho = (pts, endDir, crosses) => {
     const S = pts[0], E = pts[pts.length - 1];
     const dx = E[0] - S[0], dy = E[1] - S[1];
     if (Math.abs(dx) < 0.6 || Math.abs(dy) < 0.6) return [S, E];
@@ -4459,21 +4486,74 @@ window.addEventListener('DOMContentLoaded', async () => {
       ...mxs.map((mx) => [S, [mx, S[1]], [mx, E[1]], E]),
       ...mys.map((my) => [S, [S[0], my], [E[0], my], E]),
     ];
-    let best = null, bs = Infinity;
-    for (const c of cands) {
-      if (endDir) {
-        // 末段方向必须沿目标边法线（顶/底竖直进▼、左右水平进），否则箭头躺着——硬过滤：
-        // 一拐候选天然各有一个 H、一个 V 末段，过滤后必有剩余，再按拟合度选优。
-        // （曾用罚分 900，但贴住 dagre 远端干线的拟合收益可达数万分，罚分压不住：
-        // D1--否-->C3 端点在顶边却横着扎进 Gp_TstApp_SwitchToRunPhase）
-        const a = c[c.length - 2], b = c[c.length - 1];
-        const dir = Math.abs(b[0] - a[0]) >= Math.abs(b[1] - a[1]) ? 'H' : 'V';
-        if (dir !== endDir) continue;
+    const pick = (list) => {
+      let best = null, bs = Infinity;
+      for (const c of list) {
+        const s = fitScore(c, pts);
+        if (s < bs - 1e-6) { bs = s; best = c; }
       }
-      const s = fitScore(c, pts);
-      if (s < bs - 1e-6) { bs = s; best = c; }
+      return best;
+    };
+    // 穿盒淘汰优先于拟合分（方向合规且不穿盒 > 任意不穿盒 > 方向合规 > 任意）：
+    // 拟合分最低的候选可能干线竖穿节点盒（D1--否-->END 干线 x=129 穿「读 InitCheckRslt」）。
+    if (crosses) {
+      const ok = cands.filter((c) => !crosses(c));
+      if (endDir) return pick(ok.filter((c) => dirOf(c) === endDir)) || pick(ok) || pick(cands.filter((c) => dirOf(c) === endDir)) || pick(cands);
+      return pick(ok) || pick(cands);
     }
-    return best || cands[0];
+    // 末段方向必须沿目标边法线（顶/底竖直进▼、左右水平进），否则箭头躺着——硬过滤：
+    // 一拐候选天然各有一个 H、一个 V 末段，过滤后必有剩余，再按拟合度选优。
+    // （曾用罚分 900，但贴住 dagre 远端干线的拟合收益可达数万分，罚分压不住：
+    // D1--否-->C3 端点在顶边却横着扎进 Gp_TstApp_SwitchToRunPhase）
+    if (endDir) return pick(cands.filter((c) => dirOf(c) === endDir)) || pick(cands);
+    return pick(cands) || cands[0];
+  };
+  // 边标签随路由重挂用的折线工具：弧长、按弧长取点、点投影（返回最近点及其弧长位置）
+  const polyLen = (pts) => {
+    let L = 0;
+    for (let i = 0; i < pts.length - 1; i++) L += Math.hypot(pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1]);
+    return L;
+  };
+  const pointAt = (pts, at) => {
+    let acc = 0;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const a = pts[i], b = pts[i + 1];
+      const L = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      if (acc + L >= at) {
+        const t = L ? (at - acc) / L : 0;
+        return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+      }
+      acc += L;
+    }
+    return pts[pts.length - 1];
+  };
+  const projectOn = (p, pts) => {
+    let bd = Infinity, bl = 0, bp = pts[0], acc = 0;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const a = pts[i], b = pts[i + 1];
+      const vx = b[0] - a[0], vy = b[1] - a[1];
+      const wx = p[0] - a[0], wy = p[1] - a[1];
+      const l2 = vx * vx + vy * vy;
+      let t = l2 ? (wx * vx + wy * vy) / l2 : 0;
+      t = Math.max(0, Math.min(1, t));
+      const q = [a[0] + t * vx, a[1] + t * vy];
+      const d = Math.hypot(q[0] - p[0], q[1] - p[1]);
+      if (d < bd) { bd = d; bl = acc + Math.sqrt(l2) * t; bp = q; }
+      acc += Math.sqrt(l2);
+    }
+    return { d: bd, len: bl, pt: bp };
+  };
+  // 各 svg 的边标签缓存（mermaid 把标签放在路径中点，g.edgeLabel 的 translate 即标签中心）
+  const labelCache = new Map();
+  const labelsOf = (svg) => {
+    if (labelCache.has(svg)) return labelCache.get(svg);
+    const list = [];
+    svg.querySelectorAll('g.edgeLabel').forEach((g) => {
+      const t = (g.getAttribute('transform') || '').match(/translate\(\s*(-?[\d.]+)[ ,]\s*(-?[\d.]+)\s*\)/);
+      if (t) list.push({ g, x: +t[1], y: +t[2], used: false });
+    });
+    labelCache.set(svg, list);
+    return list;
   };
   document.querySelectorAll('svg path.flowchart-link').forEach((p) => {
     const d = p.getAttribute('d');
@@ -4485,20 +4565,27 @@ window.addEventListener('DOMContentLoaded', async () => {
       if (nums.length >= 2) pts.push([nums[nums.length - 2], nums[nums.length - 1]]);
     }
     if (pts.length < 2) return;
-    // 边 id L_<源>_<目标>_<n>：按下划线拆出目标节点（节点 id 本身含下划线，逐位试拆），取端点所在边的法线约束
-    let endDir = null;
+    const svg = p.closest('svg');
+    // 边 id L_<源>_<目标>_<n>：按下划线拆出源/目标节点（节点 id 本身含下划线，逐位试拆），取端点所在边的法线约束
+    let endDir = null, endPts = pts, sp0 = null, crossesFn = null;
+    let srcId = null, dstId = null, tBox = null, dstG = null, ds = null;
     const em = (p.getAttribute('id') || '').match(/^L_(.+)_\d+$/);
     if (em) {
-      const svg = p.closest('svg');
       const boxes = boxesOf(svg);
       const core = em[1];
       for (let i = 1; i < core.length - 1; i++) {
         if (core[i] !== '_') continue;
-        const srcId = core.slice(0, i), dstId = core.slice(i + 1);
-        if (!boxes[srcId] || !boxes[dstId]) continue;
-        const tBox = boxes[dstId];
+        if (!boxes[core.slice(0, i)] || !boxes[core.slice(i + 1)]) continue;
+        srcId = core.slice(0, i);
+        dstId = core.slice(i + 1);
+        break;
+      }
+      if (dstId) {
+        crossesFn = crossesOf(boxes, srcId, dstId);
+        tBox = boxes[dstId];
+        dstG = svg.querySelector('g.node[id^="flowchart-' + dstId + '-"]');
         const S0 = pts[0], E0 = pts[pts.length - 1];
-        const ds = [
+        ds = [
           ['T', distToSeg(E0, [tBox.x, tBox.y], [tBox.x + tBox.w, tBox.y])],
           ['B', distToSeg(E0, [tBox.x, tBox.y + tBox.h], [tBox.x + tBox.w, tBox.y + tBox.h])],
           ['L', distToSeg(E0, [tBox.x, tBox.y], [tBox.x, tBox.y + tBox.h])],
@@ -4511,13 +4598,14 @@ window.addEventListener('DOMContentLoaded', async () => {
         } else if (ds[0][1] <= 12 && axis(ds[0][0]) !== axis(ds[1][0])) {
           // 角部模糊（一顶/底边 + 一侧边距离相近）：不能放任——dagre 的横进顶边会原样
           // 保留成躺平箭头（D2--否-->I 端点在 I 顶边距左角 4px，用户反馈"箭头躺着"）。
-          // 来源在角侧盒外、且该侧边没有其他入边时，端点平移到侧边一拐横进
+          // 矩形族节点 + 来源在角侧盒外 + 该侧边无其他入边 → 端点平移到侧缘横进
           // （W2-->END 类汇合，与对侧兄弟边同高对称，用户明确要这种）；
-          // 侧边已被兄弟入边占用（I 左边已有 P-->I）或来源在盒内时竖直进顶/底边。
+          // 但仅当平移后存在不穿盒的横进候选才采用——D1--否-->END 直下必穿「读 InitCheckRslt」
+          // 盒、按 dagre 干线左绕则不穿 → 采用平移；没有干净横进路由就退回竖进顶/底边
+          // （侧边已被兄弟入边占用（I 左边已有 P-->I）或来源在盒内时也竖直进）。
           const sideCh = axis(ds[0][0]) === 'H' ? ds[0][0] : ds[1][0];
           const sgn = sideCh === 'L' ? -1 : 1;
           const outSide = sgn < 0 ? S0[0] < tBox.x - 4 : S0[0] > tBox.x + tBox.w + 4;
-          const dstG = svg.querySelector('g.node[id^="flowchart-' + dstId + '-"]');
           // 仅矩形族节点（无 polygon 子元素）可平移；菱形/平行四边形包围盒边不贴实际形状
           const rectFam = dstG && !dstG.querySelector('polygon');
           const occ = occOf(svg)[dstId] || [];
@@ -4525,28 +4613,63 @@ window.addEventListener('DOMContentLoaded', async () => {
           const sideFree = !occ.some((o) => o.side === sideCh && o.id !== edgeId);
           if (rectFam && outSide && sideFree) {
             const nx = sgn > 0 ? tBox.x + tBox.w : tBox.x;
-            const corner = [S0[0], E0[1]];
-            const hitBox = (a, b) => {
-              const x1 = Math.min(a[0], b[0]), x2 = Math.max(a[0], b[0]);
-              const y1 = Math.min(a[1], b[1]), y2 = Math.max(a[1], b[1]);
-              for (const id in boxes) {
-                if (id === srcId || id === dstId) continue;
-                const bx = boxes[id];
-                if (x1 < bx.x + bx.w - 2 && x2 > bx.x + 2 && y1 < bx.y + bx.h - 2 && y2 > bx.y + 2) return true;
-              }
-              return false;
-            };
-            if (!hitBox(S0, corner) && !hitBox(corner, [nx, E0[1]])) {
-              pts[pts.length - 1] = [nx, E0[1]];  // 平移到侧缘（y 不变，与兄弟边同高）
+            const shifted = [...pts.slice(0, -1), [nx, E0[1]]];
+            const trySp = ortho(shifted, 'H', crossesFn);
+            if (trySp && dirOf(trySp) === 'H' && !crossesFn(trySp)) {
+              endPts = shifted;  // 平移到侧缘（y 不变，与兄弟边同高）
               endDir = 'H';
-            } else endDir = 'V';  // 平移路由穿节点盒则放弃，竖进
+              sp0 = trySp;
+            } else endDir = 'V';
           } else endDir = 'V';
         }
-        break;
       }
     }
-    const sp = ortho(pts, endDir);
+    let sp = sp0 || ortho(endPts, endDir, crossesFn);
+    // 端点贴形：贴边（≤12px）端点把箭头尖贴到盒边——dagre 按原始斜向求的交点在直角化后会
+    // 悬空（D1-->END 尖浮在「结束」胶囊左肩外 6px，用户反馈"箭头和框离得远"）；胶囊（rx>0）
+    // 进点卡入平直段。贴形改线后穿盒或移动过大（末段方向与贴边侧不符的回落路由）则放弃。
+    if (tBox && ds && ds[0][1] <= 12 && dstG && !dstG.querySelector('polygon') && sp.length >= 2) {
+      const rect = dstG.querySelector('rect[rx]');
+      const rx = rect ? +(rect.getAttribute('rx') || 0) : 0;
+      const li = sp.length - 1;
+      const A = sp[li - 1], E = sp[li];
+      const snapped = sp.map((q) => [q[0], q[1]]);
+      if (dirOf(sp) === 'V') {
+        const ySnap = Math.abs(E[1] - tBox.y) <= Math.abs(E[1] - (tBox.y + tBox.h)) ? tBox.y : tBox.y + tBox.h;
+        let x = E[0];
+        if (rx > 0 && sp.length >= 3) x = Math.min(Math.max(x, tBox.x + rx), tBox.x + tBox.w - rx);
+        snapped[li - 1] = [x, A[1]];
+        snapped[li] = [x, ySnap];
+      } else {
+        const xSnap = Math.abs(E[0] - tBox.x) <= Math.abs(E[0] - (tBox.x + tBox.w)) ? tBox.x : tBox.x + tBox.w;
+        let y = E[1];
+        if (rx > 0 && sp.length >= 3) y = Math.min(Math.max(y, tBox.y + rx), tBox.y + tBox.h - rx);
+        snapped[li - 1] = [A[0], y];
+        snapped[li] = [xSnap, y];
+      }
+      const moved = Math.abs(snapped[li][0] - E[0]) + Math.abs(snapped[li][1] - E[1]);
+      if (moved <= 30 && (!crossesFn || !crossesFn(snapped))) sp = snapped;
+    }
     p.setAttribute('d', 'M' + sp.map((q) => q[0] + ',' + q[1]).join('L'));
+    // 边标签随路由重挂：标签投影到原路径取弧长占比，平移到新路径同占比处——否则路由大改后
+    // 标签留在旧干线旁（D1--否-->END 的「否」字离新线 87px，用户反馈"文字与线离得远"）。
+    // 标签匹配：取投影到原路径距离最近（<30px）的未占用标签——mermaid 本就把它放在路径中点上。
+    const labels = labelsOf(svg);
+    let lab = null, ld = 30;
+    for (const l of labels) {
+      if (l.used) continue;
+      const dd = projectOn([l.x, l.y], pts).d;
+      if (dd < ld) { ld = dd; lab = l; }
+    }
+    if (lab) {
+      lab.used = true;
+      const oldL = polyLen(pts), newL = polyLen(sp);
+      if (oldL > 0 && newL > 0) {
+        const pr = projectOn([lab.x, lab.y], pts);
+        const np = pointAt(sp, (pr.len / oldL) * newL);
+        lab.g.setAttribute('transform', 'translate(' + (lab.x + np[0] - pr.pt[0]) + ', ' + (lab.y + np[1] - pr.pt[1]) + ')');
+      }
+    }
   });
 });
 </script>

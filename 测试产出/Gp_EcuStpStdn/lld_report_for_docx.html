@@ -3937,14 +3937,25 @@ globalThis.mermaid = globalThis.__esbuild_esm_mermaid.default;
 // 按拟合度选优，否则会选出横着扎进顶边的躺平箭头（P-->I 进 Cnt_u32加1 顶边、
 // D1--否-->C3 横进 SwitchToRunPhase 顶边）。端点落在角部（顶/底边与侧边距离相近）时
 // 按来源方位决策：矩形族节点 + 来源在角侧盒外 + 该侧边无其他入边 → 端点平移到侧缘横进，
-// 但仅当平移后存在不穿盒的横进候选才采用，否则竖直进；菱形等 polygon 节点不平移。
+// 但仅当平移后存在不穿盒不穿边的横进候选才采用，否则竖直进；菱形等 polygon 节点不平移。
+// ③ 穿边避让：选路优先级为字典序「不穿盒 > 方向合规 > 不穿其他边 > 拟合分」——候选与已
+// 定稿边的当前路由严格交叉（_xcheck 同口径）即降级；候选不够时两轮扩容（被穿盒的盒缘外
+// 8px 加干线、被穿越段的端点外 8px 加干线）；仍不干净且 dagre 原始路由干净则保留原始斜线
+// 不直角化。TLF35584 密集图曾批量出现兄弟边互相交叉（N5-->N6 干线贴 N5 顶边与 N5-->N7
+// 角部拐弯相撞）、两点直线早退把 dagre 绕行路线拉成竖穿节点盒（D2-->END 竖穿 B2）。
 // 选定后两件收尾：
-// ③ 端点贴形：贴边（≤12px）端点的箭头尖贴到盒边——dagre 按原始斜向求的交点在直角化后
-//    会悬空（D1-->END 尖浮在「结束」胶囊左肩外 6px）；胶囊（rx>0）进点卡入平直段。
-// ④ 标签重挂：边标签投影到原路径取弧长占比，平移到新路径同占比处——否则路由大改后
+// ④ 端点贴形：贴边（≤12px）端点的箭头尖贴到盒边——dagre 按原始斜向求的交点在直角化后
+//    会悬空（D1-->END 尖浮在「结束」胶囊左肩外 6px）；进点坐标卡进盒跨距（胶囊留 rx
+//    平直段，普通矩形也卡 2px 级悬空），两点直线被夹出拐点时插入拐点。
+// ⑤ 标签重挂：边标签投影到原路径取弧长占比，平移到新路径同占比处——否则路由大改后
 //    标签留在旧干线旁（D1--否-->END 的「否」字离新线 87px）。
 window.addEventListener('DOMContentLoaded', async () => {
   await mermaid.run({ querySelector: '.mermaid' });
+  // 调试钩子：file URL 带 #debug-orig 时把 dagre 原始路径存到 data-orig，供离线比对直角化改动
+  if (location.hash === '#debug-orig')
+    document.querySelectorAll('svg path.flowchart-link').forEach((p) => {
+      if (p.getAttribute('d')) p.setAttribute('data-orig', p.getAttribute('d'));
+    });
   const median = (vals) => { const v = [...vals].sort((a, b) => a - b); return v[v.length >> 1]; };
   const round2 = (n) => Math.round(n * 100) / 100;
   const distToSeg = (p, a, b) => {
@@ -4016,7 +4027,8 @@ window.addEventListener('DOMContentLoaded', async () => {
     return Math.abs(b[0] - a[0]) >= Math.abs(b[1] - a[1]) ? 'H' : 'V';
   };
   // 候选路由穿盒检查：任一段与其他节点包围盒（2px 缩边 AABB）相交即算穿盒（源/目标自身除外）
-  const crossesOf = (boxes, srcId, dstId) => (cand) => {
+  const crossBoxesOf = (boxes, srcId, dstId) => (cand) => {
+    const hit = [];
     for (let i = 0; i < cand.length - 1; i++) {
       const a = cand[i], b = cand[i + 1];
       const x1 = Math.min(a[0], b[0]), x2 = Math.max(a[0], b[0]);
@@ -4024,46 +4036,132 @@ window.addEventListener('DOMContentLoaded', async () => {
       for (const id in boxes) {
         if (id === srcId || id === dstId) continue;
         const bx = boxes[id];
-        if (x1 < bx.x + bx.w - 2 && x2 > bx.x + 2 && y1 < bx.y + bx.h - 2 && y2 > bx.y + 2) return true;
+        if (x1 < bx.x + bx.w - 2 && x2 > bx.x + 2 && y1 < bx.y + bx.h - 2 && y2 > bx.y + 2) hit.push(id);
       }
     }
-    return false;
+    return hit;
   };
-  const ortho = (pts, endDir, crosses) => {
+  // 段-段严格交叉：与 _xcheck.js 同口径（0.6 容差、平行/共线跳过、一横一竖才算；
+  // 斜线段按首端点近似为横段——dagre 原始斜线基本不参与判定，这也与 _xcheck 一致）
+  const segX = (p1, p2, q1, q2) => {
+    const aVert = Math.abs(p1[0] - p2[0]) < 0.6, bVert = Math.abs(q1[0] - q2[0]) < 0.6;
+    if (aVert === bVert) return false;
+    const vv = aVert ? [p1, p2] : [q1, q2], hh = aVert ? [q1, q2] : [p1, p2];
+    const vx = vv[0][0], hy = hh[0][1];
+    return hy > Math.min(vv[0][1], vv[1][1]) + 0.6 && hy < Math.max(vv[0][1], vv[1][1]) - 0.6 &&
+           vx > Math.min(hh[0][0], hh[1][0]) + 0.6 && vx < Math.max(hh[0][0], hh[1][0]) - 0.6;
+  };
+  const bboxOf = (pts) => {
+    let x1 = Infinity, y1 = Infinity, x2 = -Infinity, y2 = -Infinity;
+    for (const q of pts) { if (q[0] < x1) x1 = q[0]; if (q[0] > x2) x2 = q[0]; if (q[1] < y1) y1 = q[1]; if (q[1] > y2) y2 = q[1]; }
+    return { x1, y1, x2, y2 };
+  };
+  // 各 svg 的边路由登记表（自旋整形之后、主循环之中惰性建立）：候选选路时避让其他边的当前
+  // 路由——先定稿的边先入库，后处理的边避开它们；每条边定稿后回写自己的新路由。TLF35584
+  // 密集图曾批量出现兄弟边拟合后互相交叉（N5-->N6 干线贴 N5 顶边与 N5-->N7 角部拐弯相撞），
+  // 只因选路只看盒不看边。
+  const routeCache = new Map();
+  const routesOf = (svg) => {
+    if (routeCache.has(svg)) return routeCache.get(svg);
+    const reg = { list: [], byEl: new Map() };
+    const boxes = boxesOf(svg);
+    svg.querySelectorAll('path.flowchart-link').forEach((p) => {
+      const d = p.getAttribute('d');
+      if (!d) return;
+      const pts = [];
+      (d.match(/[A-Za-z][^A-Za-z]*/g) || []).forEach((seg) => {
+        const nums = seg.slice(1).trim().split(/[ ,]+/).filter(Boolean).map(Number);
+        if (nums.length >= 2) pts.push([nums[nums.length - 2], nums[nums.length - 1]]);
+      });
+      if (pts.length < 2) return;
+      const id = p.getAttribute('id') || '';
+      let srcId = null, dstId = null;
+      const em = id.match(/^L_(.+)_d+$/);
+      if (em) {
+        const core = em[1];
+        for (let i = 1; i < core.length - 1; i++) {
+          if (core[i] !== '_') continue;
+          if (boxes[core.slice(0, i)] && boxes[core.slice(i + 1)]) { srcId = core.slice(0, i); dstId = core.slice(i + 1); break; }
+        }
+      }
+      const e = { p, pts, invisible: /edge-thickness-invisible/.test(p.getAttribute('class') || ''), srcId, dstId, bbox: bboxOf(pts) };
+      reg.list.push(e);
+      reg.byEl.set(p, e);
+    });
+    routeCache.set(svg, reg);
+    return reg;
+  };
+  // 候选与其他边的首个严格交叉段（无则 null）；同源同目标的平行边不参与（互相避让无意义）
+  const mkEdgeHit = (svg, self) => (cand) => {
+    if (!self) return null;
+    const cb = bboxOf(cand);
+    for (const e of routesOf(svg).list) {
+      if (e === self || e.invisible) continue;
+      if (self.srcId && e.srcId === self.srcId && e.dstId === self.dstId) continue;
+      if (cb.x2 < e.bbox.x1 || cb.x1 > e.bbox.x2 || cb.y2 < e.bbox.y1 || cb.y1 > e.bbox.y2) continue;
+      for (let i = 0; i < cand.length - 1; i++)
+        for (let j = 0; j < e.pts.length - 1; j++)
+          if (segX(cand[i], cand[i + 1], e.pts[j], e.pts[j + 1])) return [e.pts[j], e.pts[j + 1]];
+    }
+    return null;
+  };
+  // 选路优先级（字典序）：不穿盒 > 末段方向合规 > 不穿其他边 > 拟合分。候选不够时两轮扩容：
+  // ① 基础候选穿到哪些盒，就把竖/横干线挪到盒缘外 8px 再试（N5-->N6 需在 N3 右缘外穿行）；
+  // ② 仍穿边就把干线挪到被穿越段的端点外 8px 再试一轮。
+  // 扩容后仍不干净、且 dagre 原始路由干净（不穿盒/不穿边/方向合规）→ 保留原始斜线不直角化
+  // （D2-->END 一类：dagre 本已左绕 B2，两点直线早退曾把它拉成竖穿 B2 盒）。
+  const ortho = (pts, endDir, ctx) => {
     const S = pts[0], E = pts[pts.length - 1];
-    const dx = E[0] - S[0], dy = E[1] - S[1];
-    if (Math.abs(dx) < 0.6 || Math.abs(dy) < 0.6) return [S, E];
+    const xBoxes = ctx ? crossBoxesOf(ctx.boxes, ctx.srcId, ctx.dstId) : () => [];
+    const edgeHit = ctx ? ctx.edgeHit : null;
+    const straight = [S, E];
+    if ((Math.abs(E[0] - S[0]) < 0.6 || Math.abs(E[1] - S[1]) < 0.6) && !xBoxes(straight).length && !(edgeHit && edgeHit(straight))) return straight;
     const mids = pts.slice(1, -1);
     const uniq = (arr) => [...new Set(arr)];
-    const mxs = uniq([round2((S[0] + E[0]) / 2), ...(mids.length ? [round2(median(mids.map((p) => p[0])))] : [])]);
-    const mys = uniq([round2((S[1] + E[1]) / 2), ...(mids.length ? [round2(median(mids.map((p) => p[1])))] : [])]);
-    const cands = [
+    const build = (mxs, mys) => [
       [S, [S[0], E[1]], E],
       [S, [E[0], S[1]], E],
       ...mxs.map((mx) => [S, [mx, S[1]], [mx, E[1]], E]),
       ...mys.map((my) => [S, [S[0], my], [E[0], my], E]),
     ];
-    const pick = (list) => {
-      let best = null, bs = Infinity;
-      for (const c of list) {
-        const s = fitScore(c, pts);
-        if (s < bs - 1e-6) { bs = s; best = c; }
+    const mxs = uniq([round2((S[0] + E[0]) / 2), ...(mids.length ? [round2(median(mids.map((p) => p[0])))] : [])]);
+    const mys = uniq([round2((S[1] + E[1]) / 2), ...(mids.length ? [round2(median(mids.map((p) => p[1])))] : [])]);
+    let cands = build(mxs, mys);
+    // 扩容①：盒缘外 8px 干线
+    const hitBoxes = uniq(cands.flatMap((c) => xBoxes(c)));
+    if (ctx && hitBoxes.length) {
+      const ex = [], ey = [];
+      for (const id of hitBoxes.slice(0, 6)) {
+        const b = ctx.boxes[id];
+        ex.push(round2(b.x - 8), round2(b.x + b.w + 8));
+        ey.push(round2(b.y - 8), round2(b.y + b.h + 8));
       }
-      return best;
-    };
-    // 穿盒淘汰优先于拟合分（方向合规且不穿盒 > 任意不穿盒 > 方向合规 > 任意）：
-    // 拟合分最低的候选可能干线竖穿节点盒（D1--否-->END 干线 x=129 穿「读 InitCheckRslt」）。
-    if (crosses) {
-      const ok = cands.filter((c) => !crosses(c));
-      if (endDir) return pick(ok.filter((c) => dirOf(c) === endDir)) || pick(ok) || pick(cands.filter((c) => dirOf(c) === endDir)) || pick(cands);
-      return pick(ok) || pick(cands);
+      cands = cands.concat(build(uniq(ex).slice(0, 12), uniq(ey).slice(0, 12)));
     }
-    // 末段方向必须沿目标边法线（顶/底竖直进▼、左右水平进），否则箭头躺着——硬过滤：
-    // 一拐候选天然各有一个 H、一个 V 末段，过滤后必有剩余，再按拟合度选优。
-    // （曾用罚分 900，但贴住 dagre 远端干线的拟合收益可达数万分，罚分压不住：
-    // D1--否-->C3 端点在顶边却横着扎进 Gp_TstApp_SwitchToRunPhase）
-    if (endDir) return pick(cands.filter((c) => dirOf(c) === endDir)) || pick(cands);
-    return pick(cands) || cands[0];
+    let best = null, bk = null;
+    const consider = (list) => {
+      for (const c of list) {
+        // 字典序：不穿盒 > 不穿其他边 > 方向合规 > 拟合分。方向让位给穿边——端点贴形
+        // 阶段常能把方向问题修回来（箭尖贴边/卡跨距），穿边却修不了（svg#46 汇聚兄弟边）
+        const k = [xBoxes(c).length ? 1 : 0, edgeHit && edgeHit(c) ? 1 : 0, endDir && dirOf(c) !== endDir ? 1 : 0, fitScore(c, pts)];
+        if (!bk || k[0] < bk[0] || (k[0] === bk[0] && (k[1] < bk[1] || (k[1] === bk[1] && (k[2] < bk[2] || (k[2] === bk[2] && k[3] < bk[3] - 1e-6)))))) { bk = k; best = c; }
+      }
+    };
+    consider(cands);
+    // 扩容②：仍穿边，干线挪到被穿越段的端点外 8px 再试一轮
+    if (bk && bk[1] > 0 && edgeHit) {
+      const hit = edgeHit(best);
+      if (hit) {
+        const [ha, hb2] = hit;
+        consider(build(uniq([round2(ha[0] - 8), round2(ha[0] + 8), round2(hb2[0] - 8), round2(hb2[0] + 8)]), uniq([round2(ha[1] - 8), round2(ha[1] + 8), round2(hb2[1] - 8), round2(hb2[1] + 8)])));
+      }
+    }
+    // 仍不干净：dagre 原始路由干净（不穿盒/不穿边、方向合规）则保留原始斜线
+    if (bk && (bk[0] > 0 || bk[1] > 0)) {
+      const origBad = xBoxes(pts).length > 0 || (endDir && dirOf(pts) !== endDir) || (edgeHit && edgeHit(pts));
+      if (!origBad) return pts.slice();
+    }
+    return best;
   };
   // 边标签随路由重挂用的折线工具：弧长、按弧长取点、点投影（返回最近点及其弧长位置）
   const polyLen = (pts) => {
@@ -4176,20 +4274,16 @@ window.addEventListener('DOMContentLoaded', async () => {
       }
     });
   });
-  document.querySelectorAll('svg path.flowchart-link').forEach((p) => {
-    const d = p.getAttribute('d');
-    if (!d) return;
-    const segs = d.match(/[A-Za-z][^A-Za-z]*/g) || [];
-    const pts = [];
-    for (const seg of segs) {
-      const nums = seg.slice(1).trim().split(/[ ,]+/).filter(Boolean).map(Number);
-      if (nums.length >= 2) pts.push([nums[nums.length - 2], nums[nums.length - 1]]);
-    }
-    if (pts.length < 2) return;
+  // 单条边选路（不改 DOM，返回定稿折线）：两遍主循环共用——第一遍按 DOM 序定稿（后续边
+  // 避让已定稿的），第二遍从 dagre 原始路径对所有边重选——消除处理顺序死锁（A 避让 B 的
+  // dagre 原始斜线而选了交叉路由，B 随后改道，A 本有干净路由却无从得知：svg#51 D1-->R1
+  // 的最优 my930.66 第一遍被 D0-->END 的原始干线否决，第二遍才轮到它）。
+  const routeEdge = (p, pts) => {
     const svg = p.closest('svg');
     // 边 id L_<源>_<目标>_<n>：按下划线拆出源/目标节点（节点 id 本身含下划线，逐位试拆），取端点所在边的法线约束
-    let endDir = null, endPts = pts, sp0 = null, crossesFn = null;
+    let endDir = null, endPts = pts, sp0 = null, ctx = null, xBoxes = null, xEdge = null;
     let srcId = null, dstId = null, tBox = null, dstG = null, ds = null;
+    const selfE = routesOf(svg).byEl.get(p) || null;
     const em = (p.getAttribute('id') || '').match(/^L_(.+)_\d+$/);
     if (em) {
       const boxes = boxesOf(svg);
@@ -4202,7 +4296,9 @@ window.addEventListener('DOMContentLoaded', async () => {
         break;
       }
       if (dstId) {
-        crossesFn = crossesOf(boxes, srcId, dstId);
+        xBoxes = crossBoxesOf(boxes, srcId, dstId);
+        xEdge = mkEdgeHit(svg, selfE);
+        ctx = { boxes, srcId, dstId, edgeHit: xEdge };
         tBox = boxes[dstId];
         dstG = svg.querySelector('g.node[id^="flowchart-' + dstId + '-"]');
         const S0 = pts[0], E0 = pts[pts.length - 1];
@@ -4235,8 +4331,8 @@ window.addEventListener('DOMContentLoaded', async () => {
           if (rectFam && outSide && sideFree) {
             const nx = sgn > 0 ? tBox.x + tBox.w : tBox.x;
             const shifted = [...pts.slice(0, -1), [nx, E0[1]]];
-            const trySp = ortho(shifted, 'H', crossesFn);
-            if (trySp && dirOf(trySp) === 'H' && !crossesFn(trySp)) {
+            const trySp = ortho(shifted, 'H', ctx);
+            if (trySp && dirOf(trySp) === 'H' && !xBoxes(trySp).length && !xEdge(trySp)) {
               endPts = shifted;  // 平移到侧缘（y 不变，与兄弟边同高）
               endDir = 'H';
               sp0 = trySp;
@@ -4245,32 +4341,65 @@ window.addEventListener('DOMContentLoaded', async () => {
         }
       }
     }
-    let sp = sp0 || ortho(endPts, endDir, crossesFn);
+    let sp = sp0 || ortho(endPts, endDir, ctx);
     // 端点贴形：贴边（≤12px）端点把箭头尖贴到盒边——dagre 按原始斜向求的交点在直角化后会
-    // 悬空（D1-->END 尖浮在「结束」胶囊左肩外 6px，用户反馈"箭头和框离得远"）；胶囊（rx>0）
-    // 进点卡入平直段。贴形改线后穿盒或移动过大（末段方向与贴边侧不符的回落路由）则放弃。
+    // 悬空（D1-->END 尖浮在「结束」胶囊左肩外 6px，用户反馈"箭头和框离得远"）；进点坐标
+    // 卡进盒跨距（胶囊 rx>0 留平直段；普通矩形也要卡——svg#0 横进箭尖曾悬在盒底边下 2px）。
+    // 两点直线被夹出拐点时插入拐点；贴形改线后穿盒/穿边或移动过大则放弃。
     if (tBox && ds && ds[0][1] <= 12 && dstG && !dstG.querySelector('polygon') && sp.length >= 2) {
       const rect = dstG.querySelector('rect[rx]');
       const rx = rect ? +(rect.getAttribute('rx') || 0) : 0;
+      const pad = rx > 0 ? rx : 0;
       const li = sp.length - 1;
       const A = sp[li - 1], E = sp[li];
-      const snapped = sp.map((q) => [q[0], q[1]]);
+      let snapped = sp.map((q) => [q[0], q[1]]);
       if (dirOf(sp) === 'V') {
         const ySnap = Math.abs(E[1] - tBox.y) <= Math.abs(E[1] - (tBox.y + tBox.h)) ? tBox.y : tBox.y + tBox.h;
-        let x = E[0];
-        if (rx > 0 && sp.length >= 3) x = Math.min(Math.max(x, tBox.x + rx), tBox.x + tBox.w - rx);
-        snapped[li - 1] = [x, A[1]];
-        snapped[li] = [x, ySnap];
+        const x = Math.min(Math.max(E[0], tBox.x + pad), tBox.x + tBox.w - pad);
+        if (x === A[0]) snapped[li] = [x, ySnap];
+        else if (sp.length >= 3 && Math.abs(sp[li - 2][1] - A[1]) < 0.6) { snapped[li - 1] = [x, A[1]]; snapped[li] = [x, ySnap]; }
+        else snapped = [...sp.slice(0, -1), [x, A[1]], [x, ySnap]];
       } else {
         const xSnap = Math.abs(E[0] - tBox.x) <= Math.abs(E[0] - (tBox.x + tBox.w)) ? tBox.x : tBox.x + tBox.w;
-        let y = E[1];
-        if (rx > 0 && sp.length >= 3) y = Math.min(Math.max(y, tBox.y + rx), tBox.y + tBox.h - rx);
-        snapped[li - 1] = [A[0], y];
-        snapped[li] = [xSnap, y];
+        const y = Math.min(Math.max(E[1], tBox.y + pad), tBox.y + tBox.h - pad);
+        if (y === A[1]) snapped[li] = [xSnap, y];
+        else if (sp.length >= 3 && Math.abs(sp[li - 2][0] - A[0]) < 0.6) { snapped[li - 1] = [A[0], y]; snapped[li] = [xSnap, y]; }
+        else snapped = [...sp.slice(0, -1), [A[0], y], [xSnap, y]];
       }
-      const moved = Math.abs(snapped[li][0] - E[0]) + Math.abs(snapped[li][1] - E[1]);
-      if (moved <= 30 && (!crossesFn || !crossesFn(snapped))) sp = snapped;
+      const tip = snapped[snapped.length - 1];
+      const moved = Math.abs(tip[0] - E[0]) + Math.abs(tip[1] - E[1]);
+      if (moved <= 30 && (!xBoxes || !xBoxes(snapped).length) && !(xEdge && xEdge(snapped))) sp = snapped;
     }
+    return sp;
+  };
+  // 两遍选路 + 统一落笔：entry.orig 存 dagre 原始路径（登记表按当前 d 惰性建立，此时即
+  // 原始/自旋整形后的路径）；每遍定稿后回写登记表的当前路由供后续边避让；最后统一写 d
+  // 并重挂标签（标签按 orig → 定稿的弧长占比平移，只挂一次）。
+  const edgeEls = [...document.querySelectorAll('svg path.flowchart-link')];
+  const parsePts = (d) => {
+    const pts = [];
+    (d.match(/[A-Za-z][^A-Za-z]*/g) || []).forEach((seg) => {
+      const nums = seg.slice(1).trim().split(/[ ,]+/).filter(Boolean).map(Number);
+      if (nums.length >= 2) pts.push([nums[nums.length - 2], nums[nums.length - 1]]);
+    });
+    return pts;
+  };
+  for (let pass = 0; pass < 2; pass++) {
+    edgeEls.forEach((p) => {
+      const svg = p.closest('svg');
+      const e = routesOf(svg).byEl.get(p);
+      const orig = pass === 0 ? parsePts(p.getAttribute('d') || '') : (e && e.orig);
+      if (!orig || orig.length < 2) return;
+      if (e && pass === 0) e.orig = orig;
+      const sp = routeEdge(p, orig);
+      if (e) { e.pts = sp.map((q) => [q[0], q[1]]); e.bbox = bboxOf(e.pts); }
+    });
+  }
+  edgeEls.forEach((p) => {
+    const svg = p.closest('svg');
+    const e = routesOf(svg).byEl.get(p);
+    if (!e || !e.orig || !e.pts) return;
+    const pts = e.orig, sp = e.pts;
     p.setAttribute('d', 'M' + sp.map((q) => q[0] + ',' + q[1]).join('L'));
     // 边标签随路由重挂：标签投影到原路径取弧长占比，平移到新路径同占比处——否则路由大改后
     // 标签留在旧干线旁（D1--否-->END 的「否」字离新线 87px，用户反馈"文字与线离得远"）。

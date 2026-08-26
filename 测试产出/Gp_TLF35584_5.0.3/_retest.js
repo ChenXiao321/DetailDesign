@@ -1,0 +1,10 @@
+console.log('t1', /<a[^>]* b/.test('<a b>'));
+console.log('t2', /<a[^>]* b/.test('<a b'));
+console.log('t3', /<pa[^>]* d/.test('<pa d="x"'));
+console.log('t4', /<path[^>]* d/.test('<path d="x"'));
+console.log('t5', /<path [^>]* d/.test('<path d="x"'));
+console.log('t6', /<path [^>]* d/.test('<path  d="x"'));
+console.log('t7', /<path [^>]*d/.test('<path d="x"'));
+console.log('t8', /<path [^>]{0,10}d/.test('<path d="x"'));
+console.log('t9', /<path [^>]{0,}d/.test('<path d="x"'));
+console.log('t10', /<path [^>]+d/.test('<path d="x"'));

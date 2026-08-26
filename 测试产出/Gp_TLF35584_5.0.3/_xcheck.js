@@ -3,7 +3,7 @@
 // 节点盒从标记近似推导（rect 取 x/y/w/h，polygon 取 points 外包），与浏览器 getBBox 略有出入，
 // 只用于发现「干线竖穿节点」类明显问题（如 D1--否-->END 干线穿「读 InitCheckRslt」）。
 const fs = require('fs');
-const html = fs.readFileSync('测试产出/Gp_EcuStpStdn/lld_report.html', 'utf-8');
+const html = fs.readFileSync('测试产出/Gp_TLF35584_5.0.3/lld_report.html', 'utf-8');
 const svgs = [...html.matchAll(/<svg[\s\S]*?<\/svg>/g)].map(m => m[0]);
 let total = 0, boxHits = 0;
 svgs.forEach((svg, si) => {

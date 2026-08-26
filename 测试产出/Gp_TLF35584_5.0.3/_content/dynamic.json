@@ -1,0 +1,41 @@
+{
+  "stateMachine": {
+    "name": "Gp_TLF35584 运行状态机",
+    "diagram": "stateDiagram-v2\n    [*] --> INITIAL_TASK : 上电（PreInit 置位）\n    INITIAL_TASK --> WAIT : Gp_TLF35584_Init 完成\n    WAIT --> PREPARERUN : 用户 SetDevSigModeOut 请求 NORMAL（RtSetMode 置位）\n    INITIAL_TASK --> PREPARERUN : MainFunction default 分支兜底（异常状态值）\n    PREPARERUN --> RUN : 模式切换后 DeviceState 为 NORMAL\n    PREPARERUN --> PREPARERUN : 未达 NORMAL 且 ReInitRetry 小于 TRY_REINIT_MAX（重试加一）\n    PREPARERUN --> ERROR : 重试次数耗尽\n    note right of WAIT : Init 后不自动切 NORMAL，等待用户调用 SetDevSigModeOut\n    note right of RUN : WdgTimeCnt 到达 SERVICE_WDG_TIME 时喂狗；每周期 GetAllFaultRegister 采集故障寄存器并消抖\n    note right of ERROR : 终态，MainFunction 不再动作",
+    "diagramFormat": "mermaid",
+    "states": [
+      { "name": "INITIAL_TASK", "description": "上电初始状态，由 PreInit 置位；Init 尚未执行或执行中" },
+      { "name": "WAIT", "description": "Init 完成，驱动不自动切 NORMAL，等待用户调用 SetDevSigModeOut 下发模式请求" },
+      { "name": "PREPARERUN", "description": "收到 NORMAL 请求，RtWdgRegCfg 将 WDCYC 从 1ms 改为 0.1ms 重建 WWD 时序，喂狗一次后尝试切入 NORMAL；未达 NORMAL 时按 TRY_REINIT_MAX 重试" },
+      { "name": "RUN", "description": "正常运行：按 SERVICE_WDG_TIME 周期喂狗（WDGM_ENABLE 时受 WdgSwitch/WdgMTrigCnt 控制），每周期采集故障寄存器并消抖更新 ErrRecord" },
+      { "name": "ERROR", "description": "PREPARERUN 重试耗尽进入，MainFunction 不再动作" }
+    ],
+    "transitions": [],
+    "polarion": {
+      "isWorkItem": true, "chapter": "5.3.1", "workItemKind": "statemachine",
+      "title": "Gp_TLF35584 运行状态机", "workItemId": null
+    }
+  },
+  "sequences": [
+    {
+      "name": "Initialization",
+      "diagram": "sequenceDiagram\n    actor ASW as EcuM/ASW\n    participant INIT as Gp_TLF35584_Init\n    participant CO as Callout\n    ASW->>INIT: Init() 上电初始化\n    alt BistFunctCalled 为 FALSE（未先调用 Bist）\n        INIT->>INIT: PreInit() 初始化运行时数据\n        INIT->>CO: CalloutWdiService(STD_HIGH) WDI 预置高\n        INIT->>INIT: GetWakeAndResetInfo()\n        Note right of INIT: 读 DEVCFG1 判冷启动，读 WKSF 取唤醒源<br>清标志寄存器（经 CalloutSpiTransSync）\n    end\n    INIT->>CO: CalloutSpiTransSync 读 DEVSTAT 取 DeviceState\n    alt DeviceState 为 NORMAL（软复位未回到 INIT）\n        INIT->>CO: CalloutMpsTestSupport(TESTMODE) 屏蔽复位动作\n        INIT->>INIT: SetPorstMode(0) 清 WWD 错误计数\n        INIT->>CO: CalloutMpsTestSupport(NORMALMODE) 恢复\n    end\n    INIT->>CO: CalloutSpiTransSync 读状态寄存器取 WDG 信息\n    INIT->>CO: CalloutSpiTransSync 写 WWDSCMD 喂 WWD 退出长开窗\n    INIT->>CO: CalloutSpiTransSync 解锁后写 WDCFG0/SYSPCFG1 关 WDG 与 ERR 引脚\n    INIT->>CO: CalloutSpiTransSync 写入全部初始化寄存器\n    INIT->>CO: CalloutStmSwDalayNus(MODE_SWITCH_DELAY)\n    INIT->>CO: CalloutSpiTransSync 回读状态寄存器校验保护寄存器\n    INIT->>CO: CalloutSpiTransSync 再次读 DEVSTAT\n    alt DeviceState 为 INIT\n        Note right of INIT: InitStatus 置 PASS，清 INIT_ERR\n    else 未达到 INIT\n        Note right of INIT: InitStatus 置 FAILED，置位 INIT_ERR\n        INIT->>CO: CalloutDemReport(REINIT_FAULT)（DEM_ERROR_ENABLE 时）\n    end\n    Note right of INIT: StateVar 置 WAIT，等待用户 SetDevSigModeOut 请求切 NORMAL",
+      "diagramFormat": "mermaid",
+      "description": "TLF35584 init function,include watchdog initialization",
+      "polarion": {
+        "isWorkItem": true, "chapter": "5.3.2", "workItemKind": "sequence",
+        "title": "Gp_TLF35584 Initialization 序列图", "workItemId": null
+      }
+    },
+    {
+      "name": "Runtime",
+      "diagram": "sequenceDiagram\n    actor OS\n    participant MF as Gp_TLF35584_MainFunction\n    participant CO as Callout\n    OS->>MF: MainFunction() 周期调度\n    alt 用户经 SetDevSigModeOut 请求了目标模式\n        alt SetMode 为 STANDBY\n            MF->>MF: SwitchToStandbyMode()\n            MF->>CO: CalloutWkSourceConfirm()（WAKE_UP_SOURCE_CONFIRM 时）\n            MF->>CO: CalloutSpiTransSync 写 DEVCTRL/DEVCTRLN 切 STANDBY\n            MF->>CO: CalloutStmSwDalayNus(MODE_SWITCH_DELAY)\n        else SetMode 为 NORMAL\n            Note right of MF: StateVar 置 PREPARERUN，由下方分支完成切换\n        else SetMode 为 PORST\n            MF->>MF: SetPorstMode(FWD_RESET_ACTION) 触发复位\n        end\n    end\n    MF->>MF: GetAllFaultRegister() 读全部标志寄存器并消抖\n    alt 故障消抖确认（ReadFaultCnt 达 TRY_REPAIR_MAX）\n        MF->>CO: CalloutDisableIntrrupt()\n        Note right of MF: 清零并按位重组 ErrRecord 故障记录\n        MF->>CO: CalloutEnableIntrrupt()\n    end\n    alt StateVar 为 PREPARERUN\n        MF->>MF: RtWdgRegCfg() WDCYC 改 0.1ms 重建 WWD 时序\n        MF->>MF: GetWdgInfo() 后 WdgService() 喂狗一次\n        MF->>CO: CalloutStmSwDalayNus(CMD_SYNC_DELAY)\n        MF->>MF: SwitchToNormalMode() 写 DEVCTRL/DEVCTRLN\n        MF->>CO: CalloutStmSwDalayNus(MODE_SWITCH_DELAY)\n        MF->>CO: CalloutSpiTransSync 读 DEVSTAT\n        alt DeviceState 为 NORMAL\n            Note right of MF: StateVar 置 RUN\n        else 未达 NORMAL\n            Note right of MF: ReInitRetry 小于 TRY_REINIT_MAX 则重试<br>否则 StateVar 置 ERROR\n        end\n    else StateVar 为 RUN\n        alt WdgTimeCnt 到达 SERVICE_WDG_TIME\n            alt WDGM_ENABLE 生效\n                Note right of MF: WdgSwitch 为 TRUE 才喂狗<br>WdgMTrigCnt 递减至零后 WdgSwitch 清 FALSE\n                MF->>MF: WdgService() 按 WdMode 喂 WWD/FWD\n            else WDGM_DISABLE 生效\n                MF->>MF: WdgService() 按 WdMode 喂 WWD/FWD\n            end\n            Note right of MF: 首次到达时清一次标志寄存器（ClearFirstWdgEventFlg）\n        else 未到喂狗周期\n            MF->>MF: GetWdgInfo() 仅刷新看门狗信息\n        end\n    else StateVar 为 WAIT 或 ERROR\n        Note right of MF: 不动作（WAIT 等待用户请求切 NORMAL）\n    end",
+      "diagramFormat": "mermaid",
+      "description": "TLF35584 main state,service wdg,get wdg infomation,update err infomation",
+      "polarion": {
+        "isWorkItem": true, "chapter": "5.3.2", "workItemKind": "sequence",
+        "title": "Gp_TLF35584 Runtime 序列图", "workItemId": null
+      }
+    }
+  ]
+}

@@ -1,5 +1,7 @@
 // 全图扫描：渲染后 HTML 中所有 flowchart 边（已直角化）——
-// ① 两两查严格 X 交叉；② 逐段查边穿节点盒（2px 缩边 AABB，源/目标自身除外）。
+// ① 两两查严格 X 交叉；② 逐段查边穿节点盒（2px 缩边 AABB，源/目标自身除外）；
+// ④ 查边深入矩形族目标盒内部（终点前路径进 2px 缩边开盒——竖干线落在目标盒跨度内时
+//    末段连箭头埋在节点填充下，如 TLF35584 RtSetMode 图 W2-->END 秃线）。
 // 节点盒从标记近似推导（rect 取 x/y/w/h，polygon 取 points 外包），与浏览器 getBBox 略有出入，
 // 只用于发现「干线竖穿节点」类明显问题（如 D1--否-->END 干线穿「读 InitCheckRslt」）。
 const fs = require('fs');
@@ -36,7 +38,7 @@ svgs.forEach((svg, si) => {
       x1 = Math.min(...pp.map(p => p[0])); x2 = Math.max(...pp.map(p => p[0]));
       y1 = Math.min(...pp.map(p => p[1])); y2 = Math.max(...pp.map(p => p[1]));
     } else continue;
-    boxes[id] = { x: x1 + tx, y: y1 + ty, w: x2 - x1, h: y2 - y1 };
+    boxes[id] = { x: x1 + tx, y: y1 + ty, w: x2 - x1, h: y2 - y1, poly: !rm && !!pm };
   }
   // 边 id 拆源/目标
   const endsOf = (edgeId) => {
@@ -100,5 +102,61 @@ svgs.forEach((svg, si) => {
     }
   }
   if (bhits.length) { boxHits += bhits.length; console.log(`svg#${si} 边穿节点盒:`); bhits.forEach(h => console.log('  ' + h)); }
+  // ④ 边深入矩形族目标盒内部：终点前的路径进入目标盒 2px 缩边开盒（slab 法）——
+  // ② 把源/目标盒排除了（箭尖总要触边），但竖干线落在目标盒跨度内时末段连箭头
+  // 一起埋在节点填充下（RtSetMode 图 W2-->END 干线 x=444.61 ∈「结束」盒 x 跨度，秃线）。
+  // polygon 目标斜边端点本就在包围盒内，恒误报，跳过。
+  const phits = [];
+  for (const e of edges) {
+    if (e.invisible) continue;
+    const ends = endsOf(e.id);
+    if (!ends) continue;
+    const tb = boxes[ends[1]];
+    if (!tb || tb.poly) continue;
+    const x1 = tb.x + 2, x2 = tb.x + tb.w - 2, y1 = tb.y + 2, y2 = tb.y + tb.h - 2;
+    for (let k = 0; k < e.pts.length - 1; k++) {
+      const a = e.pts[k], b = e.pts[k + 1];
+      const dx = b[0] - a[0], dy = b[1] - a[1];
+      let t0 = 0, t1 = 1;
+      if (Math.abs(dx) < 1e-9) { if (a[0] <= x1 || a[0] >= x2) continue; }
+      else {
+        let ta = (x1 - a[0]) / dx, tb2 = (x2 - a[0]) / dx;
+        if (ta > tb2) { const t = ta; ta = tb2; tb2 = t; }
+        t0 = Math.max(t0, ta); t1 = Math.min(t1, tb2);
+        if (t0 >= t1) continue;
+      }
+      if (Math.abs(dy) < 1e-9) { if (a[1] <= y1 || a[1] >= y2) continue; }
+      else {
+        let ta = (y1 - a[1]) / dy, tb2 = (y2 - a[1]) / dy;
+        if (ta > tb2) { const t = ta; ta = tb2; tb2 = t; }
+        t0 = Math.max(t0, ta); t1 = Math.min(t1, tb2);
+        if (t0 >= t1) continue;
+      }
+      phits.push(`${e.id}#seg${k} 深入目标盒 ${ends[1]}`);
+      break;
+    }
+  }
+  if (phits.length) { boxHits += phits.length; console.log(`svg#${si} 边深入目标盒:`); phits.forEach(h => console.log('  ' + h)); }
+  // ⑤ 横段贴盒缘（美观）：横段与其他节点顶/底边共线（<1px）且横向重叠——像从盒上碾过
+  // （TLF35584 SinSafetyBistCheck 图 P2-->D0 回边横段与 E2 顶边完全贴合）。源/目标盒自身除外。
+  const hhits = [];
+  for (const e of edges) {
+    if (e.invisible) continue;
+    const ends = endsOf(e.id);
+    for (let k = 0; k < e.pts.length - 1; k++) {
+      const a = e.pts[k], b = e.pts[k + 1];
+      if (Math.abs(a[1] - b[1]) >= 0.6) continue;
+      const x1 = Math.min(a[0], b[0]), x2 = Math.max(a[0], b[0]);
+      for (const id in boxes) {
+        if (ends && (id === ends[0] || id === ends[1])) continue;
+        const bx = boxes[id];
+        for (const ey of [bx.y, bx.y + bx.h]) {
+          if (Math.abs(a[1] - ey) < 1 && x2 > bx.x + 1 && x1 < bx.x + bx.w - 1)
+          { hhits.push(`${e.id}#seg${k} 贴 ${id} ${ey === bx.y ? '顶' : '底'}边`); break; }
+        }
+      }
+    }
+  }
+  if (hhits.length) { boxHits += hhits.length; console.log(`svg#${si} 横段贴盒缘:`); hhits.forEach(h => console.log('  ' + h)); }
 });
-console.log((total || boxHits) ? `共 ${total} 处严格交叉、${boxHits} 处边穿节点盒` : '全部图无严格交叉、无边穿节点盒');
+console.log((total || boxHits) ? `共 ${total} 处严格交叉、${boxHits} 处穿盒/深入目标盒/越界` : '全部图无严格交叉、无边穿节点盒、无深入目标盒');

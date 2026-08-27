@@ -6174,6 +6174,9 @@ globalThis.mermaid = globalThis.__esbuild_esm_mermaid.default;
 // 8px 加干线、被穿越段的端点外 8px 加干线）；仍不干净且 dagre 原始路由干净则保留原始斜线
 // 不直角化。TLF35584 密集图曾批量出现兄弟边互相交叉（N5-->N6 干线贴 N5 顶边与 N5-->N7
 // 角部拐弯相撞）、两点直线早退把 dagre 绕行路线拉成竖穿节点盒（D2-->END 竖穿 B2）。
+// ③b 目标盒穿透：穿盒检查排除了目标盒自身（箭尖总要触边），但竖干线落在矩形族目标盒
+// 跨度内会穿盒而入、末段连箭头埋在节点填充下（RtSetMode 图 W2-->END 秃线）——候选在终点
+// 前不得进入目标盒 2px 缩边内部，否决并入「不穿盒」档，扩容①同时加目标盒缘外 8px 干线。
 // 选定后两件收尾：
 // ④ 端点贴形：贴边（≤12px）端点的箭头尖贴到盒边——dagre 按原始斜向求的交点在直角化后
 //    会悬空（D1-->END 尖浮在「结束」胶囊左肩外 6px）；进点坐标卡进盒跨距（胶囊留 rx
@@ -6272,6 +6275,35 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
     return hit;
   };
+  // 目标盒穿透检查（仅矩形族目标用——菱形/平行四边形斜边端点本就在包围盒内部，会误判）：
+  // 路径在终点前不得进入目标盒 2px 缩边内部。穿盒检查把目标盒自身排除了（箭尖总要触边），
+  // 但竖干线落在目标盒 x 跨度内时会穿盒而入，末段连箭头一起埋在节点填充下面——
+  // TLF35584 RtSetMode 图 W2-->END：干线 x=444.61 ∈「结束」盒 x 跨度 [423.86,462.24]，
+  // 箭头被盖成秃线（用户截图反馈"有条线没有箭头"）。段与开盒相交用 slab 法。
+  const penInto = (box) => (cand) => {
+    const x1 = box.x + 2, x2 = box.x + box.w - 2, y1 = box.y + 2, y2 = box.y + box.h - 2;
+    for (let i = 0; i < cand.length - 1; i++) {
+      const a = cand[i], b = cand[i + 1];
+      const dx = b[0] - a[0], dy = b[1] - a[1];
+      let t0 = 0, t1 = 1;
+      if (Math.abs(dx) < 1e-9) { if (a[0] <= x1 || a[0] >= x2) continue; }
+      else {
+        let ta = (x1 - a[0]) / dx, tb = (x2 - a[0]) / dx;
+        if (ta > tb) { const t = ta; ta = tb; tb = t; }
+        t0 = Math.max(t0, ta); t1 = Math.min(t1, tb);
+        if (t0 >= t1) continue;
+      }
+      if (Math.abs(dy) < 1e-9) { if (a[1] <= y1 || a[1] >= y2) continue; }
+      else {
+        let ta = (y1 - a[1]) / dy, tb = (y2 - a[1]) / dy;
+        if (ta > tb) { const t = ta; ta = tb; tb = t; }
+        t0 = Math.max(t0, ta); t1 = Math.min(t1, tb);
+        if (t0 >= t1) continue;
+      }
+      return true;
+    }
+    return false;
+  };
   // 段-段严格交叉：与 _xcheck.js 同口径（0.6 容差、平行/共线跳过、一横一竖才算；
   // 斜线段按首端点近似为横段——dagre 原始斜线基本不参与判定，这也与 _xcheck 一致）
   const segX = (p1, p2, q1, q2) => {
@@ -6345,8 +6377,9 @@ window.addEventListener('DOMContentLoaded', async () => {
     const S = pts[0], E = pts[pts.length - 1];
     const xBoxes = ctx ? crossBoxesOf(ctx.boxes, ctx.srcId, ctx.dstId) : () => [];
     const edgeHit = ctx ? ctx.edgeHit : null;
+    const pen = ctx && ctx.pen ? ctx.pen : () => false;
     const straight = [S, E];
-    if ((Math.abs(E[0] - S[0]) < 0.6 || Math.abs(E[1] - S[1]) < 0.6) && !xBoxes(straight).length && !(edgeHit && edgeHit(straight))) return straight;
+    if ((Math.abs(E[0] - S[0]) < 0.6 || Math.abs(E[1] - S[1]) < 0.6) && !xBoxes(straight).length && !pen(straight) && !(edgeHit && edgeHit(straight))) return straight;
     const mids = pts.slice(1, -1);
     const uniq = (arr) => [...new Set(arr)];
     const build = (mxs, mys) => [
@@ -6358,12 +6391,19 @@ window.addEventListener('DOMContentLoaded', async () => {
     const mxs = uniq([round2((S[0] + E[0]) / 2), ...(mids.length ? [round2(median(mids.map((p) => p[0])))] : [])]);
     const mys = uniq([round2((S[1] + E[1]) / 2), ...(mids.length ? [round2(median(mids.map((p) => p[1])))] : [])]);
     let cands = build(mxs, mys);
-    // 扩容①：盒缘外 8px 干线
+    // 扩容①：盒缘外 8px 干线。穿到目标盒自身（pen）时同样扩——把目标盒缘外 8px 加入干线，
+    // 让汇合边能走盒外 L 形（W2-->END 竖干线穿「结束」盒 → 改走左缘外 x=tBox.x-8 横进）
     const hitBoxes = uniq(cands.flatMap((c) => xBoxes(c)));
-    if (ctx && hitBoxes.length) {
+    const penHit = cands.some((c) => pen(c));
+    if (ctx && (hitBoxes.length || penHit)) {
       const ex = [], ey = [];
       for (const id of hitBoxes.slice(0, 6)) {
         const b = ctx.boxes[id];
+        ex.push(round2(b.x - 8), round2(b.x + b.w + 8));
+        ey.push(round2(b.y - 8), round2(b.y + b.h + 8));
+      }
+      if (penHit && ctx.dstBox) {
+        const b = ctx.dstBox;
         ex.push(round2(b.x - 8), round2(b.x + b.w + 8));
         ey.push(round2(b.y - 8), round2(b.y + b.h + 8));
       }
@@ -6372,9 +6412,9 @@ window.addEventListener('DOMContentLoaded', async () => {
     let best = null, bk = null;
     const consider = (list) => {
       for (const c of list) {
-        // 字典序：不穿盒 > 不穿其他边 > 方向合规 > 拟合分。方向让位给穿边——端点贴形
-        // 阶段常能把方向问题修回来（箭尖贴边/卡跨距），穿边却修不了（svg#46 汇聚兄弟边）
-        const k = [xBoxes(c).length ? 1 : 0, edgeHit && edgeHit(c) ? 1 : 0, endDir && dirOf(c) !== endDir ? 1 : 0, fitScore(c, pts)];
+        // 字典序：不穿盒（含不穿目标盒内部）> 不穿其他边 > 方向合规 > 拟合分。方向让位给
+        // 穿边——端点贴形阶段常能把方向问题修回来（箭尖贴边/卡跨距），穿边却修不了（svg#46）
+        const k = [(xBoxes(c).length || pen(c)) ? 1 : 0, edgeHit && edgeHit(c) ? 1 : 0, endDir && dirOf(c) !== endDir ? 1 : 0, fitScore(c, pts)];
         if (!bk || k[0] < bk[0] || (k[0] === bk[0] && (k[1] < bk[1] || (k[1] === bk[1] && (k[2] < bk[2] || (k[2] === bk[2] && k[3] < bk[3] - 1e-6)))))) { bk = k; best = c; }
       }
     };
@@ -6387,9 +6427,9 @@ window.addEventListener('DOMContentLoaded', async () => {
         consider(build(uniq([round2(ha[0] - 8), round2(ha[0] + 8), round2(hb2[0] - 8), round2(hb2[0] + 8)]), uniq([round2(ha[1] - 8), round2(ha[1] + 8), round2(hb2[1] - 8), round2(hb2[1] + 8)])));
       }
     }
-    // 仍不干净：dagre 原始路由干净（不穿盒/不穿边、方向合规）则保留原始斜线
+    // 仍不干净：dagre 原始路由干净（不穿盒/不穿目标盒内部/不穿边、方向合规）则保留原始斜线
     if (bk && (bk[0] > 0 || bk[1] > 0)) {
-      const origBad = xBoxes(pts).length > 0 || (endDir && dirOf(pts) !== endDir) || (edgeHit && edgeHit(pts));
+      const origBad = xBoxes(pts).length > 0 || pen(pts) || (endDir && dirOf(pts) !== endDir) || (edgeHit && edgeHit(pts));
       if (!origBad) return pts.slice();
     }
     return best;
@@ -6529,9 +6569,11 @@ window.addEventListener('DOMContentLoaded', async () => {
       if (dstId) {
         xBoxes = crossBoxesOf(boxes, srcId, dstId);
         xEdge = mkEdgeHit(svg, selfE);
-        ctx = { boxes, srcId, dstId, edgeHit: xEdge };
         tBox = boxes[dstId];
         dstG = svg.querySelector('g.node[id^="flowchart-' + dstId + '-"]');
+        // 矩形族目标才做穿透检查（polygon 目标斜边端点本在包围盒内，恒误判）
+        const rectFamDst = dstG && !dstG.querySelector('polygon');
+        ctx = { boxes, srcId, dstId, edgeHit: xEdge, pen: rectFamDst ? penInto(tBox) : null, dstBox: tBox };
         const S0 = pts[0], E0 = pts[pts.length - 1];
         ds = [
           ['T', distToSeg(E0, [tBox.x, tBox.y], [tBox.x + tBox.w, tBox.y])],
@@ -6599,7 +6641,107 @@ window.addEventListener('DOMContentLoaded', async () => {
       }
       const tip = snapped[snapped.length - 1];
       const moved = Math.abs(tip[0] - E[0]) + Math.abs(tip[1] - E[1]);
-      if (moved <= 30 && (!xBoxes || !xBoxes(snapped).length) && !(xEdge && xEdge(snapped))) sp = snapped;
+      const pen = ctx && ctx.pen ? ctx.pen : () => false;
+      if (moved <= 30 && !pen(snapped) && (!xBoxes || !xBoxes(snapped).length) && !(xEdge && xEdge(snapped))) sp = snapped;
+    }
+    // ⑥ 贴缘/近距修饰（美观，最后做，改后穿盒/穿边/穿目标盒/方向改变均放弃）：
+    // a) 横段与其他节点顶/底边共线贴合（<2.5px 且横向重叠）时抬/降到盒外 8px——
+    //    SinSafetyBistCheck 图 P2-->D0 回边横段与 E2 顶边完全贴合，像从盒上碾过；
+    //    首/末段为保端点贴在盒边上用插拐平移（末段插拐不得改变入箭方向）。
+    //    ±8 常被兄弟边下垂段否决（T21-->END 抬升撞上 T31-->END 的下垂线）——按否决段
+    //    端点 y 再向外推 8px 爬梯（最多 3 级、总位移 ≤64px），直到干净或放弃。
+    // b) 竖段与其他边竖段平行间距 <12px 且纵向重叠时错开到 16px——否边下落（x=731.77）
+    //    与回边上行（x=739.77）隔 8px，两条线易看成一条。
+    if (ctx && sp.length >= 2) {
+      const pen = ctx.pen ? ctx.pen : () => false;
+      const clean = (cand) => !(xBoxes && xBoxes(cand).length) && !pen(cand) && !(xEdge && xEdge(cand));
+      for (let i = 0; i < sp.length - 1; i++) {
+        const a = sp[i], b = sp[i + 1];
+        if (Math.abs(a[1] - b[1]) >= 0.6) continue;
+        const x1 = Math.min(a[0], b[0]), x2 = Math.max(a[0], b[0]);
+        let yTry = null, up = true, hugId = null;
+        for (const id in ctx.boxes) {
+          if (id === ctx.srcId || id === ctx.dstId) continue;
+          const bx = ctx.boxes[id];
+          if (x2 < bx.x + 1 || x1 > bx.x + bx.w - 1) continue;
+          if (Math.abs(a[1] - bx.y) < 2.5) { yTry = round2(bx.y - 8); up = true; hugId = id; break; }
+          if (Math.abs(a[1] - (bx.y + bx.h)) < 2.5) { yTry = round2(bx.y + bx.h + 8); up = false; hugId = id; break; }
+        }
+        if (yTry === null) continue;
+        let applied = false;
+        for (let att = 0; att < 3 && Math.abs(yTry - a[1]) <= 64; att++) {
+          let cand = null;
+          if (i > 0 && i < sp.length - 2) { cand = sp.map((q) => [q[0], q[1]]); cand[i][1] = cand[i + 1][1] = yTry; }
+          else if (i === 0 && sp.length >= 3 && Math.abs(sp[1][0] - sp[2][0]) < 0.6)
+            cand = [sp[0], [sp[0][0], yTry], [sp[1][0], yTry], ...sp.slice(2)];
+          else if (i === sp.length - 2 && sp.length >= 3 && Math.abs(sp[i - 1][0] - sp[i][0]) < 0.6)
+            cand = [...sp.slice(0, i + 1), [sp[i][0], yTry], [sp[i + 1][0], yTry], sp[i + 1]];
+          if (!cand || dirOf(cand) !== dirOf(sp) || (xBoxes && xBoxes(cand).length) || pen(cand)) break;
+          const hit = xEdge && xEdge(cand);
+          if (!hit) { sp = cand; applied = true; break; }
+          // 爬梯：越过挡住它的段（其远侧端点再向外 8px）
+          yTry = round2(up ? Math.min(hit[0][1], hit[1][1]) - 8 : Math.max(hit[0][1], hit[1][1]) + 8);
+        }
+        // 退路B：竖移被邻边走廊封死（或末段竖移会改变入箭方向）时，改把相邻竖段
+        // 平移到贴缘盒的侧向空隙（盒缘外 8px），横段随之缩短到不再覆盖该盒——
+        // svg#0 文件包含图 c-->Callout_h 末段贴 Cfg_c 底边，竖移会把入箭方向
+        // 从 H 改成 V；把末段前的竖段左移到 Cfg_c 与 Callout_h 之间后贴缘消失。
+        // （首段情形如 P2-->D0 贴 E2 顶：竖段左移会横穿邻边横臂被 xEdge 否决，
+        //   属布局锁死，保持贴缘。）
+        if (!applied && hugId && (i === 0 || i === sp.length - 2)) {
+          const vb = ctx.boxes[hugId];
+          for (const side of [0, 1]) {
+            const newX = round2(side === 0 ? vb.x - 8 : vb.x + vb.w + 8);
+            let cand = null, hSeg = null;
+            if (i === 0 && sp.length >= 3 && Math.abs(sp[1][0] - sp[2][0]) < 0.6) {
+              if ((newX - sp[0][0]) * (sp[1][0] - sp[0][0]) <= 0 || Math.abs(newX - sp[0][0]) <= 8) continue; // 不反向/不塌缩
+              cand = [sp[0], [newX, sp[0][1]], [newX, sp[2][1]], ...sp.slice(3)];
+              hSeg = [cand[0], cand[1]];
+            } else if (i === sp.length - 2 && sp.length >= 3 && Math.abs(sp[i - 1][0] - sp[i][0]) < 0.6) {
+              if ((sp[i + 1][0] - newX) * (sp[i + 1][0] - sp[i][0]) <= 0 || Math.abs(sp[i + 1][0] - newX) <= 8) continue;
+              cand = [...sp.slice(0, i), [newX, sp[i - 1][1]], [newX, sp[i][1]], sp[i + 1]];
+              hSeg = [cand[cand.length - 2], cand[cand.length - 1]];
+            }
+            if (!cand || dirOf(cand) !== dirOf(sp) || !clean(cand)) continue;
+            // 新横段不得再贴任何盒缘（否则只是换了个盒子贴）
+            const hx1 = Math.min(hSeg[0][0], hSeg[1][0]), hx2 = Math.max(hSeg[0][0], hSeg[1][0]);
+            let rehug = false;
+            for (const id2 in ctx.boxes) {
+              if (id2 === ctx.srcId || id2 === ctx.dstId) continue;
+              const b2 = ctx.boxes[id2];
+              if (hx2 < b2.x + 1 || hx1 > b2.x + b2.w - 1) continue;
+              if (Math.abs(hSeg[0][1] - b2.y) < 2.5 || Math.abs(hSeg[0][1] - (b2.y + b2.h)) < 2.5) { rehug = true; break; }
+            }
+            if (rehug) continue;
+            sp = cand; applied = true; break;
+          }
+        }
+        if (applied) break;
+      }
+      // 竖段近距错开
+      for (let i = 0; i < sp.length - 1; i++) {
+        const a = sp[i], b = sp[i + 1];
+        if (Math.abs(a[0] - b[0]) >= 0.6) continue;
+        const y1 = Math.min(a[1], b[1]), y2 = Math.max(a[1], b[1]);
+        let nearX = null;
+        for (const e of routesOf(svg).list) {
+          if (e === selfE || e.invisible) continue;
+          for (let j = 0; j < e.pts.length - 1; j++) {
+            const q1 = e.pts[j], q2 = e.pts[j + 1];
+            if (Math.abs(q1[0] - q2[0]) >= 0.6) continue;
+            const dx = a[0] - q1[0];
+            if (Math.abs(dx) >= 12 || dx === 0) continue;
+            const oy = Math.min(y2, Math.max(q1[1], q2[1])) - Math.max(y1, Math.min(q1[1], q2[1]));
+            if (oy > 4) { nearX = round2(q1[0] + (dx > 0 ? 16 : -16)); break; }
+          }
+          if (nearX !== null) break;
+        }
+        if (nearX === null) continue;
+        // 仅动内部竖段：首/末段插拐会让横Stub滑在自己盒缘上（新的自贴缘），不值得
+        let cand = null;
+        if (i > 0 && i < sp.length - 2) { cand = sp.map((q) => [q[0], q[1]]); cand[i][0] = cand[i + 1][0] = nearX; }
+        if (cand && dirOf(cand) === dirOf(sp) && clean(cand)) { sp = cand; break; }
+      }
     }
     return sp;
   };

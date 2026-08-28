@@ -561,16 +561,24 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
   const shortName = (n: string) => n.startsWith(`${module}_`) ? n.slice(module.length + 1) : n;
   const wrapName = (n: string) => n.startsWith(`${module}_`) ? `${module}_<br/>${n.slice(module.length + 1)}` : n;
   // 提供的接口节点按列平铺（direction TB + 每列一条隐形竖链），列数随接口数自适应，避免单列过长
-  const ov: string[] = ['flowchart LR'];
+  // init 指令：本图单独收紧 rank/nodeSpacing——MOD 框内标题与成员、成员行间默认 61px 偏空（用户反馈）。
+  // 框内行距 = rankSpacing + 8（mermaid.min.js 已补丁，cluster 子图内层距原 +25 改 +8），
+  // 顶层横向（Caller→MOD→组节点）通道 = rankSpacing + 25，两方向由此解耦；
+  // rankSpacing 勿写 0（falsy 会被 mermaid 回退默认 50）
+  const ov: string[] = ['%%{init: {"flowchart": {"rankSpacing": 10, "nodeSpacing": 16}}}%%', 'flowchart LR'];
   ov.push('    Caller(["外部调用方<br/>（其他 FC / RTE / 集成代码）"])');
-  ov.push(`    subgraph MOD["${module} 提供的外部接口<br/>（${providedFunctions.length} 个）"]`);
+  // 标题做成框内透明节点（标题文字+横线分隔，与右侧 External 组节点同款），不用 subgraph
+  // 自带标题——subgraph 标题折成两行时 mermaid 只预留一行高度，第二行被首个成员节点遮挡
+  // （IoMcuAdc 总图「（4 个）」被 Init 节点盖住，用户截图反馈，要求像右侧一样横线分隔）
+  ov.push('    subgraph MOD[" "]');
   ov.push('        direction TB');
+  ov.push(`        MT["<b>${module}</b><br/><b>提供的外部接口</b>（${providedFunctions.length} 个）<br/>────────────"]`);
   const ovCols = providedFunctions.length <= 4 ? 1 : Math.ceil(providedFunctions.length / 4);
   const ovRows = Math.ceil(providedFunctions.length / Math.max(ovCols, 1));
   for (let c = 0; c < ovCols; c++) {
     const col = providedFunctions.slice(c * ovRows, (c + 1) * ovRows);
     if (col.length > 0) {
-      ov.push('        ' + col.map(f => `P${c * ovRows + col.indexOf(f)}("${wrapName(f.name)}")`).join(' ~~~ '));
+      ov.push('        MT ~~~ ' + col.map(f => `P${c * ovRows + col.indexOf(f)}("${wrapName(f.name)}")`).join(' ~~~ '));
     }
   }
   ov.push('    end');
@@ -595,6 +603,7 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
   if (providedFunctions.length > 0) ov.push(`    class ${providedFunctions.map((_, i) => 'P' + i).join(',')} provided`);
   [...ovGroups.keys()].forEach((_, gi) => ov.push(`    class G${gi} extgroup`));
   ov.push('    style MOD fill:#fbfcfd,stroke:#d0d7de,stroke-width:1px');
+  ov.push('    style MT fill:transparent,stroke:transparent,color:#1f2328');
 
   // ---------- 5.1 内部函数调用图（静态生成；按对外接口函数逐张拆分，每张一个工作项） ----------
   // 每张图 = 以某对外接口为根的调用树（内部函数逐层展开 + 命中的 Callout）；

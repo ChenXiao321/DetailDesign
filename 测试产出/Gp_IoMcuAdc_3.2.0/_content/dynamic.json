@@ -1,0 +1,36 @@
+{
+  "stateMachine": {
+    "name": "Gp_IoMcuAdc 初始化状态机",
+    "diagram": "stateDiagram-v2\n    [*] --> UNINITED : 上电（DET 缓冲区清零）\n    UNINITED --> INITED : Gp_IoMcuAdc_Init 成功\n    UNINITED --> INIT_FAILED : Init 中 SetupResultBuffer 返回 E_NOT_OK 或 CalloutInit 返回 FALSE\n    INIT_FAILED --> INITED : 再次调用 Gp_IoMcuAdc_Init 成功\n    INITED --> INITED : MainFunction 周期读取与 GetAdcSig 接口输出\n    note right of UNINITED : DEV_ERROR_DETECT 开启时\n    MainFunction 与 GetAdcSig 接口在入口检查\n    未初始化仅记录错误不处理\n    note right of INIT_FAILED : 可通过重新调用 Init 恢复",
+    "states": [
+      {
+        "name": "UNINITED",
+        "description": "未初始化状态，上电后 DET 缓冲区清零的初态；DEV_ERROR_DETECT 开启时 MainFunction 与各 GetAdcSig 接口在入口检查到该状态仅记录 UNINITED 错误，不做处理"
+      },
+      {
+        "name": "INITED",
+        "description": "初始化完成状态，Gp_IoMcuAdc_Init 成功（Adc_SetupResultBuffer 返回 E_OK 且 CalloutInit 返回 TRUE）后进入；MainFunction 周期读取各通道 ADC 原始值与诊断数据，GetAdcSig 接口正常输出"
+      },
+      {
+        "name": "INIT_FAILED",
+        "description": "初始化失败状态，Init 中 Adc_SetupResultBuffer 返回 E_NOT_OK 或 CalloutInit 返回 FALSE 时进入并记录 ERRSTU_INIT_FAILED；可通过重新调用 Init 恢复为 INITED"
+      }
+    ],
+    "transitions": [],
+    "diagramFormat": "mermaid"
+  },
+  "sequences": [
+    {
+      "name": "Initialization",
+      "diagram": "sequenceDiagram\n    actor ASW as EcuM/ASW\n    participant FC as Gp_IoMcuAdc\n    participant CO as Callout\n    participant MCAL as Adc（MCAL）\n    ASW->>FC: Gp_IoMcuAdc_Init()\n    FC->>CO: CalloutGetCoreId()\n    CO-->>FC: CoreId（0~5）\n    FC->>FC: 取本核配置与运行时地址\n    loop 每个通道（ChlNum_u8）\n        FC->>FC: 置初值 ADCRAW_INVALID/0/0/NO_ERR\n    end\n    loop 每个 ADC 组（SPEC_DEP_IF 为具体 MCAL 时）\n        FC->>MCAL: Adc_SetupResultBuffer（组，dummy 缓冲）\n        MCAL-->>FC: Ret_t\n        FC->>MCAL: Adc_EnableHardwareTrigger（组）\n    end\n    FC->>CO: CalloutInit(CoreId)\n    CO-->>FC: FuncCompl_b\n    alt Ret_t 为 E_NOT_OK 或 FuncCompl_b 为 FALSE（DEV_ERROR_DETECT 开启）\n        FC->>FC: DET 记录 INIT_FAILED，InitStu_t 置 INIT_FAILED\n    else 全部成功\n        FC->>FC: InitStu_t 置 INITED，RunCnt_u32 清 0\n    end",
+      "description": "Gp_IoMcuAdc initialization, include channel buffer initialization and MCAL ADC hardware trigger setup",
+      "diagramFormat": "mermaid"
+    },
+    {
+      "name": "Runtime",
+      "diagram": "sequenceDiagram\n    actor SCH as 周期任务\n    participant FC as Gp_IoMcuAdc\n    participant APP as ASW/应用\n    SCH->>FC: Gp_IoMcuAdc_MainFunction()\n    FC->>FC: 取本核配置与运行时地址\n    alt DEV_ERROR_DETECT 开启且未初始化\n        FC->>FC: DET 记录 UNINITED，直接返回\n    else 已初始化\n        loop 每个非直接读通道\n            FC->>FC: PollingCnt_u16 分频计数\n            opt 计数达到 PollingCntMax_u16\n                FC->>FC: GetAdcRaw（Callout 或结果地址，可查新数据位）\n                FC->>FC: GetDiag（Callout 或写 0）\n            end\n        end\n        FC->>FC: RunCnt_u32 加 1\n    end\n    APP->>FC: Gp_IoMcuAdc_GetAdcSigAdcRaw(Id_u16, AdcRaw_pu16)\n    FC->>FC: CheckInitStu 与 CheckArgIn（DEV_ERROR_DETECT 开启）\n    alt 直接读通道\n        FC->>FC: 即时 GetAdcRaw 后输出\n    else 周期读取通道\n        FC->>FC: 输出 MainFunction 缓冲值\n    end\n    FC-->>APP: E_OK 与 ADC 原始值\n    APP->>FC: Gp_IoMcuAdc_GetAdcSigDiag(Id_u16, Diag_pu32)\n    FC-->>APP: E_OK 与诊断数据",
+      "description": "Gp_IoMcuAdc runtime, include periodic MainFunction reading and AdcSig interface output",
+      "diagramFormat": "mermaid"
+    }
+  ]
+}

@@ -1252,6 +1252,42 @@ window.addEventListener('DOMContentLoaded', async () => {
       }
     }
     let sp = sp0 || ortho(endPts, endDir, ctx);
+    // 躺平进顶/底边救援：端点贴目标顶/底边（≤2.5px）、方向合规要求竖进，但所有竖进候选
+    // 都被穿盒/穿边否决时，正交化只能选出末段水平的躺平箭头（IoMcuAdc GetAdcRaw
+    // D3--否-->W2：C2 盒封死 x≤652 走廊、兄弟边 D4→W3 的横干线封死 x>601 走廊，竖进
+    // 数学上无解）。此时把端点平移到朝来路一侧的侧边中点横进（▶ 侧缘进，同侧向汇合
+    // 画法）；polygon 目标（平行四边形）按斜边实际位置求该 y 的边 x——直接钉 bbox
+    // 侧边会悬空（W2 bbox 左边 527 vs 斜边实际 538）。无干净横进路由则保留躺平原样。
+    if (sp && !sp0 && tBox && ds && endDir === 'V' && dirOf(sp) === 'H' &&
+        (ds[0][0] === 'T' || ds[0][0] === 'B') && ds[0][1] <= 2.5 && sp.length >= 2) {
+      const trunkX = sp[sp.length - 2][0];
+      const sideCh = trunkX < tBox.x ? 'L' : trunkX > tBox.x + tBox.w ? 'R' : null;
+      if (sideCh) {
+        const yMid = round2(tBox.y + tBox.h / 2);
+        let sideX = sideCh === 'L' ? tBox.x : tBox.x + tBox.w;
+        const poly = dstG ? dstG.querySelector('polygon') : null;
+        if (poly) {
+          const gm = (dstG.getAttribute('transform') || '').match(/translate\\(\\s*(-?[\\d.]+)[ ,]\\s*(-?[\\d.]+)\\s*\\)/);
+          const tm = (poly.getAttribute('transform') || '').match(/translate\\(\\s*(-?[\\d.]+)[ ,]\\s*(-?[\\d.]+)\\s*\\)/);
+          const ox = (gm ? +gm[1] : 0) + (tm ? +tm[1] : 0), oy = (gm ? +gm[2] : 0) + (tm ? +tm[2] : 0);
+          const vp = (poly.getAttribute('points') || '').trim().split(/\\s+/).map((q) => { const w = q.split(','); return [+w[0] + ox, +w[1] + oy]; });
+          const xs = [];
+          for (let i = 0; i < vp.length; i++) {
+            const a = vp[i], b = vp[(i + 1) % vp.length];
+            if (Math.abs(a[1] - b[1]) < 1e-6 || (a[1] - yMid) * (b[1] - yMid) > 0) continue;
+            xs.push(a[0] + (yMid - a[1]) * (b[0] - a[0]) / (b[1] - a[1]));
+          }
+          if (xs.length >= 2) sideX = round2(sideCh === 'L' ? Math.min.apply(null, xs) : Math.max.apply(null, xs));
+        }
+        const shifted = [...endPts.slice(0, -1), [sideX, yMid]];
+        const trySp = ortho(shifted, 'H', ctx);
+        if (trySp && dirOf(trySp) === 'H' && !xBoxes(trySp).length && !(ctx.pen && ctx.pen(trySp)) && !xEdge(trySp)) {
+          endPts = shifted;
+          endDir = 'H';
+          sp = trySp;
+        }
+      }
+    }
     // 端点贴形：贴边（≤12px）端点把箭头尖贴到盒边——dagre 按原始斜向求的交点在直角化后会
     // 悬空（D1-->END 尖浮在「结束」胶囊左肩外 6px，用户反馈"箭头和框离得远"）；进点坐标
     // 卡进盒跨距（胶囊 rx>0 留平直段；普通矩形也要卡——svg#0 横进箭尖曾悬在盒底边下 2px）。

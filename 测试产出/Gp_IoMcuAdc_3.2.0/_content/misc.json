@@ -1,0 +1,37 @@
+{
+  "configs": {
+    "GP_IOMCUADC_CORE0_ENABLE": "使能 Core0 上的模块实例。STD_ON 时编译 Core0 的运行时缓冲区（DET 缓冲区、AdcSig 缓冲区、AdcSigLocalImpl 缓冲区）并在 rtCont 中登记有效地址，Gp_IoMcuAdc 各接口可在 Core0 上调用；STD_OFF 时 rtCont 中 Core0 各项登记为空指针，该核上的调用将访问无效地址。当前配置为 STD_ON。与 GP_IOMCUADC_GRP_NUM_IN_CORE0、GP_IOMCUADC_SIG_NUM_IN_CORE0 配套使用。",
+    "GP_IOMCUADC_CORE1_ENABLE": "使能 Core1 上的模块实例，行为与 GP_IOMCUADC_CORE0_ENABLE 相同（STD_ON 编译该核缓冲区并登记地址，STD_OFF 登记空指针）。当前配置为 STD_OFF，Core1 无运行时缓冲区。",
+    "GP_IOMCUADC_CORE2_ENABLE": "使能 Core2 上的模块实例，行为与 GP_IOMCUADC_CORE0_ENABLE 相同。当前配置为 STD_OFF。",
+    "GP_IOMCUADC_CORE3_ENABLE": "使能 Core3 上的模块实例，行为与 GP_IOMCUADC_CORE0_ENABLE 相同。当前配置为 STD_OFF。",
+    "GP_IOMCUADC_CORE4_ENABLE": "使能 Core4 上的模块实例，行为与 GP_IOMCUADC_CORE0_ENABLE 相同。当前配置为 STD_OFF。",
+    "GP_IOMCUADC_CORE5_ENABLE": "使能 Core5 上的模块实例，行为与 GP_IOMCUADC_CORE0_ENABLE 相同。当前配置为 STD_OFF。",
+    "GP_IOMCUADC_GRP_NUM_IN_CORE0": "Core0 的 ADC 组数，决定该核配置中组配置表 GrpCfg_cpu32 的维度与 Init 中 MCAL 组初始化循环的上界。当前配置为 1。",
+    "GP_IOMCUADC_SIG_NUM_IN_CORE0": "Core0 的 ADC 信号（通道）数，决定该核 AdcSig 与 AdcSigLocalImpl 运行时缓冲区数组的维度，以及 Init/MainFunction 通道循环的上界 ChlNum_u8。当前配置为 1。",
+    "GP_IOMCUADC_GRP_NUM_IN_CORE1": "Core1 的 ADC 组数。当前配置为 0，表示 Core1 无 ADC 组。",
+    "GP_IOMCUADC_SIG_NUM_IN_CORE1": "Core1 的 ADC 信号数。当前配置为 0，该核缓冲区数组维度为 0。",
+    "GP_IOMCUADC_GRP_NUM_IN_CORE2": "Core2 的 ADC 组数。当前配置为 0。",
+    "GP_IOMCUADC_SIG_NUM_IN_CORE2": "Core2 的 ADC 信号数。当前配置为 0。",
+    "GP_IOMCUADC_GRP_NUM_IN_CORE3": "Core3 的 ADC 组数。当前配置为 0。",
+    "GP_IOMCUADC_SIG_NUM_IN_CORE3": "Core3 的 ADC 信号数。当前配置为 0。",
+    "GP_IOMCUADC_GRP_NUM_IN_CORE4": "Core4 的 ADC 组数。当前配置为 0。",
+    "GP_IOMCUADC_SIG_NUM_IN_CORE4": "Core4 的 ADC 信号数。当前配置为 0。",
+    "GP_IOMCUADC_GRP_NUM_IN_CORE5": "Core5 的 ADC 组数。当前配置为 0。",
+    "GP_IOMCUADC_SIG_NUM_IN_CORE5": "Core5 的 ADC 信号数。当前配置为 0。",
+    "GP_IOMCUADC_SIG_NUM": "全部核的 ADC 信号总数，是对外接口信号 ID 的取值上界（CheckArgIn 检查 Id_u16 小于本值），也是信号映射配置表 cfgAdcSigMapping 的维度。当前配置为 1，即仅信号 ID 0 合法。",
+    "GP_IOMCUADC_DEV_ERROR_DETECT": "开发错误检测（DET）总开关。STD_ON 时编译 DET 缓冲区与全部错误检查路径：CheckInitStu、CheckArgIn 两个内部函数参与编译，MainFunction 与各对外接口在入口执行初始化状态与入参检查，Init 记录初始化结果状态（INITED/INIT_FAILED）与运行计数；STD_OFF 时上述代码全部裁剪，接口不做任何入口检查。当前配置为 STD_ON。",
+    "GP_IOMCUADC_SPEC_DEP_IF_UNDEFINED": "GP_IOMCUADC_SPEC_DEP_IF 的候选取值常量（0），表示未指定依赖平台，本身不控制行为。",
+    "GP_IOMCUADC_SPEC_DEP_IF_AURIX2G_MCAL": "GP_IOMCUADC_SPEC_DEP_IF 的候选取值常量（1），表示依赖 AURIX 2G MCAL，本身不控制行为。",
+    "GP_IOMCUADC_SPEC_DEP_IF_AURIX3G_MCAL": "GP_IOMCUADC_SPEC_DEP_IF 的候选取值常量（2），表示依赖 AURIX 3G MCAL，本身不控制行为。",
+    "GP_IOMCUADC_SPEC_DEP_IF_TRAVEO2G_MCAL": "GP_IOMCUADC_SPEC_DEP_IF 的候选取值常量（3），表示依赖 TRAVEO 2G MCAL，本身不控制行为。",
+    "GP_IOMCUADC_SPEC_DEP_IF_STELLARPX_MCAL": "GP_IOMCUADC_SPEC_DEP_IF 的候选取值常量（4），表示依赖 STELLAR PX MCAL，本身不控制行为。",
+    "GP_IOMCUADC_SPEC_DEP_IF": "选择本模块依赖的 MCAL/微控制器平台，取值为上述 SPEC_DEP_IF 候选常量之一。配置为具体平台（AURIX2G/AURIX3G/TRAVEO2G/STELLARPX）时，Init 编译 MCAL 组初始化段（Adc_SetupResultBuffer 与 Adc_EnableHardwareTrigger），CheckAdcRawValidity 按平台检查新数据位（AURIX2G/TRAVEO2G 查 bit31、STELLARPX 查 bit19、AURIX3G 恒为有效）；配置为 UNDEFINED 时 MCAL 调用段不编译、有效性检查函数体为空（恒返回 FALSE）。当前配置为 UNDEFINED，集成时须改为实际目标平台。"
+  },
+  "callouts": {
+    "Gp_IoMcuAdc_CalloutGetCoreId": "集成方实现，返回当前核 ID。返回值必须合法（0~5），模块将其直接用作 cfgCont 与 rtCont 的核索引，不做校验。Gp_IoMcuAdc_Init、Gp_IoMcuAdc_MainFunction、Gp_IoMcuAdc_GetAdcSigDiag、Gp_IoMcuAdc_GetAdcSigAdcRaw 在入口处均调用它取得本核配置与运行时缓冲区。",
+    "Gp_IoMcuAdc_CalloutInit": "集成方实现的额外初始化钩子，返回完成标志（TRUE 表示成功）。Gp_IoMcuAdc_Init 在通道初值设置与 MCAL 组初始化之后调用；DEV_ERROR_DETECT 开启时返回 FALSE 将导致 DET 记录 IFID_INIT 与 ERRSTU_INIT_FAILED，InitStu_t 置 INIT_FAILED。",
+    "Gp_IoMcuAdc_CalloutGetAdcRaw": "集成方实现的 ADC 原始值获取函数，用于需要特殊处理的通道（信号配置 AdcRawCalloutFunc_b 为 TRUE）。按核 ID 与通道索引经输出参数返回 16 位 ADC 原始值，返回值表示是否完成（TRUE 成功）。Gp_IoMcuAdc_GetAdcRaw 调用它；返回 FALSE 时在 AdcSigErr_t 中置 CALLOUT_GET_ADCRAW_FAILED 位，成功时原始值写入本通道缓冲区。",
+    "Gp_IoMcuAdc_CalloutGetDiag": "集成方实现的诊断数据获取函数，用于需要特殊处理的通道（信号配置 DiagCalloutFunc_b 为 TRUE）。按核 ID 与通道索引经输出参数返回 32 位诊断数据，返回值表示是否完成（TRUE 成功）。Gp_IoMcuAdc_GetDiag 调用它；返回 FALSE 时在 AdcSigErr_t 中置 CALLOUT_GET_DIAG_FAILED 位，成功时诊断数据写入本通道缓冲区。"
+  },
+  "functionalDescription": "Gp_IoMcuAdc 是多核 ADC 信号驱动功能组件，运行在已使能的核上，为上层提供 ADC 原始值（AdcSigAdcRaw）与诊断数据（AdcSigDiag）两类信号接口。Gp_IoMcuAdc_Init 完成本核通道缓冲区初始化并经 MCAL 接口启动 ADC 硬件触发转换；Gp_IoMcuAdc_MainFunction 由周期任务调用，按每通道配置的分频计数（PollingCntMax_u16）周期读取各非直接读通道的 ADC 原始值与诊断数据存入运行时缓冲区。通道可配置为直接读（DirectlyRead_b），此类通道 MainFunction 不周期读取，由对外接口在被调用时即时读取，适用于等待并确认读回 ADC 等需要立即读取的应用。每通道的 ADC 原始值与诊断数据获取均可配置为 Callout 方式，由集成方实现特殊处理；ADC 原始值还可配置新数据位有效性检查，检查未通过时输出 ADCRAW_INVALID。模块按核隔离配置与运行时数据（最多 6 核），DEV_ERROR_DETECT 开启时提供初始化状态、入参范围与核一致性的开发错误检测。"
+}

@@ -38,14 +38,34 @@ const AUDIT = `(function(){
       }
       if(!dstId) return;
       const dstG=svg.querySelector('g.node[id^="flowchart-'+dstId+'-"]');
-      if(!dstG||dstG.querySelector('polygon')) return;  // 菱形/平行四边形 bbox 不贴形，不审计
+      if(!dstG) return;
       const t=map[dstId];
       const E=pts[pts.length-1], A=pts[pts.length-2];
       const dL=Math.abs(E[0]-t.x), dR=Math.abs(E[0]-(t.x+t.w));
       const dT=Math.abs(E[1]-t.y), dB=Math.abs(E[1]-(t.y+t.h));
-      if(Math.min(dL,dR,dT,dB)>12) return;  // 端点不贴盒不审计
       const dir=Math.abs(E[0]-A[0])>=Math.abs(E[1]-A[1])?'H':'V';
       const id=p.getAttribute('id');
+      const poly=dstG.querySelector('polygon');
+      if(poly){
+        // polygon 目标 bbox 不贴形，不做贴边不变量；但「横段躺平进真实水平顶/底边」要抓——
+        // 平行四边形顶/底边是水平边（该 y 有两个顶点），菱形顶/底是尖点（一个顶点）跳过。
+        // （IoMcuAdc GetAdcRaw D3--否-->W2 曾横段贴 W2 顶边躺平进入，bbox 不贴形漏审）
+        if(dir!=='H') return;
+        const gm=(dstG.getAttribute('transform')||'').match(/translate\\(\\s*(-?[\\d.]+)[ ,]\\s*(-?[\\d.]+)\\s*\\)/);
+        const tm=(poly.getAttribute('transform')||'').match(/translate\\(\\s*(-?[\\d.]+)[ ,]\\s*(-?[\\d.]+)\\s*\\)/);
+        const ox=(gm?+gm[1]:0)+(tm?+tm[1]:0), oy=(gm?+gm[2]:0)+(tm?+tm[2]:0);
+        const vp=(poly.getAttribute('points')||'').trim().split(/\\s+/).map((q)=>{const w=q.split(',');return [+w[0]+ox,+w[1]+oy];});
+        ['T','B'].forEach((which)=>{
+          const yy=which==='T'?t.y:t.y+t.h;
+          const ep=vp.filter((q)=>Math.abs(q[1]-yy)<0.6);
+          if(ep.length!==2) return;  // 菱形尖顶/尖底，无水平边
+          const x1=Math.min(ep[0][0],ep[1][0]), x2=Math.max(ep[0][0],ep[1][0]);
+          if(Math.abs(E[1]-yy)<=2.5&&E[0]>=x1-2&&E[0]<=x2+2)
+            out.push('svg#'+si+' '+id+' 横段躺平进'+(which==='T'?'顶':'底')+'边（polygon 目标）');
+        });
+        return;
+      }
+      if(Math.min(dL,dR,dT,dB)>12) return;  // 端点不贴盒不审计
       if(dir==='V'){
         if(Math.min(dT,dB)>2.5) out.push('svg#'+si+' '+id+' 竖进但箭尖未贴顶/底边 dy='+Math.min(dT,dB).toFixed(1));
         else if(E[0]<t.x-2||E[0]>t.x+t.w+2) out.push('svg#'+si+' '+id+' 竖进但箭尖横向超出盒跨距');

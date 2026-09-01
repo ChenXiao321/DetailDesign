@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>Gp_EcuStpShdn 详细设计工作项（Polarion 导入）</title>
+</head>
+<body>
+<h1>5.1 功能接口概览</h1>
+<h2>[Diagram] 功能接口总图</h2>
+<p align="center"><img src="figs/01_interfaceOverview.png" width="700" alt="功能接口总图"></p>
+<p><small>LLD-KEY: Gp_EcuStpShdn::5.1::interfaceOverview</small></p>
+<h2>[Diagram] Gp_EcuStpShdn_TrapRecov 调用图</h2>
+<p align="center"><img src="figs/02_callgraph_Gp_EcuStpShdn_TrapRecov.png" width="378" alt="Gp_EcuStpShdn_TrapRecov 调用图"></p>
+<p><small>LLD-KEY: Gp_EcuStpShdn::5.1::callgraph:Gp_EcuStpShdn_TrapRecov</small></p>
+<h2>[Diagram] Gp_EcuStpShdn_OsErrRecov 调用图</h2>
+<p align="center"><img src="figs/03_callgraph_Gp_EcuStpShdn_OsErrRecov.png" width="389" alt="Gp_EcuStpShdn_OsErrRecov 调用图"></p>
+<p><small>LLD-KEY: Gp_EcuStpShdn::5.1::callgraph:Gp_EcuStpShdn_OsErrRecov</small></p>
+<h2>[Diagram] Gp_EcuStpShdn_PwrShdnInShdnPhase 调用图</h2>
+<p align="center"><img src="figs/04_callgraph_Gp_EcuStpShdn_PwrShdnInShdnPhase.png" width="462" alt="Gp_EcuStpShdn_PwrShdnInShdnPhase 调用图"></p>
+<p><small>LLD-KEY: Gp_EcuStpShdn::5.1::callgraph:Gp_EcuStpShdn_PwrShdnInShdnPhase</small></p>
+<h2>[Diagram] Gp_EcuStpShdn_Startup 调用图</h2>
+<p align="center"><img src="figs/05_callgraph_Gp_EcuStpShdn_Startup.png" width="685" alt="Gp_EcuStpShdn_Startup 调用图"></p>
+<p><small>LLD-KEY: Gp_EcuStpShdn::5.1::callgraph:Gp_EcuStpShdn_Startup</small></p>
+<h2>[Diagram] Gp_EcuStpShdn_Mainfunction 调用图</h2>
+<p align="center"><img src="figs/06_callgraph_Gp_EcuStpShdn_Mainfunction.png" width="464" alt="Gp_EcuStpShdn_Mainfunction 调用图"></p>
+<p><small>LLD-KEY: Gp_EcuStpShdn::5.1::callgraph:Gp_EcuStpShdn_Mainfunction</small></p>
+<h2>[Diagram] 配置表函数指针引用 调用图</h2>
+<p align="center"><img src="figs/07_callgraph.png" width="517" alt="配置表函数指针引用 调用图"></p>
+<p><small>LLD-KEY: Gp_EcuStpShdn::5.1::callgraph:配置表函数指针引用</small></p>
+<h1>5.2.2.2 外部接口函数</h1>
+<h2>[Table] Gp_RstM 接口函数：Gp_RstM_GetLastRstTypeInfo</h2>
+<table>
+<tr><th>接口函数</th><td><code>Gp_RstM_GetLastRstTypeInfo</code></td></tr>
+<tr><th>语法</th><td><code>Gp_RstM_GetLastRstTypeInfo</code></td></tr>
+<tr><th>来源分组</th><td>Gp_RstM</td></tr>
+<tr><th>模块内调用者</th><td>Gp_EcuStpShdn_Startup</td></tr>
+<tr><th>说明</th><td>获取上次复位的类型信息（复位类型、复位 ID、复位核）</td></tr>
+</table>
+<p><small>LLD-KEY: Gp_EcuStpShdn::5.2.2.2::Gp_RstM_GetLastRstTypeInfo</small></p>
+<h2>[Table] Gp_RstM 接口函数：Gp_RstM_Init</h2>
+<table>
+<tr><th>接口函数</th><td><code>Gp_RstM_Init</code></td></tr>
+<tr><th>语法</th><td><code>Gp_RstM_Init</code></td></tr>
+<tr><th>来源分组</th><td>Gp_RstM</td></tr>
+<tr><th>模块内调用者</th><td>Gp_EcuStpShdn_Startup</td></tr>
+<tr><th>说明</th><td>复位管理器初始化</td></tr>
+</table>
+<p><small>LLD-KEY: Gp_EcuStpShdn::5.2.2.2::Gp_RstM_Init</small></p>
+<h2>[Table] Gp_RstM 接口函数：Gp_RstM_InitOne</h2>
+<table>
+<tr><th>接口函数</th><td><code>Gp_RstM_InitOne</code></td></tr>
+<tr><th>语法</th><td><code>Gp_RstM_InitOne</code></td></tr>
+<tr><th>来源分组</th><td>Gp_RstM</td></tr>
+<tr><th>模块内调用者</th><td>Gp_EcuStpShdn_Startup</td></tr>
+<tr><th>说明</th><td>复位管理器第一阶段初始化</td></tr>
+</table>
+<p><small>LLD-KEY: Gp_EcuStpShdn::5.2.2.2::Gp_RstM_InitOne</small></p>
+<h2>[Table] Gp_RstM 接口函数：Gp_RstM_InitTwo</h2>
+<table>
+<tr><th>接口函数</th><td><code>Gp_RstM_InitTwo</code></td></tr>
+<tr><th>语法</th><td><code>Gp_RstM_InitTwo</code></td></tr>
+<tr><th>来源分组</th><td>Gp_RstM</td></tr>
+<tr><th>模块内调用者</th><td>Gp_EcuStpShdn_Startup</td></tr>
+<tr><th>说明</th><td>复位管理器第二阶段初始化</td></tr>
+</table>
+<p><small>LLD-KEY: Gp_EcuStpShdn::5.2.2.2::Gp_RstM_InitTwo</small></p>
+<h2>[Table] Gp_TstApp 接口函数：Gp_TstApp_PreRunInit</h2>
+<table>
+<tr><th>接口函数</th><td><code>Gp_TstApp_PreRunInit</code></td></tr>
+<tr><th>语法</th><td><code>Gp_TstApp_PreRunInit</code></td></tr>
+<tr><th>来源分组</th><td>Gp_TstApp</td></tr>
+<tr><th>模块内调用者</th><td>Gp_EcuStpShdn_Startup</td></tr>
+<tr><th>说明</th><td>测试应用预运行初始化（安全功能）</td></tr>
+</table>
+<p><small>LLD-KEY: Gp_EcuStpShdn::5.2.2.2::Gp_TstApp_PreRunInit</small></p>
+<h2>[Table] Gp_TstApp 接口函数：Gp_TstApp_PreRunPhase</h2>
+<table>
+<tr><th>接口函数</th><td><code>Gp_TstApp_PreRunPhase</code></td></tr>
+<tr><th>语法</th><td><code>Gp_TstApp_PreRunPhase</code></td></tr>
+<tr><th>来源分组</th><td>Gp_TstApp</td></tr>
+<tr><th>模块内调用者</th><td>Gp_EcuStpShdn_Startup</td></tr>
+<tr><th>说明</th><td>测试应用预运行阶段执行（安全功能）</td></tr>
+</table>
+<p><small>LLD-KEY: Gp_EcuStpShdn::5.2.2.2::Gp_TstApp_PreRunPhase</small></p>
+<h2>[Table] Gp_TstApp 接口函数：Gp_TstApp_RunTimePhase</h2>
+<table>
+<tr><th>接口函数</th><td><code>Gp_TstApp_RunTimePhase</code></td></tr>
+<tr><th>语法</th><td><code>Gp_TstApp_RunTimePhase</code></td></tr>
+<tr><th>来源分组</th><td>Gp_TstApp</td></tr>
+<tr><th>模块内调用者</th><td>Gp_EcuStpShdn_Mainfunction</td></tr>
+<tr><th>说明</th><td>测试应用运行时阶段执行（安全功能）</td></tr>
+</table>
+<p><small>LLD-KEY: Gp_EcuStpShdn::5.2.2.2::Gp_TstApp_RunTimePhase</small></p>
+<h2>[Table] Gp_TstApp 接口函数：Gp_TstApp_SwitchToRunPhase</h2>
+<table>
+<tr><th>接口函数</th><td><code>Gp_TstApp_SwitchToRunPhase</code></td></tr>
+<tr><th>语法</th><td><code>Gp_TstApp_SwitchToRunPhase</code></td></tr>
+<tr><th>来源分组</th><td>Gp_TstApp</td></tr>
+<tr><th>模块内调用者</th><td>Gp_EcuStpShdn_MstPostInit</td></tr>
+<tr><th>说明</th><td>切换到运行阶段（安全功能）</td></tr>
+</table>
+<p><small>LLD-KEY: Gp_EcuStpShdn::5.2.2.2::Gp_TstApp_SwitchToRunPhase</small></p>
+<h1>5.2.3.2 对外接口函数</h1>
+<h2>[Function] Gp_EcuStpShdn_SetSafeState</h2>
+
+<div class="workitem" id="Gp_EcuStpShdn::Gp_EcuStpShdn_SetSafeState">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_SetSafeState</span>
+    <span class="wi-tag">工作项 · 5.2.3.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_SetSafeState</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_SetSafeState(void)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>void</td></tr>
+    <tr><td class="label">Description</td><td class="desc">设置主核本地缓冲区中的安全状态标志（SafeState_b = TRUE）。当系统经历多次非预期复位后，由 Gp_RstM 或 ASW 调用本接口请求进入安全状态。该标志在 Gp_EcuStpShdn_Startup 阶段二中被检查：一旦置位，程序在安全状态下初始化 SBC，并通过 Gp_EcuStpShdn_CalloutSafeState 进入安全状态处理；该标志同时在 Gp_EcuStpShdn_Mainfunction 中被检查，用于抑制 MCU 运行时测试。本函数无参数、无返回值。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/08_Gp_EcuStpShdn_SetSafeState.png" width="186" alt="Gp_EcuStpShdn_SetSafeState"></p>
+</td></tr>
+    <tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_EcuStpShdn_bufMstLocalImpl_ltst</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_EcuStpShdn.c:377-380</span>
+    <span>圈复杂度: 1</span>
+    <span>bodyHash: 1a0f22a68a314b11 · sigHash: ed66befbc2076a1d</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_EcuStpShdn::5.2.3.2::Gp_EcuStpShdn_SetSafeState</small></p>
+<h2>[Function] Gp_EcuStpShdn_SetTryPwrShdn</h2>
+
+<div class="workitem" id="Gp_EcuStpShdn::Gp_EcuStpShdn_SetTryPwrShdn">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_SetTryPwrShdn</span>
+    <span class="wi-tag">工作项 · 5.2.3.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_SetTryPwrShdn</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_SetTryPwrShdn(void)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>void</td></tr>
+    <tr><td class="label">Description</td><td class="desc">设置主核本地缓冲区中的尝试断电标志（TryPwrShdn_b = TRUE）。当检测到断电请求时由 Gp_RstM 调用本接口。该标志在 Gp_EcuStpShdn_Startup 阶段二中被检查：一旦置位，立即调用 Gp_EcuStpShdn_CalloutPwrShdnInStpPhase 执行启动阶段断电，程序不预期返回。本函数无参数、无返回值。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/09_Gp_EcuStpShdn_SetTryPwrShdn.png" width="198" alt="Gp_EcuStpShdn_SetTryPwrShdn"></p>
+</td></tr>
+    <tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_EcuStpShdn_bufMstLocalImpl_ltst</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_EcuStpShdn.c:393-396</span>
+    <span>圈复杂度: 1</span>
+    <span>bodyHash: a1b77face62e9bc7 · sigHash: a8a5783ab6e1c170</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_EcuStpShdn::5.2.3.2::Gp_EcuStpShdn_SetTryPwrShdn</small></p>
+<h2>[Function] Gp_EcuStpShdn_GetSafeState</h2>
+
+<div class="workitem" id="Gp_EcuStpShdn::Gp_EcuStpShdn_GetSafeState">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_GetSafeState</span>
+    <span class="wi-tag">工作项 · 5.2.3.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_GetSafeState</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>boolean Gp_EcuStpShdn_GetSafeState(void)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>boolean - TRUE/FASLE</td></tr>
+    <tr><td class="label">Description</td><td class="desc">返回主核本地缓冲区中的当前安全状态标志（SafeState_b）。本接口提供给 ASW，用于查询 ECU 是否已进入安全状态（例如多次非预期复位之后）。返回值：TRUE 表示安全状态标志已置位，否则返回 FALSE。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/10_Gp_EcuStpShdn_GetSafeState.png" width="134" alt="Gp_EcuStpShdn_GetSafeState"></p>
+</td></tr>
+    <tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_EcuStpShdn_bufMstLocalImpl_ltst</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_EcuStpShdn.c:409-416</span>
+    <span>圈复杂度: 1</span>
+    <span>bodyHash: ba1fa11f9c5c36c0 · sigHash: a92fd30ccf33a0f2</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_EcuStpShdn::5.2.3.2::Gp_EcuStpShdn_GetSafeState</small></p>
+<h2>[Function] Gp_EcuStpShdn_TrapRecov</h2>
+
+<div class="workitem" id="Gp_EcuStpShdn::Gp_EcuStpShdn_TrapRecov">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_TrapRecov</span>
+    <span class="wi-tag">工作项 · 5.2.3.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_TrapRecov</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_TrapRecov(uint8 OsStatus_u8)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td><code>OsStatus_u8</code><br><span class="muted">uint8; OS status</span></td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>void</td></tr>
+    <tr><td class="label">Description</td><td class="desc">Trap 恢复接口。将 OS 状态码（OsStatus_u8）透传给 Gp_EcuStpShdn_CalloutTrapRecov，具体的恢复行为由集成方在 Callout 函数中实现。本函数预期在系统发生 Trap 时由 Trap 处理程序调用。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/11_Gp_EcuStpShdn_TrapRecov.png" width="209" alt="Gp_EcuStpShdn_TrapRecov"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_EcuStpShdn_CalloutTrapRecov</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_EcuStpShdn.c:428-431</span>
+    <span>圈复杂度: 1</span>
+    <span>bodyHash: 5d99b560217eb2a8 · sigHash: 743c41963c7dafe3</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_EcuStpShdn::5.2.3.2::Gp_EcuStpShdn_TrapRecov</small></p>
+<h2>[Function] Gp_EcuStpShdn_OsErrRecov</h2>
+
+<div class="workitem" id="Gp_EcuStpShdn::Gp_EcuStpShdn_OsErrRecov">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_OsErrRecov</span>
+    <span class="wi-tag">工作项 · 5.2.3.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_OsErrRecov</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_OsErrRecov(uint8 OsStatus_u8)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td><code>OsStatus_u8</code><br><span class="muted">uint8; OS status</span></td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>void</td></tr>
+    <tr><td class="label">Description</td><td class="desc">OS 错误恢复接口。将 OS 状态码（OsStatus_u8）透传给 Gp_EcuStpShdn_CalloutOsErrRecov，具体的恢复行为由集成方在 Callout 函数中实现。本函数预期在 OS 发生错误时由 OS 错误钩子调用。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/12_Gp_EcuStpShdn_OsErrRecov.png" width="208" alt="Gp_EcuStpShdn_OsErrRecov"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_EcuStpShdn_CalloutOsErrRecov</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_EcuStpShdn.c:444-447</span>
+    <span>圈复杂度: 1</span>
+    <span>bodyHash: b49e151128dc0d3b · sigHash: 77a98bd0648e625a</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_EcuStpShdn::5.2.3.2::Gp_EcuStpShdn_OsErrRecov</small></p>
+<h2>[Function] Gp_EcuStpShdn_PwrShdnInShdnPhase</h2>
+
+<div class="workitem" id="Gp_EcuStpShdn::Gp_EcuStpShdn_PwrShdnInShdnPhase">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_PwrShdnInShdnPhase</span>
+    <span class="wi-tag">工作项 · 5.2.3.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_PwrShdnInShdnPhase</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_PwrShdnInShdnPhase(void)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>void</td></tr>
+    <tr><td class="label">Description</td><td class="desc">在关闭阶段调用 Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase，执行 ECU 断电序列。本函数仅允许 Core0 调用。无参数、无返回值。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/13_Gp_EcuStpShdn_PwrShdnInShdnPhase.png" width="212" alt="Gp_EcuStpShdn_PwrShdnInShdnPhase"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_EcuStpShdn.c:462-465</span>
+    <span>圈复杂度: 1</span>
+    <span>bodyHash: d397d8793c1185c6 · sigHash: 4be05919dd197aa6</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_EcuStpShdn::5.2.3.2::Gp_EcuStpShdn_PwrShdnInShdnPhase</small></p>
+<h2>[Function] Gp_EcuStpShdn_Startup</h2>
+
+<div class="workitem" id="Gp_EcuStpShdn::Gp_EcuStpShdn_Startup">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_Startup</span>
+    <span class="wi-tag">工作项 · 5.2.3.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_Startup</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_Startup(void)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>void</td></tr>
+    <tr><td class="label">Description</td><td class="desc">实现 ECU 多核启动序列，分三个阶段执行，主核（Core0）与从核之间通过屏障同步。阶段一：主核初始化运行时缓冲区并调用 Gp_EcuStpShdn_CalloutInitStageOneCore0，随后将阶段置为 STAGE_TWO；从核自旋等待直至进入 STAGE_TWO。阶段二：所有核执行 SafeTpack 预运行初始化与测试（安全功能使能时）；主核调用 Gp_RstM 初始化并读取上次复位信息，随后评估 TryPwrShdn 与 SafeState 标志——若 TryPwrShdn 置位则调用 Gp_EcuStpShdn_CalloutPwrShdnInStpPhase（不返回）；若 SafeState 置位则执行 Core0 初始化、安全状态下的 SBC 初始化并进入安全状态处理；否则依次执行 MCU 预运行测试检查、经从核运行时容器函数指针完成 Core0 初始化、主核后初始化与 SBC 初始化，然后将阶段置为 STAGE_THREE。阶段三：从核完成自身初始化并记录完成时间戳；非安全状态下检查初始化结果，失败经 Gp_EcuStpShdn_CalloutInitFailedHnd 上报。启动关键节点的时间戳记录在主核本地缓冲区中供观测。本函数在 EcuM DriverInitOne 阶段每核各调用一次。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/14_Gp_EcuStpShdn_Startup.png" width="700" alt="Gp_EcuStpShdn_Startup"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_EcuStpShdn_CalloutGetCoreId<br>Gp_EcuStpShdn_CalloutInitStageOneCore0<br>Gp_RstM_InitOne<br>GP_ECUSTPSHDN_NOP<br>Gp_TstApp_PreRunInit<br>Gp_TstApp_PreRunPhase<br>Gp_EcuStpShdn_CalloutGetSysTimeMs<br>Gp_RstM_InitTwo<br>Gp_RstM_Init<br>Gp_RstM_GetLastRstTypeInfo<br>Gp_EcuStpShdn_CalloutPwrShdnInStpPhase<br>(*)-&gt;StpStageTwo_pf<br>Gp_EcuStpShdn_CalloutSbcInitInSafeState<br>Gp_EcuStpShdn_CalloutSafeState<br>Gp_EcuStpShdn_MstProcMcuPreRunTest<br>Gp_EcuStpShdn_MstPostInit<br>Gp_EcuStpShdn_CalloutSbcInit<br>Gp_EcuStpShdn_CheckInitRslt<br>Gp_EcuStpShdn_CalloutInitFailedHnd</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_EcuStpShdn_rtSatCont_lcatst, Gp_EcuStpShdn_bufMstLocalImpl_ltst, Gp_EcuStpShdn_bufSatLocalImplCore0_ltst</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_EcuStpShdn.c:484-703</span>
+    <span>圈复杂度: 13</span>
+    <span>bodyHash: 53d2849904946644 · sigHash: 5392b5f3d2cbfb18</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_EcuStpShdn::5.2.3.2::Gp_EcuStpShdn_Startup</small></p>
+<h2>[Function] Gp_EcuStpShdn_Mainfunction</h2>
+
+<div class="workitem" id="Gp_EcuStpShdn::Gp_EcuStpShdn_Mainfunction">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_Mainfunction</span>
+    <span class="wi-tag">工作项 · 5.2.3.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_Mainfunction</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_Mainfunction(void)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>void</td></tr>
+    <tr><td class="label">Description</td><td class="desc">模块周期主函数，由需要执行 MCU 运行时测试的核循环调用。首次调用时，Core0 通过 Gp_EcuStpShdn_GetLastSatTimeStamp 计算并记录最后完成初始化的从核时间戳。若 TryPwrShdn 与 SafeState 标志均未置位，则执行 MCU 运行时测试（安全功能使能时经 Gp_TstApp_RunTimePhase）；随后 Core0 经 Gp_EcuStpShdn_CalloutChkMcuRunTimeTest 检查运行时测试结果，失败时调用 Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd。本函数无参数、无返回值。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/15_Gp_EcuStpShdn_Mainfunction.png" width="700" alt="Gp_EcuStpShdn_Mainfunction"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_EcuStpShdn_CalloutGetCoreId<br>Gp_EcuStpShdn_GetLastSatTimeStamp<br>Gp_TstApp_RunTimePhase<br>Gp_EcuStpShdn_CalloutChkMcuRunTimeTest<br>Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_EcuStpShdn_bufMstLocalImpl_ltst</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_EcuStpShdn.c:719-778</span>
+    <span>圈复杂度: 7</span>
+    <span>bodyHash: eccdafb5f930bb4c · sigHash: 13cda1b5a8925f33</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_EcuStpShdn::5.2.3.2::Gp_EcuStpShdn_Mainfunction</small></p>
+<h1>5.2.4.2 内部函数</h1>
+<h2>[Function] Gp_EcuStpShdn_CheckInitRslt</h2>
+
+<div class="workitem" id="Gp_EcuStpShdn::Gp_EcuStpShdn_CheckInitRslt">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CheckInitRslt</span>
+    <span class="wi-tag">工作项 · 5.2.4.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CheckInitRslt</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_CheckInitRslt(Gp_EcuStpShdn_SatLocalImplType* Impl_ptst)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td><code>Impl_ptst</code><br><span class="muted">volatile Gp_EcuStpShdn_SatLocalImplType*; pointer to satellite local implement</span></td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>void</td></tr>
+    <tr><td class="label">Description</td><td class="desc">汇总从核本地缓冲区的初始化检查结果。遍历 InitCheckRslt_t 结果数组，对值为 E_NOT_OK 的每一项，将 InitRsltAllBits_u32 中的对应位置 1，使调用方可按位识别所有失败的初始化步骤。仅在 GP_ECUSTPSHDN_SAFETY_ENABLE 为 STD_ON 时参与编译。由 Gp_EcuStpShdn_MstPostInit 及 Gp_EcuStpShdn_Startup（从核路径）调用。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/16_Gp_EcuStpShdn_CheckInitRslt.png" width="409" alt="Gp_EcuStpShdn_CheckInitRslt"></p>
+</td></tr>
+    <tr><td class="label">条件编译</td><td><code>GP_ECUSTPSHDN_SAFETY_ENABLE</code> 生效时参与编译</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_EcuStpShdn_MstPostInit, Gp_EcuStpShdn_Startup</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_EcuStpShdn.c:210-226</span>
+    <span>圈复杂度: 3</span>
+    <span>bodyHash: 5ffa5f6fe0660a15 · sigHash: b0bc4c148e212fec</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_EcuStpShdn::5.2.4.2::Gp_EcuStpShdn_CheckInitRslt</small></p>
+<h2>[Function] Gp_EcuStpShdn_MstProcMcuPreRunTest</h2>
+
+<div class="workitem" id="Gp_EcuStpShdn::Gp_EcuStpShdn_MstProcMcuPreRunTest">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_MstProcMcuPreRunTest</span>
+    <span class="wi-tag">工作项 · 5.2.4.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_MstProcMcuPreRunTest</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_MstProcMcuPreRunTest(void)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>void</td></tr>
+    <tr><td class="label">Description</td><td class="desc">在主核上检查 MCU 预运行测试结果。测试结果经 Gp_EcuStpShdn_CalloutChkMcuPreRunTest 查询并记录到主核本地缓冲区（McuSelfTest_t：SELFTEST_PASS 或 SELFTEST_FAIL）。失败时在 GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE 为 STD_ON 的条件下调用 Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd 执行失败处理。仅在 GP_ECUSTPSHDN_SAFETY_ENABLE 为 STD_ON 时参与编译。由 Gp_EcuStpShdn_Startup 在阶段二中调用。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/17_Gp_EcuStpShdn_MstProcMcuPreRunTest.png" width="433" alt="Gp_EcuStpShdn_MstProcMcuPreRunTest"></p>
+</td></tr>
+    <tr><td class="label">条件编译</td><td><code>GP_ECUSTPSHDN_SAFETY_ENABLE</code> 生效时参与编译</td></tr><tr><td class="label">调用</td><td class="muted small">Gp_EcuStpShdn_CalloutChkMcuPreRunTest<br>Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_EcuStpShdn_Startup</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_EcuStpShdn_bufMstLocalImpl_ltst</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_EcuStpShdn.c:239-255</span>
+    <span>圈复杂度: 2</span>
+    <span>bodyHash: c51461914a356e3c · sigHash: 217054d52168c174</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_EcuStpShdn::5.2.4.2::Gp_EcuStpShdn_MstProcMcuPreRunTest</small></p>
+<h2>[Function] Gp_EcuStpShdn_MstPostInit</h2>
+
+<div class="workitem" id="Gp_EcuStpShdn::Gp_EcuStpShdn_MstPostInit">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_MstPostInit</span>
+    <span class="wi-tag">工作项 · 5.2.4.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_MstPostInit</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_MstPostInit(void)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>void</td></tr>
+    <tr><td class="label">Description</td><td class="desc">Core0 初始化之后执行主核后初始化检查。首先经 Gp_EcuStpShdn_CheckInitRslt 汇总初始化结果，失败经 Gp_EcuStpShdn_CalloutInitFailedHnd 上报；随后将测试应用切换到运行阶段（Gp_TstApp_SwitchToRunPhase），并经 Gp_EcuStpShdn_CalloutChkSwtToRun 检查切换结果，失败时调用 Gp_EcuStpShdn_CalloutSwtToRunFailedHnd；最后经 Gp_EcuStpShdn_CalloutChkSbcTest 检查 SBC 自检结果并记录到主核本地缓冲区（SbcSelfTest_t），失败时调用 Gp_EcuStpShdn_CalloutSbcTestFailedHnd。仅在 GP_ECUSTPSHDN_SAFETY_ENABLE 为 STD_ON 时参与编译。由 Gp_EcuStpShdn_Startup 在阶段二中调用。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/18_Gp_EcuStpShdn_MstPostInit.png" width="416" alt="Gp_EcuStpShdn_MstPostInit"></p>
+</td></tr>
+    <tr><td class="label">条件编译</td><td><code>GP_ECUSTPSHDN_SAFETY_ENABLE</code> 生效时参与编译</td></tr><tr><td class="label">调用</td><td class="muted small">Gp_EcuStpShdn_CheckInitRslt<br>Gp_EcuStpShdn_CalloutInitFailedHnd<br>Gp_TstApp_SwitchToRunPhase<br>Gp_EcuStpShdn_CalloutChkSwtToRun<br>Gp_EcuStpShdn_CalloutSwtToRunFailedHnd<br>Gp_EcuStpShdn_CalloutChkSbcTest<br>Gp_EcuStpShdn_CalloutSbcTestFailedHnd</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_EcuStpShdn_Startup</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_EcuStpShdn_bufMstLocalImpl_ltst, Gp_EcuStpShdn_bufSatLocalImplCore0_ltst</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_EcuStpShdn.c:268-309</span>
+    <span>圈复杂度: 4</span>
+    <span>bodyHash: cd2eff8f25800b58 · sigHash: 44d53b9e8301da58</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_EcuStpShdn::5.2.4.2::Gp_EcuStpShdn_MstPostInit</small></p>
+<h2>[Function] Gp_EcuStpShdn_GetLastSatTimeStamp</h2>
+
+<div class="workitem" id="Gp_EcuStpShdn::Gp_EcuStpShdn_GetLastSatTimeStamp">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_GetLastSatTimeStamp</span>
+    <span class="wi-tag">工作项 · 5.2.4.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_GetLastSatTimeStamp</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>uint32 Gp_EcuStpShdn_GetLastSatTimeStamp(void)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>uint32 - maximum time stamp</td></tr>
+    <tr><td class="label">Description</td><td class="desc">计算所有激活从核中最大的初始化完成时间戳。主核时间戳不记录在从核缓冲区中，因此索引 0 按 0 处理。按 GP_ECUSTPSHDN_ACTIVE_CORE_NUM 遍历各激活从核，从对应从核本地缓冲区读取时间戳，返回最大值。由 Gp_EcuStpShdn_Mainfunction 在 Core0 上调用一次。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/19_Gp_EcuStpShdn_GetLastSatTimeStamp.png" width="549" alt="Gp_EcuStpShdn_GetLastSatTimeStamp"></p>
+</td></tr>
+    <tr><td class="label">被调用</td><td class="muted small">Gp_EcuStpShdn_Mainfunction</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_EcuStpShdn_bufSatLocalImplCore1_ltst, Gp_EcuStpShdn_bufSatLocalImplCore2_ltst, Gp_EcuStpShdn_bufSatLocalImplCore3_ltst, Gp_EcuStpShdn_bufSatLocalImplCore4_ltst, Gp_EcuStpShdn_bufSatLocalImplCore5_ltst</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_EcuStpShdn.c:322-364</span>
+    <span>圈复杂度: 3</span>
+    <span>bodyHash: 1194ad2d443579a4 · sigHash: d56189aa80256c12</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_EcuStpShdn::5.2.4.2::Gp_EcuStpShdn_GetLastSatTimeStamp</small></p>
+<h1>5.3.1 状态机</h1>
+<h2>[StateMachine] Gp_EcuStpShdn 启动阶段状态机</h2>
+<table><tr><th>状态</th><th>说明</th></tr><tr><td>UNDEF</td><td>未定义状态，上电复位后的初始状态，StpStage_t 初始值</td></tr><tr><td>STAGE_ONE</td><td>启动阶段一：master 完成必要的初始化（运行时缓冲区、阶段一 Callout），satellite 核自旋等待 master 置位 STAGE_TWO</td></tr><tr><td>STAGE_TWO</td><td>启动阶段二：所有核执行 SafeTpack PreRun 初始化与测试（安全使能时）；master 完成 RstM 初始化并获取复位信息，检查 TryPwrShdn/SafeState 标志并进入相应分支，正常路径完成 MCAL 初始化检查与 SBC 初始化</td></tr><tr><td>STAGE_THREE</td><td>启动阶段三：satellite 核完成自身初始化并记录时间戳；非安全状态时检查初始化结果，失败上报 CalloutInitFailedHnd</td></tr></table>
+<table><tr><th>从</th><th>到</th><th>触发</th><th>说明</th></tr><tr><td>UNDEF</td><td>STAGE_ONE</td><td>各核进入 Gp_EcuStpShdn_Startup</td><td>master 在阶段一初始化运行时缓冲区后将 StpStage_t 置为 STAGE_TWO</td></tr><tr><td>STAGE_ONE</td><td>STAGE_TWO</td><td>master 完成阶段一初始化</td><td>satellite 核通过自旋等待 StpStage_t == STAGE_TWO 实现屏障同步</td></tr><tr><td>STAGE_TWO</td><td>STAGE_THREE</td><td>master 完成阶段二全部处理</td><td>master 完成初始化检查后 StpStage_t 置为 STAGE_THREE，satellite 解除等待开始自身初始化</td></tr><tr><td>STAGE_TWO</td><td>[*]</td><td>TryPwrShdn_b == TRUE</td><td>调用 Gp_EcuStpShdn_CalloutPwrShdnInStpPhase，程序不再返回</td></tr><tr><td>STAGE_TWO</td><td>[*]</td><td>SafeState_b == TRUE</td><td>安全状态初始化（SBC 安全状态初始化）后进入 Gp_EcuStpShdn_CalloutSafeState</td></tr></table>
+<p align="center"><img src="figs/20_Gp_EcuStpShdn.png" width="700" alt="Gp_EcuStpShdn 启动阶段状态机"></p>
+<p><small>LLD-KEY: Gp_EcuStpShdn::5.3.1::Gp_EcuStpShdn_启动阶段状态机</small></p>
+<h1>5.3.2 序列图</h1>
+<h2>[Sequence] Gp_EcuStpShdn Initialization 序列图（主核 Core0）</h2>
+<p>Gp_EcuStpShdn_Startup 初始化序列（主核 Core0）：三阶段启动过程中主核侧的交互顺序</p>
+<p align="center"><img src="figs/21_Initialization_Core0.png" width="700" alt="Gp_EcuStpShdn Initialization 序列图（主核 Core0）"></p>
+<p><small>LLD-KEY: Gp_EcuStpShdn::5.3.2::Initialization（主核_Core0）</small></p>
+<h2>[Sequence] Gp_EcuStpShdn Initialization 序列图（从核 satellite）</h2>
+<p>Gp_EcuStpShdn_Startup 初始化序列（从核 satellite）：三阶段启动过程中从核侧的交互顺序，自旋等待与 master 屏障同步</p>
+<p align="center"><img src="figs/22_Initialization_satellite.png" width="700" alt="Gp_EcuStpShdn Initialization 序列图（从核 satellite）"></p>
+<p><small>LLD-KEY: Gp_EcuStpShdn::5.3.2::Initialization（从核_satellite）</small></p>
+<h2>[Sequence] Gp_EcuStpShdn Runtime 序列图（主核 Core0）</h2>
+<p>Gp_EcuStpShdn_Mainfunction 周期运行序列（主核 Core0）：含最后 satellite 初始化时间戳记录与 MCU 运行时测试结果检查</p>
+<p align="center"><img src="figs/23_Runtime_Core0.png" width="700" alt="Gp_EcuStpShdn Runtime 序列图（主核 Core0）"></p>
+<p><small>LLD-KEY: Gp_EcuStpShdn::5.3.2::Runtime（主核_Core0）</small></p>
+<h2>[Sequence] Gp_EcuStpShdn Runtime 序列图（从核 satellite）</h2>
+<p>Gp_EcuStpShdn_Mainfunction 周期运行序列（从核 satellite）：仅执行 MCU 运行时测试</p>
+<p align="center"><img src="figs/24_Runtime_satellite.png" width="700" alt="Gp_EcuStpShdn Runtime 序列图（从核 satellite）"></p>
+<p><small>LLD-KEY: Gp_EcuStpShdn::5.3.2::Runtime（从核_satellite）</small></p>
+<h1>6.2 Callout function</h1>
+<h2>[Function] Gp_EcuStpShdn_CalloutChkMcuPreRunTest</h2>
+<h5>6.2.1 <code>Gp_EcuStpShdn_CalloutChkMcuPreRunTest</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutChkMcuPreRunTest</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutChkMcuPreRunTest</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>boolean Gp_EcuStpShdn_CalloutChkMcuPreRunTest(void)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">检查 MCU 预运行测试结果。由 MstProcMcuPreRunTest 在启动第二阶段调用；集成方实现预运行测试结果的判定逻辑，确认测试是否通过。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_EcuStpShdn_MstProcMcuPreRunTest</td></tr>
+  </table>
+</div>
+<p><small>LLD-KEY: Gp_EcuStpShdn::6.2::Gp_EcuStpShdn_CalloutChkMcuPreRunTest</small></p>
+<h2>[Function] Gp_EcuStpShdn_CalloutChkMcuRunTimeTest</h2>
+<h5>6.2.2 <code>Gp_EcuStpShdn_CalloutChkMcuRunTimeTest</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutChkMcuRunTimeTest</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutChkMcuRunTimeTest</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>boolean Gp_EcuStpShdn_CalloutChkMcuRunTimeTest(void)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">检查 MCU 运行时测试结果。由 Mainfunction 在运行时周期调用；集成方实现运行时测试结果的判定逻辑。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_EcuStpShdn_Mainfunction</td></tr>
+  </table>
+</div>
+<p><small>LLD-KEY: Gp_EcuStpShdn::6.2::Gp_EcuStpShdn_CalloutChkMcuRunTimeTest</small></p>
+<h2>[Function] Gp_EcuStpShdn_CalloutChkSbcTest</h2>
+<h5>6.2.3 <code>Gp_EcuStpShdn_CalloutChkSbcTest</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutChkSbcTest</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutChkSbcTest</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>boolean Gp_EcuStpShdn_CalloutChkSbcTest(void)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">检查 SBC 自检结果。由 MstPostInit 在主核后初始化阶段调用；集成方实现 SBC 自检结果的判定逻辑。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_EcuStpShdn_MstPostInit</td></tr>
+  </table>
+</div>
+<p><small>LLD-KEY: Gp_EcuStpShdn::6.2::Gp_EcuStpShdn_CalloutChkSbcTest</small></p>
+<h2>[Function] Gp_EcuStpShdn_CalloutChkSwtToRun</h2>
+<h5>6.2.4 <code>Gp_EcuStpShdn_CalloutChkSwtToRun</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutChkSwtToRun</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutChkSwtToRun</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>boolean Gp_EcuStpShdn_CalloutChkSwtToRun(void)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">检查切换到运行阶段的结果。由 MstPostInit 调用；集成方实现切换结果的确认逻辑。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_EcuStpShdn_MstPostInit</td></tr>
+  </table>
+</div>
+<p><small>LLD-KEY: Gp_EcuStpShdn::6.2::Gp_EcuStpShdn_CalloutChkSwtToRun</small></p>
+<h2>[Function] Gp_EcuStpShdn_CalloutGetCoreId</h2>
+<h5>6.2.5 <code>Gp_EcuStpShdn_CalloutGetCoreId</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutGetCoreId</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutGetCoreId</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>uint32 Gp_EcuStpShdn_CalloutGetCoreId(void)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>uint32 - core ID</td></tr>
+    <tr><td class="label">Description</td><td class="desc">从底层驱动获取当前核 ID。集成方需保证返回的核 ID 有效、在配置中已使能，且可用作 0~5 的数组索引；Startup 与 Mainfunction 均依赖该值索引核本地缓冲区。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_EcuStpShdn_Startup, Gp_EcuStpShdn_Mainfunction</td></tr>
+  </table>
+</div>
+<p><small>LLD-KEY: Gp_EcuStpShdn::6.2::Gp_EcuStpShdn_CalloutGetCoreId</small></p>
+<h2>[Function] Gp_EcuStpShdn_CalloutGetSysTimeMs</h2>
+<h5>6.2.6 <code>Gp_EcuStpShdn_CalloutGetSysTimeMs</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutGetSysTimeMs</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutGetSysTimeMs</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>uint32 Gp_EcuStpShdn_CalloutGetSysTimeMs(void)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>uint32 - system time million second</td></tr>
+    <tr><td class="label">Description</td><td class="desc">获取系统毫秒级时间戳。由 Startup 调用，用于记录启动关键节点时间；集成方对接底层计时资源。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_EcuStpShdn_Startup</td></tr>
+  </table>
+</div>
+<p><small>LLD-KEY: Gp_EcuStpShdn::6.2::Gp_EcuStpShdn_CalloutGetSysTimeMs</small></p>
+<h2>[Function] Gp_EcuStpShdn_CalloutInitFailedHnd</h2>
+<h5>6.2.7 <code>Gp_EcuStpShdn_CalloutInitFailedHnd</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutInitFailedHnd</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutInitFailedHnd</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_CalloutInitFailedHnd(uint32 InitRslt_u32)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td><code>InitRslt_u32</code><br><span class="muted">uint32; initialization result</span></td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">初始化失败处理。当 Startup 第三阶段检测到初始化结果非零时调用；集成方实现失败后的处理策略（如错误记录、复位请求）。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_EcuStpShdn_MstPostInit, Gp_EcuStpShdn_Startup</td></tr>
+  </table>
+</div>
+<p><small>LLD-KEY: Gp_EcuStpShdn::6.2::Gp_EcuStpShdn_CalloutInitFailedHnd</small></p>
+<h2>[Function] Gp_EcuStpShdn_CalloutInitStageOneCore0</h2>
+<h5>6.2.8 <code>Gp_EcuStpShdn_CalloutInitStageOneCore0</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutInitStageOneCore0</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutInitStageOneCore0</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_CalloutInitStageOneCore0(Gp_EcuStpShdn_SatLocalImplType* Impl_ptst)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td><code>Impl_ptst</code><br><span class="muted">volatile Gp_EcuStpShdn_SatLocalImplType*; pointer to satellite local implement</span></td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">Core0 第一阶段初始化。由 Startup 在启动第一阶段调用；集成方实现 Core0 特有的早期初始化内容。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_EcuStpShdn_Startup</td></tr>
+  </table>
+</div>
+<p><small>LLD-KEY: Gp_EcuStpShdn::6.2::Gp_EcuStpShdn_CalloutInitStageOneCore0</small></p>
+<h2>[Function] Gp_EcuStpShdn_CalloutInitStageTwoCore0</h2>
+<h5>6.2.9 <code>Gp_EcuStpShdn_CalloutInitStageTwoCore0</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutInitStageTwoCore0</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutInitStageTwoCore0</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_CalloutInitStageTwoCore0(Gp_EcuStpShdn_SatLocalImplType* Impl_ptst)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td><code>Impl_ptst</code><br><span class="muted">volatile Gp_EcuStpShdn_SatLocalImplType*; pointer to satellite local implement</span></td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">Core0 第二阶段初始化。经 rtSatCont 配置表函数指针在启动第二/三阶段调用；集成方实现该核的第二阶段初始化内容。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">(rtSatCont 配置表函数指针引用)</td></tr>
+  </table>
+</div>
+<p><small>LLD-KEY: Gp_EcuStpShdn::6.2::Gp_EcuStpShdn_CalloutInitStageTwoCore0</small></p>
+<h2>[Function] Gp_EcuStpShdn_CalloutInitStageTwoCore1</h2>
+<h5>6.2.10 <code>Gp_EcuStpShdn_CalloutInitStageTwoCore1</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutInitStageTwoCore1</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutInitStageTwoCore1</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_CalloutInitStageTwoCore1(Gp_EcuStpShdn_SatLocalImplType* Impl_ptst)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td><code>Impl_ptst</code><br><span class="muted">volatile Gp_EcuStpShdn_SatLocalImplType*; pointer to satellite local implement</span></td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">Core1 第二阶段初始化。经 rtSatCont 配置表函数指针在启动第二/三阶段调用；集成方实现该核的第二阶段初始化内容。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">(rtSatCont 配置表函数指针引用)</td></tr>
+  </table>
+</div>
+<p><small>LLD-KEY: Gp_EcuStpShdn::6.2::Gp_EcuStpShdn_CalloutInitStageTwoCore1</small></p>
+<h2>[Function] Gp_EcuStpShdn_CalloutInitStageTwoCore2</h2>
+<h5>6.2.11 <code>Gp_EcuStpShdn_CalloutInitStageTwoCore2</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutInitStageTwoCore2</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutInitStageTwoCore2</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_CalloutInitStageTwoCore2(Gp_EcuStpShdn_SatLocalImplType* Impl_ptst)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td><code>Impl_ptst</code><br><span class="muted">volatile Gp_EcuStpShdn_SatLocalImplType*; pointer to satellite local implement</span></td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">Core2 第二阶段初始化。经 rtSatCont 配置表函数指针在启动第二/三阶段调用（需 ACTIVE_CORE_NUM &gt; 2 参与编译）；集成方实现该核的第二阶段初始化内容。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">(rtSatCont 配置表函数指针引用)</td></tr>
+  </table>
+</div>
+<p><small>LLD-KEY: Gp_EcuStpShdn::6.2::Gp_EcuStpShdn_CalloutInitStageTwoCore2</small></p>
+<h2>[Function] Gp_EcuStpShdn_CalloutInitStageTwoCore3</h2>
+<h5>6.2.12 <code>Gp_EcuStpShdn_CalloutInitStageTwoCore3</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutInitStageTwoCore3</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutInitStageTwoCore3</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_CalloutInitStageTwoCore3(Gp_EcuStpShdn_SatLocalImplType* Impl_ptst)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td><code>Impl_ptst</code><br><span class="muted">volatile Gp_EcuStpShdn_SatLocalImplType*; pointer to satellite local implement</span></td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">Core3 第二阶段初始化。经 rtSatCont 配置表函数指针在启动第二/三阶段调用（需 ACTIVE_CORE_NUM &gt; 3 参与编译）；集成方实现该核的第二阶段初始化内容。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">(rtSatCont 配置表函数指针引用)</td></tr>
+  </table>
+</div>
+<p><small>LLD-KEY: Gp_EcuStpShdn::6.2::Gp_EcuStpShdn_CalloutInitStageTwoCore3</small></p>
+<h2>[Function] Gp_EcuStpShdn_CalloutInitStageTwoCore4</h2>
+<h5>6.2.13 <code>Gp_EcuStpShdn_CalloutInitStageTwoCore4</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutInitStageTwoCore4</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutInitStageTwoCore4</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_CalloutInitStageTwoCore4(Gp_EcuStpShdn_SatLocalImplType* Impl_ptst)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td><code>Impl_ptst</code><br><span class="muted">volatile Gp_EcuStpShdn_SatLocalImplType*; pointer to satellite local implement</span></td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">Core4 第二阶段初始化。经 rtSatCont 配置表函数指针在启动第二/三阶段调用（需 ACTIVE_CORE_NUM &gt; 4 参与编译）；集成方实现该核的第二阶段初始化内容。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">(rtSatCont 配置表函数指针引用)</td></tr>
+  </table>
+</div>
+<p><small>LLD-KEY: Gp_EcuStpShdn::6.2::Gp_EcuStpShdn_CalloutInitStageTwoCore4</small></p>
+<h2>[Function] Gp_EcuStpShdn_CalloutInitStageTwoCore5</h2>
+<h5>6.2.14 <code>Gp_EcuStpShdn_CalloutInitStageTwoCore5</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutInitStageTwoCore5</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutInitStageTwoCore5</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_CalloutInitStageTwoCore5(Gp_EcuStpShdn_SatLocalImplType* Impl_ptst)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td><code>Impl_ptst</code><br><span class="muted">volatile Gp_EcuStpShdn_SatLocalImplType*; pointer to satellite local implement</span></td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">Core5 第二阶段初始化。经 rtSatCont 配置表函数指针在启动第二/三阶段调用（需 ACTIVE_CORE_NUM &gt; 5 参与编译）；集成方实现该核的第二阶段初始化内容。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">(rtSatCont 配置表函数指针引用)</td></tr>
+  </table>
+</div>
+<p><small>LLD-KEY: Gp_EcuStpShdn::6.2::Gp_EcuStpShdn_CalloutInitStageTwoCore5</small></p>
+<h2>[Function] Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd</h2>
+<h5>6.2.15 <code>Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd(void)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">MCU 预运行测试失败处理。由 MstProcMcuPreRunTest 调用（SAFETY_ACTION_ENABLE 使能时参与编译）；集成方实现失败后的安全动作。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_EcuStpShdn_MstProcMcuPreRunTest</td></tr>
+  </table>
+</div>
+<p><small>LLD-KEY: Gp_EcuStpShdn::6.2::Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd</small></p>
+<h2>[Function] Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd</h2>
+<h5>6.2.16 <code>Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd(void)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">MCU 运行时测试失败处理。由 Mainfunction 周期调用（SAFETY_ACTION_ENABLE 使能时参与编译）；集成方实现失败后的安全动作。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_EcuStpShdn_Mainfunction</td></tr>
+  </table>
+</div>
+<p><small>LLD-KEY: Gp_EcuStpShdn::6.2::Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd</small></p>
+<h2>[Function] Gp_EcuStpShdn_CalloutOsErrRecov</h2>
+<h5>6.2.17 <code>Gp_EcuStpShdn_CalloutOsErrRecov</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutOsErrRecov</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutOsErrRecov</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_CalloutOsErrRecov(uint8 OsStatus_u8)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td><code>OsStatus_u8</code><br><span class="muted">uint8; OS status</span></td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">OS 错误恢复。由 OsErrRecov 接口转发调用；集成方实现具体的 OS 错误恢复策略。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_EcuStpShdn_OsErrRecov</td></tr>
+  </table>
+</div>
+<p><small>LLD-KEY: Gp_EcuStpShdn::6.2::Gp_EcuStpShdn_CalloutOsErrRecov</small></p>
+<h2>[Function] Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase</h2>
+<h5>6.2.18 <code>Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase(void)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">关闭阶段的断电处理。由 PwrShdnInShdnPhase 调用；集成方执行项目具体的断电序列。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_EcuStpShdn_PwrShdnInShdnPhase</td></tr>
+  </table>
+</div>
+<p><small>LLD-KEY: Gp_EcuStpShdn::6.2::Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase</small></p>
+<h2>[Function] Gp_EcuStpShdn_CalloutPwrShdnInStpPhase</h2>
+<h5>6.2.19 <code>Gp_EcuStpShdn_CalloutPwrShdnInStpPhase</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutPwrShdnInStpPhase</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutPwrShdnInStpPhase</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_CalloutPwrShdnInStpPhase(void)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">启动阶段的断电处理。当 RstM 设置 TryPwrShdn 标志时由 Startup 调用；调用后程序不再返回，集成方执行断电序列。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_EcuStpShdn_Startup</td></tr>
+  </table>
+</div>
+<p><small>LLD-KEY: Gp_EcuStpShdn::6.2::Gp_EcuStpShdn_CalloutPwrShdnInStpPhase</small></p>
+<h2>[Function] Gp_EcuStpShdn_CalloutSafeState</h2>
+<h5>6.2.20 <code>Gp_EcuStpShdn_CalloutSafeState</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutSafeState</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutSafeState</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_CalloutSafeState(void)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">安全状态特殊处理。当进入安全状态标志置位时由 Startup 调用；集成方实现安全状态下的系统行为。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_EcuStpShdn_Startup</td></tr>
+  </table>
+</div>
+<p><small>LLD-KEY: Gp_EcuStpShdn::6.2::Gp_EcuStpShdn_CalloutSafeState</small></p>
+<h2>[Function] Gp_EcuStpShdn_CalloutSbcInit</h2>
+<h5>6.2.21 <code>Gp_EcuStpShdn_CalloutSbcInit</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutSbcInit</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutSbcInit</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_CalloutSbcInit(uint32* SbcInfo_pu32)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td><code>SbcInfo_pu32</code><br><span class="muted">uint32*; SBC information when system start up</span></td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">SBC 初始化。由 Startup 在主核后初始化阶段调用；集成方完成 SBC 初始化，并通过输出参数 SbcInfo_pu32 回写系统启动时的 SBC 信息。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_EcuStpShdn_Startup</td></tr>
+  </table>
+</div>
+<p><small>LLD-KEY: Gp_EcuStpShdn::6.2::Gp_EcuStpShdn_CalloutSbcInit</small></p>
+<h2>[Function] Gp_EcuStpShdn_CalloutSbcInitInSafeState</h2>
+<h5>6.2.22 <code>Gp_EcuStpShdn_CalloutSbcInitInSafeState</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutSbcInitInSafeState</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutSbcInitInSafeState</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_CalloutSbcInitInSafeState(uint32* SbcInfo_pu32)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td><code>SbcInfo_pu32</code><br><span class="muted">uint32*; SBC information when system start up</span></td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">安全状态下的 SBC 初始化。由 Startup 在安全状态分支调用；集成方完成 SBC 初始化，并通过输出参数 SbcInfo_pu32 回写 SBC 信息。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_EcuStpShdn_Startup</td></tr>
+  </table>
+</div>
+<p><small>LLD-KEY: Gp_EcuStpShdn::6.2::Gp_EcuStpShdn_CalloutSbcInitInSafeState</small></p>
+<h2>[Function] Gp_EcuStpShdn_CalloutSbcTestFailedHnd</h2>
+<h5>6.2.23 <code>Gp_EcuStpShdn_CalloutSbcTestFailedHnd</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutSbcTestFailedHnd</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutSbcTestFailedHnd</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_CalloutSbcTestFailedHnd(void)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">SBC 自检失败处理。由 MstPostInit 调用（SAFETY_ACTION_ENABLE 使能时参与编译）；集成方实现失败后的安全动作。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_EcuStpShdn_MstPostInit</td></tr>
+  </table>
+</div>
+<p><small>LLD-KEY: Gp_EcuStpShdn::6.2::Gp_EcuStpShdn_CalloutSbcTestFailedHnd</small></p>
+<h2>[Function] Gp_EcuStpShdn_CalloutSwtToRunFailedHnd</h2>
+<h5>6.2.24 <code>Gp_EcuStpShdn_CalloutSwtToRunFailedHnd</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutSwtToRunFailedHnd</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutSwtToRunFailedHnd</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_CalloutSwtToRunFailedHnd(void)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">切换运行阶段失败处理。由 MstPostInit 调用（SAFETY_ACTION_ENABLE 使能时参与编译）；集成方实现失败后的安全动作。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_EcuStpShdn_MstPostInit</td></tr>
+  </table>
+</div>
+<p><small>LLD-KEY: Gp_EcuStpShdn::6.2::Gp_EcuStpShdn_CalloutSwtToRunFailedHnd</small></p>
+<h2>[Function] Gp_EcuStpShdn_CalloutTrapRecov</h2>
+<h5>6.2.25 <code>Gp_EcuStpShdn_CalloutTrapRecov</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_EcuStpShdn_CalloutTrapRecov</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_EcuStpShdn_CalloutTrapRecov</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_EcuStpShdn_CalloutTrapRecov(uint8 OsStatus_u8)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td><code>OsStatus_u8</code><br><span class="muted">uint8; OS status</span></td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">Trap 恢复。由 TrapRecov 接口转发调用；集成方实现 Trap 发生后的恢复策略。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_EcuStpShdn_TrapRecov</td></tr>
+  </table>
+</div>
+<p><small>LLD-KEY: Gp_EcuStpShdn::6.2::Gp_EcuStpShdn_CalloutTrapRecov</small></p>
+</body>
+</html>

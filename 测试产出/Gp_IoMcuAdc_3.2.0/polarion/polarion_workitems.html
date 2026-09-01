@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>Gp_IoMcuAdc 详细设计工作项（Polarion 导入）</title>
+</head>
+<body>
+<h1>5.1 功能接口概览</h1>
+<h2>[Diagram] 功能接口总图</h2>
+<p align="center"><img src="figs/01_interfaceOverview.png" width="657" alt="功能接口总图"></p>
+<p><small>LLD-KEY: Gp_IoMcuAdc::5.1::interfaceOverview</small></p>
+<h2>[Diagram] Gp_IoMcuAdc_Init 调用图</h2>
+<p align="center"><img src="figs/02_callgraph_Gp_IoMcuAdc_Init.png" width="326" alt="Gp_IoMcuAdc_Init 调用图"></p>
+<p><small>LLD-KEY: Gp_IoMcuAdc::5.1::callgraph:Gp_IoMcuAdc_Init</small></p>
+<h2>[Diagram] Gp_IoMcuAdc_MainFunction 调用图</h2>
+<p align="center"><img src="figs/03_callgraph_Gp_IoMcuAdc_MainFunction.png" width="700" alt="Gp_IoMcuAdc_MainFunction 调用图"></p>
+<p><small>LLD-KEY: Gp_IoMcuAdc::5.1::callgraph:Gp_IoMcuAdc_MainFunction</small></p>
+<h2>[Diagram] Gp_IoMcuAdc_GetAdcSigDiag 调用图</h2>
+<p align="center"><img src="figs/04_callgraph_Gp_IoMcuAdc_GetAdcSigDiag.png" width="616" alt="Gp_IoMcuAdc_GetAdcSigDiag 调用图"></p>
+<p><small>LLD-KEY: Gp_IoMcuAdc::5.1::callgraph:Gp_IoMcuAdc_GetAdcSigDiag</small></p>
+<h2>[Diagram] Gp_IoMcuAdc_GetAdcSigAdcRaw 调用图</h2>
+<p align="center"><img src="figs/05_callgraph_Gp_IoMcuAdc_GetAdcSigAdcRaw.png" width="700" alt="Gp_IoMcuAdc_GetAdcSigAdcRaw 调用图"></p>
+<p><small>LLD-KEY: Gp_IoMcuAdc::5.1::callgraph:Gp_IoMcuAdc_GetAdcSigAdcRaw</small></p>
+<h1>5.2.2.2 外部接口函数</h1>
+<h2>[Table] External 接口函数：Adc_EnableHardwareTrigger</h2>
+<table>
+<tr><th>接口函数</th><td><code>Adc_EnableHardwareTrigger</code></td></tr>
+<tr><th>语法</th><td><code>Adc_EnableHardwareTrigger</code></td></tr>
+<tr><th>来源分组</th><td>External</td></tr>
+<tr><th>模块内调用者</th><td>Gp_IoMcuAdc_Init</td></tr>
+
+</table>
+<p><small>LLD-KEY: Gp_IoMcuAdc::5.2.2.2::Adc_EnableHardwareTrigger</small></p>
+<h2>[Table] External 接口函数：Adc_SetupResultBuffer</h2>
+<table>
+<tr><th>接口函数</th><td><code>Adc_SetupResultBuffer</code></td></tr>
+<tr><th>语法</th><td><code>Adc_SetupResultBuffer</code></td></tr>
+<tr><th>来源分组</th><td>External</td></tr>
+<tr><th>模块内调用者</th><td>Gp_IoMcuAdc_Init</td></tr>
+
+</table>
+<p><small>LLD-KEY: Gp_IoMcuAdc::5.2.2.2::Adc_SetupResultBuffer</small></p>
+<h1>5.2.3.2 对外接口函数</h1>
+<h2>[Function] Gp_IoMcuAdc_Init</h2>
+
+<div class="workitem" id="Gp_IoMcuAdc::Gp_IoMcuAdc_Init">
+  <div class="wi-header">
+    <span class="wi-title">Gp_IoMcuAdc_Init</span>
+    <span class="wi-tag">工作项 · 5.2.3.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_IoMcuAdc_Init</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_IoMcuAdc_Init(void)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>void</td></tr>
+    <tr><td class="label">Description</td><td class="desc">本函数完成 Gp_IoMcuAdc 的初始化。先经 CalloutGetCoreId 取得当前核 ID，据此从 cfgCont 与 rtCont 中取出本核的配置地址与运行时缓冲区地址；随后逐通道置初值（AdcRaw_u16 置 ADCRAW_INVALID、Diag_u32 置 0、PollingCnt_u16 置 0、AdcSigErr_t 置 NO_ERR）。当 GP_IOMCUADC_SPEC_DEP_IF 配置为具体 MCAL 平台时，逐 ADC 组调用 MCAL 接口：先 Adc_SetupResultBuffer 注册结果缓冲（以 AdcRaw_u16 字段作 dummy 缓冲，该调用不会真正填充，且必须先于 Adc_EnableHardwareTrigger 调用以避免 ADC 模块 DET 错误），再 Adc_EnableHardwareTrigger 使能硬件触发转换。最后调用 CalloutInit 完成集成方的额外初始化。DEV_ERROR_DETECT 开启时，若 Adc_SetupResultBuffer 返回 E_NOT_OK 或 CalloutInit 返回 FALSE，则在 DET 缓冲区记录 IFID_INIT 与 ERRSTU_INIT_FAILED 并将 InitStu_t 置 INIT_FAILED，否则置 INITED，同时将 RunCnt_u32 清 0。本函数应在已使能的核上、MCAL ADC 初始化完成之后调用。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/06_Gp_IoMcuAdc_Init.png" width="700" alt="Gp_IoMcuAdc_Init"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_IoMcuAdc_CalloutGetCoreId<br>Adc_SetupResultBuffer<br>Adc_EnableHardwareTrigger<br>Gp_IoMcuAdc_CalloutInit</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_IoMcuAdc_rtCont_lcatst</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_IoMcuAdc.c:618-696</span>
+    <span>圈复杂度: 5</span>
+    <span>bodyHash: 3211061a584d4957 · sigHash: 25e5a9b40750ee05</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_IoMcuAdc::5.2.3.2::Gp_IoMcuAdc_Init</small></p>
+<h2>[Function] Gp_IoMcuAdc_MainFunction</h2>
+
+<div class="workitem" id="Gp_IoMcuAdc::Gp_IoMcuAdc_MainFunction">
+  <div class="wi-header">
+    <span class="wi-title">Gp_IoMcuAdc_MainFunction</span>
+    <span class="wi-tag">工作项 · 5.2.3.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_IoMcuAdc_MainFunction</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_IoMcuAdc_MainFunction(void)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>void</td></tr>
+    <tr><td class="label">Description</td><td class="desc">本函数是 Gp_IoMcuAdc 的周期处理函数，由周期任务在 Init 完成后调用。先经 CalloutGetCoreId 取当前核 ID 并取本核配置与运行时缓冲区地址；DEV_ERROR_DETECT 开启时先经 CheckInitStu 检查初始化是否完成，未完成则记录未初始化错误并直接返回。随后逐通道处理：仅对 DirectlyRead_b 为 FALSE 的通道（避免与直接读取接口的读冲突）将 PollingCnt_u16 加 1，计数达到配置的 PollingCntMax_u16 时清 0，并依次调用 GetAdcRaw 读取 ADC 原始值、GetDiag 获取诊断数据存入运行时缓冲区——以此实现每个通道按配置周期对 MainFunction 调用周期的分频读取；DirectlyRead_b 为 TRUE 的通道与计数未到期的通道不做处理。DEV_ERROR_DETECT 开启时处理完成后将 RunCnt_u32 加 1。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/07_Gp_IoMcuAdc_MainFunction.png" width="700" alt="Gp_IoMcuAdc_MainFunction"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_IoMcuAdc_CalloutGetCoreId<br>Gp_IoMcuAdc_CheckInitStu<br>Gp_IoMcuAdc_GetAdcRaw<br>Gp_IoMcuAdc_GetDiag</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_IoMcuAdc_rtCont_lcatst</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_IoMcuAdc.c:715-782</span>
+    <span>圈复杂度: 5</span>
+    <span>bodyHash: 028c86198125bab3 · sigHash: 21341cddb157c391</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_IoMcuAdc::5.2.3.2::Gp_IoMcuAdc_MainFunction</small></p>
+<h2>[Function] Gp_IoMcuAdc_GetAdcSigDiag</h2>
+
+<div class="workitem" id="Gp_IoMcuAdc::Gp_IoMcuAdc_GetAdcSigDiag">
+  <div class="wi-header">
+    <span class="wi-title">Gp_IoMcuAdc_GetAdcSigDiag</span>
+    <span class="wi-tag">工作项 · 5.2.3.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_IoMcuAdc_GetAdcSigDiag</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>Std_ReturnType Gp_IoMcuAdc_GetAdcSigDiag(uint16 Id_u16, uint32* Diag_pu32)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td><code>Id_u16</code><br><span class="muted">uint16; signal ID 0~0xFFFF</span></td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td><code>Diag_pu32</code><br><span class="muted">uint32*; pointer to buffer of diagnostic data</span></td></tr>
+    <tr><td class="label">Return value</td><td>Std_ReturnType - E_OK/E_NOT_OK</td></tr>
+    <tr><td class="label">Description</td><td class="desc">本函数是对外接口，按信号 ID 提供诊断数据。先经 CalloutGetCoreId 取当前核 ID 并取本核配置与运行时缓冲区地址；DEV_ERROR_DETECT 开启时依次执行 CheckInitStu 与 CheckArgIn 两项检查（ID 在配置范围内、输出指针非空、信号 ID 属于当前核），两项检查逐一执行不因前一项报错而跳过，以覆盖全部错误状态记录。全部通过后按信号映射配置取得通道索引：该通道配置为 DirectlyRead_b 时调用 GetDiag 即时读取诊断数据（同时写入缓冲区供调试观察）后输出，否则直接输出 MainFunction 周期读取并存入缓冲区的诊断数据，返回 E_OK；任一检查未通过则返回 E_NOT_OK。本函数应在已使能的核上、Init 完成之后调用。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/08_Gp_IoMcuAdc_GetAdcSigDiag.png" width="503" alt="Gp_IoMcuAdc_GetAdcSigDiag"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_IoMcuAdc_CalloutGetCoreId<br>Gp_IoMcuAdc_CheckInitStu<br>Gp_IoMcuAdc_CheckArgIn<br>Gp_IoMcuAdc_GetDiag</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_IoMcuAdc_rtCont_lcatst</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_IoMcuAdc.c:801-866</span>
+    <span>圈复杂度: 3</span>
+    <span>bodyHash: 09f3af7a28f7d0eb · sigHash: 5865b104759080a2</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_IoMcuAdc::5.2.3.2::Gp_IoMcuAdc_GetAdcSigDiag</small></p>
+<h2>[Function] Gp_IoMcuAdc_GetAdcSigAdcRaw</h2>
+
+<div class="workitem" id="Gp_IoMcuAdc::Gp_IoMcuAdc_GetAdcSigAdcRaw">
+  <div class="wi-header">
+    <span class="wi-title">Gp_IoMcuAdc_GetAdcSigAdcRaw</span>
+    <span class="wi-tag">工作项 · 5.2.3.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_IoMcuAdc_GetAdcSigAdcRaw</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>Std_ReturnType Gp_IoMcuAdc_GetAdcSigAdcRaw(uint16 Id_u16, uint16* AdcRaw_pu16)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td><code>Id_u16</code><br><span class="muted">uint16; signal ID 0~0xFFFF</span></td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td><code>AdcRaw_pu16</code><br><span class="muted">uint16*; pointer to buffer of ADC raw</span></td></tr>
+    <tr><td class="label">Return value</td><td>Std_ReturnType - E_OK/E_NOT_OK</td></tr>
+    <tr><td class="label">Description</td><td class="desc">本函数是对外接口，按信号 ID 提供 ADC 原始值。先经 CalloutGetCoreId 取当前核 ID 并取本核配置与运行时缓冲区地址；DEV_ERROR_DETECT 开启时依次执行 CheckInitStu 与 CheckArgIn 两项检查（ID 在配置范围内、输出指针非空、信号 ID 属于当前核），两项检查逐一执行不因前一项报错而跳过，以覆盖全部错误状态记录。全部通过后按信号映射配置取得通道索引：该通道配置为 DirectlyRead_b 时调用 GetAdcRaw 即时读取 ADC 原始值（同时写入缓冲区供调试观察）后输出，否则直接输出 MainFunction 周期读取并存入缓冲区的 ADC 原始值，返回 E_OK；任一检查未通过则返回 E_NOT_OK。本函数应在已使能的核上、Init 完成之后调用。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/09_Gp_IoMcuAdc_GetAdcSigAdcRaw.png" width="503" alt="Gp_IoMcuAdc_GetAdcSigAdcRaw"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_IoMcuAdc_CalloutGetCoreId<br>Gp_IoMcuAdc_CheckInitStu<br>Gp_IoMcuAdc_CheckArgIn<br>Gp_IoMcuAdc_GetAdcRaw</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_IoMcuAdc_rtCont_lcatst</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_IoMcuAdc.c:885-950</span>
+    <span>圈复杂度: 3</span>
+    <span>bodyHash: debda6e2c5150613 · sigHash: c4913312b7b07550</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_IoMcuAdc::5.2.3.2::Gp_IoMcuAdc_GetAdcSigAdcRaw</small></p>
+<h1>5.2.4.2 内部函数</h1>
+<h2>[Function] Gp_IoMcuAdc_CheckInitStu</h2>
+
+<div class="workitem" id="Gp_IoMcuAdc::Gp_IoMcuAdc_CheckInitStu">
+  <div class="wi-header">
+    <span class="wi-title">Gp_IoMcuAdc_CheckInitStu</span>
+    <span class="wi-tag">工作项 · 5.2.4.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_IoMcuAdc_CheckInitStu</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>boolean Gp_IoMcuAdc_CheckInitStu(Gp_IoMcuAdc_IfIdType IfId_t, Gp_IoMcuAdc_RunTimeType* Rt_cptst)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td><code>IfId_t</code><br><span class="muted">Gp_IoMcuAdc_IfIdType; interface ID</span></td></tr><tr><td class="label"></td><td><code>Rt_cptst</code><br><span class="muted">const Gp_IoMcuAdc_RunTimeType*; pointer to FC runtime buffer</span></td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>boolean - TRUE/FALSE</td></tr>
+    <tr><td class="label">Description</td><td class="desc">本函数检查模块初始化状态，供各对外接口与 MainFunction 在入口处调用。DET 缓冲区中 InitStu_t 为 INITED 时返回 FALSE（无错误）；否则返回 TRUE，并在 DET 缓冲区记录接口 ID 与 ERRSTU_UNINITED 未初始化错误。DET 缓冲区只保留最新一条错误记录，已有记录会被覆盖，便于集成排错。本函数仅在 GP_IOMCUADC_DEV_ERROR_DETECT 等于 STD_ON 时参与编译。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/10_Gp_IoMcuAdc_CheckInitStu.png" width="411" alt="Gp_IoMcuAdc_CheckInitStu"></p>
+</td></tr>
+    <tr><td class="label">条件编译</td><td><code>GP_IOMCUADC_DEV_ERROR_DETECT</code> 生效时参与编译</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_IoMcuAdc_MainFunction, Gp_IoMcuAdc_GetAdcSigDiag, Gp_IoMcuAdc_GetAdcSigAdcRaw</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_IoMcuAdc.c:332-355</span>
+    <span>圈复杂度: 2</span>
+    <span>bodyHash: 78723b63952ee6d9 · sigHash: 28304dcd261e44a4</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_IoMcuAdc::5.2.4.2::Gp_IoMcuAdc_CheckInitStu</small></p>
+<h2>[Function] Gp_IoMcuAdc_CheckArgIn</h2>
+
+<div class="workitem" id="Gp_IoMcuAdc::Gp_IoMcuAdc_CheckArgIn">
+  <div class="wi-header">
+    <span class="wi-title">Gp_IoMcuAdc_CheckArgIn</span>
+    <span class="wi-tag">工作项 · 5.2.4.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_IoMcuAdc_CheckArgIn</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>boolean Gp_IoMcuAdc_CheckArgIn(Gp_IoMcuAdc_IfIdType IfId_t, Gp_IoMcuAdc_AdcSigMappingCfgType* SmCfg_cptst, Gp_IoMcuAdc_RunTimeType* Rt_cptst, uint32 ChkCoreId_u32, uint16 ChkId_u16, uint8* ChkArgIn_pu8)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td><code>IfId_t</code><br><span class="muted">Gp_IoMcuAdc_IfIdType; interface ID</span></td></tr><tr><td class="label"></td><td><code>SmCfg_cptst</code><br><span class="muted">const Gp_IoMcuAdc_AdcSigMappingCfgType*; pointer to FC signal mapping Cfg</span></td></tr><tr><td class="label"></td><td><code>Rt_cptst</code><br><span class="muted">const Gp_IoMcuAdc_RunTimeType*; pointer to FC runtime buffer</span></td></tr><tr><td class="label"></td><td><code>ChkCoreId_u32</code><br><span class="muted">uint32; core ID 0~5</span></td></tr><tr><td class="label"></td><td><code>ChkId_u16</code><br><span class="muted">uint16; signal ID 0~0xFFFF</span></td></tr><tr><td class="label"></td><td><code>ChkArgIn_pu8</code><br><span class="muted">uint8*; pointer to buffer of output argument</span></td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>boolean - TRUE/FALSE</td></tr>
+    <tr><td class="label">Description</td><td class="desc">本函数检查对外接口的入参有效性，供 GetAdcSigDiag 与 GetAdcSigAdcRaw 在入口处调用。信号 ID 小于配置信号总数 GP_IOMCUADC_SIG_NUM 且输出指针非空时，再检查该信号在映射配置中的核 ID 与当前核是否一致：一致则返回 FALSE（无错误），不一致则记录 ERRSTU_SIG_MAP_INCONSISTENT（信号不属于本核）并返回 TRUE；ID 越界或指针为空时记录 ERRSTU_INVALID_ARG 并返回 TRUE。错误记录含接口 ID，DET 缓冲区只保留最新一条。本函数仅在 GP_IOMCUADC_DEV_ERROR_DETECT 等于 STD_ON 时参与编译。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/11_Gp_IoMcuAdc_CheckArgIn.png" width="700" alt="Gp_IoMcuAdc_CheckArgIn"></p>
+</td></tr>
+    <tr><td class="label">条件编译</td><td><code>GP_IOMCUADC_DEV_ERROR_DETECT</code> 生效时参与编译</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_IoMcuAdc_GetAdcSigDiag, Gp_IoMcuAdc_GetAdcSigAdcRaw</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_IoMcuAdc.c:378-417</span>
+    <span>圈复杂度: 4</span>
+    <span>bodyHash: a6bb0f602f2f0faa · sigHash: 6629190aeeef8237</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_IoMcuAdc::5.2.4.2::Gp_IoMcuAdc_CheckArgIn</small></p>
+<h2>[Function] Gp_IoMcuAdc_GetDiag</h2>
+
+<div class="workitem" id="Gp_IoMcuAdc::Gp_IoMcuAdc_GetDiag">
+  <div class="wi-header">
+    <span class="wi-title">Gp_IoMcuAdc_GetDiag</span>
+    <span class="wi-tag">工作项 · 5.2.4.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_IoMcuAdc_GetDiag</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_IoMcuAdc_GetDiag(Gp_IoMcuAdc_CfgType* Cfg_cptst, Gp_IoMcuAdc_RunTimeType* Rt_cptst, uint32 CoreId_u32, uint8 ChlIdx_u8)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td><code>Cfg_cptst</code><br><span class="muted">const Gp_IoMcuAdc_CfgType*; pointer to FC Cfg</span></td></tr><tr><td class="label"></td><td><code>Rt_cptst</code><br><span class="muted">const Gp_IoMcuAdc_RunTimeType*; pointer to FC runtime buffer</span></td></tr><tr><td class="label"></td><td><code>CoreId_u32</code><br><span class="muted">uint32; core ID 0~5</span></td></tr><tr><td class="label"></td><td><code>ChlIdx_u8</code><br><span class="muted">uint8; channel index 0~255</span></td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>void</td></tr>
+    <tr><td class="label">Description</td><td class="desc">本函数是内部函数，获取单个通道的诊断数据，被 MainFunction 按配置周期调用，也被 GetAdcSigDiag 在直接读通道上即时调用。信号配置 DiagCalloutFunc_b 为 TRUE 时经 CalloutGetDiag 由集成方特殊处理：返回 FALSE 时在 AdcSigErr_t 中置 CALLOUT_GET_DIAG_FAILED 位，返回 TRUE 时将诊断数据写入本通道缓冲区；为 FALSE 时本版本无诊断功能，缓冲区直接写入 0——有诊断需求的集成方应配置 Callout 方式并在 Callout 函数中实现。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/12_Gp_IoMcuAdc_GetDiag.png" width="589" alt="Gp_IoMcuAdc_GetDiag"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_IoMcuAdc_CalloutGetDiag</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_IoMcuAdc_MainFunction, Gp_IoMcuAdc_GetAdcSigDiag</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_IoMcuAdc.c:438-470</span>
+    <span>圈复杂度: 3</span>
+    <span>bodyHash: 7b53813ee4bbdeec · sigHash: b910bca44987987f</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_IoMcuAdc::5.2.4.2::Gp_IoMcuAdc_GetDiag</small></p>
+<h2>[Function] Gp_IoMcuAdc_GetAdcRaw</h2>
+
+<div class="workitem" id="Gp_IoMcuAdc::Gp_IoMcuAdc_GetAdcRaw">
+  <div class="wi-header">
+    <span class="wi-title">Gp_IoMcuAdc_GetAdcRaw</span>
+    <span class="wi-tag">工作项 · 5.2.4.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_IoMcuAdc_GetAdcRaw</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_IoMcuAdc_GetAdcRaw(Gp_IoMcuAdc_CfgType* Cfg_cptst, Gp_IoMcuAdc_RunTimeType* Rt_cptst, uint32 CoreId_u32, uint8 ChlIdx_u8)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td><code>Cfg_cptst</code><br><span class="muted">const Gp_IoMcuAdc_CfgType*; pointer to FC Cfg</span></td></tr><tr><td class="label"></td><td><code>Rt_cptst</code><br><span class="muted">const Gp_IoMcuAdc_RunTimeType*; pointer to FC runtime buffer</span></td></tr><tr><td class="label"></td><td><code>CoreId_u32</code><br><span class="muted">uint32; core ID 0~5</span></td></tr><tr><td class="label"></td><td><code>ChlIdx_u8</code><br><span class="muted">uint8; channel index 0~255</span></td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>void</td></tr>
+    <tr><td class="label">Description</td><td class="desc">本函数是内部函数，获取单个通道的 ADC 原始值，被 MainFunction 按配置周期调用，也被 GetAdcSigAdcRaw 在直接读通道上即时调用。信号配置 AdcRawCalloutFunc_b 为 TRUE 时经 CalloutGetAdcRaw 由集成方特殊处理：返回 FALSE 时在 AdcSigErr_t 中置 CALLOUT_GET_ADCRAW_FAILED 位，返回 TRUE 时将原始值写入本通道缓冲区。否则从配置的结果地址 ResRegOrBuf_pu32 读取 32 位转换结果：AdcRawCheckValidity_b 为 TRUE 时经 CheckAdcRawValidity 检查新数据位，转换完成则取低 16 位写入缓冲区，未完成则写入 ADCRAW_INVALID（供需要等待并确认转换完成的特殊应用识别）；为 FALSE 时不做检查直接取低 16 位写入。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/13_Gp_IoMcuAdc_GetAdcRaw.png" width="700" alt="Gp_IoMcuAdc_GetAdcRaw"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_IoMcuAdc_CalloutGetAdcRaw<br>Gp_IoMcuAdc_CheckAdcRawValidity</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_IoMcuAdc_MainFunction, Gp_IoMcuAdc_GetAdcSigAdcRaw</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_IoMcuAdc.c:492-548</span>
+    <span>圈复杂度: 5</span>
+    <span>bodyHash: bc22576d65f60b36 · sigHash: ab4e13d2ef7e535a</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_IoMcuAdc::5.2.4.2::Gp_IoMcuAdc_GetAdcRaw</small></p>
+<h2>[Function] Gp_IoMcuAdc_CheckAdcRawValidity</h2>
+
+<div class="workitem" id="Gp_IoMcuAdc::Gp_IoMcuAdc_CheckAdcRawValidity">
+  <div class="wi-header">
+    <span class="wi-title">Gp_IoMcuAdc_CheckAdcRawValidity</span>
+    <span class="wi-tag">工作项 · 5.2.4.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_IoMcuAdc_CheckAdcRawValidity</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>boolean Gp_IoMcuAdc_CheckAdcRawValidity(uint32 AdcRes_u32)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td><code>AdcRes_u32</code><br><span class="muted">uint32; ADC result</span></td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>boolean - TRUE/FALSE</td></tr>
+    <tr><td class="label">Description</td><td class="desc">本函数检查 ADC 转换结果的新数据位（转换完成标志），有效返回 TRUE，否则返回 FALSE，被 GetAdcRaw 在配置检查有效性时调用。新数据位的位置依赖 GP_IOMCUADC_SPEC_DEP_IF 配置的微控制器：AURIX2G 与 TRAVEO2G 检查 bit31，STELLARPX 检查 bit19，AURIX3G 不做检查恒为有效；SPEC_DEP_IF 为 UNDEFINED 时函数体为空，保持初值 FALSE。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/14_Gp_IoMcuAdc_CheckAdcRawValidity.png" width="700" alt="Gp_IoMcuAdc_CheckAdcRawValidity"></p>
+</td></tr>
+    <tr><td class="label">被调用</td><td class="muted small">Gp_IoMcuAdc_GetAdcRaw</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_IoMcuAdc.c:564-602</span>
+    <span>圈复杂度: 3</span>
+    <span>bodyHash: d94aeb35170c1675 · sigHash: 08df6010779cba87</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_IoMcuAdc::5.2.4.2::Gp_IoMcuAdc_CheckAdcRawValidity</small></p>
+<h1>5.3.1 状态机</h1>
+<h2>[StateMachine] Gp_IoMcuAdc 初始化状态机</h2>
+<table><tr><th>状态</th><th>说明</th></tr><tr><td>UNINITED</td><td>未初始化状态，上电后 DET 缓冲区清零的初态；DEV_ERROR_DETECT 开启时 MainFunction 与各 GetAdcSig 接口在入口检查到该状态仅记录 UNINITED 错误，不做处理</td></tr><tr><td>INITED</td><td>初始化完成状态，Gp_IoMcuAdc_Init 成功（Adc_SetupResultBuffer 返回 E_OK 且 CalloutInit 返回 TRUE）后进入；MainFunction 周期读取各通道 ADC 原始值与诊断数据，GetAdcSig 接口正常输出</td></tr><tr><td>INIT_FAILED</td><td>初始化失败状态，Init 中 Adc_SetupResultBuffer 返回 E_NOT_OK 或 CalloutInit 返回 FALSE 时进入并记录 ERRSTU_INIT_FAILED；可通过重新调用 Init 恢复为 INITED</td></tr></table>
+<p align="center"><img src="figs/15_Gp_IoMcuAdc.png" width="700" alt="Gp_IoMcuAdc 初始化状态机"></p>
+<p><small>LLD-KEY: Gp_IoMcuAdc::5.3.1::Gp_IoMcuAdc_初始化状态机</small></p>
+<h1>5.3.2 序列图</h1>
+<h2>[Sequence] Initialization</h2>
+<p>Gp_IoMcuAdc initialization, include channel buffer initialization and MCAL ADC hardware trigger setup</p>
+<p align="center"><img src="figs/16_Initialization.png" width="700" alt="Initialization"></p>
+<p><small>LLD-KEY: Gp_IoMcuAdc::5.3.2::Initialization</small></p>
+<h2>[Sequence] Runtime</h2>
+<p>Gp_IoMcuAdc runtime, include periodic MainFunction reading and AdcSig interface output</p>
+<p align="center"><img src="figs/17_Runtime.png" width="700" alt="Runtime"></p>
+<p><small>LLD-KEY: Gp_IoMcuAdc::5.3.2::Runtime</small></p>
+<h1>6.2 Callout function</h1>
+<h2>[Function] Gp_IoMcuAdc_CalloutGetAdcRaw</h2>
+<h5>6.2.1 <code>Gp_IoMcuAdc_CalloutGetAdcRaw</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_IoMcuAdc_CalloutGetAdcRaw</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_IoMcuAdc_CalloutGetAdcRaw</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>boolean Gp_IoMcuAdc_CalloutGetAdcRaw(uint32 CoreId_u32, uint8 ChlIdx_u8, uint16* AdcRaw_pu16)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td><code>CoreId_u32</code><br><span class="muted">uint32; core ID 0~5</span></td></tr><tr><td class="label"></td><td><code>ChlIdx_u8</code><br><span class="muted">uint8; channel index 0~255</span></td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td><code>AdcRaw_pu16</code><br><span class="muted">uint16*; pointer to buffer of ADC raw</span></td></tr>
+    <tr><td class="label">Return value</td><td>boolean - TRUE/FALSE</td></tr>
+    <tr><td class="label">Description</td><td class="desc">集成方实现的 ADC 原始值获取函数，用于需要特殊处理的通道（信号配置 AdcRawCalloutFunc_b 为 TRUE）。按核 ID 与通道索引经输出参数返回 16 位 ADC 原始值，返回值表示是否完成（TRUE 成功）。Gp_IoMcuAdc_GetAdcRaw 调用它；返回 FALSE 时在 AdcSigErr_t 中置 CALLOUT_GET_ADCRAW_FAILED 位，成功时原始值写入本通道缓冲区。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_IoMcuAdc_GetAdcRaw</td></tr>
+  </table>
+</div>
+<p><small>LLD-KEY: Gp_IoMcuAdc::6.2::Gp_IoMcuAdc_CalloutGetAdcRaw</small></p>
+<h2>[Function] Gp_IoMcuAdc_CalloutGetCoreId</h2>
+<h5>6.2.2 <code>Gp_IoMcuAdc_CalloutGetCoreId</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_IoMcuAdc_CalloutGetCoreId</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_IoMcuAdc_CalloutGetCoreId</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>uint32 Gp_IoMcuAdc_CalloutGetCoreId(void)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>uint32 - core ID</td></tr>
+    <tr><td class="label">Description</td><td class="desc">集成方实现，返回当前核 ID。返回值必须合法（0~5），模块将其直接用作 cfgCont 与 rtCont 的核索引，不做校验。Gp_IoMcuAdc_Init、Gp_IoMcuAdc_MainFunction、Gp_IoMcuAdc_GetAdcSigDiag、Gp_IoMcuAdc_GetAdcSigAdcRaw 在入口处均调用它取得本核配置与运行时缓冲区。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_IoMcuAdc_Init, Gp_IoMcuAdc_MainFunction, Gp_IoMcuAdc_GetAdcSigDiag, Gp_IoMcuAdc_GetAdcSigAdcRaw</td></tr>
+  </table>
+</div>
+<p><small>LLD-KEY: Gp_IoMcuAdc::6.2::Gp_IoMcuAdc_CalloutGetCoreId</small></p>
+<h2>[Function] Gp_IoMcuAdc_CalloutGetDiag</h2>
+<h5>6.2.3 <code>Gp_IoMcuAdc_CalloutGetDiag</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_IoMcuAdc_CalloutGetDiag</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_IoMcuAdc_CalloutGetDiag</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>boolean Gp_IoMcuAdc_CalloutGetDiag(uint32 CoreId_u32, uint8 ChlIdx_u8, uint32* Diag_pu32)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td><code>CoreId_u32</code><br><span class="muted">uint32; core ID 0~5</span></td></tr><tr><td class="label"></td><td><code>ChlIdx_u8</code><br><span class="muted">uint8; channel index 0~255</span></td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td><code>Diag_pu32</code><br><span class="muted">uint32*; pointer to buffer of diagnostic data</span></td></tr>
+    <tr><td class="label">Return value</td><td>boolean - TRUE/FALSE</td></tr>
+    <tr><td class="label">Description</td><td class="desc">集成方实现的诊断数据获取函数，用于需要特殊处理的通道（信号配置 DiagCalloutFunc_b 为 TRUE）。按核 ID 与通道索引经输出参数返回 32 位诊断数据，返回值表示是否完成（TRUE 成功）。Gp_IoMcuAdc_GetDiag 调用它；返回 FALSE 时在 AdcSigErr_t 中置 CALLOUT_GET_DIAG_FAILED 位，成功时诊断数据写入本通道缓冲区。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_IoMcuAdc_GetDiag</td></tr>
+  </table>
+</div>
+<p><small>LLD-KEY: Gp_IoMcuAdc::6.2::Gp_IoMcuAdc_CalloutGetDiag</small></p>
+<h2>[Function] Gp_IoMcuAdc_CalloutInit</h2>
+<h5>6.2.4 <code>Gp_IoMcuAdc_CalloutInit</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_IoMcuAdc_CalloutInit</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_IoMcuAdc_CalloutInit</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>boolean Gp_IoMcuAdc_CalloutInit(uint32 CoreId_u32)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td><code>CoreId_u32</code><br><span class="muted">uint32; core ID 0~5</span></td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>boolean - TRUE/FALSE</td></tr>
+    <tr><td class="label">Description</td><td class="desc">集成方实现的额外初始化钩子，返回完成标志（TRUE 表示成功）。Gp_IoMcuAdc_Init 在通道初值设置与 MCAL 组初始化之后调用；DEV_ERROR_DETECT 开启时返回 FALSE 将导致 DET 记录 IFID_INIT 与 ERRSTU_INIT_FAILED，InitStu_t 置 INIT_FAILED。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_IoMcuAdc_Init</td></tr>
+  </table>
+</div>
+<p><small>LLD-KEY: Gp_IoMcuAdc::6.2::Gp_IoMcuAdc_CalloutInit</small></p>
+</body>
+</html>

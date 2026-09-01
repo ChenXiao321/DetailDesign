@@ -89,6 +89,30 @@ node packages/cli/dist/index.js report 测试模块/Gp_EcuStpStdn --out 测试�
 Mermaid 可粘贴到支持 Mermaid 的工具（VS Code Mermaid 插件 / mermaid.live）预览；
 HTML 报告已内嵌 mermaid.min.js，直接打开即可离线渲染。
 
+### 第 5 步：Polarion 导入与 ID 回写
+
+两步走：本工具生成 Word round-trip 导入文件（内嵌流程图/调用图/状态机/序列图 PNG），
+在 Polarion 界面人工导入后，再用导出 csv 回写工作项 ID 形成闭环。REST 直连仅留骨架。
+
+```bash
+# 1. 生成导入文件（离线，需本机有 Edge 与 pandoc；产物在 <out>/polarion/，不触碰既有交付件）
+node packages/cli/dist/index.js polarion 测试模块/Gp_EcuStpStdn --out 测试产出/Gp_EcuStpStdn export
+
+# 2. Polarion 项目 → Work Items → Import → Word，选 polarion_workitems.docx，
+#    "Split document at" 设 Heading 2，按终端输出的类型映射表选工作项类型
+
+# 3. 导入后从 Polarion 导出工作项 csv（含 ID + Description 列），回写 ID
+node packages/cli/dist/index.js polarion 测试模块/Gp_EcuStpStdn --out 测试产出/Gp_EcuStpStdn map-ids --ids polarion_export.csv
+
+# 4. 重跑 report / export 刷新展示（卡片头部与 manifest 带 workItemId）
+```
+
+匹配规则：描述内锚点 `LLD-KEY: <module::chapter::name>` 精确匹配 > title 精确匹配；
+未匹配默认报错退出（不回写半吊子），确认后加 `--partial` 放行。
+Polarion 连接参数（baseUrl/projectId/token）仅 `push` 骨架用：环境变量 `LLD_POLARION_*`
+或 lld.config.json 的 `polarion` 节（参照 lld.config.example.json）。
+
+
 ## 迁移到目标环境运行（Qwen 实测 runbook）
 
 Qwen 服务器（10.7.29.98:4000）只在特定网段可达，实测需在能访问该地址的机器上跑。
@@ -134,7 +158,7 @@ node packages/cli/dist/index.js report 测试模块/Gp_EcuStpStdn --out 测试�
 | 静态分析层 | ✅ 完成（Gp_EcuStpShdn 验证通过） |
 | LLM 生成层 | ✅ pipeline 完成；示例内容见 `samples/claude_generated_content.json`（由 Claude 生成，用于评审效果） |
 | HTML 评审报告 | ✅ 章节完整（17 张 mermaid 图，全中文 + 「推断，待确认」标记） |
-| Polarion 同步层 | ⬜ 待做（需测试项目 projectId） |
+| Polarion 同步层 | ✅ 离线导入文件 + ID 回写完成（export → Word round-trip → map-ids）；REST 直连仅骨架（`push` 报未实现） |
 
 ## 目录结构
 

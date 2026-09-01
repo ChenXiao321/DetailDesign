@@ -3,17 +3,20 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import {
   analyzeModule, generateDesign, generateHtmlReport, resolveConfig, normalizeBaseUrl,
-  OpenAICompatibleProvider, MockProvider,
-  type InputFile, type ModuleModel, type LLMProvider, type LLMConfig,
+  OpenAICompatibleProvider, MockProvider, resolvePolarionConfig,
+  type InputFile, type ModuleModel, type LLMProvider, type LLMConfig, type PolarionConfig,
 } from '@lld/core';
+import { cmdPolarionExport } from './polarion/exportCmd.js';
+import { cmdPolarionMapIds } from './polarion/mapIdsCmd.js';
+import { cmdPolarionPush } from './polarion/pushCmd.js';
 
-/** lld.config.json（可选，放当前工作目录）：{ "llm": { baseUrl, apiKey, model, temperature, maxTokens, timeoutMs } } */
-function loadConfigFile(): Partial<LLMConfig> {
+/** lld.config.json（可选，放当前工作目录）：{ "llm": {...}, "polarion": {...} }（已 gitignore，勿提交真实 token） */
+interface LldConfigFile { llm?: Partial<LLMConfig>; polarion?: Partial<PolarionConfig> }
+function loadConfigFile(): LldConfigFile {
   const p = path.resolve('lld.config.json');
   if (!fs.existsSync(p)) return {};
   try {
-    const raw = JSON.parse(fs.readFileSync(p, 'utf-8')) as { llm?: Partial<LLMConfig> };
-    return raw.llm ?? {};
+    return JSON.parse(fs.readFileSync(p, 'utf-8')) as LldConfigFile;
   } catch (err) {
     console.error(`警告: lld.config.json 解析失败，忽略该文件（${(err as Error).message}）`);
     return {};
@@ -42,7 +45,7 @@ function loadOrAnalyzeModel(dir: string, modelPath: string): Promise<ModuleModel
 
 function makeProvider(mock: boolean): LLMProvider {
   if (mock) return new MockProvider();
-  const config = resolveConfig(loadConfigFile());
+  const config = resolveConfig(loadConfigFile().llm);
   if (!config.baseUrl) {
     console.error('未配置 LLM 地址。设置环境变量 LLD_LLM_BASE_URL（如 http://server:8000/v1），'
       + '或在当前目录建 lld.config.json（{"llm":{"baseUrl":"..."}}），或使用 --mock 离线预览');
@@ -53,7 +56,7 @@ function makeProvider(mock: boolean): LLMProvider {
 
 /** 连通性自检：GET /models + 一次最小 chat 调用，验证目标环境能否跑通 */
 async function cmdPing(): Promise<void> {
-  const config = resolveConfig(loadConfigFile());
+  const config = resolveConfig(loadConfigFile().llm);
   if (!config.baseUrl) {
     console.error('未配置 LLM 地址（LLD_LLM_BASE_URL 或 lld.config.json）');
     process.exit(1);
@@ -184,11 +187,21 @@ async function cmdReport(outDir: string): Promise<void> {
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
   const command = args[0];
-  const positional = args.slice(1).filter(a => !a.startsWith('--'));
+  // 位置参数：剔除 --out/--only/--ids 及其值，剩下的才是命令参数
+  const flagsWithValue = new Set(['--out', '--only', '--ids']);
+  const positional: string[] = [];
+  for (let i = 1; i < args.length; i++) {
+    const a = args[i]!;
+    if (flagsWithValue.has(a)) { i++; continue; }
+    if (!a.startsWith('--')) positional.push(a);
+  }
   const mock = args.includes('--mock');
   const resume = args.includes('--resume');
+  const partial = args.includes('--partial');
   const onlyIdx = args.indexOf('--only');
   const only = onlyIdx >= 0 ? args[onlyIdx + 1]?.split(',') : undefined;
+  const idsIdx = args.indexOf('--ids');
+  const idsPath = idsIdx >= 0 && args[idsIdx + 1] ? path.resolve(args[idsIdx + 1]!) : undefined;
 
   const dir = positional[0] ? path.resolve(positional[0]) : '';
   // 产物目录：--out 指定；未指定时默认与模块目录相同（向后兼容）
@@ -214,6 +227,25 @@ async function main(): Promise<void> {
       if (!dir) break;
       await cmdReport(outDir);
       return;
+    case 'polarion': {
+      if (!dir) break;
+      const sub = positional[1];
+      const polarionCfg = resolvePolarionConfig(loadConfigFile().polarion);
+      if (sub === 'export') {
+        await cmdPolarionExport(outDir, polarionCfg);
+        return;
+      }
+      if (sub === 'map-ids') {
+        cmdPolarionMapIds(outDir, polarionCfg, idsPath, partial);
+        return;
+      }
+      if (sub === 'push') {
+        await cmdPolarionPush(outDir, polarionCfg);
+        return;
+      }
+      console.error(`未知 polarion 子动作: ${sub ?? '(空)'}（支持 export / map-ids / push）`);
+      process.exit(1);
+    }
   }
 
   console.error(`用法:
@@ -223,7 +255,13 @@ async function main(): Promise<void> {
                                         LLM 生成设计内容，产出 lld_design.json（增量落盘，中断可 --resume 续跑）
                                         --only flowcharts 仅重刷各函数流程图（可叠加函数名缩小范围），保留描述
   lld report <模块目录> [--out 产物目录]    生成 HTML 评审报告 lld_report.html
-  （不带 --out 时产物写在模块目录内；report 只需 --out 指向产物目录，模块目录仅作占位）
+  lld polarion <模块目录> [--out 产物目录] export
+                                        生成 Polarion Word 导入文件（<out>/polarion/polarion_workitems.docx + manifest csv + figs/）
+  lld polarion <模块目录> [--out 产物目录] map-ids --ids <Polarion导出csv> [--partial]
+                                        导入后回写 workItemId 到 lld_design.json（锚点 LLD-KEY 匹配 > title 匹配）
+  lld polarion <模块目录> [--out 产物目录] push
+                                        REST 直连推送（本期仅骨架：校验配置并打印，推送报未实现）
+  （不带 --out 时产物写在模块目录内；report/polarion 只需 --out 指向产物目录，模块目录仅作占位）
 LLM 配置: 环境变量 LLD_LLM_BASE_URL / LLD_LLM_API_KEY / LLD_LLM_MODEL / LLD_LLM_TIMEOUT_MS，
   或当前目录 lld.config.json（{"llm":{"baseUrl":"http://server:4000","model":"..."}}）；只给 host:port 时自动补 /v1`);
   process.exit(1);

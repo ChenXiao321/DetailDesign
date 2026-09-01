@@ -1,0 +1,1755 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>Gp_TLF35584 详细设计工作项（Polarion 导入）</title>
+</head>
+<body>
+<h1>5.1 功能接口概览</h1>
+<h2>[Diagram] 功能接口总图</h2>
+<p align="center"><img src="figs/01_interfaceOverview.png" width="700" alt="功能接口总图"></p>
+<p><small>LLD-KEY: Gp_TLF35584::5.1::interfaceOverview</small></p>
+<h2>[Diagram] Gp_TLF35584_Init 调用图</h2>
+<p align="center"><img src="figs/02_callgraph_Gp_TLF35584_Init.png" width="700" alt="Gp_TLF35584_Init 调用图"></p>
+<p><small>LLD-KEY: Gp_TLF35584::5.1::callgraph:Gp_TLF35584_Init</small></p>
+<h2>[Diagram] Gp_TLF35584_MainFunction 调用图</h2>
+<p align="center"><img src="figs/03_callgraph_Gp_TLF35584_MainFunction.png" width="700" alt="Gp_TLF35584_MainFunction 调用图"></p>
+<p><small>LLD-KEY: Gp_TLF35584::5.1::callgraph:Gp_TLF35584_MainFunction</small></p>
+<h2>[Diagram] Gp_TLF35584_Bist 调用图</h2>
+<p align="center"><img src="figs/04_callgraph_Gp_TLF35584_Bist.png" width="700" alt="Gp_TLF35584_Bist 调用图"></p>
+<p><small>LLD-KEY: Gp_TLF35584::5.1::callgraph:Gp_TLF35584_Bist</small></p>
+<h2>[Diagram] Gp_TLF35584_SetDevMpsMode 调用图</h2>
+<p align="center"><img src="figs/05_callgraph_Gp_TLF35584_SetDevMpsMode.png" width="430" alt="Gp_TLF35584_SetDevMpsMode 调用图"></p>
+<p><small>LLD-KEY: Gp_TLF35584::5.1::callgraph:Gp_TLF35584_SetDevMpsMode</small></p>
+<h2>[Diagram] Gp_TLF35584_UnlockSeq 调用图</h2>
+<p align="center"><img src="figs/06_callgraph_Gp_TLF35584_UnlockSeq.png" width="624" alt="Gp_TLF35584_UnlockSeq 调用图"></p>
+<p><small>LLD-KEY: Gp_TLF35584::5.1::callgraph:Gp_TLF35584_UnlockSeq</small></p>
+<h2>[Diagram] Gp_TLF35584_LockSeq 调用图</h2>
+<p align="center"><img src="figs/07_callgraph_Gp_TLF35584_LockSeq.png" width="611" alt="Gp_TLF35584_LockSeq 调用图"></p>
+<p><small>LLD-KEY: Gp_TLF35584::5.1::callgraph:Gp_TLF35584_LockSeq</small></p>
+<h2>[Diagram] Gp_TLF35584_SetWkUpTimer 调用图</h2>
+<p align="center"><img src="figs/08_callgraph_Gp_TLF35584_SetWkUpTimer.png" width="700" alt="Gp_TLF35584_SetWkUpTimer 调用图"></p>
+<p><small>LLD-KEY: Gp_TLF35584::5.1::callgraph:Gp_TLF35584_SetWkUpTimer</small></p>
+<h2>[Diagram] 配置表函数指针引用 调用图</h2>
+<p align="center"><img src="figs/09_callgraph.png" width="474" alt="配置表函数指针引用 调用图"></p>
+<p><small>LLD-KEY: Gp_TLF35584::5.1::callgraph:配置表函数指针引用</small></p>
+<h1>5.2.2.2 外部接口函数</h1>
+<h2>[Table] External 接口函数：Gp_TLF35584_CalloutEnableIntrrupt</h2>
+<table>
+<tr><th>接口函数</th><td><code>Gp_TLF35584_CalloutEnableIntrrupt</code></td></tr>
+<tr><th>语法</th><td><code>Gp_TLF35584_CalloutEnableIntrrupt</code></td></tr>
+<tr><th>来源分组</th><td>External</td></tr>
+<tr><th>模块内调用者</th><td>Gp_TLF35584_GetAllFaultRegister</td></tr>
+
+</table>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.2.2::Gp_TLF35584_CalloutEnableIntrrupt</small></p>
+<h2>[Table] External 接口函数：Smu_ActivateFSP</h2>
+<table>
+<tr><th>接口函数</th><td><code>Smu_ActivateFSP</code></td></tr>
+<tr><th>语法</th><td><code>Smu_ActivateFSP</code></td></tr>
+<tr><th>来源分组</th><td>External</td></tr>
+<tr><th>模块内调用者</th><td>Gp_TLF35584_Errpin_Bist</td></tr>
+
+</table>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.2.2::Smu_ActivateFSP</small></p>
+<h2>[Table] External 接口函数：Smu_ReleaseFSP</h2>
+<table>
+<tr><th>接口函数</th><td><code>Smu_ReleaseFSP</code></td></tr>
+<tr><th>语法</th><td><code>Smu_ReleaseFSP</code></td></tr>
+<tr><th>来源分组</th><td>External</td></tr>
+<tr><th>模块内调用者</th><td>Gp_TLF35584_Errpin_Bist</td></tr>
+
+</table>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.2.2::Smu_ReleaseFSP</small></p>
+<h2>[Table] Gp_TimeCal 接口函数：Gp_TimeCal_CaptureStart</h2>
+<table>
+<tr><th>接口函数</th><td><code>Gp_TimeCal_CaptureStart</code></td></tr>
+<tr><th>语法</th><td><code>Gp_TimeCal_CaptureStart</code></td></tr>
+<tr><th>来源分组</th><td>Gp_TimeCal</td></tr>
+<tr><th>模块内调用者</th><td>Gp_TLF35584_SinSafetyBistCheck, Gp_TLF35584_AllSafetyBistCheck</td></tr>
+
+</table>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.2.2::Gp_TimeCal_CaptureStart</small></p>
+<h2>[Table] Gp_TimeCal 接口函数：Gp_TimeCal_CaptureStop</h2>
+<table>
+<tr><th>接口函数</th><td><code>Gp_TimeCal_CaptureStop</code></td></tr>
+<tr><th>语法</th><td><code>Gp_TimeCal_CaptureStop</code></td></tr>
+<tr><th>来源分组</th><td>Gp_TimeCal</td></tr>
+<tr><th>模块内调用者</th><td>Gp_TLF35584_SinSafetyBistCheck, Gp_TLF35584_AllSafetyBistCheck</td></tr>
+
+</table>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.2.2::Gp_TimeCal_CaptureStop</small></p>
+<h1>5.2.3.2 对外接口函数</h1>
+<h2>[Function] Gp_TLF35584_Init</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_Init">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_Init</span>
+    <span class="wi-tag">工作项 · 5.2.3.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_Init</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_TLF35584_Init(void)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>void</td></tr>
+    <tr><td class="label">Description</td><td class="desc">本函数完成 TLF35584 的初始化，包括看门狗初始化、ERR 引脚初始化与电源寄存器初始化，并设置状态变量初值。若 BistFunctCalled_u8 为 FALSE（未调用过 BIST），先执行 PreInit 预初始化，并通过 GetWakeAndResetInfo 获取复位与唤醒信息。随后读取器件状态，若处于 NORMAL_STATE，则依次经 SetDevMpsMode 进入 MPS 测试模式、SetPorstMode、再回到 MPS 正常模式，以清除软复位未使器件回到 INIT 模式时残留的 WDG 错误计数。之后依次获取看门狗信息、服务 WWD 退出长开窗模式、配置寄存器前关闭 WDG 与 FSP、执行全部寄存器初始化，并再次读取器件状态。若最终器件状态为 INIT_STATE，则 InitStatus_u8 置 PASS 并清除 DriverErrPath_u32 的 INIT_ERR 位；否则置 FAILED、置位 INIT_ERR 并通过 CalloutDemReport 上报 REINIT_FAULT。最后 StateVar_u8 置 WAIT_STATE、WdgSwitch_b 置 FALSE，等待用户切换正常模式。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/10_Gp_TLF35584_Init.png" width="453" alt="Gp_TLF35584_Init"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_TLF35584_PreInit<br>Gp_TLF35584_GetWakeAndResetInfo<br>Gp_TLF35584_GetState<br>Gp_TLF35584_SetDevMpsMode<br>Gp_TLF35584_SetPorstMode<br>Gp_TLF35584_GetWdgInfo<br>Gp_TLF35584_WwdSpiService<br>Gp_TLF35584_DisableWdgFsp<br>Gp_TLF35584_InitRegCfg<br>Gp_TLF35584_CalloutDemReport</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_TLF35584_rtData_ltst</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:355-417</span>
+    <span>圈复杂度: 4</span>
+    <span>bodyHash: b9313a3e8b88c185 · sigHash: 579b9774fe4758b4</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.3.2::Gp_TLF35584_Init</small></p>
+<h2>[Function] Gp_TLF35584_MainFunction</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_MainFunction">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_MainFunction</span>
+    <span class="wi-tag">工作项 · 5.2.3.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_MainFunction</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_TLF35584_MainFunction(void)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Asynchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>void</td></tr>
+    <tr><td class="label">Description</td><td class="desc">本函数是 TLF35584 的主状态处理函数，由上层周期性调用，负责服务看门狗、获取看门狗信息并更新错误信息。每次调用先经 RtSetMode 异步设置器件模式，再读取并保存全部故障寄存器，然后按 StateVar_u8 分发到各状态分支。PREPARERUN_STATE 分支重新配置 WDG 寄存器并喂狗一次，经 SwitchToNormalMode 切换正常模式并延时确认：器件进入 NORMAL_STATE 则转入 RUN_STATE，否则重试，ReInitRetry_u8 达到 TRY_REINIT_MAX 后转入 ERROR_STATE。RUN_STATE 分支对 WdgTimeCnt_u16 计数，达到 SERVICE_WDG_TIME 时执行喂狗并首次清除 WDG 错误标志寄存器，未到时仅获取看门狗信息；其中喂狗方式由 GP_TLF35584_WDGM_ENABLE 条件编译二选一，ENABLE 时按 WdgSwitch_b 与 WdgMTrigCnt_u16 计数喂狗，DISABLE 时无条件喂狗。WAIT_STATE 与 ERROR_STATE 不做处理，default 将状态变量复位为 PREPARERUN_STATE。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/11_Gp_TLF35584_MainFunction.png" width="700" alt="Gp_TLF35584_MainFunction"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_TLF35584_RtSetMode<br>Gp_TLF35584_GetAllFaultRegister<br>Gp_TLF35584_RtWdgRegCfg<br>Gp_TLF35584_GetWdgInfo<br>Gp_TLF35584_WdgService<br>Gp_TLF35584_CalloutStmSwDalayNus<br>Gp_TLF35584_SwitchToNormalMode<br>Gp_TLF35584_GetState<br>Gp_TLF35584_ClearFlagReg</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_TLF35584_rtData_ltst</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:430-530</span>
+    <span>圈复杂度: 11</span>
+    <span>bodyHash: 2e80d6f390eec70a · sigHash: 2882292ade0730ec</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.3.2::Gp_TLF35584_MainFunction</small></p>
+<h2>[Function] Gp_TLF35584_SetWdgTriggerCondition</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_SetWdgTriggerCondition">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_SetWdgTriggerCondition</span>
+    <span class="wi-tag">工作项 · 5.2.3.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_SetWdgTriggerCondition</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_TLF35584_SetWdgTriggerCondition(uint16 TimeOut_u16)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>None</td></tr>
+    <tr><td class="label">Parameters(in)</td><td><code>TimeOut_u16</code></td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">本函数供用户在 MainFunction 之前调用，设置看门狗服务开关与触发计数。入参 TimeOut_u16 写入 WdgMTrigCnt_u16；当其大于 0 时将 WdgSwitch_b 置 TRUE 使能看门狗服务，为 0 时置 FALSE 停止看门狗服务。MainFunction 在 RUN_STATE 分支中依据这两个变量决定是否喂狗及剩余喂狗次数。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/12_Gp_TLF35584_SetWdgTriggerCondition.png" width="363" alt="Gp_TLF35584_SetWdgTriggerCondition"></p>
+</td></tr>
+    <tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_TLF35584_rtData_ltst</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:544-559</span>
+    <span>圈复杂度: 2</span>
+    <span>bodyHash: f1fe6d51d47afaae · sigHash: 324426628ed59f89</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.3.2::Gp_TLF35584_SetWdgTriggerCondition</small></p>
+<h2>[Function] Gp_TLF35584_GetDevSigModeIn</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_GetDevSigModeIn">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_GetDevSigModeIn</span>
+    <span class="wi-tag">工作项 · 5.2.3.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_GetDevSigModeIn</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>Std_ReturnType Gp_TLF35584_GetDevSigModeIn(uint16 Id_u16, uint8* DevMode_pu8)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Asynchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>None</td></tr>
+    <tr><td class="label">Parameters(in)</td><td><code>Id_u16</code></td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td><code>DevMode_pu8</code></td></tr>
+    <tr><td class="label">Return value</td><td>Std_ReturnType</td></tr>
+    <tr><td class="label">Description</td><td class="desc">本函数用于读取 TLF35584 的器件状态。入参 Id_u16 未使用，经宏置为未用参数。仅当输出指针 DevMode_pu8 非空时，将 DeviceState_u8 写入其所指地址并返回 E_OK，否则返回 E_NOT_OK。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/13_Gp_TLF35584_GetDevSigModeIn.png" width="326" alt="Gp_TLF35584_GetDevSigModeIn"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">GP_TLF35584_UNUSED_PARAMETER</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_TLF35584_rtData_ltst</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:572-588</span>
+    <span>圈复杂度: 2</span>
+    <span>bodyHash: 6d869ef8356d1eb1 · sigHash: b94b0a9e1c1ca94e</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.3.2::Gp_TLF35584_GetDevSigModeIn</small></p>
+<h2>[Function] Gp_TLF35584_SetDevSigModeOut</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_SetDevSigModeOut">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_SetDevSigModeOut</span>
+    <span class="wi-tag">工作项 · 5.2.3.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_SetDevSigModeOut</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>Std_ReturnType Gp_TLF35584_SetDevSigModeOut(uint16 Id_u16, uint8 DevMode_u8)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Asynchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>None</td></tr>
+    <tr><td class="label">Parameters(in)</td><td><code>Id_u16</code></td></tr><tr><td class="label"></td><td><code>DevMode_u8</code></td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>Std_ReturnType</td></tr>
+    <tr><td class="label">Description</td><td class="desc">本函数用于设置 TLF35584 的器件模式请求。入参 Id_u16 未使用，经宏置为未用参数。当 DevMode_u8 不大于 WAKE_STATE 时返回 E_OK，并按其取值（STANDBY_STATE、NORMAL_STATE、PORST_STATE、WAKE_STATE）写入 SetMode_u8，作为模式切换请求供后续处理；取值越界时返回 E_NOT_OK，SetMode_u8 保持不变。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/14_Gp_TLF35584_SetDevSigModeOut.png" width="700" alt="Gp_TLF35584_SetDevSigModeOut"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">GP_TLF35584_UNUSED_PARAMETER</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_TLF35584_rtData_ltst</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:602-638</span>
+    <span>圈复杂度: 6</span>
+    <span>bodyHash: ca2ef9f4cf7dc653 · sigHash: 51c55bb3df53ea12</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.3.2::Gp_TLF35584_SetDevSigModeOut</small></p>
+<h2>[Function] Gp_TLF35584_GetDevSigDiag</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_GetDevSigDiag">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_GetDevSigDiag</span>
+    <span class="wi-tag">工作项 · 5.2.3.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_GetDevSigDiag</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>Std_ReturnType Gp_TLF35584_GetDevSigDiag(uint16 Id_u16, uint32* DevFault_pu32)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Asynchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td><code>Id_u16</code></td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td><code>DevFault_pu32</code></td></tr>
+    <tr><td class="label">Return value</td><td>Std_ReturnType</td></tr>
+    <tr><td class="label">Description</td><td class="desc">本函数用于读取 TLF35584 的器件故障信号记录。仅当 Id_u16 小于 FAULT_SIGNAL_NUMS 且输出指针 DevFault_pu32 非空时，将 ErrRecord_au32[Id_u16] 写入其所指地址并返回 E_OK，否则返回 E_NOT_OK。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/15_Gp_TLF35584_GetDevSigDiag.png" width="339" alt="Gp_TLF35584_GetDevSigDiag"></p>
+</td></tr>
+    <tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_TLF35584_rtData_ltst</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:651-666</span>
+    <span>圈复杂度: 3</span>
+    <span>bodyHash: a1335498a03cc38d · sigHash: a514b47ee4bea3d6</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.3.2::Gp_TLF35584_GetDevSigDiag</small></p>
+<h2>[Function] Gp_TLF35584_Bist</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_Bist">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_Bist</span>
+    <span class="wi-tag">工作项 · 5.2.3.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_Bist</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>Std_ReturnType Gp_TLF35584_Bist(void)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">本函数执行 TLF35584 的全部内建自测（BIST），包括 ABIST 模拟通路自检、FWD 功能看门狗自检、WWD 窗口看门狗自检与 ERR 引脚自检四段，建议仅在冷上电时调用；返回失败时建议用户置全局标志并在合适位置重试，以降低 BIST 期间 SPI 瞬态干扰或电压波动的风险。函数先执行 PreInit 与 GetWakeAndResetInfo，并将 BistFunctCalled_u8 置 TRUE，使后续 Init 不再重复获取复位信息。四段自检分别受 GP_TLF35584_ANA_BIST_ENABLE、GP_TLF35584_FWD_BIST_ENABLE、GP_TLF35584_WWD_BIST_ENABLE、GP_TLF35584_ERR_BIST_ENABLE 条件编译控制，仅在对应宏等于 GP_TLF35584_ENABLE 时参与编译。全部自检完成后检查 BistErrPath_u32：大于 0 则 BistSuccessful_u8 置 FAILED 并返回 E_NOT_OK，否则置 PASS 并返回 E_OK。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/16_Gp_TLF35584_Bist.png" width="700" alt="Gp_TLF35584_Bist"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_TLF35584_PreInit<br>Gp_TLF35584_GetWakeAndResetInfo<br>Gp_TLF35584_SafetypathBist<br>Gp_TLF35584_FwdBist<br>Gp_TLF35584_WwdBist<br>Gp_TLF35584_Errpin_Bist</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_TLF35584_rtData_ltst</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:683-737</span>
+    <span>圈复杂度: 2</span>
+    <span>bodyHash: f4967f3e4872820d · sigHash: d8749d9a33ee7be6</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.3.2::Gp_TLF35584_Bist</small></p>
+<h2>[Function] Gp_TLF35584_GetSystemUnusualReason</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_GetSystemUnusualReason">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_GetSystemUnusualReason</span>
+    <span class="wi-tag">工作项 · 5.2.3.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_GetSystemUnusualReason</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>Std_ReturnType Gp_TLF35584_GetSystemUnusualReason(uint8* ColdStart_pu8, uint8* Rst_pu8, uint8* WkSource_pu8)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>E_NOT_OK/E_OK</td></tr>
+    <tr><td class="label">Description</td><td class="desc">本函数读取系统异常原因信息，包括是否 KL30 冷上电（SystemPor_bk_u8）、复位类型位图（ResetType_bk_u8，各位依次为硬复位、软复位、ERRF、FWDF、WWDF、VMONF、STBYUV、UCUV）与唤醒源（WakeupSource_bk_u8，取值 0 至 5 分别表示无唤醒源及 WAK、ENA、QUC、TIMER、SPI 唤醒）。仅当 ColdStart_pu8、Rst_pu8、WkSource_pu8 三个输出指针均非空时，将上述数据拷贝至各指针所指地址并返回 E_OK，否则返回 E_NOT_OK。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/17_Gp_TLF35584_GetSystemUnusualReason.png" width="398" alt="Gp_TLF35584_GetSystemUnusualReason"></p>
+</td></tr>
+    <tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_TLF35584_rtData_ltst</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:773-806</span>
+    <span>圈复杂度: 4</span>
+    <span>bodyHash: 96159ac55c5c0e79 · sigHash: 9747bb3e2b996b10</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.3.2::Gp_TLF35584_GetSystemUnusualReason</small></p>
+<h2>[Function] Gp_TLF35584_SetDevMpsMode</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_SetDevMpsMode">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_SetDevMpsMode</span>
+    <span class="wi-tag">工作项 · 5.2.3.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_SetDevMpsMode</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_TLF35584_SetDevMpsMode(uint8 MpsMode_u8)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>None</td></tr>
+    <tr><td class="label">Parameters(in)</td><td><code>MpsMode_u8</code></td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>Std_ReturnType</td></tr>
+    <tr><td class="label">Description</td><td class="desc">本函数设置 TLF35584 的 MPS 工作模式，透传调用 CalloutMpsTestSupport 完成实际切换。MpsMode_u8 为 MPS_TESTMODE 时器件处于测试模式，将屏蔽 WDG、ERR 引脚等错误引发的复位动作；为 MPS_NORMALMODE 时器件处于正常模式，错误将引发 ROT 复位。本函数在 Init 中被调用，用于处理软复位残留的 WDG 错误计数。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/18_Gp_TLF35584_SetDevMpsMode.png" width="210" alt="Gp_TLF35584_SetDevMpsMode"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_TLF35584_CalloutMpsTestSupport</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_TLF35584_Init</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:822-826</span>
+    <span>圈复杂度: 1</span>
+    <span>bodyHash: f4cb797a2df7ce18 · sigHash: cc1f2164da4ddcdd</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.3.2::Gp_TLF35584_SetDevMpsMode</small></p>
+<h2>[Function] Gp_TLF35584_UnlockSeq</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_UnlockSeq">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_UnlockSeq</span>
+    <span class="wi-tag">工作项 · 5.2.3.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_UnlockSeq</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>Gp_TLF35584_INLINE_ void Gp_TLF35584_UnlockSeq(void)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">本函数向保护关键字寄存器 PROTCFG 依次写入 4 字节解锁序列（0xAB、0xEF、0x56、0x12），以获得受保护寄存器的写访问权。4 条写命令经 WriteCmd 组包填入 TxBuf_au16，CntTx_u16 置 4 后由 TransmitData 一次发送。本函数为内联函数，被 SetPorstMode、DisableWdgFsp、RtWdgRegCfg、SetWkUpTimer、InitRegCfg 及各 BIST 函数在写保护寄存器前调用。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/19_Gp_TLF35584_UnlockSeq.png" width="304" alt="Gp_TLF35584_UnlockSeq"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_TLF35584_WriteCmd<br>Gp_TLF35584_TransmitData</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_TLF35584_SetPorstMode, Gp_TLF35584_DisableWdgFsp, Gp_TLF35584_RtWdgRegCfg, Gp_TLF35584_SetWkUpTimer, Gp_TLF35584_InitRegCfg, Gp_TLF35584_FwdBist, Gp_TLF35584_WwdBist, Gp_TLF35584_Errpin_Bist</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_TLF35584_rtData_ltst</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:955-969</span>
+    <span>圈复杂度: 1</span>
+    <span>bodyHash: c901813671015610 · sigHash: beb933e93f6912ee</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.3.2::Gp_TLF35584_UnlockSeq</small></p>
+<h2>[Function] Gp_TLF35584_LockSeq</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_LockSeq">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_LockSeq</span>
+    <span class="wi-tag">工作项 · 5.2.3.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_LockSeq</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>Gp_TLF35584_INLINE_ void Gp_TLF35584_LockSeq(void)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">本函数向保护关键字寄存器 PROTCFG 依次写入 4 字节锁定序列（0xDF、0x34、0xBE、0xCA），锁定受保护寄存器的写访问；锁定后所有已配置的值应用到 SSC 与 WD 模块。4 条写命令经 WriteCmd 组包填入 TxBuf_au16，CntTx_u16 置 4 后由 TransmitData 一次发送。本函数为内联函数，与 UnlockSeq 配对使用，调用者相同。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/20_Gp_TLF35584_LockSeq.png" width="304" alt="Gp_TLF35584_LockSeq"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_TLF35584_WriteCmd<br>Gp_TLF35584_TransmitData</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_TLF35584_SetPorstMode, Gp_TLF35584_DisableWdgFsp, Gp_TLF35584_RtWdgRegCfg, Gp_TLF35584_SetWkUpTimer, Gp_TLF35584_InitRegCfg, Gp_TLF35584_FwdBist, Gp_TLF35584_WwdBist, Gp_TLF35584_Errpin_Bist</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_TLF35584_rtData_ltst</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:984-998</span>
+    <span>圈复杂度: 1</span>
+    <span>bodyHash: 58a41cbce48c2595 · sigHash: 5a56daf16bbf704c</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.3.2::Gp_TLF35584_LockSeq</small></p>
+<h2>[Function] Gp_TLF35584_SetWkUpTimer</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_SetWkUpTimer">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_SetWkUpTimer</span>
+    <span class="wi-tag">工作项 · 5.2.3.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_SetWkUpTimer</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>Std_ReturnType Gp_TLF35584_SetWkUpTimer(uint8 WkUpEn_u8, uint32 Ticks_u32)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td><code>timer</code></td></tr><tr><td class="label"></td><td><code></code></td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">本函数设置唤醒定时器：WkUpEn_u8 为 0 禁止定时器、为 1 使能定时器；Ticks_u32 为定时值，每 tick 为 10ms，最大为 24bit 门限 TIMER_THRESHOULD。入参校验通过后将 Ticks_u32 拆为低、中、高三个字节，并按使能与否将 DevCf0Val_u8 取为 0xC8 或 0x48；随后经 UnlockSeq 解锁保护寄存器、WriteCmd 组包 DEVCF0 寄存器与三个定时器字节共 4 条写命令（寄存器地址取自 idxInitRegAddress_cau8）、TransmitData 发送、LockSeq 锁定，返回 E_OK。入参越界时不做任何寄存器操作，直接返回 E_NOT_OK。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/21_Gp_TLF35584_SetWkUpTimer.png" width="463" alt="Gp_TLF35584_SetWkUpTimer"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_TLF35584_UnlockSeq<br>Gp_TLF35584_WriteCmd<br>Gp_TLF35584_TransmitData<br>Gp_TLF35584_LockSeq</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_TLF35584_rtData_ltst, Gp_TLF35584_idxInitRegAddress_cau8</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:1863-1911</span>
+    <span>圈复杂度: 4</span>
+    <span>bodyHash: 0a042ed6e9bb85e4 · sigHash: db9ebdc2f8324605</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.3.2::Gp_TLF35584_SetWkUpTimer</small></p>
+<h1>5.2.4.2 内部函数</h1>
+<h2>[Function] Gp_TLF35584_GetWakeAndResetInfo</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_GetWakeAndResetInfo">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_GetWakeAndResetInfo</span>
+    <span class="wi-tag">工作项 · 5.2.4.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_GetWakeAndResetInfo</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_TLF35584_GetWakeAndResetInfo(void)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">获取 TLF35584 系统异常原因（上电类型与唤醒源）的内部函数，被 Gp_TLF35584_Init 与 Gp_TLF35584_Bist 调用。函数无参数、无返回值，按固定顺序执行三步：先调 Gp_TLF35584_ColdStartAndPorst 读 R0 类寄存器判断是否冷上电；再调 Gp_TLF35584_GetWakeUpSource 读寄存器获取唤醒源；最后调 Gp_TLF35584_ClearFlagReg 清除故障标志。本函数不直接访问全局变量，采集结果由各被调函数写入模块运行时数据。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/22_Gp_TLF35584_GetWakeAndResetInfo.png" width="223" alt="Gp_TLF35584_GetWakeAndResetInfo"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_TLF35584_ColdStartAndPorst<br>Gp_TLF35584_GetWakeUpSource<br>Gp_TLF35584_ClearFlagReg</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_TLF35584_Init, Gp_TLF35584_Bist</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:751-760</span>
+    <span>圈复杂度: 1</span>
+    <span>bodyHash: 36ff81857474c1c7 · sigHash: f017b06753facb1e</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.4.2::Gp_TLF35584_GetWakeAndResetInfo</small></p>
+<h2>[Function] Gp_TLF35584_TransmitData</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_TransmitData">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_TransmitData</span>
+    <span class="wi-tag">工作项 · 5.2.4.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_TransmitData</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_TLF35584_TransmitData(uint16 TxCnt_u16)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td><code>TxCnt_u16</code></td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>void</td></tr>
+    <tr><td class="label">Description</td><td class="desc">触发 SPI 驱动发送帧的内部函数，是模块与 TLF35584 通信的唯一发送出口，被 UnlockSeq、LockSeq、各喂狗服务、模式切换、寄存器配置及 BIST 等大量内部函数调用。外层 for 循环最多重试 GP_TLF35584_TRY_REPAIR_MAX 次：每次先调 Gp_TLF35584_CalloutSpiTransSync 对 TxBuf_au16 与 RxBuf_au16 做同步收发，返回 E_OK 时先将 SpiCheckFlag_u8 置为 NO_ERROR，再进入内层 for 循环逐字回读校验——凡写命令字（带 GP_TLF35584_WRITE_COMMAND 位）要求 Tx 与 Rx 回环一致，不一致则置 SPI_ERR 并 break 退出内层循环。内层校验全部通过时清除 DriverErrPath_u32 的 SPI_ERR 位并跳出重试循环；传输失败或回读校验失败时置位 SPI_ERR 并进入下一次重试。失败路径上的 Gp_TLF35584_CalloutDemReport 上报（GP_TLF35584_SPI_FAULT）仅在 GP_TLF35584_DEM_ERROR_ENABLE 等于 GP_TLF35584_ENABLE 时参与编译。函数操作全局变量 Gp_TLF35584_rtData_ltst。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/23_Gp_TLF35584_TransmitData.png" width="700" alt="Gp_TLF35584_TransmitData"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_TLF35584_CalloutSpiTransSync<br>Gp_TLF35584_CalloutDemReport</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_TLF35584_UnlockSeq, Gp_TLF35584_LockSeq, Gp_TLF35584_WwdSpiService, Gp_TLF35584_FwdSpiService, Gp_TLF35584_WrongService, Gp_TLF35584_GetState, Gp_TLF35584_SwitchToStandbyMode, Gp_TLF35584_SwitchToNormalMode, Gp_TLF35584_SetPorstMode, Gp_TLF35584_ColdStartAndPorst, Gp_TLF35584_DisableWdgFsp, Gp_TLF35584_RtWdgRegCfg, Gp_TLF35584_SetWkUpTimer, Gp_TLF35584_InitRegCfg, Gp_TLF35584_ClearFlagReg, Gp_TLF35584_UpdateFlagReg, Gp_TLF35584_UpdateStatusReg, Gp_TLF35584_FwdBist, Gp_TLF35584_WwdBist, Gp_TLF35584_Errpin_Bist, Gp_TLF35584_SinSafetyBistCheck, Gp_TLF35584_SingleOvSafetyPathBist, Gp_TLF35584_AllCompartorSafetyCmd, Gp_TLF35584_AllSafetyBistCheck, Gp_TLF35584_AllCompartorSafetyPathBist</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_TLF35584_rtData_ltst</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:839-899</span>
+    <span>圈复杂度: 7</span>
+    <span>bodyHash: 7b49f04efb0a7767 · sigHash: e7b6c5744964d8fb</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.4.2::Gp_TLF35584_TransmitData</small></p>
+<h2>[Function] Gp_TLF35584_WriteCmd</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_WriteCmd">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_WriteCmd</span>
+    <span class="wi-tag">工作项 · 5.2.4.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_WriteCmd</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>uint16 Gp_TLF35584_WriteCmd(uint8 RegAdd_u8, uint8 RegData_u8)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td><code></code></td></tr><tr><td class="label"></td><td><code></code></td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>uint16 RegValue_u16</td></tr>
+    <tr><td class="label">Description</td><td class="desc">按寄存器地址与数据组 16 位写命令帧的纯计算函数，不访问全局变量，被模块内所有需要写 TLF35584 寄存器的内部函数调用。先将入参 RegAdd_u8 取低 6 位左移 8 位作为帧头，再或上 GP_TLF35584_WRITE_COMMAND 写命令位，最后或上入参 RegData_u8 低 8 位，返回组好的 RegValue_u16。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/24_Gp_TLF35584_WriteCmd.png" width="198" alt="Gp_TLF35584_WriteCmd"></p>
+</td></tr>
+    <tr><td class="label">被调用</td><td class="muted small">Gp_TLF35584_UnlockSeq, Gp_TLF35584_LockSeq, Gp_TLF35584_WwdSpiService, Gp_TLF35584_FwdSpiService, Gp_TLF35584_WrongService, Gp_TLF35584_SwitchToStandbyMode, Gp_TLF35584_SwitchToNormalMode, Gp_TLF35584_SetPorstMode, Gp_TLF35584_ColdStartAndPorst, Gp_TLF35584_DisableWdgFsp, Gp_TLF35584_RtWdgRegCfg, Gp_TLF35584_SetWkUpTimer, Gp_TLF35584_InitRegCfg, Gp_TLF35584_ClearFlagReg, Gp_TLF35584_FwdBist, Gp_TLF35584_WwdBist, Gp_TLF35584_Errpin_Bist, Gp_TLF35584_SingleOvSafetyPathBist, Gp_TLF35584_AllCompartorSafetyCmd</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:913-922</span>
+    <span>圈复杂度: 1</span>
+    <span>bodyHash: 4483593cd6a68f19 · sigHash: a637e29e25a972c8</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.4.2::Gp_TLF35584_WriteCmd</small></p>
+<h2>[Function] Gp_TLF35584_ReadCmd</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_ReadCmd">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_ReadCmd</span>
+    <span class="wi-tag">工作项 · 5.2.4.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_ReadCmd</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>uint16 Gp_TLF35584_ReadCmd(uint8 RegData_u8)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td><code></code></td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>uint16 RegValue_u16</td></tr>
+    <tr><td class="label">Description</td><td class="desc">按寄存器地址组 16 位读命令帧的纯计算函数，不访问全局变量，被 Gp_TLF35584_GetState、Gp_TLF35584_UpdateStatusReg 等需要读 TLF35584 寄存器的内部函数调用。将入参 RegData_u8（寄存器地址）取低 6 位左移 8 位即得读命令字 RegValue_u16 并返回；与写命令不同，读命令不置 GP_TLF35584_WRITE_COMMAND 位。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/25_Gp_TLF35584_ReadCmd.png" width="192" alt="Gp_TLF35584_ReadCmd"></p>
+</td></tr>
+    <tr><td class="label">被调用</td><td class="muted small">Gp_TLF35584_GetState, Gp_TLF35584_SwitchToNormalMode, Gp_TLF35584_ColdStartAndPorst, Gp_TLF35584_RtWdgRegCfg, Gp_TLF35584_InitRegCfg, Gp_TLF35584_UpdateFlagReg, Gp_TLF35584_UpdateStatusReg, Gp_TLF35584_SinSafetyBistCheck, Gp_TLF35584_SingleOvSafetyPathBist, Gp_TLF35584_AllSafetyBistCheck, Gp_TLF35584_AllCompartorSafetyPathBist</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:935-940</span>
+    <span>圈复杂度: 1</span>
+    <span>bodyHash: c38911f49d0df258 · sigHash: 9c89c5c3ab49f93b</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.4.2::Gp_TLF35584_ReadCmd</small></p>
+<h2>[Function] Gp_TLF35584_WwdSpiService</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_WwdSpiService">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_WwdSpiService</span>
+    <span class="wi-tag">工作项 · 5.2.4.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_WwdSpiService</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_TLF35584_WwdSpiService(void)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">窗口看门狗 SPI 触发命令函数，被 Gp_TLF35584_Init、Gp_TLF35584_WrongService 与 Gp_TLF35584_WdgService 调用。将全局 LastWwdScmd_u8 与 GP_TLF35584_WWDSCMDMASK 异或得到本次触发命令 Scmd_u8，经 Gp_TLF35584_WriteCmd 组成对 WWDSCMD 寄存器的写命令填入 TxBuf_au16[0]，CntTx_u16 置 1 后调 Gp_TLF35584_TransmitData 发送一帧。函数操作全局变量 Gp_TLF35584_rtData_ltst。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/26_Gp_TLF35584_WwdSpiService.png" width="200" alt="Gp_TLF35584_WwdSpiService"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_TLF35584_WriteCmd<br>Gp_TLF35584_TransmitData</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_TLF35584_Init, Gp_TLF35584_WrongService, Gp_TLF35584_WdgService</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_TLF35584_rtData_ltst</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:1011-1020</span>
+    <span>圈复杂度: 1</span>
+    <span>bodyHash: 9610f5e81412bcfb · sigHash: 326508b6b8234193</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.4.2::Gp_TLF35584_WwdSpiService</small></p>
+<h2>[Function] Gp_TLF35584_WwdWdiService</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_WwdWdiService">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_WwdWdiService</span>
+    <span class="wi-tag">工作项 · 5.2.4.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_WwdWdiService</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_TLF35584_WwdWdiService(void)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">窗口看门狗 WDI 引脚触发函数，仅被 Gp_TLF35584_WdgService 调用。有效触发信号为 WDI 引脚从高到低的下降沿：本函数先将全局 WdiRestoreFlag_b 置 TRUE 以标记待恢复，再调 Gp_TLF35584_CalloutWdiService 将 WDI 引脚拉低 STD_LOW；拉高动作由 Gp_TLF35584_GetWdgInfo 在后续周期检查 WdiRestoreFlag_b 时完成。函数操作全局变量 Gp_TLF35584_rtData_ltst。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/27_Gp_TLF35584_WwdWdiService.png" width="212" alt="Gp_TLF35584_WwdWdiService"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_TLF35584_CalloutWdiService</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_TLF35584_WdgService</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_TLF35584_rtData_ltst</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:1033-1041</span>
+    <span>圈复杂度: 1</span>
+    <span>bodyHash: 2e04a7eb4149dfa4 · sigHash: fe8d514358618159</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.4.2::Gp_TLF35584_WwdWdiService</small></p>
+<h2>[Function] Gp_TLF35584_FwdSpiService</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_FwdSpiService">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_FwdSpiService</span>
+    <span class="wi-tag">工作项 · 5.2.4.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_FwdSpiService</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_TLF35584_FwdSpiService(uint8 UsedSeed_u8)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td><code>UsedSeed_u8</code></td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">功能看门狗应答服务，仅被 Gp_TLF35584_WdgService 调用。先按入参 UsedSeed_u8 从应答种子表 Gp_TLF35584_idxResTable_lcau32 取出 SignTmp_u32，再根据全局 RspCnt_u8 的取值（3、2、1、0）决定本轮写入的应答条数（4、3、2、1 条）：从 SignTmp_u32 按 FIRST、SECOND、THIRD、FORTH 掩码依次提取应答字节，经 Gp_TLF35584_WriteCmd 组帧填入 TxBuf_au16 的 RSP0 起始槽位——仅写满 4 条时最后一条写 FWDRSPSYNC 寄存器以同步并重启心跳，其余各条均写 FWDRSP；随后按条数置 CntTx_u16 并调 Gp_TLF35584_TransmitData 发送。RspCnt_u8 为其他取值时不做任何操作。函数操作全局变量 Gp_TLF35584_rtData_ltst 与 Gp_TLF35584_idxResTable_lcau32。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/28_Gp_TLF35584_FwdSpiService.png" width="700" alt="Gp_TLF35584_FwdSpiService"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_TLF35584_WriteCmd<br>Gp_TLF35584_TransmitData</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_TLF35584_WdgService</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_TLF35584_rtData_ltst, Gp_TLF35584_idxResTable_lcau32</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:1055-1117</span>
+    <span>圈复杂度: 5</span>
+    <span>bodyHash: f3ef57d924aa3831 · sigHash: 5070c6d8e7e2deb2</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.4.2::Gp_TLF35584_FwdSpiService</small></p>
+<h2>[Function] Gp_TLF35584_WrongService</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_WrongService">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_WrongService</span>
+    <span class="wi-tag">工作项 · 5.2.4.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_WrongService</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_TLF35584_WrongService(uint8 WrongSlect_u8)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">按入参 WrongSlect_u8 实现错误应答注入策略的内部函数，仅被 Gp_TLF35584_SetPorstMode 调用。当 WrongSlect_u8 等于 GP_TLF35584_FWD_RESET_ACTION 时执行 FWD 复位策略：向 TxBuf_au16 填入 4 条错误应答命令（前三条写 FWDRSP、末条写 FWDRSPSYNC，数据均为 GP_TLF35584_FWD_ERR_ANSWER），CntTx_u16 置 4 后调 Gp_TLF35584_TransmitData 发送。否则按编译配置二选一：GP_TLF35584_WWD_BIST_DELAY_ENABLE 为 STD_ON 时调 Gp_TLF35584_CalloutStmSwDalayNus 延时 GP_TLF35584_WWD_BIST_DELAY_TIME；为 STD_OFF 时交替执行两轮 Gp_TLF35584_GetWdgInfo 与 Gp_TLF35584_WwdSpiService。函数操作全局变量 Gp_TLF35584_rtData_ltst。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/29_Gp_TLF35584_WrongService.png" width="700" alt="Gp_TLF35584_WrongService"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_TLF35584_WriteCmd<br>Gp_TLF35584_TransmitData<br>Gp_TLF35584_CalloutStmSwDalayNus<br>Gp_TLF35584_GetWdgInfo<br>Gp_TLF35584_WwdSpiService</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_TLF35584_SetPorstMode</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_TLF35584_rtData_ltst</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:1130-1155</span>
+    <span>圈复杂度: 2</span>
+    <span>bodyHash: ab05aebb3b912250 · sigHash: 453c7a6297e7b301</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.4.2::Gp_TLF35584_WrongService</small></p>
+<h2>[Function] Gp_TLF35584_GetState</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_GetState">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_GetState</span>
+    <span class="wi-tag">工作项 · 5.2.4.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_GetState</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_TLF35584_GetState(void)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">读取 TLF35584 当前设备状态的内部函数，被 Gp_TLF35584_Init、Gp_TLF35584_MainFunction、Gp_TLF35584_SwitchToStandbyMode 及各 BIST 函数调用。先用 Gp_TLF35584_ReadCmd 组 DEVSTAT 寄存器读命令填入 TxBuf_au16[0]，CntTx_u16 置 1 后调 Gp_TLF35584_TransmitData 完成收发；随后从 RxBuf_au16[0] 低字节按 GP_TLF35584_DEVICESTATE_MASK 掩码提取设备状态，写入全局 StatusData_tst.DeviceState_u8。函数操作全局变量 Gp_TLF35584_rtData_ltst。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/30_Gp_TLF35584_GetState.png" width="250" alt="Gp_TLF35584_GetState"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_TLF35584_ReadCmd<br>Gp_TLF35584_TransmitData</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_TLF35584_Init, Gp_TLF35584_MainFunction, Gp_TLF35584_SwitchToStandbyMode, Gp_TLF35584_FwdBist, Gp_TLF35584_WwdBist, Gp_TLF35584_Errpin_Bist</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_TLF35584_rtData_ltst</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:1168-1177</span>
+    <span>圈复杂度: 1</span>
+    <span>bodyHash: b76876f9590dc6a8 · sigHash: f402739572e9ab04</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.4.2::Gp_TLF35584_GetState</small></p>
+<h2>[Function] Gp_TLF35584_WdgService</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_WdgService">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_WdgService</span>
+    <span class="wi-tag">工作项 · 5.2.4.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_WdgService</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_TLF35584_WdgService(void)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">看门狗喂狗分发函数，仅被 Gp_TLF35584_MainFunction 周期调用。按全局 WdMode_u8 的五种配置模式分发喂狗路径：FWD_SPI 仅调 Gp_TLF35584_FwdSpiService；FWD_WWD_SPI 先调 FwdSpiService 再调 Gp_TLF35584_WwdSpiService；WWD_WDI 仅调 Gp_TLF35584_WwdWdiService；WWD_SPI 仅调 WwdSpiService；FWD_SPI_WWD_WDI 先调 FwdSpiService 再调 WwdWdiService；其他取值不执行任何喂狗操作。FwdSpiService 的入参取全局 LastSeed_u8。函数操作全局变量 Gp_TLF35584_rtData_ltst。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/31_Gp_TLF35584_WdgService.png" width="700" alt="Gp_TLF35584_WdgService"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_TLF35584_FwdSpiService<br>Gp_TLF35584_WwdSpiService<br>Gp_TLF35584_WwdWdiService</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_TLF35584_MainFunction</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_TLF35584_rtData_ltst</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:1190-1225</span>
+    <span>圈复杂度: 6</span>
+    <span>bodyHash: 2353a292c910fb55 · sigHash: 98e84a042330ea89</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.4.2::Gp_TLF35584_WdgService</small></p>
+<h2>[Function] Gp_TLF35584_GetAllFaultRegister</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_GetAllFaultRegister">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_GetAllFaultRegister</span>
+    <span class="wi-tag">工作项 · 5.2.4.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_GetAllFaultRegister</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_TLF35584_GetAllFaultRegister(void)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">在 TLF35584 处于故障状态时采集全部故障寄存器内容的内部函数，仅被 Gp_TLF35584_MainFunction 调用。先调 Gp_TLF35584_UpdateFlagReg 更新标志寄存器，再循环读取 GP_TLF35584_FLAG_RECOVER_NUM 个标志寄存器值：任一非 0 即判定芯片上报故障，置位 DriverErrPath_u32 的 SYSTEM_ERR 位，调 Gp_TLF35584_ClearFlagReg 与 Gp_TLF35584_SwitchToNormalMode 后跳出循环。随后按 SYSTEM_ERR 位走消抖逻辑：故障存在时 ReadFaultCnt_u8 累加，达到 GP_TLF35584_TRY_REPAIR_MAX 后钳位于该值并将 FaultThreshold_u8 累加（上限 255），然后重读标志寄存器，经 Gp_TLF35584_CalloutDisableIntrrupt 关中断后先清零 ErrRecord_au32，再从标志值逐位提取 CHIP、TRACKER2、TRACKER1、VREF、COM、VCORE、UC、STANDBY、PREG 九组故障的 SG、UV、OV 位，SPILOGICAL 组由 RegValue_au8[0] 整体赋值，最后调 Gp_TLF35584_CalloutEnableIntrrupt 开中断。无故障时清零 ReadFaultCnt_u8、清 SYSTEM_ERR 位并清空 ErrRecord_au32。函数操作全局变量 Gp_TLF35584_rtData_ltst 与 Gp_TLF35584_idxFlagRegValue_lau8。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/32_Gp_TLF35584_GetAllFaultRegister.png" width="700" alt="Gp_TLF35584_GetAllFaultRegister"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_TLF35584_UpdateFlagReg<br>Gp_TLF35584_ClearFlagReg<br>Gp_TLF35584_SwitchToNormalMode<br>Gp_TLF35584_CalloutDisableIntrrupt<br>Gp_TLF35584_CalloutEnableIntrrupt</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_TLF35584_MainFunction</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_TLF35584_rtData_ltst, Gp_TLF35584_idxFlagRegValue_lau8</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:1238-1408</span>
+    <span>圈复杂度: 9</span>
+    <span>bodyHash: aa65fa05c82bfc0c · sigHash: 1826e800e1124845</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.4.2::Gp_TLF35584_GetAllFaultRegister</small></p>
+<h2>[Function] Gp_TLF35584_GetWdgInfo</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_GetWdgInfo">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_GetWdgInfo</span>
+    <span class="wi-tag">工作项 · 5.2.4.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_GetWdgInfo</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_TLF35584_GetWdgInfo(void)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">采集看门狗相关信息的内部函数，被 Gp_TLF35584_Init、Gp_TLF35584_MainFunction 与 Gp_TLF35584_WrongService 调用。若全局 WdiRestoreFlag_b 为 TRUE（上次 WDI 触发后待恢复），先将其清 FALSE 并调 Gp_TLF35584_CalloutWdiService 将 WDI 引脚拉高 STD_HIGH，与 WwdWdiService 的拉低动作配合构成完整下降沿触发。随后调 Gp_TLF35584_UpdateStatusReg 更新全部状态寄存器，再从 Gp_TLF35584_idxStatusRegValue_lau8 逐项提取：DEVSTAT 取 DeviceState_u8、WWDSTAT 取 WwdErrCnt_u8、FWDSTAT0 取 LastSeed_u8 与 RspCnt_u8、FWDSTAT1 取 FwdErrCnt_u8、WWDSCMD 最高位取 LastWwdScmd_u8，均写入全局 StatusData_tst。函数操作全局变量 Gp_TLF35584_rtData_ltst 与 Gp_TLF35584_idxStatusRegValue_lau8。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/33_Gp_TLF35584_GetWdgInfo.png" width="273" alt="Gp_TLF35584_GetWdgInfo"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_TLF35584_CalloutWdiService<br>Gp_TLF35584_UpdateStatusReg</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_TLF35584_Init, Gp_TLF35584_MainFunction, Gp_TLF35584_WrongService</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_TLF35584_rtData_ltst, Gp_TLF35584_idxStatusRegValue_lau8</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:1425-1473</span>
+    <span>圈复杂度: 2</span>
+    <span>bodyHash: e71e34fd50cb2f72 · sigHash: 059e9516d7898167</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.4.2::Gp_TLF35584_GetWdgInfo</small></p>
+<h2>[Function] Gp_TLF35584_SwitchToStandbyMode</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_SwitchToStandbyMode">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_SwitchToStandbyMode</span>
+    <span class="wi-tag">工作项 · 5.2.4.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_SwitchToStandbyMode</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_TLF35584_SwitchToStandbyMode(void)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">在 NORMAL 状态下关闭 TLF35584 各稳压器输出并将芯片切换到 STANDBY 模式。函数按 TRY_REPAIR_MAX 次数重试：每轮先（WAKE_UP_SOURCE_CONFIRM 使能时）经 Gp_TLF35584_CalloutWkSourceConfirm 确认唤醒源，确认通过后读取 DeviceState，若为 NORMAL 则向 DEVCTRL 写入 STANDBY_STATEM（0xFC）、向 DEVCTRLN 写入其按位取反值并延时后跳出循环；若非 NORMAL 则依次执行 DisableWdgFsp、ClearFlagReg、SwitchToNormalMode 修复器件状态后进入下一轮。唤醒源确认失败时置位 DriverErrPath_u32 的 WAKE_UP_SOURCE_ERR 并（DEM_ERROR_ENABLE 使能时）上报 WAKE_UP_SOURCE_FAULT；重试耗尽时置位 POWN_OFF_ERR 并上报 POWER_OFF_FAULT。本函数由 Gp_TLF35584_RtSetMode 在用户经 SetDevSigModeOut 请求 STANDBY 模式时间接调用。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/34_Gp_TLF35584_SwitchToStandbyMode.png" width="700" alt="Gp_TLF35584_SwitchToStandbyMode"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_TLF35584_CalloutWkSourceConfirm<br>Gp_TLF35584_GetState<br>Gp_TLF35584_WriteCmd<br>Gp_TLF35584_TransmitData<br>Gp_TLF35584_CalloutStmSwDalayNus<br>Gp_TLF35584_DisableWdgFsp<br>Gp_TLF35584_ClearFlagReg<br>Gp_TLF35584_SwitchToNormalMode<br>Gp_TLF35584_CalloutDemReport</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_TLF35584_RtSetMode</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_TLF35584_rtData_ltst</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:1486-1546</span>
+    <span>圈复杂度: 5</span>
+    <span>bodyHash: d0b597e93e2c9260 · sigHash: f8c73c5f5708b903</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.4.2::Gp_TLF35584_SwitchToStandbyMode</small></p>
+<h2>[Function] Gp_TLF35584_SwitchToNormalMode</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_SwitchToNormalMode">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_SwitchToNormalMode</span>
+    <span class="wi-tag">工作项 · 5.2.4.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_SwitchToNormalMode</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_TLF35584_SwitchToNormalMode(void)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">通过 SPI 向 DEVCTRL 写入 0xEA、向 DEVCTRLN 写入其按位取反值，将 TLF35584 切换到 NORMAL 模式，随后再发起一帧 DEVSTAT 读命令以获取器件状态。命令字由 Gp_TLF35584_WriteCmd 组帧填入 TxBuf_au16，统一由 Gp_TLF35584_TransmitData 发送。本函数是模块的基础模式切换原语，被 Gp_TLF35584_MainFunction、Gp_TLF35584_GetAllFaultRegister、Gp_TLF35584_SwitchToStandbyMode 以及 FwdBist、WwdBist、Errpin_Bist 等 BIST 流程调用。函数内部无分支与错误处理路径。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/35_Gp_TLF35584_SwitchToNormalMode.png" width="245" alt="Gp_TLF35584_SwitchToNormalMode"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_TLF35584_WriteCmd<br>Gp_TLF35584_TransmitData<br>Gp_TLF35584_ReadCmd</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_TLF35584_MainFunction, Gp_TLF35584_GetAllFaultRegister, Gp_TLF35584_SwitchToStandbyMode, Gp_TLF35584_FwdBist, Gp_TLF35584_WwdBist, Gp_TLF35584_Errpin_Bist</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_TLF35584_rtData_ltst</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:1559-1573</span>
+    <span>圈复杂度: 1</span>
+    <span>bodyHash: faed83f4b70e825f · sigHash: d12bbe0df12182f5</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.4.2::Gp_TLF35584_SwitchToNormalMode</small></p>
+<h2>[Function] Gp_TLF35584_SetPorstMode</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_SetPorstMode">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_SetPorstMode</span>
+    <span class="wi-tag">工作项 · 5.2.4.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_SetPorstMode</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_TLF35584_SetPorstMode(uint8 ResetSlect_u8)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">按入参 ResetSlect_u8 选择 FWD 或 WWD 路径触发 PORST 复位：先调用 Gp_TLF35584_UpdateStatusReg 刷新状态寄存器缓存，FWD 路径读 FWDSTAT1 错误计数加 1 后写入 WDCFG1，WWD 路径读 WWDSTAT 错误计数加 1 后拼装触发值写入 WDCFG0，两段写寄存器均在 UnlockSeq 与 LockSeq 保护下经 TransmitData 完成。随后经模式切换延时调用 Gp_TLF35584_WrongService 制造看门狗错误服务以实际触发复位，并再次延时。若复位未发生、程序继续运行，则置位 DriverErrPath_u32 的 PORST_FAIL_ERROR 并上报 DEM 故障，该段仅在 DEBUG_SUPPORT_ENABLE 等于 STD_OFF 时参与编译，其中 DEM 上报另需 DEM_ERROR_ENABLE 使能。本函数被 Gp_TLF35584_Init、Gp_TLF35584_RtSetMode、FwdBist、WwdBist 调用。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/36_Gp_TLF35584_SetPorstMode.png" width="605" alt="Gp_TLF35584_SetPorstMode"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_TLF35584_UpdateStatusReg<br>Gp_TLF35584_UnlockSeq<br>Gp_TLF35584_WriteCmd<br>Gp_TLF35584_TransmitData<br>Gp_TLF35584_LockSeq<br>Gp_TLF35584_CalloutStmSwDalayNus<br>Gp_TLF35584_WrongService<br>Gp_TLF35584_CalloutDemReport</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_TLF35584_Init, Gp_TLF35584_RtSetMode, Gp_TLF35584_FwdBist, Gp_TLF35584_WwdBist</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_TLF35584_rtData_ltst, Gp_TLF35584_idxStatusRegValue_lau8</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:1586-1626</span>
+    <span>圈复杂度: 2</span>
+    <span>bodyHash: 6c7af9f66461c3ba · sigHash: 2a6a2b1f2581a94e</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.4.2::Gp_TLF35584_SetPorstMode</small></p>
+<h2>[Function] Gp_TLF35584_ColdStartAndPorst</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_ColdStartAndPorst">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_ColdStartAndPorst</span>
+    <span class="wi-tag">工作项 · 5.2.4.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_ColdStartAndPorst</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_TLF35584_ColdStartAndPorst(void)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">在一帧 SPI 事务中先读 DEVCFG1 寄存器再回写其复位值，根据回读值是否仍含 COLD_ON_FLAG 判断是否冷上电：DEVCFG1 为 R0 复位类型，若回读值等于复位值即为冷上电，将 SystemPor_bk_u8 置为 SIGNAL_VALID；否则说明发生过 PORST 复位，调用 Gp_TLF35584_GetResetType 以 GETRST_DIAG 阶段解析复位原因。本函数被 Gp_TLF35584_GetWakeAndResetInfo 调用，是唤醒与复位信息采集流程的一部分。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/37_Gp_TLF35584_ColdStartAndPorst.png" width="380" alt="Gp_TLF35584_ColdStartAndPorst"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_TLF35584_ReadCmd<br>Gp_TLF35584_WriteCmd<br>Gp_TLF35584_TransmitData<br>Gp_TLF35584_GetResetType</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_TLF35584_GetWakeAndResetInfo</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_TLF35584_rtData_ltst</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:1640-1659</span>
+    <span>圈复杂度: 2</span>
+    <span>bodyHash: 67529797831b56fa · sigHash: 365d15b69705b074</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.4.2::Gp_TLF35584_ColdStartAndPorst</small></p>
+<h2>[Function] Gp_TLF35584_GetWakeUpSource</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_GetWakeUpSource">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_GetWakeUpSource</span>
+    <span class="wi-tag">工作项 · 5.2.4.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_GetWakeUpSource</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_TLF35584_GetWakeUpSource(void)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">先调用 Gp_TLF35584_UpdateFlagReg 刷新标志寄存器缓存，再取 WKSF 唤醒源寄存器的唤醒位域，按 WAK、ENA、QUC、TIMER、SPI 的优先级级联判断，第一个置位的唤醒源将其对应 FLAG 写入 StatusData_tst.WakeupSource_bk_u8；五类唤醒源均未置位时写入 SIGNAL_INVALID 表示无效。本函数被 Gp_TLF35584_GetWakeAndResetInfo 调用，用于上电后的唤醒源解析。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/38_Gp_TLF35584_GetWakeUpSource.png" width="700" alt="Gp_TLF35584_GetWakeUpSource"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_TLF35584_UpdateFlagReg</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_TLF35584_GetWakeAndResetInfo</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_TLF35584_rtData_ltst, Gp_TLF35584_idxFlagRegValue_lau8</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:1678-1716</span>
+    <span>圈复杂度: 6</span>
+    <span>bodyHash: 65946a61b8007ec2 · sigHash: 9f8047381e9cee1a</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.4.2::Gp_TLF35584_GetWakeUpSource</small></p>
+<h2>[Function] Gp_TLF35584_GetResetType</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_GetResetType">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_GetResetType</span>
+    <span class="wi-tag">工作项 · 5.2.4.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_GetResetType</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_TLF35584_GetResetType(uint8 phase_u8)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">先调用 Gp_TLF35584_UpdateFlagReg 刷新标志寄存器缓存，再按入参 phase_u8 分两个阶段解析复位原因：phase_u8 为 GETRST_DIAG 时，将 INITERR 寄存器低 4 位复位原因写入 ResetType_bk_u8，并分别判 MONSF2 的 UCUV、STBYUV 位，置位则补充对应原因位；phase_u8 为 GETRST_RUN 时执行同样解析，结果写入运行期变量 ResetType_u8；其他取值不处理。本函数被 Gp_TLF35584_ColdStartAndPorst 以及 FwdBist、WwdBist、Errpin_Bist 调用。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/39_Gp_TLF35584_GetResetType.png" width="489" alt="Gp_TLF35584_GetResetType"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_TLF35584_UpdateFlagReg</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_TLF35584_ColdStartAndPorst, Gp_TLF35584_FwdBist, Gp_TLF35584_WwdBist, Gp_TLF35584_Errpin_Bist</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_TLF35584_rtData_ltst, Gp_TLF35584_idxFlagRegValue_lau8</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:1731-1790</span>
+    <span>圈复杂度: 7</span>
+    <span>bodyHash: 488461130ff4d0d1 · sigHash: 69c158861496719d</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.4.2::Gp_TLF35584_GetResetType</small></p>
+<h2>[Function] Gp_TLF35584_DisableWdgFsp</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_DisableWdgFsp">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_DisableWdgFsp</span>
+    <span class="wi-tag">工作项 · 5.2.4.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_DisableWdgFsp</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_TLF35584_DisableWdgFsp(void)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">禁用看门狗与 ERR 引脚功能：先调用 Gp_TLF35584_UnlockSeq 解锁保护寄存器，向 WDCFG0 与 SYSPCFG1 各写入 DISABLE_WDG_ERRPIN 值并组帧发送，最后调用 Gp_TLF35584_LockSeq 重新上锁。本函数被 Gp_TLF35584_Init、Gp_TLF35584_SwitchToStandbyMode 以及 FwdBist、WwdBist、Errpin_Bist 调用，用于初始化、进 standby 前及 BIST 前关闭看门狗失效安全路径。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/40_Gp_TLF35584_DisableWdgFsp.png" width="279" alt="Gp_TLF35584_DisableWdgFsp"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_TLF35584_UnlockSeq<br>Gp_TLF35584_WriteCmd<br>Gp_TLF35584_TransmitData<br>Gp_TLF35584_LockSeq</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_TLF35584_Init, Gp_TLF35584_SwitchToStandbyMode, Gp_TLF35584_FwdBist, Gp_TLF35584_WwdBist, Gp_TLF35584_Errpin_Bist</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_TLF35584_rtData_ltst</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:1803-1813</span>
+    <span>圈复杂度: 1</span>
+    <span>bodyHash: c498fb450ae48e4e · sigHash: 9e62844614170840</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.4.2::Gp_TLF35584_DisableWdgFsp</small></p>
+<h2>[Function] Gp_TLF35584_RtWdgRegCfg</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_RtWdgRegCfg">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_RtWdgRegCfg</span>
+    <span class="wi-tag">工作项 · 5.2.4.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_RtWdgRegCfg</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_TLF35584_RtWdgRegCfg(void)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">运行阶段将看门狗时基由 1ms 切换为 0.1ms：先读 RWDCFG0 取当前看门狗配置，将 WDCYC 位清 0 得到 0.1ms 时基配置值，再清 FWD 与 WWD 使能位得到禁狗配置值；随后在 UnlockSeq 与 LockSeq 保护下连续写入两条 WDCFG0 命令，先禁狗再改时基，避免切换窗口内误触发。本函数仅被 Gp_TLF35584_MainFunction 在运行阶段调用。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/41_Gp_TLF35584_RtWdgRegCfg.png" width="267" alt="Gp_TLF35584_RtWdgRegCfg"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_TLF35584_ReadCmd<br>Gp_TLF35584_TransmitData<br>Gp_TLF35584_UnlockSeq<br>Gp_TLF35584_WriteCmd<br>Gp_TLF35584_LockSeq</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_TLF35584_MainFunction</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_TLF35584_rtData_ltst</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:1826-1849</span>
+    <span>圈复杂度: 1</span>
+    <span>bodyHash: 3bc1b23fc537a78c · sigHash: 1ae35a4425a40994</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.4.2::Gp_TLF35584_RtWdgRegCfg</small></p>
+<h2>[Function] Gp_TLF35584_InitRegCfg</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_InitRegCfg">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_InitRegCfg</span>
+    <span class="wi-tag">工作项 · 5.2.4.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_InitRegCfg</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_TLF35584_InitRegCfg(void)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">初始化阶段完成 TLF35584 全部 INIT 寄存器配置与回读校验：先在 UnlockSeq 保护下循环按地址表与配置值表组写命令填满 TxBuf_au16，批量发送后 LockSeq 并延时；再循环组读命令批量读全部 STATUS 寄存器；最后循环将保护寄存器的回读值与配置值逐条比对，发现不一致即置位 DriverErrPath_u32 的 PROTECT_REG_ERR、调用 CalloutDemReport 上报 PROTECT_REG_FAULT 并跳出校验循环。本函数仅被 Gp_TLF35584_Init 调用。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/42_Gp_TLF35584_InitRegCfg.png" width="527" alt="Gp_TLF35584_InitRegCfg"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_TLF35584_UnlockSeq<br>Gp_TLF35584_WriteCmd<br>Gp_TLF35584_TransmitData<br>Gp_TLF35584_LockSeq<br>Gp_TLF35584_CalloutStmSwDalayNus<br>Gp_TLF35584_ReadCmd<br>Gp_TLF35584_CalloutDemReport</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_TLF35584_Init</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_TLF35584_rtData_ltst, Gp_TLF35584_idxInitRegAddress_cau8, Gp_TLF35584_idxStatusRegAddress_cau8</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:1923-1966</span>
+    <span>圈复杂度: 5</span>
+    <span>bodyHash: 8a9d4706cfd0c3a3 · sigHash: cb45296c22013ddd</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.4.2::Gp_TLF35584_InitRegCfg</small></p>
+<h2>[Function] Gp_TLF35584_ClearFlagReg</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_ClearFlagReg">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_ClearFlagReg</span>
+    <span class="wi-tag">工作项 · 5.2.4.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_ClearFlagReg</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_TLF35584_ClearFlagReg(void)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">清除全部故障标志但保留唤醒源记录：第一个循环覆盖标志寄存器索引 0 至 2，第二个循环覆盖索引 4 至 FLAG_REG_NUM，两段循环均向对应寄存器组 FAULT_CLRMASK 清除写命令填入 TxBuf_au16，索引 3 的 WKSF 唤醒源寄存器被跳过以免误清唤醒信息，最后一帧 SPI 批量发送完成清除。本函数被 Gp_TLF35584_MainFunction、GetWakeAndResetInfo、GetAllFaultRegister、SwitchToStandbyMode 及各 BIST 流程广泛调用。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/43_Gp_TLF35584_ClearFlagReg.png" width="510" alt="Gp_TLF35584_ClearFlagReg"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_TLF35584_WriteCmd<br>Gp_TLF35584_TransmitData</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_TLF35584_MainFunction, Gp_TLF35584_GetWakeAndResetInfo, Gp_TLF35584_GetAllFaultRegister, Gp_TLF35584_SwitchToStandbyMode, Gp_TLF35584_FwdBist, Gp_TLF35584_WwdBist, Gp_TLF35584_Errpin_Bist, Gp_TLF35584_SingleOvSafetyPathBist, Gp_TLF35584_AllCompartorSafetyPathBist</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_TLF35584_rtData_ltst, Gp_TLF35584_idxFlagRegAddress_cau8</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:1979-2000</span>
+    <span>圈复杂度: 3</span>
+    <span>bodyHash: 9fef2ebde293bbd9 · sigHash: 47a8b79f429fe7f3</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.4.2::Gp_TLF35584_ClearFlagReg</small></p>
+<h2>[Function] Gp_TLF35584_UpdateFlagReg</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_UpdateFlagReg">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_UpdateFlagReg</span>
+    <span class="wi-tag">工作项 · 5.2.4.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_UpdateFlagReg</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_TLF35584_UpdateFlagReg(void)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">刷新全部标志寄存器的本地缓存：先循环为 FLAG_REG_NUM 个标志寄存器组读命令填入 TxBuf_au16，一帧 SPI 批量发送后，再循环将回读值逐条写入 Gp_TLF35584_idxFlagRegValue_lau8 缓存数组。本函数被 Gp_TLF35584_GetAllFaultRegister、Gp_TLF35584_GetWakeUpSource、Gp_TLF35584_GetResetType 调用，为故障与唤醒复位信息查询提供数据基础。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/44_Gp_TLF35584_UpdateFlagReg.png" width="449" alt="Gp_TLF35584_UpdateFlagReg"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_TLF35584_ReadCmd<br>Gp_TLF35584_TransmitData</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_TLF35584_GetAllFaultRegister, Gp_TLF35584_GetWakeUpSource, Gp_TLF35584_GetResetType</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_TLF35584_rtData_ltst, Gp_TLF35584_idxFlagRegAddress_cau8, Gp_TLF35584_idxFlagRegValue_lau8</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:2013-2032</span>
+    <span>圈复杂度: 3</span>
+    <span>bodyHash: 34adbb15c880903d · sigHash: 3f0931f8dae6dd7a</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.4.2::Gp_TLF35584_UpdateFlagReg</small></p>
+<h2>[Function] Gp_TLF35584_UpdateStatusReg</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_UpdateStatusReg">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_UpdateStatusReg</span>
+    <span class="wi-tag">工作项 · 5.2.4.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_UpdateStatusReg</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_TLF35584_UpdateStatusReg(void)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">刷新全部状态寄存器的本地缓存：先循环为 STATUS_REG_NUM 个状态寄存器组读命令填入 TxBuf_au16，一帧 SPI 批量发送后，再循环将回读值取低 8 位逐条写入 Gp_TLF35584_idxStatusRegValue_lau8 缓存数组。本函数被 Gp_TLF35584_GetWdgInfo 与 Gp_TLF35584_SetPorstMode 调用，为看门狗信息查询与复位触发流程提供最新状态。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/45_Gp_TLF35584_UpdateStatusReg.png" width="448" alt="Gp_TLF35584_UpdateStatusReg"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_TLF35584_ReadCmd<br>Gp_TLF35584_TransmitData</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_TLF35584_GetWdgInfo, Gp_TLF35584_SetPorstMode</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_TLF35584_rtData_ltst, Gp_TLF35584_idxStatusRegAddress_cau8, Gp_TLF35584_idxStatusRegValue_lau8</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:2045-2064</span>
+    <span>圈复杂度: 3</span>
+    <span>bodyHash: b24b615e53fca882 · sigHash: c1b9a81b538907b4</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.4.2::Gp_TLF35584_UpdateStatusReg</small></p>
+<h2>[Function] Gp_TLF35584_RtSetMode</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_RtSetMode">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_RtSetMode</span>
+    <span class="wi-tag">工作项 · 5.2.4.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_RtSetMode</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_TLF35584_RtSetMode(void)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">按用户写入的 SetMode_u8 执行目标模式切换：为 STANDBY_STATE 时先将 SetMode_u8 清 0 再调用 Gp_TLF35584_SwitchToStandbyMode；为 NORMAL_STATE 时清 0 后将 StateVar_u8 置为 PREPARERUN_STATE，实际切换由 ASYNC 接口控制；为 PORST_STATE 时调用 Gp_TLF35584_SetPorstMode 以 FWD 复位动作触发 PORST；其他取值不处理。本函数由 Gp_TLF35584_MainFunction 周期调用。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/46_Gp_TLF35584_RtSetMode.png" width="697" alt="Gp_TLF35584_RtSetMode"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_TLF35584_SwitchToStandbyMode<br>Gp_TLF35584_SetPorstMode</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_TLF35584_MainFunction</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_TLF35584_rtData_ltst</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:2077-2100</span>
+    <span>圈复杂度: 4</span>
+    <span>bodyHash: 72d8e8a88b838d42 · sigHash: b19615d71f981814</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.4.2::Gp_TLF35584_RtSetMode</small></p>
+<h2>[Function] Gp_TLF35584_PreInit</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_PreInit">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_PreInit</span>
+    <span class="wi-tag">工作项 · 5.2.4.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_PreInit</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_TLF35584_PreInit(void)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>void</td></tr>
+    <tr><td class="label">Description</td><td class="desc">本函数完成模块运行时数据 Gp_TLF35584_rtData_ltst 的内存初始化：将看门狗模式 WdMode_u8 置为配置值 GP_TLF35584_WD_MODE，状态机 StateVar_u8 置为 INITIAL_TASK，清零重初始化重试计数、复位类型、唤醒源及其备份变量，并将 BistFunctCalled_u8 置为 FALSE。随后将 WdiRestoreFlag_b 置为 FALSE，调用 Gp_TLF35584_CalloutWdiService(STD_HIGH) 把 WDI 信号拉高，为 WWD 喂狗服务做准备。本函数由 Gp_TLF35584_Init 与 Gp_TLF35584_Bist 调用，是模块初始化流程和 BIST 流程的公共准备步骤。函数无返回值，内部无错误处理分支。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/47_Gp_TLF35584_PreInit.png" width="284" alt="Gp_TLF35584_PreInit"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_TLF35584_CalloutWdiService</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_TLF35584_Init, Gp_TLF35584_Bist</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_TLF35584_rtData_ltst</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:2113-2131</span>
+    <span>圈复杂度: 1</span>
+    <span>bodyHash: ee7f34a6d525990e · sigHash: 360c3974964457f4</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.4.2::Gp_TLF35584_PreInit</small></p>
+<h2>[Function] Gp_TLF35584_FwdBist</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_FwdBist">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_FwdBist</span>
+    <span class="wi-tag">工作项 · 5.2.4.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_FwdBist</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_TLF35584_FwdBist(void)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">本函数执行 FWD 功能看门狗 BIST：通过向 WDCFG0 寄存器写入 0x94 配置错误的喂狗应答，故意触发 FWD 看门狗错误，验证芯片是否按预期进入 INIT 状态并上报 FWDF 复位。本函数由 Gp_TLF35584_Bist 调用。流程上先关闭看门狗 FSP、清标志寄存器、切换到 NORMAL 模式并延时确认状态；随后配置 FWD 复位动作、读取复位类型，再次读取状态后若 DeviceState_u8 为 INIT_STATE 且复位类型含 FWDF 位，则经 Gp_TLF35584_CalloutSafeStateConfirm 确认安全状态后清标志寄存器；任一环节不符则在 BistErrPath_u32 中分别置 BIST_ERROR_9、BIST_ERROR_10 或 BIST_ERROR_11 位。安全状态确认及其结果判断仅在 SS1_SS2_SIGNAL_CONFIRM 为 STD_ON 时参与编译，否则检测到复位后直接清标志寄存器。本函数整体仅在 FWD_BIST_ENABLE 使能时参与编译。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/48_Gp_TLF35584_FwdBist.png" width="700" alt="Gp_TLF35584_FwdBist"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_TLF35584_DisableWdgFsp<br>Gp_TLF35584_ClearFlagReg<br>Gp_TLF35584_SwitchToNormalMode<br>Gp_TLF35584_CalloutStmSwDalayNus<br>Gp_TLF35584_GetState<br>Gp_TLF35584_UnlockSeq<br>Gp_TLF35584_WriteCmd<br>Gp_TLF35584_TransmitData<br>Gp_TLF35584_LockSeq<br>Gp_TLF35584_SetPorstMode<br>Gp_TLF35584_GetResetType<br>Gp_TLF35584_CalloutSafeStateConfirm</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_TLF35584_Bist</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_TLF35584_rtData_ltst</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:2145-2196</span>
+    <span>圈复杂度: 5</span>
+    <span>bodyHash: b5f7faf3c236de3f · sigHash: ff901bceccb99a08</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.4.2::Gp_TLF35584_FwdBist</small></p>
+<h2>[Function] Gp_TLF35584_WwdBist</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_WwdBist">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_WwdBist</span>
+    <span class="wi-tag">工作项 · 5.2.4.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_WwdBist</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_TLF35584_WwdBist(void)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">本函数执行 WWD 窗口看门狗 BIST：使能 WWD 并配置关闭窗与开启窗时间后，在窗口关闭期间给出无效触发，故意触发 WWD 看门狗错误，验证芯片是否进入 INIT 状态并上报 WWDF 复位。本函数由 Gp_TLF35584_Bist 调用。流程上先关闭看门狗 FSP、清标志寄存器、切换到 NORMAL 模式并延时确认状态；随后解锁写 WDCFG0、WWDCFG0、WWDCFG1 三个寄存器并发送，配置 WWD 复位动作后读取复位类型与状态，若 DeviceState_u8 为 INIT_STATE 且复位类型含 WWDF 位，则经 Gp_TLF35584_CalloutSafeStateConfirm 确认安全状态后清标志寄存器并将 ResetType_u8 清 0；任一环节不符则在 BistErrPath_u32 中分别置 BIST_ERROR_12、BIST_ERROR_13 或 BIST_ERROR_14 位。安全状态确认及其结果判断仅在 SS1_SS2_SIGNAL_CONFIRM 为 STD_ON 时参与编译。本函数整体仅在 WWD_BIST_ENABLE 使能时参与编译。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/49_Gp_TLF35584_WwdBist.png" width="700" alt="Gp_TLF35584_WwdBist"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_TLF35584_DisableWdgFsp<br>Gp_TLF35584_ClearFlagReg<br>Gp_TLF35584_SwitchToNormalMode<br>Gp_TLF35584_CalloutStmSwDalayNus<br>Gp_TLF35584_GetState<br>Gp_TLF35584_UnlockSeq<br>Gp_TLF35584_WriteCmd<br>Gp_TLF35584_TransmitData<br>Gp_TLF35584_LockSeq<br>Gp_TLF35584_SetPorstMode<br>Gp_TLF35584_GetResetType<br>Gp_TLF35584_CalloutSafeStateConfirm</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_TLF35584_Bist</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_TLF35584_rtData_ltst</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:2211-2265</span>
+    <span>圈复杂度: 5</span>
+    <span>bodyHash: cb7442aeb6a2a330 · sigHash: 7b029d5ebfa6031a</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.4.2::Gp_TLF35584_WwdBist</small></p>
+<h2>[Function] Gp_TLF35584_Errpin_Bist</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_Errpin_Bist">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_Errpin_Bist</span>
+    <span class="wi-tag">工作项 · 5.2.4.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_Errpin_Bist</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_TLF35584_Errpin_Bist(void)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">本函数执行 ERR PIN BIST：通过写 SYSPCFG1 寄存器并借助 SMU 拉压 FSP 触发错误引脚路径，验证芯片是否进入 INIT 状态并上报 ERRF 复位。本函数由 Gp_TLF35584_Bist 调用。流程上先关闭看门狗 FSP、清标志寄存器、切换到 NORMAL 模式并读取状态；随后经 Gp_TLF35584_CalloutSafeStateConfirm 确认当前非安全状态后才继续测试，确认状态为 NORMAL 后写 SYSPCFG1 并调用 Smu_ActivateFSP 激活 FSP，延时后读取复位类型与状态，若 DeviceState_u8 为 INIT_STATE 且复位类型含 ERRF 位，则再次确认安全状态后调用 Smu_ReleaseFSP 释放 FSP 并清标志寄存器；任一环节不符则在 BistErrPath_u32 中分别置 BIST_ERROR_15、BIST_ERROR_16 或 BIST_ERROR_17 位。Smu_ActivateFSP 与 Smu_ReleaseFSP 及其相关清标志操作仅在 SMU_CONFIG_ENABLE 为 STD_ON 时参与编译，两处 Gp_TLF35584_CalloutSafeStateConfirm 确认及其结果判断仅在 SS1_SS2_SIGNAL_CONFIRM 为 STD_ON 时参与编译。本函数整体仅在 ERR_BIST_ENABLE 使能时参与编译。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/50_Gp_TLF35584_Errpin_Bist.png" width="700" alt="Gp_TLF35584_Errpin_Bist"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_TLF35584_DisableWdgFsp<br>Gp_TLF35584_ClearFlagReg<br>Gp_TLF35584_SwitchToNormalMode<br>Gp_TLF35584_CalloutStmSwDalayNus<br>Gp_TLF35584_GetState<br>Gp_TLF35584_CalloutSafeStateConfirm<br>Gp_TLF35584_UnlockSeq<br>Gp_TLF35584_WriteCmd<br>Gp_TLF35584_TransmitData<br>Gp_TLF35584_LockSeq<br>Smu_ActivateFSP<br>Gp_TLF35584_GetResetType<br>Smu_ReleaseFSP</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_TLF35584_Bist</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_TLF35584_rtData_ltst</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:2280-2357</span>
+    <span>圈复杂度: 6</span>
+    <span>bodyHash: b922ce49c1134165 · sigHash: 30e98bd182692a17</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.4.2::Gp_TLF35584_Errpin_Bist</small></p>
+<h2>[Function] Gp_TLF35584_SinSafetyBistCheck</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_SinSafetyBistCheck">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_SinSafetyBistCheck</span>
+    <span class="wi-tag">工作项 · 5.2.4.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_SinSafetyBistCheck</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>Std_ReturnType Gp_TLF35584_SinSafetyBistCheck(void)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">本函数轮询检查单一过压比较器安全路径 BIST 的结果。启动 Gp_TimeCal_CaptureStart 计时后进入 while 循环，在 Ret_t 为 E_NOT_OK 期间反复通过 SPI 读取 MONSF1、ABIST_CTRL0、ABIST_SELECT0 三个寄存器，依次核对 ABIST_CTRL0 的 BIST_SUCCEED 位、ABIST_SELECT0 无 UCOV 错误、MONSF1 的 UCOV_MONSF1 标志；三项全部满足时依次清 BistErrPath_u32 的 BIST_ERROR_0、BIST_ERROR_1、BIST_ERROR_2 位并将 Ret_t 置为 E_OK 退出循环，任一项不满足则置对应错误位后继续轮询。每次循环先经 Gp_TimeCal_CaptureStop 检查计时间隔，超过 ABIST_SINGLE_MAXTIME 时 break 超时退出。函数返回 Ret_t，由 Gp_TLF35584_SingleOvSafetyPathBist 调用并据此判定 BIST 是否通过。本函数仅在 ANA_BIST_ENABLE 使能时参与编译。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/51_Gp_TLF35584_SinSafetyBistCheck.png" width="700" alt="Gp_TLF35584_SinSafetyBistCheck"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_TimeCal_CaptureStart<br>Gp_TimeCal_CaptureStop<br>Gp_TLF35584_ReadCmd<br>Gp_TLF35584_TransmitData</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_TLF35584_SingleOvSafetyPathBist</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_TLF35584_rtData_ltst, Gp_TLF35584_SingAnalogBistCal_lst</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:2372-2435</span>
+    <span>圈复杂度: 6</span>
+    <span>bodyHash: 03f7dd4f6dfea3c6 · sigHash: 47e083b6c7ea8512</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.4.2::Gp_TLF35584_SinSafetyBistCheck</small></p>
+<h2>[Function] Gp_TLF35584_SingleOvSafetyPathBist</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_SingleOvSafetyPathBist">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_SingleOvSafetyPathBist</span>
+    <span class="wi-tag">工作项 · 5.2.4.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_SingleOvSafetyPathBist</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_TLF35584_SingleOvSafetyPathBist(void)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">本函数执行单一过压比较器安全路径 BIST：先写 ABIST_SELECT0 为 UCOV_SELECT0、写 ABIST_CTRL0 为 FULLPATH_BIST 并发送，选中单一过压比较器并启动 BIST；随后调用 Gp_TLF35584_SinSafetyBistCheck 轮询检查结果。检查通过（Ret_t 为 E_OK）时调用 Gp_TLF35584_ClearFlagReg 清标志寄存器；失败时在 BistErrPath_u32 中置 BIST_ERROR_3 位，并回读 MONSF1、ABIST_CTRL0、ABIST_SELECT0、VMONSTAT、DEVSTAT 五个寄存器，将其值存入 Gp_TLF35584_BistErrRestore_lau8 第 0 至 4 项供故障分析。本函数由 Gp_TLF35584_SafetypathBist 调用，仅在 ANA_BIST_ENABLE 使能时参与编译。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/52_Gp_TLF35584_SingleOvSafetyPathBist.png" width="502" alt="Gp_TLF35584_SingleOvSafetyPathBist"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_TLF35584_WriteCmd<br>Gp_TLF35584_TransmitData<br>Gp_TLF35584_SinSafetyBistCheck<br>Gp_TLF35584_ClearFlagReg<br>Gp_TLF35584_ReadCmd</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_TLF35584_SafetypathBist</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_TLF35584_rtData_ltst, Gp_TLF35584_BistErrRestore_lau8</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:2448-2482</span>
+    <span>圈复杂度: 2</span>
+    <span>bodyHash: df5194d4c92f7e31 · sigHash: 7230cbdaecbedcbc</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.4.2::Gp_TLF35584_SingleOvSafetyPathBist</small></p>
+<h2>[Function] Gp_TLF35584_AllCompartorSafetyCmd</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_AllCompartorSafetyCmd">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_AllCompartorSafetyCmd</span>
+    <span class="wi-tag">工作项 · 5.2.4.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_AllCompartorSafetyCmd</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_TLF35584_AllCompartorSafetyCmd(void)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">本函数下发货全比较器安全路径 BIST 的寄存器配置序列。先对 ABIST_CTRL1 寄存器依次写入 OV、CLOCK、OV、DISABLE 四个值，每次写入后组帧发送并延时 50us，完成 BIST 时钟与通路的准备与关闭；随后一次性写入 ABIST_SELECT0、ABIST_SELECT1、ABIST_SELECT2 与 ABIST_CTRL0 四个寄存器，选中全部 OV、UV 及内部比较器并发送启动 BIST；最后延时 1000us 等待 BIST 执行完成。本函数为纯顺序流程，无分支与返回值，由 Gp_TLF35584_AllCompartorSafetyPathBist 调用，仅在 ANA_BIST_ENABLE 使能时参与编译。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/53_Gp_TLF35584_AllCompartorSafetyCmd.png" width="308" alt="Gp_TLF35584_AllCompartorSafetyCmd"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_TLF35584_WriteCmd<br>Gp_TLF35584_TransmitData<br>Gp_TLF35584_CalloutStmSwDalayNus</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_TLF35584_AllCompartorSafetyPathBist</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_TLF35584_rtData_ltst</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:2495-2524</span>
+    <span>圈复杂度: 1</span>
+    <span>bodyHash: d7ef30c38999cd3e · sigHash: dc962026b9da93a2</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.4.2::Gp_TLF35584_AllCompartorSafetyCmd</small></p>
+<h2>[Function] Gp_TLF35584_AllSafetyBistCheck</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_AllSafetyBistCheck">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_AllSafetyBistCheck</span>
+    <span class="wi-tag">工作项 · 5.2.4.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_AllSafetyBistCheck</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>Std_ReturnType Gp_TLF35584_AllSafetyBistCheck(void)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">本函数轮询检查全比较器安全路径 BIST 的结果。启动 Gp_TimeCal_CaptureStart 计时后进入 while 循环，在 Ret_t 为 E_NOT_OK 期间反复通过 SPI 读取 MONSF1、MONSF2、MONSF3 与 ABIST_CTRL0 四个寄存器，依次核对 ABIST_CTRL0 的 BIST_SUCCEED 位及三个 MONSF 寄存器的对应掩码；四项全部满足时依次清 BistErrPath_u32 的 BIST_ERROR_4 至 BIST_ERROR_7 位并将 Ret_t 置为 E_OK 退出循环，任一项不满足则置对应错误位后继续轮询。每次循环先经 Gp_TimeCal_CaptureStop 检查计时间隔，超过 ABIST_MULTI_MAXTIME 时 break 超时退出。函数返回 Ret_t，由 Gp_TLF35584_AllCompartorSafetyPathBist 调用并据此判定 BIST 是否通过。本函数仅在 ANA_BIST_ENABLE 使能时参与编译。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/54_Gp_TLF35584_AllSafetyBistCheck.png" width="700" alt="Gp_TLF35584_AllSafetyBistCheck"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_TimeCal_CaptureStart<br>Gp_TimeCal_CaptureStop<br>Gp_TLF35584_ReadCmd<br>Gp_TLF35584_TransmitData</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_TLF35584_AllCompartorSafetyPathBist</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_TLF35584_rtData_ltst, Gp_TLF35584_MultiAnalogBistCal_lst</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:2537-2610</span>
+    <span>圈复杂度: 7</span>
+    <span>bodyHash: def01686806534b3 · sigHash: 98af5cae3098cea1</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.4.2::Gp_TLF35584_AllSafetyBistCheck</small></p>
+<h2>[Function] Gp_TLF35584_AllCompartorSafetyPathBist</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_AllCompartorSafetyPathBist">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_AllCompartorSafetyPathBist</span>
+    <span class="wi-tag">工作项 · 5.2.4.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_AllCompartorSafetyPathBist</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_TLF35584_AllCompartorSafetyPathBist(void)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">本函数执行全比较器安全路径 BIST 的主流程：先调用 Gp_TLF35584_AllCompartorSafetyCmd 下发货寄存器配置并启动 BIST，再调用 Gp_TLF35584_AllSafetyBistCheck 轮询检查结果。检查通过（Ret_t 为 E_OK）时调用 Gp_TLF35584_ClearFlagReg 清标志寄存器；失败时在 BistErrPath_u32 中置 BIST_ERROR_8 位，并回读 MONSF1、MONSF2、MONSF3、ABIST_CTRL0、VMONSTAT、DEVSTAT 六个寄存器，将其值存入 Gp_TLF35584_BistErrRestore_lau8 第 5 至 10 项供故障分析。本函数由 Gp_TLF35584_SafetypathBist 调用，仅在 ANA_BIST_ENABLE 使能时参与编译。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/55_Gp_TLF35584_AllCompartorSafetyPathBist.png" width="496" alt="Gp_TLF35584_AllCompartorSafetyPathBist"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_TLF35584_AllCompartorSafetyCmd<br>Gp_TLF35584_AllSafetyBistCheck<br>Gp_TLF35584_ClearFlagReg<br>Gp_TLF35584_ReadCmd<br>Gp_TLF35584_TransmitData</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_TLF35584_SafetypathBist</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_TLF35584_rtData_ltst, Gp_TLF35584_BistErrRestore_lau8</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:2623-2655</span>
+    <span>圈复杂度: 2</span>
+    <span>bodyHash: 5a15a663e4f47859 · sigHash: 14b87bbfd492b81b</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.4.2::Gp_TLF35584_AllCompartorSafetyPathBist</small></p>
+<h2>[Function] Gp_TLF35584_SafetypathBist</h2>
+
+<div class="workitem" id="Gp_TLF35584::Gp_TLF35584_SafetypathBist">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_SafetypathBist</span>
+    <span class="wi-tag">工作项 · 5.2.4.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_SafetypathBist</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_TLF35584_SafetypathBist(void)</code></td></tr>
+    <tr><td class="label">Service ID[hex]</td><td>None</td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">本函数是安全路径 BIST 的入口编排函数：先调用 Gp_TLF35584_SingleOvSafetyPathBist 完成单一过压比较器的安全路径 BIST，再调用 Gp_TLF35584_AllCompartorSafetyPathBist 完成全部比较器的安全路径 BIST。函数自身不访问全局变量、不做结果判断，错误记录由各子函数写入 BistErrPath_u32。本函数由 Gp_TLF35584_Bist 调用，仅在 ANA_BIST_ENABLE 使能时参与编译。</td></tr>
+    <tr><td class="label">流程图</td><td><p align="center"><img src="figs/56_Gp_TLF35584_SafetypathBist.png" width="257" alt="Gp_TLF35584_SafetypathBist"></p>
+</td></tr>
+    <tr><td class="label">调用</td><td class="muted small">Gp_TLF35584_SingleOvSafetyPathBist<br>Gp_TLF35584_AllCompartorSafetyPathBist</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_TLF35584_Bist</td></tr>
+  </table>
+  <div class="wi-footer">
+    <span>源: Gp_TLF35584.c:2668-2674</span>
+    <span>圈复杂度: 1</span>
+    <span>bodyHash: 293262e587a65f54 · sigHash: 81f743aa60d0ab2f</span>
+    <span>描述生成: claude-sample</span>
+  </div>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::5.2.4.2::Gp_TLF35584_SafetypathBist</small></p>
+<h1>5.3.1 状态机</h1>
+<h2>[StateMachine] Gp_TLF35584 运行状态机</h2>
+<table><tr><th>状态</th><th>说明</th></tr><tr><td>INITIAL_TASK</td><td>上电初始状态，由 PreInit 置位；Init 尚未执行或执行中</td></tr><tr><td>WAIT</td><td>Init 完成，驱动不自动切 NORMAL，等待用户调用 SetDevSigModeOut 下发模式请求</td></tr><tr><td>PREPARERUN</td><td>收到 NORMAL 请求，RtWdgRegCfg 将 WDCYC 从 1ms 改为 0.1ms 重建 WWD 时序，喂狗一次后尝试切入 NORMAL；未达 NORMAL 时按 TRY_REINIT_MAX 重试</td></tr><tr><td>RUN</td><td>正常运行：按 SERVICE_WDG_TIME 周期喂狗（WDGM_ENABLE 时受 WdgSwitch/WdgMTrigCnt 控制），每周期采集故障寄存器并消抖更新 ErrRecord</td></tr><tr><td>ERROR</td><td>PREPARERUN 重试耗尽进入，MainFunction 不再动作</td></tr></table>
+<p align="center"><img src="figs/57_Gp_TLF35584.png" width="700" alt="Gp_TLF35584 运行状态机"></p>
+<p><small>LLD-KEY: Gp_TLF35584::5.3.1::Gp_TLF35584_运行状态机</small></p>
+<h1>5.3.2 序列图</h1>
+<h2>[Sequence] Gp_TLF35584 Initialization 序列图</h2>
+<p>TLF35584 init function,include watchdog initialization</p>
+<p align="center"><img src="figs/58_Initialization.png" width="700" alt="Gp_TLF35584 Initialization 序列图"></p>
+<p><small>LLD-KEY: Gp_TLF35584::5.3.2::Initialization</small></p>
+<h2>[Sequence] Gp_TLF35584 Runtime 序列图</h2>
+<p>TLF35584 main state,service wdg,get wdg infomation,update err infomation</p>
+<p align="center"><img src="figs/59_Runtime.png" width="700" alt="Gp_TLF35584 Runtime 序列图"></p>
+<p><small>LLD-KEY: Gp_TLF35584::5.3.2::Runtime</small></p>
+<h1>6.2 Callout function</h1>
+<h2>[Function] Gp_TLF35584_CalloutDemReport</h2>
+<h5>6.2.1 <code>Gp_TLF35584_CalloutDemReport</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_CalloutDemReport</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_CalloutDemReport</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_TLF35584_CalloutDemReport(uint8 FaultId_u8, uint8 Status_u8)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td><code>fault</code></td></tr><tr><td class="label"></td><td><code>fault</code><br><span class="muted">: uint8 Status_u8: status of TLF35584's</span></td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>void</td></tr>
+    <tr><td class="label">Description</td><td class="desc">集成方需实现将模块故障上报 Dem 的 Callout：入参 FaultId_u8 为 TLF35584 故障标识、Status_u8 为故障状态，按 FaultMatrix-UDS 服务定义的 Dem Event 完成上报（取代已废弃的旧事件）。模块在 Gp_TLF35584_Init 重试失败、Gp_TLF35584_TransmitData SPI 校验失败、Gp_TLF35584_SwitchToStandbyMode 唤醒源确认/切换失败、Gp_TLF35584_SetPorstMode 触发失败及 Gp_TLF35584_InitRegCfg 受保护寄存器校验失败时调用，仅在 GP_TLF35584_DEM_ERROR_ENABLE 使能时参与编译。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_TLF35584_Init, Gp_TLF35584_TransmitData, Gp_TLF35584_SwitchToStandbyMode, Gp_TLF35584_SetPorstMode, Gp_TLF35584_InitRegCfg</td></tr>
+  </table>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::6.2::Gp_TLF35584_CalloutDemReport</small></p>
+<h2>[Function] Gp_TLF35584_CalloutDisableIntrrupt</h2>
+<h5>6.2.2 <code>Gp_TLF35584_CalloutDisableIntrrupt</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_CalloutDisableIntrrupt</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_CalloutDisableIntrrupt</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_TLF35584_CalloutDisableIntrrupt(void)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>void</td></tr>
+    <tr><td class="label">Description</td><td class="desc">集成方需实现关全局中断的 Callout，无参数无返回值。模块在 Gp_TLF35584_GetAllFaultRegister 读取并清零故障记录变量的临界段前调用，防止异步的故障设置与读取并发导致错误先被清除的问题（5.0.0 版本起引入，与对应的开中断接口配合使用）。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_TLF35584_GetAllFaultRegister</td></tr>
+  </table>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::6.2::Gp_TLF35584_CalloutDisableIntrrupt</small></p>
+<h2>[Function] Gp_TLF35584_CalloutMpsTestSupport</h2>
+<h5>6.2.3 <code>Gp_TLF35584_CalloutMpsTestSupport</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_CalloutMpsTestSupport</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_CalloutMpsTestSupport</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_TLF35584_CalloutMpsTestSupport(uint8 Lvl_u8)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td><code>Lvl_u8</code></td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>void</td></tr>
+    <tr><td class="label">Description</td><td class="desc">集成方需实现驱动 MPS（microcontroller programming support）引脚电平的 Callout：按入参 Lvl_u8 输出高/低电平，MPS 高使 TLF35584 进入测试模式（屏蔽 WDG/ERR pin 等复位动作），MPS 低回到正常模式（错误将引起 ROT 复位）。模块在 Gp_TLF35584_SetDevMpsMode 设置器件测试/正常模式时调用。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_TLF35584_SetDevMpsMode</td></tr>
+  </table>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::6.2::Gp_TLF35584_CalloutMpsTestSupport</small></p>
+<h2>[Function] Gp_TLF35584_CalloutSafeStateConfirm</h2>
+<h5>6.2.4 <code>Gp_TLF35584_CalloutSafeStateConfirm</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_CalloutSafeStateConfirm</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_CalloutSafeStateConfirm</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>Std_ReturnType Gp_TLF35584_CalloutSafeStateConfirm(void)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>E_NOT_OK:the system not in safe state : E_OK:the system not in safe state</td></tr>
+    <tr><td class="label">Description</td><td class="desc">集成方需实现系统安全状态确认的 Callout：检测应用层 SS1/SS2 安全状态信号是否按预期动作，返回 E_OK 表示系统处于安全状态，返回 E_NOT_OK 表示未进入安全状态。模块在 Gp_TLF35584_FwdBist、Gp_TLF35584_WwdBist、Gp_TLF35584_Errpin_Bist 触发预期复位反应后调用，仅在 GP_TLF35584_SS1_SS2_SIGNAL_CONFIRM 为 STD_ON 时参与编译。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_TLF35584_FwdBist, Gp_TLF35584_WwdBist, Gp_TLF35584_Errpin_Bist</td></tr>
+  </table>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::6.2::Gp_TLF35584_CalloutSafeStateConfirm</small></p>
+<h2>[Function] Gp_TLF35584_CalloutSpiTransSync</h2>
+<h5>6.2.5 <code>Gp_TLF35584_CalloutSpiTransSync</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_CalloutSpiTransSync</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_CalloutSpiTransSync</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>Std_ReturnType Gp_TLF35584_CalloutSpiTransSync(uint16* TxBuf_pu16, uint16* RxBuf_pu16, uint16 Length_u16)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td><code>TxBuf_pu16</code><br><span class="muted">uint16 *</span></td></tr><tr><td class="label"></td><td><code>RxBuf_pu16</code><br><span class="muted">: uint16 *</span></td></tr><tr><td class="label"></td><td><code>Length_u16</code></td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>void</td></tr>
+    <tr><td class="label">Description</td><td class="desc">集成方需实现 SPI 同步收发的 Callout：以 TxBuf_pu16 为发送缓冲、RxBuf_pu16 为接收缓冲，完成 Length_u16 个 16 位字的同步传输，并返回传输结果（E_OK/E_NOT_OK）。模块所有寄存器读写均经 Gp_TLF35584_TransmitData 汇聚到该接口，传输结果用于写命令回读校验与 SPI 错误记录。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_TLF35584_TransmitData</td></tr>
+  </table>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::6.2::Gp_TLF35584_CalloutSpiTransSync</small></p>
+<h2>[Function] Gp_TLF35584_CalloutStmSwDalayNus</h2>
+<h5>6.2.6 <code>Gp_TLF35584_CalloutStmSwDalayNus</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_CalloutStmSwDalayNus</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_CalloutStmSwDalayNus</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_TLF35584_CalloutStmSwDalayNus(uint32 Nus_u32)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td><code>Nus_u32</code></td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>None</td></tr>
+    <tr><td class="label">Description</td><td class="desc">集成方需实现微秒级软件延时的 Callout，按入参 Nus_u32 阻塞等待指定时长。模块在模式切换后等待状态稳定、BIST 各步骤之间等待器件反应、错误喂狗时序等场景调用，调用方包括 Gp_TLF35584_MainFunction、Gp_TLF35584_WrongService、Gp_TLF35584_SwitchToStandbyMode、Gp_TLF35584_SetPorstMode、Gp_TLF35584_InitRegCfg、Gp_TLF35584_FwdBist、Gp_TLF35584_WwdBist、Gp_TLF35584_Errpin_Bist、Gp_TLF35584_AllCompartorSafetyCmd。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_TLF35584_MainFunction, Gp_TLF35584_WrongService, Gp_TLF35584_SwitchToStandbyMode, Gp_TLF35584_SetPorstMode, Gp_TLF35584_InitRegCfg, Gp_TLF35584_FwdBist, Gp_TLF35584_WwdBist, Gp_TLF35584_Errpin_Bist, Gp_TLF35584_AllCompartorSafetyCmd</td></tr>
+  </table>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::6.2::Gp_TLF35584_CalloutStmSwDalayNus</small></p>
+<h2>[Function] Gp_TLF35584_CalloutWdgmValid</h2>
+<h5>6.2.7 <code>Gp_TLF35584_CalloutWdgmValid</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_CalloutWdgmValid</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_CalloutWdgmValid</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>Std_ReturnType Gp_TLF35584_CalloutWdgmValid(void)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>void</td></tr>
+    <tr><td class="label">Description</td><td class="desc">集成方需实现校验 WdgM 信号有效性的 Callout，返回校验结果。该接口在 4.0.0 版本加入，5.0.0 版本已删除模块内调用，当前版本无模块内调用者（仅余配置表函数指针引用），集成方可按需保留实现或裁剪。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">(rtSatCont 配置表函数指针引用)</td></tr>
+  </table>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::6.2::Gp_TLF35584_CalloutWdgmValid</small></p>
+<h2>[Function] Gp_TLF35584_CalloutWdiService</h2>
+<h5>6.2.8 <code>Gp_TLF35584_CalloutWdiService</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_CalloutWdiService</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_CalloutWdiService</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>void Gp_TLF35584_CalloutWdiService(uint8 Lvl_u8)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td><code>Lvl_u8</code></td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>void</td></tr>
+    <tr><td class="label">Description</td><td class="desc">集成方需实现 WDI 引脚电平输出的 Callout，按入参 Lvl_u8 驱动 TLF35584 的 WDI 引脚高/低电平，完成窗口看门狗的 WDI 喂狗时序。模块在 Gp_TLF35584_WwdWdiService 执行 WDI 喂狗、Gp_TLF35584_GetWdgInfo 及 Gp_TLF35584_PreInit（初始化时将 WDI 置高）中调用。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_TLF35584_WwdWdiService, Gp_TLF35584_GetWdgInfo, Gp_TLF35584_PreInit</td></tr>
+  </table>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::6.2::Gp_TLF35584_CalloutWdiService</small></p>
+<h2>[Function] Gp_TLF35584_CalloutWkSourceConfirm</h2>
+<h5>6.2.9 <code>Gp_TLF35584_CalloutWkSourceConfirm</code></h5>
+<div class="workitem">
+  <div class="wi-header">
+    <span class="wi-title">Gp_TLF35584_CalloutWkSourceConfirm</span>
+    <span class="wi-tag">工作项 · 6.2</span>
+    <span class="wi-id">待导入分配ID</span>
+  </div>
+  <table class="wi-table">
+    <tr><td class="label">Service name</td><td><code>Gp_TLF35584_CalloutWkSourceConfirm</code></td></tr>
+    <tr><td class="label">Syntax</td><td><code>Std_ReturnType Gp_TLF35584_CalloutWkSourceConfirm(void)</code></td></tr>
+    <tr><td class="label">Sync/Async</td><td>Synchronous</td></tr>
+    <tr><td class="label">Reentrancy</td><td>Non_Reentrancy</td></tr>
+    <tr><td class="label">Parameters(in)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(inout)</td><td>None</td></tr>
+    <tr><td class="label">Parameters(out)</td><td>None</td></tr>
+    <tr><td class="label">Return value</td><td>void</td></tr>
+    <tr><td class="label">Description</td><td class="desc">集成方需实现下电阶段唤醒源确认的 Callout：确认系统当前不存在有效唤醒源、满足休眠条件，返回 E_OK 允许进入 Standby，返回 E_NOT_OK 阻止本次切换。模块在 Gp_TLF35584_SwitchToStandbyMode 的每次重试循环前调用，仅在 GP_TLF35584_WAKE_UP_SOURCE_CONFIRM 为 STD_ON 时参与编译。<span class="inferred">推断，待确认</span></td></tr>
+    <tr><td class="label">模块内调用者</td><td class="muted small">Gp_TLF35584_SwitchToStandbyMode</td></tr>
+  </table>
+</div>
+<p><small>LLD-KEY: Gp_TLF35584::6.2::Gp_TLF35584_CalloutWkSourceConfirm</small></p>
+</body>
+</html>

@@ -1,0 +1,26 @@
+flowchart TD
+    subgraph SG1[" "]
+        SG1_NOTE["注：仅在<br>GP_IOMCUADC_DEV_ERROR_DETE<br>CT 生效时参与编译"]
+        SG1_NOTE ~~~ START
+        START(["开始"])
+        INIT["初始化 ErrFlag_b 为 FALSE<br>获取 Det_ptst 指针"]
+        CHECK_ARG{"ChkId_u16 <<br>GP_IOMCUADC_SIG_NUM<br>且 ChkArgIn_pu8 !=<br>GP_IOMCUADC_NULL_PTR"}
+        CHECK_CORE{"SmCfg_cptst[ChkId_u16].Map<br>pingCoreId_u32 ==<br>ChkCoreId_u32"}
+        SET_OK["设置 ErrFlag_b 为 FALSE"]
+        SET_ERR_MAP["设置 ErrFlag_b 为 TRUE<br>记录 IfId_t<br>记录 ErrStu_t 为<br>GP_IOMCUADC_ERRSTU_SIG_MAP<br>_INCONSISTENT"]
+        SET_ERR_ARG["设置 ErrFlag_b 为 TRUE<br>记录 IfId_t<br>记录 ErrStu_t 为<br>GP_IOMCUADC_ERRSTU_INVALID<br>_ARG"]
+        END(["结束"])
+        
+        START --> INIT
+        INIT --> CHECK_ARG
+        CHECK_ARG -- 是 --> CHECK_CORE
+        CHECK_CORE -- 是 --> SET_OK
+        CHECK_CORE -- 否 --> SET_ERR_MAP
+        CHECK_ARG -- 否 --> SET_ERR_ARG
+        SET_OK --> END
+        SET_ERR_MAP --> END
+        SET_ERR_ARG --> END
+    end
+    style SG1 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+    classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700
+    class SG1_NOTE condNote

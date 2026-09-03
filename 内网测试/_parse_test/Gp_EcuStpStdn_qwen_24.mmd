@@ -1,0 +1,16 @@
+sequenceDiagram
+participant OS as OS
+participant Gp as Gp_EcuStpShdn
+participant CO as Callout
+participant Tst as Gp_TstApp
+
+OS->>Gp: Gp_EcuStpShdn_Mainfunction
+Gp->>CO: Gp_EcuStpShdn_CalloutGetCoreId
+CO-->>Gp: CoreId
+Gp->>Tst: Gp_TstApp_RunTimePhase
+Tst-->>Gp: TestResult
+Gp->>CO: Gp_EcuStpShdn_CalloutChkMcuRunTimeTest
+CO-->>Gp: CheckResult
+alt CheckResult is Failed
+    Gp->>CO: Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd
+end

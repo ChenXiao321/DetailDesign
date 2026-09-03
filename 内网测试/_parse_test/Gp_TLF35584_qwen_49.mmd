@@ -1,0 +1,46 @@
+flowchart TD
+    Start(["开始"])
+    Init1["初始化 Data_pst 指向<br>Gp_TLF35584_rtData_ltst"]
+    Init2["初始化 Return_u8 为<br>E_NOT_OK"]
+    Call1[["Gp_TLF35584_DisableWdgFsp"]]
+    Call2[["Gp_TLF35584_ClearFlagReg"]]
+    Call3[["Gp_TLF35584_SwitchToNormal<br>Mode"]]
+    Call4[["Gp_TLF35584_CalloutStmSwDa<br>layNus<br>GP_TLF35584_MODE_SWITCH_DE<br>LAY"]]
+    Call5[["Gp_TLF35584_GetState"]]
+    Check1{"Data_pst->StatusData_tst.D<br>eviceState_u8 ==<br>GP_TLF35584_NORMAL_STATE"}
+    
+    Check1 -- 否 --> Err12["Data_pst->ErrData_tst.Bist<br>ErrPath_u32 |=<br>GP_TLF35584_BIST_ERROR_12"]
+    Err12 --> End(["结束"])
+    SetCnt ~~~ End
+    Call7 ~~~ End
+    Call8 ~~~ End
+    Call9 ~~~ End
+    Call10 ~~~ End
+    Call11 ~~~ End
+    Call12 ~~~ End
+    
+    Check1 -- 是 --> Call6[["Gp_TLF35584_UnlockSeq"]]
+    Call6 --> Write1["Data_pst->SpiData_tst.TxBu<br>f_au16[0U] =<br>Gp_TLF35584_WriteCmd(GP_TL<br>F35584_REG_WDCFG0,<br>GP_TLF35584_WWD_ENABLE)"]
+    Write1 --> Write2["Data_pst->SpiData_tst.TxBu<br>f_au16[1U] =<br>Gp_TLF35584_WriteCmd(GP_TL<br>F35584_REG_WWDCFG0,<br>GP_TLF35584_WWD_CW_TIME)"]
+    Write2 --> Write3["Data_pst->SpiData_tst.TxBu<br>f_au16[2U] =<br>Gp_TLF35584_WriteCmd(GP_TL<br>F35584_REG_WWDCFG1,<br>GP_TLF35584_WWD_OW_TIME)"]
+    Write3 --> SetCnt["Data_pst->SpiData_tst.CntT<br>x_u16 = 3U"]
+    SetCnt --> Call7[["Gp_TLF35584_TransmitData<br>Data_pst->SpiData_tst.CntT<br>x_u16"]]
+    Call7 --> Call8[["Gp_TLF35584_LockSeq"]]
+    Call8 --> Call9[["Gp_TLF35584_CalloutStmSwDa<br>layNus<br>GP_TLF35584_MODE_SWITCH_DE<br>LAY"]]
+    Call9 --> Call10[["Gp_TLF35584_SetPorstMode<br>GP_TLF35584_WWD_RESET_ACTI<br>ON"]]
+    Call10 --> Call11[["Gp_TLF35584_GetResetType<br>GP_TLF35584_GETRST_RUN"]]
+    Call11 --> Call12[["Gp_TLF35584_GetState"]]
+    Check2{"(Data_pst->StatusData_tst.<br>DeviceState_u8 ==<br>GP_TLF35584_INIT_STATE)<br>&&((Data_pst->StatusData_t<br>st.ResetType_u8 &<br>GP_TLF35584_RESET_WWDF)<br>==GP_TLF35584_RESET_WWDF)"}
+    
+    Check2 -- 否 --> Err13["Data_pst->ErrData_tst.Bist<br>ErrPath_u32 |=<br>GP_TLF35584_BIST_ERROR_13"]
+    Err13 --> End
+    
+    Check2 -- 是 --> Call13[["Gp_TLF35584_CalloutSafeSta<br>teConfirm"]]
+    Call13 --> Check3{"Return_u8 == E_OK"}
+    
+    Check3 -- 是 --> Call14[["Gp_TLF35584_ClearFlagReg"]]
+    Call14 --> ClearReset["Data_pst->StatusData_tst.R<br>esetType_u8 = 0U"]
+    ClearReset --> End
+    
+    Check3 -- 否 --> Err14["Data_pst->ErrData_tst.Bist<br>ErrPath_u32 |=<br>GP_TLF35584_BIST_ERROR_14"]
+    Err14 --> End

@@ -1,0 +1,22 @@
+flowchart TD
+    START(["开始"])
+    INIT1{{"初始化 Data_pst 指向<br>Gp_TLF35584_rtData_ltst"}}
+    INIT2{{"初始化 Cnt_u32 为 0U"}}
+    INIT1 --> INIT2
+    LOOP1_COND{"Cnt_u32 <<br>GP_TLF35584_FLAG_REG_NUM ?"}
+    LOOP1_COND -- 否 --> SET_CNT_TX["设置<br>Data_pst->SpiData_tst.CntT<br>x_u16 为<br>GP_TLF35584_FLAG_REG_NUM"]
+    LOOP1_COND -- 是 --> READ_CMD[["调用 Gp_TLF35584_ReadCmd<br>读取标志寄存器"]]
+    READ_CMD --> WRITE_TX[/"写入<br>Data_pst->SpiData_tst.TxBu<br>f_au16[Cnt_u32]"/]
+    WRITE_TX --> INC_LOOP1["Cnt_u32 自增"]
+    INC_LOOP1 --> LOOP1_COND
+    SET_CNT_TX --> TRANSMIT[["调用<br>Gp_TLF35584_TransmitData<br>发送数据"]]
+    TRANSMIT --> INIT3{{"初始化 Cnt_u32 为 0U"}}
+    INIT3 --> LOOP2_COND{"Cnt_u32 <<br>GP_TLF35584_FLAG_REG_NUM ?"}
+    LOOP2_COND -- 否 --> END(["结束"])
+    READ_RX ~~~ END
+    WRITE_VAL ~~~ END
+    INC_LOOP2 ~~~ END
+    LOOP2_COND -- 是 --> READ_RX[/"读取<br>Data_pst->SpiData_tst.RxBu<br>f_au16[Cnt_u32]"/]
+    READ_RX --> WRITE_VAL[/"写入<br>Gp_TLF35584_idxFlagRegValu<br>e_lau8[Cnt_u32]"/]
+    WRITE_VAL --> INC_LOOP2["Cnt_u32 自增"]
+    INC_LOOP2 --> LOOP2_COND

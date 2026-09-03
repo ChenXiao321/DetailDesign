@@ -1,0 +1,35 @@
+flowchart TD
+    START(["开始"])
+    INIT{{"初始化局部变量<br>Ret_t = E_NOT_OK<br>CoreId_u32 = 0U<br>ChlIdx_u8 = 0U<br>ErrFlag1_b = FALSE<br>ErrFlag2_b = FALSE"}}
+    CALL_CORE[["Gp_IoMcuAdc_CalloutGetCore<br>Id<br>获取核心ID"]]
+    READ_CFG[/"读取配置指针<br>Cfg_cptst = &Gp_IoMcuAdc_cfgCont_vcatst[CoreId_u32]/]
+    READ_RT[/"读取运行时指针<br>Rt_cptst = &Gp_IoMcuAdc_rtCont_lcatst[CoreId_u32]/]
+    CALL_CHECK1[["Gp_IoMcuAdc_CheckInitStu<br>检查初始化状态"]]
+    CALL_CHECK2[["Gp_IoMcuAdc_CheckArgIn<br>检查输入参数"]]
+    OR_FLAGS["合并错误标志<br>ErrFlag1_b = ErrFlag1_b |<br>ErrFlag2_b"]
+    CHECK_ERR{"ErrFlag1_b == FALSE ?"}
+    READ_MAP[/"读取通道索引<br>ChlIdx_u8 = SmCfg_cptst[Id_u16].MappingChlIdx_u8/]
+    CHECK_DIRECT{"Cfg_cptst->AdcSigLocalCfg_<br>cptst[ChlIdx_u8].DirectlyR<br>ead_b == TRUE ?"}
+    CALL_DIAG[["Gp_IoMcuAdc_GetDiag<br>获取诊断数据"]]
+    WRITE_DIAG[/"写入诊断数据<br>*Diag_pu32 = Rt_cptst->AdcSig_ptst[ChlIdx_u8].Diag_u32/]
+    SET_OK["设置返回状态<br>Ret_t = E_OK"]
+    SET_NOT_OK["设置返回状态<br>Ret_t = E_NOT_OK"]
+    END(["结束"])
+
+    START --> INIT
+    INIT --> CALL_CORE
+    CALL_CORE --> READ_CFG
+    READ_CFG --> READ_RT
+    READ_RT --> CALL_CHECK1
+    CALL_CHECK1 --> CALL_CHECK2
+    CALL_CHECK2 --> OR_FLAGS
+    OR_FLAGS --> CHECK_ERR
+    CHECK_ERR -- 是 --> READ_MAP
+    READ_MAP --> CHECK_DIRECT
+    CHECK_DIRECT -- 是 --> CALL_DIAG
+    CALL_DIAG --> WRITE_DIAG
+    WRITE_DIAG --> SET_OK
+    CHECK_DIRECT -- 否 --> WRITE_DIAG
+    CHECK_ERR -- 否 --> SET_NOT_OK
+    SET_OK --> END
+    SET_NOT_OK --> END

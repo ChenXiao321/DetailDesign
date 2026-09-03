@@ -32,9 +32,9 @@ LLM 连接配置三选一（优先级：环境变量 > lld.config.json）：
 
 ```powershell
 # 方式 1：环境变量
-$env:LLD_LLM_BASE_URL = "http://10.7.29.98:4000"   # 只给 host:port 会自动补 /v1
+$env:LLD_LLM_BASE_URL = "http://10.0.75.130:4000"   # 只给 host:port 会自动补 /v1
 $env:LLD_LLM_API_KEY = "local"        # 本地部署通常任意值
-$env:LLD_LLM_MODEL = "qwen3.6-35b-a3b" # 默认值，可不设
+$env:LLD_LLM_MODEL = "qwen3.8-27b" # 默认值，可不设
 
 # 方式 2：当前目录放 lld.config.json（参照 lld.config.example.json；已 gitignore，不会进仓库）
 ```
@@ -115,7 +115,7 @@ Polarion 连接参数（baseUrl/projectId/token）仅 `push` 骨架用：环境�
 
 ## 迁移到目标环境运行（Qwen 实测 runbook）
 
-Qwen 服务器（10.7.29.98:4000）只在特定网段可达，实测需在能访问该地址的机器上跑。
+Qwen 服务器（10.0.75.130:4000）只在特定网段可达，实测需在能访问该地址的机器上跑。
 
 **拷贝清单**（整个仓库目录，或至少以下部分）：
 

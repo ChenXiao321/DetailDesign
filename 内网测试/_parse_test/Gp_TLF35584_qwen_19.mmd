@@ -1,0 +1,18 @@
+flowchart TD
+    A(["开始"])
+    B[/"读取<br>Gp_TLF35584_rtData_ltst<br>地址至 Data_pst"/]
+    C[/"写入 TxBuf_au16[0] 为<br>Gp_TLF35584_WriteCmd(GP_TL<br>F35584_REG_PROTCFG,<br>GP_TLF35584_UNLOCK_SEQU0)<br>的返回值"/]
+    D[/"写入 TxBuf_au16[1] 为<br>Gp_TLF35584_WriteCmd(GP_TL<br>F35584_REG_PROTCFG,<br>GP_TLF35584_UNLOCK_SEQU1)<br>的返回值"/]
+    E[/"写入 TxBuf_au16[2] 为<br>Gp_TLF35584_WriteCmd(GP_TL<br>F35584_REG_PROTCFG,<br>GP_TLF35584_UNLOCK_SEQU2)<br>的返回值"/]
+    F[/"写入 TxBuf_au16[3] 为<br>Gp_TLF35584_WriteCmd(GP_TL<br>F35584_REG_PROTCFG,<br>GP_TLF35584_UNLOCK_SEQU3)<br>的返回值"/]
+    G["设置 CntTx_u16 为 4U"]
+    H[["Gp_TLF35584_TransmitData<br>发送数据"]]
+    I(["结束"])
+    A --> B
+    B --> C
+    C --> D
+    D --> E
+    E --> F
+    F --> G
+    G --> H
+    H --> I

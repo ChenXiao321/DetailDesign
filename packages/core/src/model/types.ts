@@ -55,7 +55,9 @@ export interface FunctionUnit {
   calledBy: string[];           // 模块内调用者（分析后回填）
   globalsAccessed: string[];    // 访问的模块级变量名
   conditionalFlags: string[];   // 包裹该函数的条件编译宏，如 GP_ECUSTPSHDN_SAFETY_ENABLE
+  innerCondFlags?: string[];    // 函数体内部条件编译段的宏（不含包裹整个函数的外层宏）
   bodyText: string;             // 函数体源码（供 LLM 生成流程图，截断至 8000 字符）
+  bodyTextWithPP?: string;      // 含 #if/#endif 指令行的函数体版本（仅体内有条件编译段时填；预处理把 # 行置空格后 LLM 看不到，画虚线框需要指令行定位）
   bodyHash: string;             // sha256（注释剥离+空白归一）
   sigHash: string;              // sha256（签名归一）
   complexity?: number;          // 圈复杂度（判定节点计数法，静态计算；第 7 章评估用）
@@ -122,6 +124,14 @@ export interface TypeUnit {
   relatedDefines?: { name: string; value: string; comment: string | null }[]; // 关联宏（枚举式）
   comment?: string | null;      // 类型上方/行内注释（属性表 Description 用）
   file: string;
+  /** LLM 生成内容（5.2.1.2 描述增强；报告优先于源码注释显示） */
+  generated?: {
+    comment: string;                        // 类型整体用途（属性表 Description 行）
+    defines?: Record<string, string>;       // 枚举式 typedef 各关联宏说明（常量表说明列，键=宏名）
+    elements?: Record<string, string>;      // struct 各成员说明（元素表说明列，键=成员名）
+    llmModel: string;
+    generatedAt: string;
+  };
   polarion: PolarionMarker;
 }
 

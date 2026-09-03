@@ -1,0 +1,23 @@
+flowchart LR
+    N0["Gp_IoMcuAdc_MainFunction"]
+    N1["CalloutGetCoreId"]
+    N0 -->|call| N1
+    N2["Gp_IoMcuAdc_CheckInitStu"]
+    N0 -->|call| N2
+    N3["Gp_IoMcuAdc_GetAdcRaw"]
+    N0 -->|call| N3
+    N4["CalloutGetAdcRaw"]
+    N3 -->|call| N4
+    N5["Gp_IoMcuAdc_CheckAdcRawVal<br>idity"]
+    N3 -->|call| N5
+    N6["Gp_IoMcuAdc_GetDiag"]
+    N0 -->|call| N6
+    N7["CalloutGetDiag"]
+    N6 -->|call| N7
+    classDef entry fill:#0a3069,stroke:#0a3069,color:#ffffff
+    classDef internal fill:#eaeef2,stroke:#57606a,color:#1f2328
+    classDef provided fill:#b6e3ff,stroke:#0969da,color:#0a3069
+    classDef callout fill:#ffe9a8,stroke:#bf8700,color:#1f2328
+    class N0 entry
+    class N2,N3,N5,N6 internal
+    class N1,N4,N7 callout

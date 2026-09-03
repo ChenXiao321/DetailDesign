@@ -1,0 +1,29 @@
+flowchart TD
+    START(["开始"])
+    INIT1{{"初始化 Data_pst 指向<br>Gp_TLF35584_rtData_ltst"}}
+    INIT2{{"初始化 Cnt_u32 为 0U"}}
+    LOOP1_COND{"Cnt_u32 < 3U ?"}
+    LOOP1_BODY[/"调用 Gp_TLF35584_WriteCmd<br>写入故障清除掩码至<br>TxBuf_au16[Cnt_u32]"/]
+    LOOP1_INC["Cnt_u32 自增"]
+    LOOP2_INIT{{"初始化 Cnt_u32 为 4U"}}
+    LOOP2_COND{"Cnt_u32 <<br>GP_TLF35584_FLAG_REG_NUM ?"}
+    LOOP2_BODY[/"调用 Gp_TLF35584_WriteCmd<br>写入故障清除掩码至<br>TxBuf_au16[Cnt_u32 - 1]"/]
+    LOOP2_INC["Cnt_u32 自增"]
+    SET_CNT["设置<br>Data_pst->SpiData_tst.CntT<br>x_u16 为<br>GP_TLF35584_FLAG_REG_NUM<br>-1"]
+    CALL_TX[["Gp_TLF35584_TransmitData<br>发送数据"]]
+    END(["结束"])
+
+    START --> INIT1
+    INIT1 --> INIT2
+    INIT2 --> LOOP1_COND
+    LOOP1_COND -- 是 --> LOOP1_BODY
+    LOOP1_BODY --> LOOP1_INC
+    LOOP1_INC --> LOOP1_COND
+    LOOP1_COND -- 否 --> LOOP2_INIT
+    LOOP2_INIT --> LOOP2_COND
+    LOOP2_COND -- 是 --> LOOP2_BODY
+    LOOP2_BODY --> LOOP2_INC
+    LOOP2_INC --> LOOP2_COND
+    LOOP2_COND -- 否 --> SET_CNT
+    SET_CNT --> CALL_TX
+    CALL_TX --> END

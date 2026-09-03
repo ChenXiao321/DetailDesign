@@ -1,0 +1,16 @@
+flowchart TD
+    START(["开始"])
+    INIT{{"初始化 Data_pst 指向<br>Gp_TLF35584_rtData_ltst<br>初始化 Ret_t 为 E_NOT_OK"}}
+    CHECK{"Id_u16 <<br>GP_TLF35584_FAULT_SIGNAL_N<br>UMS<br>且 DevFault_pu32 !=<br>GP_TLF35584_NULL_PTR"}
+    SET_OK["Ret_t = E_OK"]
+    READ[/"读取<br>Data_pst->ErrData_tst.ErrR<br>ecord_au32[Id_u16] 到<br>*DevFault_pu32"/]
+    SET_ERR["Ret_t = E_NOT_OK"]
+    RETURN(["返回 Ret_t"])
+
+    START --> INIT
+    INIT --> CHECK
+    CHECK -- 是 --> SET_OK
+    SET_OK --> READ
+    READ --> RETURN
+    CHECK -- 否 --> SET_ERR
+    SET_ERR --> RETURN

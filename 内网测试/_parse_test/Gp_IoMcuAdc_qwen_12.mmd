@@ -1,0 +1,21 @@
+flowchart TD
+    START(["开始"])
+    INIT{{"初始化 FuncCompl_b 为 TRUE<br>初始化 Diag_u32 为 0U"}}
+    J1{"Cfg_cptst->AdcSigLocalCfg_<br>cptst[ChlIdx_u8].DiagCallo<br>utFunc_b == TRUE ?"}
+    CALL[["Gp_IoMcuAdc_CalloutGetDiag<br>获取诊断数据"]]
+    J2{"FuncCompl_b == FALSE ?"}
+    ERR[/"记录错误标志<br>Rt_cptst->AdcSigLocalImpl_<br>ptst[ChlIdx_u8].AdcSigErr_<br>t |=<br>GP_IOMCUADC_ADCSIGERRSTU_C<br>ALLOUT_GET_DIAG_FAILED"/]
+    SAVE[/"保存诊断数据<br>Rt_cptst->AdcSig_ptst[ChlI<br>dx_u8].Diag_u32 = Diag_u32"/]
+    DEF[/"设置默认诊断数据<br>Rt_cptst->AdcSig_ptst[ChlI<br>dx_u8].Diag_u32 = 0U"/]
+    END(["结束"])
+
+    START --> INIT
+    INIT --> J1
+    J1 -- 是 --> CALL
+    CALL --> J2
+    J2 -- 是 --> ERR
+    J2 -- 否 --> SAVE
+    J1 -- 否 --> DEF
+    ERR --> END
+    SAVE --> END
+    DEF --> END

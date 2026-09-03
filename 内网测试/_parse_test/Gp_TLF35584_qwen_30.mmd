@@ -1,0 +1,7 @@
+flowchart TD
+    START(["开始"]) --> INIT{{"初始化 Data_pst 指向<br>Gp_TLF35584_rtData_ltst"}}
+    INIT --> READ_CMD[["Gp_TLF35584_ReadCmd<br>读取设备状态寄存器"]]
+    READ_CMD --> WRITE_TX[/"将读取值写入<br>TxBuf_au16[0U] 并设置<br>CntTx_u16 为 1U"/]
+    WRITE_TX --> TRANSMIT[["Gp_TLF35584_TransmitData<br>发送数据"]]
+    TRANSMIT --> CALC[/"计算 DeviceState_u8 为<br>RxBuf_au16[0U]<br>与掩码按位与的结果"/]
+    CALC --> END(["结束"])

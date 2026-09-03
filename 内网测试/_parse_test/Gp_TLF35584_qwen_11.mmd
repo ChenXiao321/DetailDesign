@@ -1,0 +1,59 @@
+flowchart TD
+    START(["开始"])
+    INIT["初始化 Data_pst 指向<br>Gp_TLF35584_rtData_ltst"]
+    CALL_SET_MODE[["Gp_TLF35584_RtSetMode<br>设置异步模式"]]
+    CALL_GET_FAULT[["Gp_TLF35584_GetAllFaultReg<br>ister 读取故障寄存器"]]
+    SWITCH{"Data_pst->StatusData_tst.S<br>tateVar_u8 状态判断"}
+
+    %% PREPARERUN STATE
+    SWITCH -- "GP_TLF35584_PREPARERUN_STA<br>TE" --> PRE_START
+    PRE_START[["Gp_TLF35584_RtWdgRegCfg<br>配置看门狗寄存器"]]
+    PRE_GET_WDG[["Gp_TLF35584_GetWdgInfo<br>获取看门狗信息"]]
+    PRE_SERVICE[["Gp_TLF35584_WdgService<br>喂狗"]]
+    PRE_DELAY_SYNC[["Gp_TLF35584_CalloutStmSwDa<br>layNus 同步延迟"]]
+    PRE_SWITCH_MODE[["Gp_TLF35584_SwitchToNormal<br>Mode 切换正常模式"]]
+    PRE_DELAY_MODE[["Gp_TLF35584_CalloutStmSwDa<br>layNus 模式切换延迟"]]
+    PRE_GET_STATE[["Gp_TLF35584_GetState<br>获取设备状态"]]
+    PRE_CHECK_STATE{"Data_pst->StatusData_tst.D<br>eviceState_u8 ==<br>GP_TLF35584_NORMAL_STATE ?"}
+    PRE_CHECK_STATE -- 是 --> PRE_SET_RUN["Data_pst->StatusData_tst.S<br>tateVar_u8 =<br>GP_TLF35584_RUN_STATE"]
+    PRE_CHECK_STATE -- 否 --> PRE_CHECK_RETRY{"Data_pst->ReInitRetry_u8<br><GP_TLF35584_TRY_REINIT_MA<br>X ?"}
+    PRE_CHECK_RETRY -- 是 --> PRE_INC_RETRY["Data_pst->ReInitRetry_u8++"]
+    PRE_INC_RETRY --> PRE_SET_PREPARE["Data_pst->StatusData_tst.S<br>tateVar_u8 =<br>GP_TLF35584_PREPARERUN_STA<br>TE"]
+    PRE_CHECK_RETRY -- 否 --> PRE_SET_ERROR["Data_pst->StatusData_tst.S<br>tateVar_u8 =<br>GP_TLF35584_ERROR_STATE"]
+    PRE_SET_RUN --> END
+    PRE_SET_PREPARE --> END
+    PRE_SET_ERROR --> END
+
+    %% RUN STATE
+    SWITCH -- "GP_TLF35584_RUN_STATE" --> RUN_INC_CNT["Data_pst->WdgTimeCnt_u16++"]
+    RUN_CHECK_TIME{"Data_pst->WdgTimeCnt_u16<br>==<br>GP_TLF35584_SERVICE_WDG_TI<br>ME ?"}
+    RUN_CHECK_TIME -- 否 --> RUN_GET_WDG[["Gp_TLF35584_GetWdgInfo<br>获取看门狗信息"]]
+    RUN_GET_WDG --> END
+    RUN_CHECK_TIME -- 是 --> RUN_RESET_CNT["Data_pst->WdgTimeCnt_u16<br>=0U"]
+    RUN_RESET_CNT --> RUN_CHECK_SWITCH{"Data_pst->WdgSwitch_b ==<br>TRUE ?"}
+    RUN_CHECK_SWITCH -- 是 --> RUN_CHECK_TRIG{"Data_pst->WdgMTrigCnt_u16<br>> 0 ?"}
+    RUN_CHECK_TRIG -- 是 --> RUN_DEC_TRIG["Data_pst->WdgMTrigCnt_u16-<br>-"]
+    RUN_CHECK_TRIG -- 否 --> RUN_SET_SWITCH_FALSE["Data_pst->WdgSwitch_b =<br>FALSE"]
+    RUN_DEC_TRIG --> RUN_SERVICE_1[["Gp_TLF35584_WdgService<br>喂狗"]]
+    RUN_SET_SWITCH_FALSE --> RUN_SERVICE_1
+    RUN_CHECK_SWITCH -- 否 --> RUN_SERVICE_2[["Gp_TLF35584_WdgService<br>喂狗"]]
+    RUN_SERVICE_1 --> RUN_CHECK_FLAG{"Data_pst->ClearFirstWdgEve<br>ntFlg_b == 0U ?"}
+    RUN_SERVICE_2 --> RUN_CHECK_FLAG
+    RUN_CHECK_FLAG -- 是 --> RUN_CLEAR_FLAG[["Gp_TLF35584_ClearFlagReg<br>清除标志寄存器"]]
+    RUN_CLEAR_FLAG --> RUN_SET_FLAG["Data_pst->ClearFirstWdgEve<br>ntFlg_b = 0x5AU"]
+    RUN_SET_FLAG --> END
+    RUN_CHECK_FLAG -- 否 --> END
+
+    %% WAIT STATE
+    SWITCH -- "GP_TLF35584_WAIT_STATE" --> WAIT_END
+
+    %% ERROR STATE
+    SWITCH -- "GP_TLF35584_ERROR_STATE" --> ERROR_END
+
+    %% DEFAULT
+    SWITCH -- "default" --> DEFAULT_SET_PREPARE["Data_pst->StatusData_tst.S<br>tateVar_u8 =<br>GP_TLF35584_PREPARERUN_STA<br>TE"]
+    DEFAULT_SET_PREPARE --> END
+
+    WAIT_END --> END
+    ERROR_END --> END
+    END(["结束"])

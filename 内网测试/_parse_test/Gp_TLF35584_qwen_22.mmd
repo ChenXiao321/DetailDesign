@@ -1,0 +1,10 @@
+flowchart TD
+    START(["开始"])
+    CALL1[["Gp_TLF35584_ColdStartAndPo<br>rst 读取R0寄存器判断冷启动"]]
+    CALL2[["Gp_TLF35584_GetWakeUpSourc<br>e 读取寄存器获取唤醒源"]]
+    CALL3[["Gp_TLF35584_ClearFlagReg<br>清除故障标志"]]
+    END(["结束"])
+    START --> CALL1
+    CALL1 --> CALL2
+    CALL2 --> CALL3
+    CALL3 --> END

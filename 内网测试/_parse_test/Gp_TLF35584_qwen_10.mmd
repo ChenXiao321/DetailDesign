@@ -1,0 +1,46 @@
+flowchart TD
+    START(["开始"])
+    INIT_DATA["Data_pst =<br>&Gp_TLF35584_rtData_ltst"]
+    CHECK_BIST{"Data_pst->StatusData_tst.B<br>istFunctCalled_u8 == FALSE"}
+    PRE_INIT[["Gp_TLF35584_PreInit"]]
+    GET_WAKE[["Gp_TLF35584_GetWakeAndRese<br>tInfo"]]
+    GET_STATE_1[["Gp_TLF35584_GetState"]]
+    CHECK_NORMAL{"Data_pst->StatusData_tst.D<br>eviceState_u8 ==<br>GP_TLF35584_NORMAL_STATE"}
+    SET_TEST[["Gp_TLF35584_SetDevMpsMode(<br>GP_TLF35584_MPS_TESTMODE)"]]
+    SET_PORST[["Gp_TLF35584_SetPorstMode(0<br>)"]]
+    SET_NORMAL[["Gp_TLF35584_SetDevMpsMode(<br>GP_TLF35584_MPS_NORMALMODE<br>)"]]
+    GET_WDG[["Gp_TLF35584_GetWdgInfo"]]
+    WWD_SERVICE[["Gp_TLF35584_WwdSpiService"]]
+    DISABLE_WDG[["Gp_TLF35584_DisableWdgFsp"]]
+    INIT_REG[["Gp_TLF35584_InitRegCfg"]]
+    GET_STATE_2[["Gp_TLF35584_GetState"]]
+    CHECK_INIT{"Data_pst->StatusData_tst.D<br>eviceState_u8 ==<br>GP_TLF35584_INIT_STATE"}
+    SET_PASS["Data_pst->StatusData_tst.I<br>nitStatus_u8 =<br>GP_TLF35584_PASS<br>Data_pst->ErrData_tst.Driv<br>erErrPath_u32 &=<br>(~GP_TLF35584_INIT_ERR)"]
+    SET_FAIL["Data_pst->StatusData_tst.I<br>nitStatus_u8 =<br>GP_TLF35584_FAILED<br>Data_pst->ErrData_tst.Driv<br>erErrPath_u32 |=<br>GP_TLF35584_INIT_ERR"]
+    REPORT_DEM[["Gp_TLF35584_CalloutDemRepo<br>rt(GP_TLF35584_REINIT_FAUL<br>T, GP_TLF35584_FAILED)"]]
+    SET_WAIT["Data_pst->StatusData_tst.S<br>tateVar_u8 =<br>GP_TLF35584_WAIT_STATE<br>Data_pst->WdgSwitch_b =<br>FALSE"]
+    END(["结束"])
+
+    START --> INIT_DATA
+    INIT_DATA --> CHECK_BIST
+    CHECK_BIST -- 是 --> PRE_INIT
+    PRE_INIT --> GET_WAKE
+    GET_WAKE --> GET_STATE_1
+    CHECK_BIST -- 否 --> GET_STATE_1
+    GET_STATE_1 --> CHECK_NORMAL
+    CHECK_NORMAL -- 是 --> SET_TEST
+    SET_TEST --> SET_PORST
+    SET_PORST --> SET_NORMAL
+    SET_NORMAL --> GET_WDG
+    CHECK_NORMAL -- 否 --> GET_WDG
+    GET_WDG --> WWD_SERVICE
+    WWD_SERVICE --> DISABLE_WDG
+    DISABLE_WDG --> INIT_REG
+    INIT_REG --> GET_STATE_2
+    GET_STATE_2 --> CHECK_INIT
+    CHECK_INIT -- 是 --> SET_PASS
+    SET_PASS --> SET_WAIT
+    CHECK_INIT -- 否 --> SET_FAIL
+    SET_FAIL --> REPORT_DEM
+    REPORT_DEM --> SET_WAIT
+    SET_WAIT --> END

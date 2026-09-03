@@ -1,0 +1,48 @@
+flowchart TD
+    START(["开始"])
+    INIT{{"初始化 Data_pst 指向<br>Gp_TLF35584_rtData_ltst<br>初始化 Ret_t 为 E_NOT_OK"}}
+    WRITE_CMD_1[/"写入 TxBuf_au16[0] 为<br>Gp_TLF35584_WriteCmd<br>返回的 ABIST_SELECT0 命令"/]
+    WRITE_CMD_2[/"写入 TxBuf_au16[1] 为<br>Gp_TLF35584_WriteCmd<br>返回的 ABIST_CTRL0 命令"/]
+    SET_CNT[/"设置 CntTx_u16 为 2U"/]
+    TRANSMIT[["Gp_TLF35584_TransmitData<br>发送数据"]]
+    CHECK[["Gp_TLF35584_SinSafetyBistC<br>heck 检查 BIST 结果"]]
+    JUDGE{"Ret_t == E_OK ?"}
+    CLEAR[["Gp_TLF35584_ClearFlagReg<br>清除标志寄存器"]]
+    SET_ERR[/"设置 BistErrPath_u32 位<br>GP_TLF35584_BIST_ERROR_3"/]
+    READ_CMD_1[/"写入 TxBuf_au16[0] 为<br>Gp_TLF35584_ReadCmd<br>返回的MONSF1 命令"/]
+    READ_CMD_2[/"写入 TxBuf_au16[1] 为<br>Gp_TLF35584_ReadCmd<br>返回的ABIST_CTRL0 命令"/]
+    READ_CMD_3[/"写入 TxBuf_au16[2] 为<br>Gp_TLF35584_ReadCmd<br>返回的ABIST_SELECT0 命令"/]
+    READ_CMD_4[/"写入 TxBuf_au16[3] 为<br>Gp_TLF35584_ReadCmd<br>返回的VMONSTAT 命令"/]
+    READ_CMD_5[/"写入 TxBuf_au16[4] 为<br>Gp_TLF35584_ReadCmd<br>返回的DEVSTAT 命令"/]
+    SET_CNT_5[/"设置 CntTx_u16 为 5U"/]
+    TRANSMIT_5[["Gp_TLF35584_TransmitData<br>发送数据"]]
+    STORE_0[/"存储 RxBuf_au16[0] 低 8<br>位到<br>BistErrRestore_lau8[0]"/]
+    STORE_1[/"存储 RxBuf_au16[1] 低 8<br>位到<br>BistErrRestore_lau8[1]"/]
+    STORE_2[/"存储 RxBuf_au16[2] 低 8<br>位到<br>BistErrRestore_lau8[2]"/]
+    STORE_3[/"存储 RxBuf_au16[3] 低 8<br>位到<br>BistErrRestore_lau8[3]"/]
+    STORE_4[/"存储 RxBuf_au16[4] 低 8<br>位到<br>BistErrRestore_lau8[4]"/]
+    END(["结束"])
+
+    START --> INIT
+    INIT --> WRITE_CMD_1
+    WRITE_CMD_1 --> WRITE_CMD_2
+    WRITE_CMD_2 --> SET_CNT
+    SET_CNT --> TRANSMIT
+    TRANSMIT --> CHECK
+    CHECK --> JUDGE
+    JUDGE -- 是 --> CLEAR
+    JUDGE -- 否 --> SET_ERR
+    SET_ERR --> READ_CMD_1
+    READ_CMD_1 --> READ_CMD_2
+    READ_CMD_2 --> READ_CMD_3
+    READ_CMD_3 --> READ_CMD_4
+    READ_CMD_4 --> READ_CMD_5
+    READ_CMD_5 --> SET_CNT_5
+    SET_CNT_5 --> TRANSMIT_5
+    TRANSMIT_5 --> STORE_0
+    STORE_0 --> STORE_1
+    STORE_1 --> STORE_2
+    STORE_2 --> STORE_3
+    STORE_3 --> STORE_4
+    CLEAR --> END
+    STORE_4 --> END

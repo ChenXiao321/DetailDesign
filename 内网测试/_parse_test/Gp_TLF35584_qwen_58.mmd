@@ -1,0 +1,17 @@
+sequenceDiagram
+    participant OS as OS
+    participant Gp as Gp_TLF35584
+    participant HW as TLF35584_HW
+    participant DEM as DEM
+
+    OS->>Gp: Gp_TLF35584_Init
+    Gp->>Gp: Gp_TLF35584_PreInit
+    Gp->>Gp: Gp_TLF35584_GetWakeAndResetInfo
+    Gp->>Gp: Gp_TLF35584_GetState
+    Gp->>HW: Gp_TLF35584_SetDevMpsMode
+    Gp->>HW: Gp_TLF35584_SetPorstMode
+    Gp->>HW: Gp_TLF35584_GetWdgInfo
+    Gp->>HW: Gp_TLF35584_WwdSpiService
+    Gp->>HW: Gp_TLF35584_DisableWdgFsp
+    Gp->>HW: Gp_TLF35584_InitRegCfg
+    Gp->>DEM: Gp_TLF35584_CalloutDemReport

@@ -1,0 +1,29 @@
+flowchart TD
+    START(["开始"])
+    INIT["初始化局部变量<br>Data_pst =<br>&Gp_TLF35584_rtData_ltst<br>TicksTmp_u32 = 0U<br>Ret_t = E_NOT_OK<br>WkUpEnTmp_u8 = 0U<br>TickLow_u8 = 0U<br>TickMid_u8 = 0U<br>TickHigh_u8 = 0U<br>DevCf0Val_u8 = 0U"]
+    ASSIGN["赋值<br>WkUpEnTmp_u8 = WkUpEn_u8<br>TicksTmp_u32 = Ticks_u32"]
+    CHECK{"WkUpEnTmp_u8 <=<br>GP_TLF35584_ENABLE<br>且<br>TicksTmp_u32 <<br>GP_TLF35584_TIMER_THRESHOU<br>LD"}
+    
+    CHECK -- 否 --> RET_FAIL["Ret_t = E_NOT_OK"]
+    
+    CHECK -- 是 --> CALC["计算 Tick 分量<br>TickLow_u8 = TicksTmp_u32<br>& 0x000000FFU<br>TickMid_u8 =<br>(TicksTmp_u32&<br>0x0000FF00U) >> 8U<br>TickHigh_u8 =<br>(TicksTmp_u32 &<br>0x00FF0000U) >> 16U"]
+    
+    CALC --> ENABLE_CHECK{"WkUpEn_u8 ==<br>GP_TLF35584_ENABLE"}
+    
+    ENABLE_CHECK -- 是 --> SET_ENABLE["DevCf0Val_u8 = 0xC8U"]
+    ENABLE_CHECK -- 否 --> SET_DISABLE["DevCf0Val_u8 = 0x48U"]
+    
+    SET_ENABLE --> UNLOCK[["Gp_TLF35584_UnlockSeq<br>解锁序列"]]
+    SET_DISABLE --> UNLOCK
+    
+    UNLOCK --> WRITE_REG0["Data_pst->SpiData_tst.TxBu<br>f_au16[0U] =<br>Gp_TLF35584_WriteCmd(Gp_TL<br>F35584_idxInitRegAddress_c<br>au8[0U], DevCf0Val_u8)"]
+    WRITE_REG0 --> WRITE_REG14["Data_pst->SpiData_tst.TxBu<br>f_au16[1U] =<br>Gp_TLF35584_WriteCmd(Gp_TL<br>F35584_idxInitRegAddress_c<br>au8[14U], TickLow_u8)"]
+    WRITE_REG14 --> WRITE_REG15["Data_pst->SpiData_tst.TxBu<br>f_au16[2U] =<br>Gp_TLF35584_WriteCmd(Gp_TL<br>F35584_idxInitRegAddress_c<br>au8[15U], TickMid_u8)"]
+    WRITE_REG15 --> WRITE_REG16["Data_pst->SpiData_tst.TxBu<br>f_au16[3U] =<br>Gp_TLF35584_WriteCmd(Gp_TL<br>F35584_idxInitRegAddress_c<br>au8[16U], TickHigh_u8)"]
+    WRITE_REG16 --> SET_CNT["Data_pst->SpiData_tst.CntT<br>x_u16 = 4U"]
+    SET_CNT --> TRANSMIT[["Gp_TLF35584_TransmitData<br>发送数据"]]
+    TRANSMIT --> LOCK[["Gp_TLF35584_LockSeq<br>锁定序列"]]
+    LOCK --> RET_OK["Ret_t = E_OK"]
+    
+    RET_FAIL --> END(["结束"])
+    RET_OK --> END

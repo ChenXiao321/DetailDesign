@@ -1,0 +1,46 @@
+flowchart TD
+    Start(["开始"])
+    InitVars["初始化局部变量<br>Cfg_cptst, Rt_cptst,<br>CoreId_u32, Cnt_u32,<br>ChlNum_u8, Ret_t,<br>FuncCompl_b"]
+    GetCoreId[["Gp_IoMcuAdc_CalloutGetCore<br>Id 获取核心ID"]]
+    SetCfgPtr["设置 Cfg_cptst<br>指向当前核心配置"]
+    SetRtPtr["设置 Rt_cptst<br>指向当前核心运行时数据"]
+    GetChlNum["读取 ChlNum_u8"]
+    Loop1Init{{"Cnt_u32 = 0U"}}
+    Loop1Cond{"Cnt_u32 < ChlNum_u8 ?"}
+    Loop1Body["初始化 ADC 信号通道<br>设置 AdcRaw_u16,<br>Diag_u32,PollingCnt_u16,<br>AdcSigErr_t"]
+    Loop1Inc["Cnt_u32++"]
+    Loop2Init{{"Cnt_u32 = 0U"}}
+    Loop2Cond{"Cnt_u32 < GrpNum_u8 ?"}
+    SetupBuffer[["Adc_SetupResultBuffer<br>设置结果缓冲区"]]
+    EnableTrigger[["Adc_EnableHardwareTrigger<br>使能硬件触发"]]
+    Loop2Inc["Cnt_u32++"]
+    CalloutInit[["Gp_IoMcuAdc_CalloutInit<br>执行额外初始化"]]
+    CheckFail{"Ret_t == E_NOT_OK 或<br>FuncCompl_b == FALSE ?"}
+    SetFail["记录初始化失败错误<br>设置 IfId_t, ErrStu_t,<br>InitStu_t"]
+    SetSuccess["设置初始化完成状态<br>InitStu_t =<br>GP_IOMCUADC_INITSTU_INITED"]
+    ClearRunCnt["清除运行计数器<br>RunCnt_u32 = 0U"]
+    End(["结束"])
+
+    Start --> InitVars
+    InitVars --> GetCoreId
+    GetCoreId --> SetCfgPtr
+    SetCfgPtr --> SetRtPtr
+    SetRtPtr --> GetChlNum
+    GetChlNum --> Loop1Init
+    Loop1Init --> Loop1Cond
+    Loop1Cond -- 是 --> Loop1Body
+    Loop1Body --> Loop1Inc
+    Loop1Inc --> Loop1Cond
+    Loop1Cond -- 否 --> Loop2Init
+    Loop2Init --> Loop2Cond
+    Loop2Cond -- 是 --> SetupBuffer
+    SetupBuffer --> EnableTrigger
+    EnableTrigger --> Loop2Inc
+    Loop2Inc --> Loop2Cond
+    Loop2Cond -- 否 --> CalloutInit
+    CalloutInit --> CheckFail
+    CheckFail -- 是 --> SetFail
+    CheckFail -- 否 --> SetSuccess
+    SetFail --> ClearRunCnt
+    SetSuccess --> ClearRunCnt
+    ClearRunCnt --> End

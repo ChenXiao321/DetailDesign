@@ -1,0 +1,24 @@
+flowchart TD
+    subgraph SG1[" "]
+        SG1_NOTE["注：仅在<br>GP_ECUSTPSHDN_SAFETY_ENABL<br>E 生效时参与编译"]
+        SG1_NOTE ~~~ START
+        START(["开始"])
+        INIT{{"初始化 MstImpl_ptst 指向<br>Gp_EcuStpShdn_bufMstLocalI<br>mpl_ltst"}}
+        CALL_CHK[["Gp_EcuStpShdn_CalloutChkMc<br>uPreRunTest 检查 MCU<br>PreRunTest 状态"]]
+        DEC_CHK{"Gp_EcuStpShdn_CalloutChkMc<br>uPreRunTest 返回 FALSE ?"}
+        SET_FAIL[/"设置<br>MstImpl_ptst->McuSelfTest_<br>t 为<br>GP_ECUSTPSHDN_SELFTEST_FAI<br>L"/]
+        CALL_FAIL[["Gp_EcuStpShdn_CalloutMcuPr<br>eRunTestFailedHnd<br>处理失败回调"]]
+        SET_PASS[/"设置<br>MstImpl_ptst->McuSelfTest_<br>t 为<br>GP_ECUSTPSHDN_SELFTEST_PAS<br>S"/]
+        END(["结束"])
+        START --> INIT
+        INIT --> CALL_CHK
+        CALL_CHK --> DEC_CHK
+        DEC_CHK -- 是 --> SET_FAIL
+        SET_FAIL --> CALL_FAIL
+        CALL_FAIL --> END
+        DEC_CHK -- 否 --> SET_PASS
+        SET_PASS --> END
+    end
+    style SG1 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+    classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700
+    class SG1_NOTE condNote

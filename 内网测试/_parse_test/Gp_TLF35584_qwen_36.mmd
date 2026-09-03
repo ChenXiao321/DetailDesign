@@ -1,0 +1,66 @@
+flowchart TD
+    START(["开始"])
+    INIT{{"初始化 Data_pst 指向<br>Gp_TLF35584_rtData_ltst<br>初始化 ErrCnt_u8,<br>Fwdstat1_u8, wwdstat_u8,<br>Wdcfg0_u8 为 0U"}}
+    CALL_UPDATE[["Gp_TLF35584_UpdateStatusRe<br>g 更新状态寄存器"]]
+    DECIDE_RESET{"ResetSlect_u8 ==<br>GP_TLF35584_FWD_RESET_ACTI<br>ON ?"}
+    
+    subgraph LANE_FWD[" "]
+        direction TB
+        READ_FWD[/"读取<br>Gp_TLF35584_idxStatusRegVa<br>lue_lau8[GP_TLF35584_REG_F<br>WDSTAT1_INDEX] 到<br>Fwdstat1_u8"/]
+        CALC_FWD["计算 ErrCnt_u8 =<br>(Fwdstat1_u8 &<br>GP_TLF35584_FWDERRCNT_MASK<br>) + 1U"]
+        CALL_UNLOCK_FWD[["Gp_TLF35584_UnlockSeq<br>解锁序列"]]
+        CALL_WRITE_FWD[["Gp_TLF35584_WriteCmd<br>生成写入命令到<br>TxBuf_au16[0U]"]]
+        SET_CNT_FWD["设置<br>Data_pst->SpiData_tst.CntT<br>x_u16 = 1U"]
+        CALL_TX_FWD[["Gp_TLF35584_TransmitData<br>发送数据"]]
+        CALL_LOCK_FWD[["Gp_TLF35584_LockSeq<br>锁定序列"]]
+    end
+    
+    subgraph LANE_WWD[" "]
+        direction TB
+        READ_WWD[/"读取<br>Gp_TLF35584_idxStatusRegVa<br>lue_lau8[GP_TLF35584_REG_W<br>WDSTAT_INDEX] 到<br>wwdstat_u8"/]
+        CALC_WWD["计算 ErrCnt_u8 =<br>(wwdstat_u8 &<br>GP_TLF35584_WWDERRCNT_MASK<br>) + 1U"]
+        CALC_WDCFG["计算 Wdcfg0_u8 =<br>((uint8)ErrCnt_u8 << 4U)<br>|0x0AU"]
+        CALL_UNLOCK_WWD[["Gp_TLF35584_UnlockSeq<br>解锁序列"]]
+        CALL_WRITE_WWD[["Gp_TLF35584_WriteCmd<br>生成写入命令到<br>TxBuf_au16[0U]"]]
+        SET_CNT_WWD["设置<br>Data_pst->SpiData_tst.CntT<br>x_u16 = 1U"]
+        CALL_TX_WWD[["Gp_TLF35584_TransmitData<br>发送数据"]]
+        CALL_LOCK_WWD[["Gp_TLF35584_LockSeq<br>锁定序列"]]
+    end
+    
+    CALL_DELAY1[["Gp_TLF35584_CalloutStmSwDa<br>layNus 延时<br>GP_TLF35584_MODE_SWITCH_DE<br>LAY"]]
+    CALL_WRONG[["Gp_TLF35584_WrongService<br>处理错误服务"]]
+    CALL_DELAY2[["Gp_TLF35584_CalloutStmSwDa<br>layNus 延时<br>GP_TLF35584_MODE_SWITCH_DE<br>LAY"]]
+    SET_ERR["设置<br>Data_pst->ErrData_tst.Driv<br>erErrPath_u32 |=<br>GP_TLF35584_PORST_FAIL_ERR<br>OR"]
+    CALL_DEM[["Gp_TLF35584_CalloutDemRepo<br>rt 报告 DEM 故障"]]
+    END(["结束"])
+
+    START --> INIT
+    INIT --> CALL_UPDATE
+    CALL_UPDATE --> DECIDE_RESET
+    DECIDE_RESET -- 是 --> READ_FWD
+    READ_FWD --> CALC_FWD
+    CALC_FWD --> CALL_UNLOCK_FWD
+    CALL_UNLOCK_FWD --> CALL_WRITE_FWD
+    CALL_WRITE_FWD --> SET_CNT_FWD
+    SET_CNT_FWD --> CALL_TX_FWD
+    CALL_TX_FWD --> CALL_LOCK_FWD
+    CALL_LOCK_FWD --> CALL_DELAY1
+    
+    DECIDE_RESET -- 否 --> READ_WWD
+    READ_WWD --> CALC_WWD
+    CALC_WWD --> CALC_WDCFG
+    CALC_WDCFG --> CALL_UNLOCK_WWD
+    CALL_UNLOCK_WWD --> CALL_WRITE_WWD
+    CALL_WRITE_WWD --> SET_CNT_WWD
+    SET_CNT_WWD --> CALL_TX_WWD
+    CALL_TX_WWD --> CALL_LOCK_WWD
+    CALL_LOCK_WWD --> CALL_DELAY1
+
+    CALL_DELAY1 --> CALL_WRONG
+    CALL_WRONG --> CALL_DELAY2
+    CALL_DELAY2 --> SET_ERR
+    SET_ERR --> CALL_DEM
+    CALL_DEM --> END
+
+    style LANE_FWD fill:transparent,stroke:transparent
+    style LANE_WWD fill:transparent,stroke:transparent

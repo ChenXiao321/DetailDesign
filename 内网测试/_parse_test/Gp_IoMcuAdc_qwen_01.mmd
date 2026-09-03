@@ -1,0 +1,19 @@
+%%{init: {"flowchart": {"rankSpacing": 10, "nodeSpacing": 16}}}%%
+flowchart LR
+    Caller(["外部调用方<br/>（其他 FC / RTE / 集成代码）"])
+    subgraph MOD[" "]
+        direction TB
+        MT["<b>Gp_IoMcuAdc</b><br/><b>提供的外部接口</b>（4 个）<br/>────────────"]
+        MT ~~~ P0("Gp_IoMcuAdc_<br/>Init") ~~~ P1("Gp_IoMcuAdc_<br/>MainFunction") ~~~ P2("Gp_IoMcuAdc_<br/>GetAdcSigDiag") ~~~ P3("Gp_IoMcuAdc_<br/>GetAdcSigAdcRaw")
+    end
+    G0["<b>External</b>（2 个）<br/>──────────<br/>Adc_EnableHardwareTrigger<br/>Adc_SetupResultBuffer"]
+    Caller -->|call| MOD
+    MOD -->|call| G0
+    classDef caller fill:#eaeef2,stroke:#57606a,color:#1f2328
+    classDef provided fill:#b6e3ff,stroke:#0969da,color:#0a3069
+    classDef extgroup fill:#f6f8fa,stroke:#57606a,color:#1f2328
+    class Caller caller
+    class P0,P1,P2,P3 provided
+    class G0 extgroup
+    style MOD fill:#fbfcfd,stroke:#d0d7de,stroke-width:1px
+    style MT fill:transparent,stroke:transparent,color:#1f2328

@@ -1,0 +1,9 @@
+stateDiagram-v2
+    [*] --> WAIT : Gp_TLF35584_Init
+    WAIT --> PREPARERUN : Gp_TLF35584_RtSetMode
+    PREPARERUN --> RUN : DeviceState_u8 == NORMAL
+    PREPARERUN --> PREPARERUN : ReInitRetry_u8 < TRY_REINIT_MAX
+    PREPARERUN --> ERROR : ReInitRetry_u8 >= TRY_REINIT_MAX
+    RUN --> RUN : WdgTimeCnt_u16 != SERVICE_WDG_TIME
+    RUN --> RUN : WdgTimeCnt_u16 == SERVICE_WDG_TIME
+    ERROR --> [*]

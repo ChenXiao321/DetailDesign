@@ -1,0 +1,69 @@
+flowchart TD
+    START(["开始"])
+    INIT{{"初始化 Data_pst 指向<br>Gp_TLF35584_rtData_ltst<br>AbistCtrl0_u8 = 0U<br>Monsf1_u8 = 0U<br>Monsf2_u8 = 0U<br>Monsf3_u8 = 0U<br>Ret_t = E_NOT_OK"}}
+    CALL_START[["Gp_TimeCal_CaptureStart(&G<br>p_TLF35584_MultiAnalogBist<br>Cal_lst)"]]
+    J{"Ret_t == E_NOT_OK"}
+    CALL_STOP[["Gp_TimeCal_CaptureStop(&Gp<br>_TLF35584_MultiAnalogBistC<br>al_lst)"]]
+    J_TIMEOUT{"Gp_TLF35584_MultiAnalogBis<br>tCal_lst.Interval_Us_f32<br>>GP_TLF35584_ABIST_MULTI_M<br>AXTIME"}
+    READ_REG[/"读取寄存器 MONSF1,<br>MONSF2,MONSF3, ABIST_CTRL0<br>写入 TxBuf_au16[0..3]<br>设置 CntTx_u16 = 4U"/]
+    CALL_TX[["Gp_TLF35584_TransmitData(D<br>ata_pst->SpiData_tst.CntTx<br>_u16)"]]
+    PARSE[/"解析 RxBuf_au16[0..3]<br>低8位<br>赋值给 Monsf1_u8,<br>Monsf2_u8, Monsf3_u8,<br>AbistCtrl0_u8"/]
+    J_BIST{"(AbistCtrl0_u8 &<br>GP_TLF35584_BIST_SUCCEED)<br>==<br>GP_TLF35584_BIST_SUCCEED"}
+    CLR_ERR4["清除 BistErrPath_u32 中的<br>GP_TLF35584_BIST_ERROR_4"]
+    J_MONSF1{"(Monsf1_u8 &<br>GP_TLF35584_MONSF1_MASK)<br>== GP_TLF35584_MONSF1_MASK"}
+    CLR_ERR5["清除 BistErrPath_u32 中的<br>GP_TLF35584_BIST_ERROR_5"]
+    J_MONSF2{"(Monsf2_u8 &<br>GP_TLF35584_MONSF2_MASK)<br>== GP_TLF35584_MONSF2_MASK"}
+    CLR_ERR6["清除 BistErrPath_u32 中的<br>GP_TLF35584_BIST_ERROR_6"]
+    J_MONSF3{"(Monsf3_u8 &<br>GP_TLF35584_MONSF3_MASK)<br>== GP_TLF35584_MONSF3_MASK"}
+    CLR_ERR7["清除 BistErrPath_u32 中的<br>GP_TLF35584_BIST_ERROR_7"]
+    SET_OK["Ret_t = E_OK"]
+    SET_ERR7["Ret_t |= E_NOT_OK<br>设置 BistErrPath_u32 中的<br>GP_TLF35584_BIST_ERROR_7"]
+    SET_ERR6["Ret_t |= E_NOT_OK<br>设置 BistErrPath_u32 中的<br>GP_TLF35584_BIST_ERROR_6"]
+    SET_ERR5["Ret_t |= E_NOT_OK<br>设置 BistErrPath_u32 中的<br>GP_TLF35584_BIST_ERROR_5"]
+    SET_ERR4["Ret_t |= E_NOT_OK<br>设置 BistErrPath_u32 中的<br>GP_TLF35584_BIST_ERROR_4"]
+    END(["结束"])
+    READ_REG ~~~ END
+    CALL_TX ~~~ END
+    PARSE ~~~ END
+    J_BIST ~~~ END
+    SET_ERR4 ~~~ END
+    CLR_ERR4 ~~~ END
+    J_MONSF1 ~~~ END
+    SET_ERR5 ~~~ END
+    CLR_ERR5 ~~~ END
+    J_MONSF2 ~~~ END
+    SET_ERR6 ~~~ END
+    CLR_ERR6 ~~~ END
+    J_MONSF3 ~~~ END
+    SET_ERR7 ~~~ END
+    CLR_ERR7 ~~~ END
+    SET_OK ~~~ END
+
+    START --> INIT
+    INIT --> CALL_START
+    CALL_START --> J
+    J -- 否 --> END
+    J -- 是 --> CALL_STOP
+    CALL_STOP --> J_TIMEOUT
+    J_TIMEOUT -- 是 --> END
+    J_TIMEOUT -- 否 --> READ_REG
+    READ_REG --> CALL_TX
+    CALL_TX --> PARSE
+    PARSE --> J_BIST
+    J_BIST -- 否 --> SET_ERR4
+    J_BIST -- 是 --> CLR_ERR4
+    CLR_ERR4 --> J_MONSF1
+    J_MONSF1 -- 否 --> SET_ERR5
+    J_MONSF1 -- 是 --> CLR_ERR5
+    CLR_ERR5 --> J_MONSF2
+    J_MONSF2 -- 否 --> SET_ERR6
+    J_MONSF2 -- 是 --> CLR_ERR6
+    CLR_ERR6 --> J_MONSF3
+    J_MONSF3 -- 否 --> SET_ERR7
+    J_MONSF3 -- 是 --> CLR_ERR7
+    CLR_ERR7 --> SET_OK
+    SET_OK --> J
+    SET_ERR7 --> J
+    SET_ERR6 --> J
+    SET_ERR5 --> J
+    SET_ERR4 --> J

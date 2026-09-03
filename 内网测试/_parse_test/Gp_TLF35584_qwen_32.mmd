@@ -1,0 +1,58 @@
+flowchart TD
+    START(["开始"]) --> INIT["初始化 Data_pst 指向<br>Gp_TLF35584_rtData_ltst<br>初始化 Cnt_u32 为 0U<br>初始化 RegValue_au8<br>数组为0U"]
+    INIT --> CALL_UPDATE[["Gp_TLF35584_UpdateFlagReg<br>更新标志寄存器"]]
+    CALL_UPDATE --> LOOP_PRE{{"Cnt_u32 = 0U"}}
+    LOOP_PRE --> LOOP_COND{"Cnt_u32 <<br>GP_TLF35584_FLAG_RECOVER_N<br>UM ?"}
+    LOOP_COND -- 否 --> POST_LOOP_CHECK{"(Data_pst->ErrData_tst.Dri<br>verErrPath_u32 &<br>GP_TLF35584_SYSTEM_ERR)<br>==GP_TLF35584_SYSTEM_ERR ?"}
+    LOOP_COND -- 是 --> READ_REG[/"读取<br>Gp_TLF35584_idxFlagRegValu<br>e_lau8[Cnt_u32 +<br>GP_TLF35584_REGISTER_OFFSE<br>T_4] 到<br>RegValue_au8[Cnt_u32]"/]
+    READ_REG --> CHECK_FAULT{"RegValue_au8[Cnt_u32] !=<br>0U ?"}
+    CHECK_FAULT -- 是 --> SET_ERR["Data_pst->ErrData_tst.Driv<br>erErrPath_u32 |=<br>GP_TLF35584_SYSTEM_ERR"]
+    SET_ERR --> CALL_CLEAR[["Gp_TLF35584_ClearFlagReg<br>清除标志寄存器"]]
+    CALL_CLEAR --> CALL_NORMAL[["Gp_TLF35584_SwitchToNormal<br>Mode 切换到正常模式"]]
+    CALL_NORMAL --> BREAK["break 跳出循环"]
+    BREAK --> POST_LOOP_CHECK
+    CHECK_FAULT -- 否 --> CLEAR_ERR["Data_pst->ErrData_tst.Driv<br>erErrPath_u32 &=<br>(~GP_TLF35584_SYSTEM_ERR)"]
+    CLEAR_ERR --> INC_CNT["Cnt_u32++"]
+    INC_CNT --> LOOP_COND
+
+    POST_LOOP_CHECK -- 是 --> INC_FAULT_CNT["Data_pst->FaultDebonce_tst<br>.ReadFaultCnt_u8++"]
+    INC_FAULT_CNT --> CHECK_MAX{"Data_pst->FaultDebonce_tst<br>.ReadFaultCnt_u8 >=<br>GP_TLF35584_TRY_REPAIR_MAX<br>?"}
+    CHECK_MAX -- 否 --> END(["结束"])
+    CHECK_MAX -- 是 --> CAP_CNT["Data_pst->FaultDebonce_tst<br>.ReadFaultCnt_u8 =<br>GP_TLF35584_TRY_REPAIR_MAX"]
+    CAP_CNT --> CHECK_THRESH{"Data_pst->FaultDebonce_tst<br>.FaultThreshold_u8 < 255U<br>?"}
+    CHECK_THRESH -- 是 --> INC_THRESH["Data_pst->FaultDebonce_tst<br>.FaultThreshold_u8++"]
+    CHECK_THRESH -- 否 --> READ_ALL_REG_PRE{{"Cnt_u32 = 0U"}}
+    INC_THRESH --> READ_ALL_REG_PRE
+    READ_ALL_REG_PRE --> READ_ALL_REG_COND{"Cnt_u32 <<br>GP_TLF35584_FLAG_RECOVER_N<br>UM ?"}
+    READ_ALL_REG_COND -- 否 --> DISABLE_INTR[["Gp_TLF35584_CalloutDisable<br>Intrrupt 禁用中断"]]
+    READ_ALL_REG_COND -- 是 --> READ_REG_VAL[/"读取<br>Gp_TLF35584_idxFlagRegValu<br>e_lau8[Cnt_u32 +<br>GP_TLF35584_REGISTER_OFFSE<br>T_4] 到<br>RegValue_au8[Cnt_u32]"/]
+    READ_REG_VAL --> INC_CNT2["Cnt_u32++"]
+    INC_CNT2 --> READ_ALL_REG_COND
+
+    DISABLE_INTR --> ZERO_ERR_PRE{{"Cnt_u32 = 0U"}}
+    ZERO_ERR_PRE --> ZERO_ERR_COND{"Cnt_u32 <<br>GP_TLF35584_FAULT_SIGNAL_N<br>UMS ?"}
+    ZERO_ERR_COND -- 否 --> WRITE_CHIP_FAULT["写入 Chip Fault 相关错误位<br>OTF, VBATOV, BG12UV,<br>BG12OV, BIASLOW, BIASHI"]
+    ZERO_ERR_COND -- 是 --> ZERO_ERR_VAL["Data_pst->ErrData_tst.ErrR<br>ecord_au32[Cnt_u32] = 0U"]
+    ZERO_ERR_VAL --> INC_CNT3["Cnt_u32++"]
+    INC_CNT3 --> ZERO_ERR_COND
+
+    WRITE_CHIP_FAULT --> WRITE_TRK2["写入 Tracker2 Fault<br>相关错误位<br>TRK2SG, TRK2UV, TRK2OV"]
+    WRITE_TRK2 --> WRITE_TRK1["写入 Tracker1 Fault<br>相关错误位<br>TRK1SG, TRK1UV, TRK1OV"]
+    WRITE_TRK1 --> WRITE_VREF["写入 VREF Fault 相关错误位<br>VREFSG, VREFUV, VREFOV"]
+    WRITE_VREF --> WRITE_COM["写入 COM Fault 相关错误位<br>COMSG, COMUV, COMOV"]
+    WRITE_COM --> WRITE_VCORE["写入 VCORE Fault<br>相关错误位<br>VCORESG, VCOREUV, VCOREOV"]
+    WRITE_VCORE --> WRITE_UC["写入 UC Fault 相关错误位<br>UCSG, UCUV, UCOV"]
+    WRITE_UC --> WRITE_STBY["写入 STANDBY Fault<br>相关错误位<br>STBYSG, STBYUV, STBYOV"]
+    WRITE_STBY --> WRITE_PRE["写入 PREG Fault 相关错误位<br>PRESG, PREUV, PREOV"]
+    WRITE_PRE --> WRITE_SPI["Data_pst->ErrData_tst.ErrR<br>ecord_au32[GP_TLF35584_SPI<br>LOGICAL_FAULT] =<br>RegValue_au8[0U]"]
+    WRITE_SPI --> ENABLE_INTR[["Gp_TLF35584_CalloutEnableI<br>ntrrupt 使能中断"]]
+    ENABLE_INTR --> END
+
+    POST_LOOP_CHECK -- 否 --> CLEAR_FAULT_CNT["Data_pst->FaultDebonce_tst<br>.ReadFaultCnt_u8 = 0U"]
+    CLEAR_FAULT_CNT --> CLEAR_ERR_PATH["Data_pst->ErrData_tst.Driv<br>erErrPath_u32 &=<br>(~GP_TLF35584_SYSTEM_ERR)"]
+    CLEAR_ERR_PATH --> CLEAR_ERR_PRE{{"Cnt_u32 = 0U"}}
+    CLEAR_ERR_PRE --> CLEAR_ERR_COND{"Cnt_u32 <<br>GP_TLF35584_FAULT_SIGNAL_N<br>UMS ?"}
+    CLEAR_ERR_COND -- 否 --> END
+    CLEAR_ERR_COND -- 是 --> CLEAR_ERR_VAL["Data_pst->ErrData_tst.ErrR<br>ecord_au32[Cnt_u32] = 0U"]
+    CLEAR_ERR_VAL --> INC_CNT4["Cnt_u32++"]
+    INC_CNT4 --> CLEAR_ERR_COND

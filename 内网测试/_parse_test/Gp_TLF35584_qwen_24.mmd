@@ -1,0 +1,7 @@
+flowchart TD
+    A(["开始"]) --> B{{"初始化 RegValue_u16 为 0U"}}
+    B --> C["计算寄存器地址部分<br>RegValue_u16 = (RegAdd_u8<br>& 0x3F) << 8"]
+    C --> D["写入命令标志<br>RegValue_u16 |=<br>GP_TLF35584_WRITE_COMMAND"]
+    D --> E["写入数据部分<br>RegValue_u16 |=<br>(RegData_u8 & 0xFF)"]
+    E --> F["返回 RegValue_u16"]
+    F --> G(["结束"])

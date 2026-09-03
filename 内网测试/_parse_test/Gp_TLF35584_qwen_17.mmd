@@ -1,0 +1,22 @@
+flowchart TD
+    START(["开始"])
+    INIT{{"初始化 Data_pst 指向<br>Gp_TLF35584_rtData_ltst<br>初始化 Ret_t 为 E_NOT_OK"}}
+    CHECK{"ColdStart_pu8 !=<br>GP_TLF35584_NULL_PTR<br>且 Rst_pu8 !=<br>GP_TLF35584_NULL_PTR<br>且 WkSource_pu8 !=<br>GP_TLF35584_NULL_PTR"}
+    SET_OK["设置 Ret_t 为 E_OK"]
+    COPY_COLD[/"读取<br>Data_pst->StatusData_tst.S<br>ystemPor_bk_u8<br>写入 *ColdStart_pu8"/]
+    COPY_RST[/"读取<br>Data_pst->StatusData_tst.R<br>esetType_bk_u8<br>写入 *Rst_pu8"/]
+    COPY_WK[/"读取<br>Data_pst->StatusData_tst.W<br>akeupSource_bk_u8<br>写入 *WkSource_pu8"/]
+    SET_NOT_OK["设置 Ret_t 为 E_NOT_OK"]
+    RETURN["返回 Ret_t"]
+    END(["结束"])
+
+    START --> INIT
+    INIT --> CHECK
+    CHECK -- 是 --> SET_OK
+    SET_OK --> COPY_COLD
+    COPY_COLD --> COPY_RST
+    COPY_RST --> COPY_WK
+    COPY_WK --> RETURN
+    CHECK -- 否 --> SET_NOT_OK
+    SET_NOT_OK --> RETURN
+    RETURN --> END

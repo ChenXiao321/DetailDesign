@@ -1,0 +1,15 @@
+sequenceDiagram
+    participant OS as OS
+    participant Gp as Gp_TLF35584
+    participant HW as TLF35584_HW
+
+    OS->>Gp: Gp_TLF35584_MainFunction
+    Gp->>Gp: Gp_TLF35584_RtSetMode
+    Gp->>HW: Gp_TLF35584_GetAllFaultRegister
+    Gp->>HW: Gp_TLF35584_RtWdgRegCfg
+    Gp->>HW: Gp_TLF35584_GetWdgInfo
+    Gp->>HW: Gp_TLF35584_WdgService
+    Gp->>Gp: Gp_TLF35584_CalloutStmSwDalayNus
+    Gp->>HW: Gp_TLF35584_SwitchToNormalMode
+    Gp->>HW: Gp_TLF35584_GetState
+    Gp->>HW: Gp_TLF35584_ClearFlagReg

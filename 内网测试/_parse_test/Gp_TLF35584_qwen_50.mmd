@@ -1,0 +1,67 @@
+flowchart TD
+    START(["开始"])
+    INIT1{{"初始化 Data_pst 指向<br>Gp_TLF35584_rtData_ltst"}}
+    INIT2{{"初始化 Return_u8 为<br>E_NOT_OK"}}
+    CALL1[["Gp_TLF35584_DisableWdgFsp<br>禁用看门狗"]]
+    CALL2[["Gp_TLF35584_ClearFlagReg<br>清除标志寄存器"]]
+    CALL3[["Gp_TLF35584_SwitchToNormal<br>Mode 切换至正常模式"]]
+    CALL4[["Gp_TLF35584_CalloutStmSwDa<br>layNus 延时<br>MODE_SWITCH_DELAY"]]
+    CALL5[["Gp_TLF35584_GetState<br>获取状态"]]
+    CALL6[["Gp_TLF35584_CalloutSafeSta<br>teConfirm 确认安全状态"]]
+    J1{"Return_u8 == E_NOT_OK ?"}
+    J2{"Data_pst->StatusData_tst.D<br>eviceState_u8 ==<br>GP_TLF35584_NORMAL_STATE ?"}
+    CALL7[["Gp_TLF35584_UnlockSeq<br>解锁序列"]]
+    WRITE1[/"Data_pst->SpiData_tst.TxBu<br>f_au16[0U] =<br>Gp_TLF35584_WriteCmd(GP_TL<br>F35584_REG_SYSPCFG1, 0x8U)"/]
+    WRITE2[/"Data_pst->SpiData_tst.CntT<br>x_u16 = 1U"/]
+    CALL8[["Gp_TLF35584_TransmitData<br>发送数据"]]
+    CALL9[["Gp_TLF35584_LockSeq<br>锁定序列"]]
+    CALL10[["Gp_TLF35584_CalloutStmSwDa<br>layNus 延时<br>MODE_SWITCH_DELAY"]]
+    CALL11[["Smu_ActivateFSP 激活 FSP"]]
+    CALL12[["Gp_TLF35584_CalloutStmSwDa<br>layNus 延时 BIST_DELAY_250"]]
+    CALL13[["Gp_TLF35584_GetResetType<br>获取复位类型 RUN"]]
+    CALL14[["Gp_TLF35584_GetState<br>获取状态"]]
+    J3{"(DeviceState_u8 ==<br>GP_TLF35584_INIT_STATE)<br>&&((ResetType_u8 &<br>GP_TLF35584_RESET_ERRF)<br>==GP_TLF35584_RESET_ERRF)<br>?"}
+    CALL15[["Gp_TLF35584_CalloutSafeSta<br>teConfirm 确认安全状态"]]
+    J4{"Return_u8 == E_OK ?"}
+    CALL16[["Smu_ReleaseFSP 释放 FSP"]]
+    CALL17[["Gp_TLF35584_CalloutStmSwDa<br>layNus 延时 BIST_DELAY_250"]]
+    CALL18[["Gp_TLF35584_ClearFlagReg<br>清除标志寄存器"]]
+    WRITE3[/"Data_pst->ErrData_tst.Bist<br>ErrPath_u32 |=<br>GP_TLF35584_BIST_ERROR_17"/]
+    WRITE4[/"Data_pst->ErrData_tst.Bist<br>ErrPath_u32 |=<br>GP_TLF35584_BIST_ERROR_16"/]
+    WRITE5[/"Data_pst->ErrData_tst.Bist<br>ErrPath_u32 |=<br>GP_TLF35584_BIST_ERROR_15"/]
+    END(["结束"])
+
+    START --> INIT1
+    INIT1 --> INIT2
+    INIT2 --> CALL1
+    CALL1 --> CALL2
+    CALL2 --> CALL3
+    CALL3 --> CALL4
+    CALL4 --> CALL5
+    CALL5 --> CALL6
+    CALL6 --> J1
+    J1 -- 否 --> END
+    J1 -- 是 --> J2
+    J2 -- 否 --> WRITE5
+    WRITE5 --> END
+    J2 -- 是 --> CALL7
+    CALL7 --> WRITE1
+    WRITE1 --> WRITE2
+    WRITE2 --> CALL8
+    CALL8 --> CALL9
+    CALL9 --> CALL10
+    CALL10 --> CALL11
+    CALL11 --> CALL12
+    CALL12 --> CALL13
+    CALL13 --> CALL14
+    CALL14 --> J3
+    J3 -- 否 --> WRITE4
+    WRITE4 --> END
+    J3 -- 是 --> CALL15
+    CALL15 --> J4
+    J4 -- 否 --> WRITE3
+    WRITE3 --> END
+    J4 -- 是 --> CALL16
+    CALL16 --> CALL17
+    CALL17 --> CALL18
+    CALL18 --> END

@@ -1,0 +1,21 @@
+flowchart TD
+    START(["开始"]) --> INIT["初始化 Data_pst 指向<br>Gp_TLF35584_rtData_ltst<br>初始化 Ret_t 为 E_NOT_OK"]
+    INIT --> CHECK_PARAM["忽略参数 Id_u16"]
+    CHECK_PARAM --> CHECK_MODE{"DevMode_u8 <=<br>GP_TLF35584_WAKE_STATE ?"}
+    CHECK_MODE -- 否 --> SET_FAIL["Ret_t = E_NOT_OK"]
+    CHECK_MODE -- 是 --> SET_OK["Ret_t = E_OK"]
+    SET_OK --> CHECK_STANDBY{"DevMode_u8 ==<br>GP_TLF35584_STANDBY_STATE<br>?"}
+    CHECK_STANDBY -- 是 --> WRITE_STANDBY[/"Data_pst->SetMode_u8 =<br>GP_TLF35584_STANDBY_STATE"/]
+    CHECK_STANDBY -- 否 --> CHECK_NORMAL{"DevMode_u8 ==<br>GP_TLF35584_NORMAL_STATE ?"}
+    CHECK_NORMAL -- 是 --> WRITE_NORMAL[/"Data_pst->SetMode_u8 =<br>GP_TLF35584_NORMAL_STATE"/]
+    CHECK_NORMAL -- 否 --> CHECK_PORST{"DevMode_u8 ==<br>GP_TLF35584_PORST_STATE ?"}
+    CHECK_PORST -- 是 --> WRITE_PORST[/"Data_pst->SetMode_u8 =<br>GP_TLF35584_PORST_STATE"/]
+    CHECK_PORST -- 否 --> CHECK_WAKE{"DevMode_u8 ==<br>GP_TLF35584_WAKE_STATE ?"}
+    CHECK_WAKE -- 是 --> WRITE_WAKE[/"Data_pst->SetMode_u8 =<br>GP_TLF35584_WAKE_STATE"/]
+    CHECK_WAKE -- 否 --> EMPTY_ELSE["空操作 (for misra c)"]
+    WRITE_STANDBY --> END(["结束"])
+    WRITE_NORMAL --> END
+    WRITE_PORST --> END
+    WRITE_WAKE --> END
+    EMPTY_ELSE --> END
+    SET_FAIL --> END

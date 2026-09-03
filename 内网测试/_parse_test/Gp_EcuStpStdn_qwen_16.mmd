@@ -1,0 +1,32 @@
+flowchart TD
+    subgraph SG1[" "]
+        SG1_NOTE["注：仅在<br>GP_ECUSTPSHDN_SAFETY_ENABL<br>E 生效时参与编译"]
+        SG1_NOTE ~~~ START
+        START(["开始"])
+        INIT{{"Cnt_u32 = 0U"}}
+        LOOP_COND{"Cnt_u32 <<br>GP_ECUSTPSHDN_INIT_RSLT_RE<br>C_NUM"}
+        READ[/"读取<br>Impl_ptst->InitCheckRslt_t<br>[Cnt_u32]"/]
+        CHECK{"Impl_ptst->InitCheckRslt_t<br>[Cnt_u32] == E_NOT_OK"}
+        SET_BIT["Impl_ptst->InitRsltAllBits<br>_u32 |= (1U << Cnt_u32)"]
+        DO_NOTHING["do nothing"]
+        INCR["Cnt_u32++"]
+        END(["结束"])
+    READ ~~~ END
+    CHECK ~~~ END
+    SET_BIT ~~~ END
+    INCR ~~~ END
+    DO_NOTHING ~~~ END
+        START --> INIT
+        INIT --> LOOP_COND
+        LOOP_COND -- 是 --> READ
+        READ --> CHECK
+        CHECK -- 是 --> SET_BIT
+        CHECK -- 否 --> DO_NOTHING
+        SET_BIT --> INCR
+        DO_NOTHING --> INCR
+        INCR --> LOOP_COND
+        LOOP_COND -- 否 --> END
+    end
+    style SG1 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+    classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700
+    class SG1_NOTE condNote

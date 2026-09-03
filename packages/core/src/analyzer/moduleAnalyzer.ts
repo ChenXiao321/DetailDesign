@@ -112,7 +112,9 @@ interface RawFunction {
   calls: string[];
   identifiers: string[];
   conditionalFlags: string[];
+  innerCondFlags?: string[];    // 函数体内部条件编译段的宏
   bodyText: string;
+  bodyTextWithPP?: string;      // 含 #if/#endif 指令行的函数体（仅体内有条件编译段时填）
   signature: string;
   complexity: number;         // 圈复杂度（仅定义函数有；原型为 0）
   infiniteLoop: boolean;      // 含 while(1)/for(;;) 死循环
@@ -127,6 +129,7 @@ function extractFunction(
   filePath: string,
   condFlags: string[],
   isDefinition: boolean,
+  pre: PreprocessedSource,
 ): RawFunction | null {
   let declarator: TSNode | null = null;
   let body: TSNode | null = null;
@@ -195,11 +198,25 @@ function extractFunction(
   let calls: string[] = [];
   let identifiers: string[] = [];
   let bodyText = '';
+  let innerCondFlags: string[] | undefined;
+  let bodyTextWithPP: string | undefined;
   if (body) {
     const refs = collectBodyRefs(body, file.source);
     calls = refs.calls;
     identifiers = refs.identifiers;
     bodyText = nodeText(body, file.source);
+    // 函数体内部的条件编译段（区域完全落在函数体内；包裹整个函数的外层区域已由 condFlags 表达）
+    const innerRegions = pre.condRegions.filter(
+      r => r.from > node.startPosition.row && r.to <= node.endPosition.row,
+    );
+    if (innerRegions.length > 0) {
+      innerCondFlags = [...new Set(innerRegions.map(r => r.macro))];
+      // bodyText 来自预处理后的 clean 源（# 指令行已置空格），LLM 看不到 #if 位置；
+      // 这里从原始行重建含指令行的版本，供流程图 prompt 圈虚线框用
+      bodyTextWithPP = pre.originalLines
+        .slice(body.startPosition.row, body.endPosition.row + 1)
+        .join('\n');
+    }
   }
 
   return {
@@ -209,7 +226,8 @@ function extractFunction(
     lineEnd: node.endPosition.row + 1,
     comment, calls, identifiers,
     conditionalFlags: condFlags,
-    bodyText, signature,
+    innerCondFlags,
+    bodyText, bodyTextWithPP, signature,
     complexity: bodyText ? cyclomaticComplexity(bodyText) : 0,
     infiniteLoop: bodyText ? hasInfiniteLoop(bodyText) : false,
   };
@@ -341,7 +359,7 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
 
       // ---------- 函数定义：只有主 .c 才算模块函数 ----------
       if (node.type === 'function_definition') {
-        const fn = extractFunction(node, file, input.path, condFlags, true);
+        const fn = extractFunction(node, file, input.path, condFlags, true, pre);
         if (!fn) return;
         if (role === 'source') definedFunctions.push(fn);
         else if (role === 'callout') prototypes.push(fn);  // Callout 实现 → 外部接口声明
@@ -354,7 +372,7 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
           (c.type === 'init_declarator' && c.childForFieldName('declarator')?.type === 'function_declarator'));
         if (hasFuncDecl) {
           if (role === 'header' || role === 'callout') {
-            const proto = extractFunction(node, file, input.path, condFlags, false);
+            const proto = extractFunction(node, file, input.path, condFlags, false, pre);
             if (proto) prototypes.push(proto);
           }
           return;
@@ -525,7 +543,11 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
     calledBy: definedFunctions.filter(other => other.name !== fn.name && other.calls.includes(fn.name)).map(o => o.name),
     globalsAccessed: fn.identifiers.filter(id => globalNames.has(id)),
     conditionalFlags: fn.conditionalFlags,
+    innerCondFlags: fn.innerCondFlags,
     bodyText: fn.bodyText.length > 8000 ? fn.bodyText.slice(0, 8000) + '\n/* ...(截断) */' : fn.bodyText,
+    bodyTextWithPP: fn.bodyTextWithPP
+      ? (fn.bodyTextWithPP.length > 8500 ? fn.bodyTextWithPP.slice(0, 8500) + '\n/* ...(截断) */' : fn.bodyTextWithPP)
+      : undefined,
     bodyHash: sha256(normalizeCode(fn.bodyText)),
     sigHash: sha256(normalizeCode(fn.signature)),
     complexity: fn.complexity,

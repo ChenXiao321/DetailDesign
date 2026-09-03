@@ -1,0 +1,16 @@
+flowchart TD
+    START(["开始"])
+    INIT{{"初始化 Data_pst 指向<br>Gp_TLF35584_rtData_ltst"}}
+    WRITE[/"写入<br>Data_pst->WdgMTrigCnt_u16<br>为 TimeOut_u16"/]
+    DECIDE{"Data_pst->WdgMTrigCnt_u16<br>> 0U"}
+    SET_TRUE["设置<br>Data_pst->WdgSwitch_b为<br>TRUE"]
+    SET_FALSE["设置<br>Data_pst->WdgSwitch_b为<br>FALSE"]
+    END(["结束"])
+
+    START --> INIT
+    INIT --> WRITE
+    WRITE --> DECIDE
+    DECIDE -- 是 --> SET_TRUE
+    DECIDE -- 否 --> SET_FALSE
+    SET_TRUE --> END
+    SET_FALSE --> END

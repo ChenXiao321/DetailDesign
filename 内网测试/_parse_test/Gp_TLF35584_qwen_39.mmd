@@ -1,0 +1,90 @@
+flowchart TD
+    START(["开始"])
+    INIT{{"初始化局部变量<br>Data_pst 指向<br>Gp_TLF35584_rtData_ltst<br>IniterrReg_u8 = 0U<br>Monsf2Reg_u8 = 0U<br>Monsf2RegUcUv_u8 = 0U<br>Monsf2RegStbUv_u8 = 0U"}}
+    CALL[["Gp_TLF35584_UpdateFlagReg<br>更新标志寄存器"]]
+    J1{"phase_u8 ==<br>GP_TLF35584_GETRST_DIAG ?"}
+    
+    subgraph LANE_DIAG[" "]
+        direction TB
+        R1[/"读取<br>Gp_TLF35584_idxFlagRegValu<br>e_lau8<br>索引<br>GP_TLF35584_REG_INITERR_IN<br>DEX<br>赋值给 IniterrReg_u8"/]
+        R2[/"读取<br>Gp_TLF35584_idxFlagRegValu<br>e_lau8<br>索引<br>GP_TLF35584_REG_MONSF2_IND<br>EX<br>赋值给 Monsf2Reg_u8"/]
+        P1["计算 ResetType_bk_u8<br>IniterrReg_u8 &<br>GP_TLF35584_PORST_REASON_M<br>ASK"]
+        P2["计算 Monsf2RegUcUv_u8<br>Monsf2Reg_u8 &<br>GP_TLF35584_PORST_UCUV_MAS<br>K"]
+        P3["计算 Monsf2RegStbUv_u8<br>Monsf2Reg_u8 &<br>GP_TLF35584_PORST_STBYUV_M<br>ASK"]
+        J2{"Monsf2RegUcUv_u8 ==<br>GP_TLF35584_PORST_UCUV_MAS<br>K ?"}
+        W1["ResetType_bk_u8 |=<br>GP_TLF35584_PORST_REASON_U<br>CUV"]
+        J3{"Monsf2RegStbUv_u8 ==<br>GP_TLF35584_PORST_STBYUV_M<br>ASK ?"}
+        W2["ResetType_bk_u8 |=<br>GP_TLF35584_PORST_REASON_S<br>TBYUV"]
+        END_DIAG(["结束"])
+    W4 ~~~ END_DIAG
+    END_RUN ~~~ END_DIAG
+    R2 ~~~ END_OTHER
+    P1 ~~~ END_OTHER
+    P2 ~~~ END_OTHER
+    P3 ~~~ END_OTHER
+    J2 ~~~ END_OTHER
+    W1 ~~~ END_OTHER
+    J3 ~~~ END_OTHER
+    W2 ~~~ END_OTHER
+    END_DIAG ~~~ END_OTHER
+    R3 ~~~ END_OTHER
+    R4 ~~~ END_OTHER
+    P4 ~~~ END_OTHER
+    P5 ~~~ END_OTHER
+    P6 ~~~ END_OTHER
+    J4 ~~~ END_OTHER
+    W3 ~~~ END_OTHER
+    J5 ~~~ END_OTHER
+    W4 ~~~ END_OTHER
+    END_RUN ~~~ END_OTHER
+        
+        R1 --> R2
+        R2 --> P1
+        P1 --> P2
+        P2 --> P3
+        P3 --> J2
+        J2 -- 是 --> W1
+        J2 -- 否 --> J3
+        W1 --> J3
+        J3 -- 是 --> W2
+        J3 -- 否 --> END_DIAG
+        W2 --> END_DIAG
+    end
+    style LANE_DIAG fill:transparent,stroke:transparent
+
+    subgraph LANE_RUN[" "]
+        direction TB
+        R3[/"读取<br>Gp_TLF35584_idxFlagRegValu<br>e_lau8<br>索引<br>GP_TLF35584_REG_INITERR_IN<br>DEX<br>赋值给 IniterrReg_u8"/]
+        R4[/"读取<br>Gp_TLF35584_idxFlagRegValu<br>e_lau8<br>索引<br>GP_TLF35584_REG_MONSF2_IND<br>EX<br>赋值给 Monsf2Reg_u8"/]
+        P4["计算 ResetType_u8<br>IniterrReg_u8 &<br>GP_TLF35584_PORST_REASON_M<br>ASK"]
+        P5["计算 Monsf2RegUcUv_u8<br>Monsf2Reg_u8 &<br>GP_TLF35584_PORST_UCUV_MAS<br>K"]
+        P6["计算 Monsf2RegStbUv_u8<br>Monsf2Reg_u8 &<br>GP_TLF35584_PORST_STBYUV_M<br>ASK"]
+        J4{"Monsf2RegUcUv_u8 ==<br>GP_TLF35584_PORST_UCUV_MAS<br>K ?"}
+        W3["ResetType_u8 |=<br>GP_TLF35584_PORST_REASON_U<br>CUV"]
+        J5{"Monsf2RegStbUv_u8 ==<br>GP_TLF35584_PORST_STBYUV_M<br>ASK ?"}
+        W4["ResetType_u8 |=<br>GP_TLF35584_PORST_REASON_S<br>TBYUV"]
+        END_RUN(["结束"])
+        
+        R3 --> R4
+        R4 --> P4
+        P4 --> P5
+        P5 --> P6
+        P6 --> J4
+        J4 -- 是 --> W3
+        J4 -- 否 --> J5
+        W3 --> J5
+        J5 -- 是 --> W4
+        J5 -- 否 --> END_RUN
+        W4 --> END_RUN
+    end
+    style LANE_RUN fill:transparent,stroke:transparent
+
+    END_OTHER(["结束"])
+
+    START --> INIT
+    INIT --> CALL
+    CALL --> J1
+    J1 -- 是 --> R1
+    J1 -- 否 --> J1_RUN{"phase_u8 ==<br>GP_TLF35584_GETRST_RUN ?"}
+    J1_RUN -- 是 --> R3
+    J1_RUN -- 否 --> END_OTHER

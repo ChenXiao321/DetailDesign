@@ -1,0 +1,31 @@
+flowchart TD
+    START(["开始"])
+    INIT{{"初始化 Data_pst 指向<br>Gp_TLF35584_rtData_ltst<br>初始化 Index_u32 = 0U<br>初始化 Cnt_u32 = 0U"}}
+    START --> INIT
+    INIT --> LOOP_COND{"Cnt_u32 <<br>GP_TLF35584_TRY_REPAIR_MAX<br>?"}
+    LOOP_COND -- 否 --> END(["结束"])
+    LOOP_INC ~~~ END
+    LOOP_COND -- 是 --> SPI_CALL[["Gp_TLF35584_CalloutSpiTran<br>sSync<br>发送 SPI 帧"]]
+    SPI_CALL --> SPI_OK{"返回值 == E_OK ?"}
+    SPI_OK -- 否 --> ERR_SET1["Data_pst->ErrData_tst.Driv<br>erErrPath_u32 |=<br>GP_TLF35584_SPI_ERR"]
+    ERR_SET1 --> DEM_REPORT1[["Gp_TLF35584_CalloutDemRepo<br>rt<br>报告 SPI 故障"]]
+    DEM_REPORT1 --> LOOP_INC["Cnt_u32++"]
+    LOOP_INC --> LOOP_COND
+    SPI_OK -- 是 --> FLAG_SET["Data_pst->StatusData_tst.S<br>piCheckFlag_u8 =<br>GP_TLF35584_NO_ERROR"]
+    FLAG_SET --> INNER_INIT{{"Index_u32 = 0U"}}
+    INNER_INIT --> INNER_COND{"Index_u32 < TxCnt_u16 ?"}
+    INNER_COND -- 否 --> CHECK_FLAG{"SpiCheckFlag_u8 ==<br>GP_TLF35584_NO_ERROR ?"}
+    INNER_COND -- 是 --> IS_WRITE{"(TxBuf_au16[Index_u32] &<br>GP_TLF35584_WRITE_COMMAND)<br>> 0U ?"}
+    IS_WRITE -- 否 --> INNER_INC["Index_u32++"]
+    INNER_INC --> INNER_COND
+    IS_WRITE -- 是 --> MATCH_CHECK{"TxBuf_au16[Index_u32] !=<br>RxBuf_au16[Index_u32] ?"}
+    MATCH_CHECK -- 否 --> INNER_INC
+    MATCH_CHECK -- 是 --> ERR_SET2["Data_pst->StatusData_tst.S<br>piCheckFlag_u8 =<br>GP_TLF35584_SPI_ERR"]
+    ERR_SET2 --> INNER_BREAK["break"]
+    INNER_BREAK --> CHECK_FLAG
+    CHECK_FLAG -- 是 --> CLEAR_ERR["Data_pst->ErrData_tst.Driv<br>erErrPath_u32 &=<br>(~GP_TLF35584_SPI_ERR)"]
+    CLEAR_ERR --> OUTER_BREAK["break"]
+    OUTER_BREAK --> END
+    CHECK_FLAG -- 否 --> ERR_SET3["Data_pst->ErrData_tst.Driv<br>erErrPath_u32 |=<br>GP_TLF35584_SPI_ERR"]
+    ERR_SET3 --> DEM_REPORT2[["Gp_TLF35584_CalloutDemRepo<br>rt<br>报告 SPI 故障"]]
+    DEM_REPORT2 --> LOOP_INC

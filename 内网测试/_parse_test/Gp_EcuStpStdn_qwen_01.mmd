@@ -1,0 +1,23 @@
+%%{init: {"flowchart": {"rankSpacing": 10, "nodeSpacing": 16}}}%%
+flowchart LR
+    Caller(["外部调用方<br/>（其他 FC / RTE / 集成代码）"])
+    subgraph MOD[" "]
+        direction TB
+        MT["<b>Gp_EcuStpShdn</b><br/><b>提供的外部接口</b>（8 个）<br/>────────────"]
+        MT ~~~ P0("Gp_EcuStpShdn_<br/>SetSafeState") ~~~ P1("Gp_EcuStpShdn_<br/>SetTryPwrShdn") ~~~ P2("Gp_EcuStpShdn_<br/>GetSafeState") ~~~ P3("Gp_EcuStpShdn_<br/>TrapRecov")
+        MT ~~~ P4("Gp_EcuStpShdn_<br/>OsErrRecov") ~~~ P5("Gp_EcuStpShdn_<br/>PwrShdnInShdnPhase") ~~~ P6("Gp_EcuStpShdn_<br/>Startup") ~~~ P7("Gp_EcuStpShdn_<br/>Mainfunction")
+    end
+    G0["<b>Gp_RstM</b>（4 个）<br/>──────────<br/>Gp_RstM_GetLastRstTypeInfo<br/>Gp_RstM_Init<br/>Gp_RstM_InitOne<br/>Gp_RstM_InitTwo"]
+    G1["<b>Gp_TstApp</b>（4 个）<br/>──────────<br/>Gp_TstApp_PreRunInit<br/>Gp_TstApp_PreRunPhase<br/>Gp_TstApp_RunTimePhase<br/>Gp_TstApp_SwitchToRunPhase"]
+    Caller -->|call| MOD
+    MOD -->|call| G0
+    MOD -->|call| G1
+    classDef caller fill:#eaeef2,stroke:#57606a,color:#1f2328
+    classDef provided fill:#b6e3ff,stroke:#0969da,color:#0a3069
+    classDef extgroup fill:#f6f8fa,stroke:#57606a,color:#1f2328
+    class Caller caller
+    class P0,P1,P2,P3,P4,P5,P6,P7 provided
+    class G0 extgroup
+    class G1 extgroup
+    style MOD fill:#fbfcfd,stroke:#d0d7de,stroke-width:1px
+    style MT fill:transparent,stroke:transparent,color:#1f2328

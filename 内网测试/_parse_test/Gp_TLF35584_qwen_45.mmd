@@ -1,0 +1,32 @@
+flowchart TD
+    START(["开始"])
+    INIT{{"初始化 Cnt_u32 为 0U"}}
+    LOOP_COND{"Cnt_u32 <<br>GP_TLF35584_STATUS_REG_NUM<br>?"}
+    READ_REG[/"读取状态寄存器<br>Gp_TLF35584_ReadCmd"/]
+    WRITE_TX["写入 TxBuf_au16[Cnt_u32]"]
+    INCR_CNT["Cnt_u32 自增"]
+    SET_CNT["设置 CntTx_u16 为<br>GP_TLF35584_STATUS_REG_NUM"]
+    CALL_TX[["Gp_TLF35584_TransmitData<br>发送数据"]]
+    LOOP2_COND{"Cnt_u32 <<br>GP_TLF35584_STATUS_REG_NUM<br>?"}
+    READ_RX[/"读取 RxBuf_au16[Cnt_u32]"/]
+    UPDATE_VAL["更新<br>idxStatusRegValue_lau8[Cnt<br>_u32]"]
+    INCR_CNT2["Cnt_u32 自增"]
+    END(["结束"])
+    READ_RX ~~~ END
+    UPDATE_VAL ~~~ END
+    INCR_CNT2 ~~~ END
+
+    START --> INIT
+    INIT --> LOOP_COND
+    LOOP_COND -- 是 --> READ_REG
+    READ_REG --> WRITE_TX
+    WRITE_TX --> INCR_CNT
+    INCR_CNT --> LOOP_COND
+    LOOP_COND -- 否 --> SET_CNT
+    SET_CNT --> CALL_TX
+    CALL_TX --> LOOP2_COND
+    LOOP2_COND -- 是 --> READ_RX
+    READ_RX --> UPDATE_VAL
+    UPDATE_VAL --> INCR_CNT2
+    INCR_CNT2 --> LOOP2_COND
+    LOOP2_COND -- 否 --> END

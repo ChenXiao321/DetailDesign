@@ -1,0 +1,17 @@
+flowchart LR
+    N0["Gp_EcuStpShdn_Mainfunction"]
+    N1["CalloutGetCoreId"]
+    N0 -->|call| N1
+    N2["Gp_EcuStpShdn_GetLastSatTi<br>meStamp"]
+    N0 -->|call| N2
+    N3["CalloutChkMcuRunTimeTest"]
+    N0 -->|call| N3
+    N4["CalloutMcuRunTimeTestFaile<br>dHnd"]
+    N0 -->|call| N4
+    classDef entry fill:#0a3069,stroke:#0a3069,color:#ffffff
+    classDef internal fill:#eaeef2,stroke:#57606a,color:#1f2328
+    classDef provided fill:#b6e3ff,stroke:#0969da,color:#0a3069
+    classDef callout fill:#ffe9a8,stroke:#bf8700,color:#1f2328
+    class N0 entry
+    class N2 internal
+    class N1,N3,N4 callout

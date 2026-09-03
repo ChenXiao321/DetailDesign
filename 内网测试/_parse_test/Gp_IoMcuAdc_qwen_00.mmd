@@ -1,0 +1,23 @@
+flowchart BT
+    Gp_IoMcuAdc_Callout_c["«Source»<br><b>Gp_IoMcuAdc_<br>Callout.c</b>"]
+    Gp_IoMcuAdc_Callout_h["«header»<br><b>Gp_IoMcuAdc_<br>Callout.h</b>"]
+    Gp_IoMcuAdc_Types_h["«header»<br><b>Gp_IoMcuAdc_<br>Types.h</b>"]
+    Gp_IoMcuAdc_Cfg_c["«Source»<br><b>Gp_IoMcuAdc_<br>Cfg.c</b>"]
+    Gp_IoMcuAdc_CfgData_h["«header»<br><b>Gp_IoMcuAdc_<br>CfgData.h</b>"]
+    Gp_IoMcuAdc_Cfg_h["«header»<br><b>Gp_IoMcuAdc_<br>Cfg.h</b>"]
+    Std_Types_h["«header»<br><b>Std_Types.h</b>"]
+    Gp_IoMcuAdc_c["«Source»<br><b>Gp_IoMcuAdc.c</b>"]
+    Gp_IoMcuAdc_h["«header»<br><b>Gp_IoMcuAdc.h</b>"]
+    Gp_IoMcuAdc_Callout_c -.->|"«include»"| Gp_IoMcuAdc_Callout_h
+    Gp_IoMcuAdc_Callout_h -.->|"«include»"| Gp_IoMcuAdc_Types_h
+    Gp_IoMcuAdc_Cfg_c -.->|"«include»"| Gp_IoMcuAdc_CfgData_h
+    Gp_IoMcuAdc_Cfg_h -.->|"«include»"| Std_Types_h
+    Gp_IoMcuAdc_CfgData_h -.->|"«include»"| Gp_IoMcuAdc_Types_h
+    Gp_IoMcuAdc_c -.->|"«include»"| Gp_IoMcuAdc_h
+    Gp_IoMcuAdc_c -.->|"«include»"| Gp_IoMcuAdc_Callout_h
+    Gp_IoMcuAdc_h -.->|"«include»"| Gp_IoMcuAdc_CfgData_h
+    Gp_IoMcuAdc_Types_h -.->|"«include»"| Gp_IoMcuAdc_Cfg_h
+    classDef header fill:#dae8fc,stroke:#6c8ebf,color:#1a1a1a
+    classDef source fill:#d5e8d4,stroke:#82b366,color:#1a1a1a
+    class Gp_IoMcuAdc_Callout_h,Gp_IoMcuAdc_Types_h,Gp_IoMcuAdc_CfgData_h,Gp_IoMcuAdc_Cfg_h,Std_Types_h,Gp_IoMcuAdc_h header
+    class Gp_IoMcuAdc_Callout_c,Gp_IoMcuAdc_Cfg_c,Gp_IoMcuAdc_c source

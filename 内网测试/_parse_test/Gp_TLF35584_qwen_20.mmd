@@ -1,0 +1,9 @@
+flowchart TD
+    START(["开始"]) --> INIT{{"初始化 Data_pst 指向<br>Gp_TLF35584_rtData_ltst"}}
+    INIT --> CALL1[["Gp_TLF35584_WriteCmd 写入<br>SEQU0 到 TxBuf_au16[0]"]]
+    CALL1 --> CALL2[["Gp_TLF35584_WriteCmd 写入<br>SEQU1 到 TxBuf_au16[1]"]]
+    CALL2 --> CALL3[["Gp_TLF35584_WriteCmd 写入<br>SEQU2 到 TxBuf_au16[2]"]]
+    CALL3 --> CALL4[["Gp_TLF35584_WriteCmd 写入<br>SEQU3 到 TxBuf_au16[3]"]]
+    CALL4 --> SET_CNT["设置 CntTx_u16 为 4U"]
+    SET_CNT --> CALL5[["Gp_TLF35584_TransmitData<br>发送数据"]]
+    CALL5 --> END(["结束"])

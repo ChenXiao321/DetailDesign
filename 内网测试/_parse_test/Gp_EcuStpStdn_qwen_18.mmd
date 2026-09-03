@@ -1,0 +1,28 @@
+flowchart TD
+    subgraph SG1[" "]
+        SG1_NOTE["注：仅在<br>GP_ECUSTPSHDN_SAFETY_ENABL<br>E 生效时参与编译"]
+        SG1_NOTE ~~~ START
+        START(["开始"])
+        INIT["初始化 MstImpl_ptst 和<br>SatImpl_ptst 指针"]
+        CALL_CHECK_INIT[["Gp_EcuStpShdn_CheckInitRsl<br>t 检查初始化结果"]]
+        INIT --> CALL_CHECK_INIT
+        CALL_CHECK_INIT --> CHECK_INIT_RSLT{"SatImpl_ptst->InitRsltAllB<br>its_u32 != 0U"}
+        CHECK_INIT_RSLT -- 是 --> CALL_INIT_FAILED[["Gp_EcuStpShdn_CalloutInitF<br>ailedHnd 处理初始化失败"]]
+        CHECK_INIT_RSLT -- 否 --> SWITCH_RUN
+        CALL_INIT_FAILED --> SWITCH_RUN
+        SWITCH_RUN[["Gp_TstApp_SwitchToRunPhase<br>切换到运行阶段"]]
+        SWITCH_RUN --> CHECK_SWT_RUN{"Gp_EcuStpShdn_CalloutChkSw<br>tToRun() == FALSE"}
+        CHECK_SWT_RUN -- 是 --> CALL_SWT_RUN_FAILED[["Gp_EcuStpShdn_CalloutSwtTo<br>RunFailedHnd 处理切换失败"]]
+        CHECK_SWT_RUN -- 否 --> CHECK_SBC
+        CALL_SWT_RUN_FAILED --> CHECK_SBC
+        CHECK_SBC{"Gp_EcuStpShdn_CalloutChkSb<br>cTest() == FALSE"}
+        CHECK_SBC -- 是 --> SET_SBC_FAIL["MstImpl_ptst->SbcSelfTest_<br>t =<br>GP_ECUSTPSHDN_SELFTEST_FAI<br>L"]
+        CHECK_SBC -- 否 --> SET_SBC_PASS["MstImpl_ptst->SbcSelfTest_<br>t =<br>GP_ECUSTPSHDN_SELFTEST_PAS<br>S"]
+        SET_SBC_FAIL --> CALL_SBC_FAILED[["Gp_EcuStpShdn_CalloutSbcTe<br>stFailedHnd<br>处理SBC测试失败"]]
+        CALL_SBC_FAILED --> END
+        SET_SBC_PASS --> END
+        END(["结束"])
+    end
+    style SG1 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+    classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700
+    class SG1_NOTE condNote

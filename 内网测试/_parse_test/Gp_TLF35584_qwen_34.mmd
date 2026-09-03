@@ -1,0 +1,49 @@
+flowchart TD
+    START(["开始"])
+    INIT{{"初始化 Cnt_u32 为 0U"}}
+    LOOP_COND{"Cnt_u32 <<br>GP_TLF35584_TRY_REPAIR_MAX<br>?"}
+    CALL_WK[["Gp_TLF35584_CalloutWkSourc<br>eConfirm"]]
+    CHK_WK{"Ret_t == E_OK ?"}
+    CALL_GET[["Gp_TLF35584_GetState"]]
+    CHK_STATE{"Data_pst->StatusData_tst.D<br>eviceState_u8 ==<br>GP_TLF35584_NORMAL_STATE ?"}
+    CALC_CTRL["DevCtrl_u8 |=<br>GP_TLF35584_STANDBY_STATEM<br>DevCtrlN_u8 = 0xFFU ^<br>DevCtrl_u8"]
+    WRITE_BUF["Data_pst->SpiData_tst.TxBu<br>f_au16[0U] =<br>Gp_TLF35584_WriteCmd(GP_TL<br>F35584_REG_DEVCTRL,<br>DevCtrl_u8)<br>Data_pst->SpiData_tst.TxBu<br>f_au16[1U] =<br>Gp_TLF35584_WriteCmd(GP_TL<br>F35584_REG_DEVCTRLN,<br>DevCtrlN_u8)<br>Data_pst->SpiData_tst.CntT<br>x_u16 = 2U"]
+    CALL_TX[["Gp_TLF35584_TransmitData(D<br>ata_pst->SpiData_tst.CntTx<br>_u16)"]]
+    CALL_DELAY[["Gp_TLF35584_CalloutStmSwDa<br>layNus(GP_TLF35584_MODE_SW<br>ITCH_DELAY)"]]
+    BREAK["break"]
+    CALL_WDG[["Gp_TLF35584_DisableWdgFsp"]]
+    CALL_CLR[["Gp_TLF35584_ClearFlagReg"]]
+    CALL_NORM[["Gp_TLF35584_SwitchToNormal<br>Mode"]]
+    SET_ERR["Data_pst->ErrData_tst.Driv<br>erErrPath_u32 |=<br>GP_TLF35584_WAKE_UP_SOURCE<br>_ERR"]
+    CALL_DEM_WK[["Gp_TLF35584_CalloutDemRepo<br>rt(GP_TLF35584_WAKE_UP_SOU<br>RCE_FAULT,<br>GP_TLF35584_FAILED)"]]
+    INCR["Cnt_u32++"]
+    CHK_MAX{"Cnt_u32 ==<br>GP_TLF35584_TRY_REPAIR_MAX<br>?"}
+    CALL_DEM_POW[["Gp_TLF35584_CalloutDemRepo<br>rt(GP_TLF35584_POWER_OFF_F<br>AULT, GP_TLF35584_FAILED)"]]
+    SET_ERR_POW["Data_pst->ErrData_tst.Driv<br>erErrPath_u32 |=<br>GP_TLF35584_POWN_OFF_ERR"]
+    END(["结束"])
+
+    START --> INIT
+    INIT --> LOOP_COND
+    LOOP_COND -- 是 --> CALL_WK
+    CALL_WK --> CHK_WK
+    CHK_WK -- 是 --> CALL_GET
+    CALL_GET --> CHK_STATE
+    CHK_STATE -- 是 --> CALC_CTRL
+    CALC_CTRL --> WRITE_BUF
+    WRITE_BUF --> CALL_TX
+    CALL_TX --> CALL_DELAY
+    CALL_DELAY --> BREAK
+    BREAK --> CHK_MAX
+    CHK_STATE -- 否 --> CALL_WDG
+    CALL_WDG --> CALL_CLR
+    CALL_CLR --> CALL_NORM
+    CALL_NORM --> INCR
+    CHK_WK -- 否 --> SET_ERR
+    SET_ERR --> CALL_DEM_WK
+    CALL_DEM_WK --> INCR
+    INCR --> LOOP_COND
+    LOOP_COND -- 否 --> CHK_MAX
+    CHK_MAX -- 是 --> CALL_DEM_POW
+    CALL_DEM_POW --> SET_ERR_POW
+    SET_ERR_POW --> END
+    CHK_MAX -- 否 --> END

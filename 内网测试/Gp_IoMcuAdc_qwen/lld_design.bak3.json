@@ -1,0 +1,3530 @@
+{
+  "module": "Gp_IoMcuAdc",
+  "analyzedAt": "2026-09-03T01:51:49.294Z",
+  "files": [
+    {
+      "path": "ConfTemplate\\Gp_IoMcuAdc_Callout.c",
+      "role": "callout",
+      "includes": [
+        "Gp_IoMcuAdc_Callout.h",
+        "Gp_IoMcuAdc_MemMap.h"
+      ]
+    },
+    {
+      "path": "ConfTemplate\\Gp_IoMcuAdc_Callout.h",
+      "role": "callout",
+      "includes": [
+        "Gp_IoMcuAdc_Types.h",
+        "Gp_IoMcuAdc_MemMap.h"
+      ]
+    },
+    {
+      "path": "ConfTemplate\\Gp_IoMcuAdc_Cfg.c",
+      "role": "config",
+      "includes": [
+        "Gp_IoMcuAdc_CfgData.h",
+        "Gp_IoMcuAdc_MemMap.h"
+      ]
+    },
+    {
+      "path": "ConfTemplate\\Gp_IoMcuAdc_Cfg.h",
+      "role": "config",
+      "includes": [
+        "Std_Types.h"
+      ]
+    },
+    {
+      "path": "ConfTemplate\\Gp_IoMcuAdc_CfgData.h",
+      "role": "config",
+      "includes": [
+        "Gp_IoMcuAdc_Types.h",
+        "Gp_IoMcuAdc_MemMap.h"
+      ]
+    },
+    {
+      "path": "ConfTemplate\\Gp_IoMcuAdc_MemMap.h",
+      "role": "memmap",
+      "includes": []
+    },
+    {
+      "path": "Gp_IoMcuAdc.c",
+      "role": "source",
+      "includes": [
+        "Gp_IoMcuAdc.h",
+        "Gp_IoMcuAdc_Callout.h",
+        "Gp_IoMcuAdc_MemMap.h"
+      ]
+    },
+    {
+      "path": "Gp_IoMcuAdc.h",
+      "role": "header",
+      "includes": [
+        "Gp_IoMcuAdc_CfgData.h",
+        "Gp_IoMcuAdc_MemMap.h"
+      ]
+    },
+    {
+      "path": "Gp_IoMcuAdc_Types.h",
+      "role": "types",
+      "includes": [
+        "Gp_IoMcuAdc_Cfg.h"
+      ]
+    }
+  ],
+  "providedFunctions": [
+    {
+      "id": "Gp_IoMcuAdc::Gp_IoMcuAdc_Init",
+      "name": "Gp_IoMcuAdc_Init",
+      "signature": "void Gp_IoMcuAdc_Init(void)",
+      "returnType": "void",
+      "parameters": [],
+      "isStatic": false,
+      "file": "Gp_IoMcuAdc.c",
+      "lineStart": 618,
+      "lineEnd": 696,
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_IoMcuAdc_Init",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "void",
+        "description": "Gp_IoMcuAdc initialization function.\nthe function will set initial value for AdcSig buffer and AdcSig local implement buffer of all channels,\nand start ADC hardware conversion by invoke corresponding ADC function of MCAL.\nthe function should be invoked in the core which is enable and after ADC initialization function of MCAL."
+      },
+      "calls": [
+        "Gp_IoMcuAdc_CalloutGetCoreId",
+        "Adc_SetupResultBuffer",
+        "Adc_EnableHardwareTrigger",
+        "Gp_IoMcuAdc_CalloutInit"
+      ],
+      "calledBy": [],
+      "globalsAccessed": [
+        "Gp_IoMcuAdc_rtCont_lcatst"
+      ],
+      "conditionalFlags": [],
+      "bodyText": "{\n    const   Gp_IoMcuAdc_CfgType*    Cfg_cptst = &Gp_IoMcuAdc_cfgCont_vcatst[0U];\n    const   Gp_IoMcuAdc_RunTimeType*    Rt_cptst = &Gp_IoMcuAdc_rtCont_lcatst[0U];\n    uint32  CoreId_u32 = 0U;\n    uint32  Cnt_u32 = 0U;\n    uint8   ChlNum_u8 = 0U;\n    Std_ReturnType  Ret_t = E_OK;\n    boolean FuncCompl_b = TRUE;\n\n    /*get core ID*/\n    CoreId_u32 = Gp_IoMcuAdc_CalloutGetCoreId();\n    /*get configuration address of current core to local address*/\n    Cfg_cptst = &Gp_IoMcuAdc_cfgCont_vcatst[CoreId_u32];\n    /*get runtime buffer address of current core to local address*/\n    Rt_cptst = &Gp_IoMcuAdc_rtCont_lcatst[CoreId_u32];\n\n    /*initialization for ADC signal channel*/\n    ChlNum_u8 = Cfg_cptst->ChlNum_u8;\n    for (Cnt_u32 = 0U; Cnt_u32 < (uint32)ChlNum_u8; Cnt_u32++)\n    {\n        /*set initial value*/\n        Rt_cptst->AdcSig_ptst[Cnt_u32].AdcRaw_u16 = GP_IOMCUADC_ADCRAW_INVALID;\n        Rt_cptst->AdcSig_ptst[Cnt_u32].Diag_u32 = 0U;\n        Rt_cptst->AdcSigLocalImpl_ptst[Cnt_u32].PollingCnt_u16 = 0U;\n        Rt_cptst->AdcSigLocalImpl_ptst[Cnt_u32].AdcSigErr_t = GP_IOMCUADC_ADCSIGERRSTU_NO_ERR;\n    }\n\n                                                                           \n                                                                              \n                                                                               \n                                                                            \n    /*enable HW trigger*/\n    for (Cnt_u32 = 0U; Cnt_u32 < (uint32)Cfg_cptst->GrpNum_u8; Cnt_u32++)\n    {\n        /*invoke MCAL ADC interface*/\n        /*\n        Adc_SetupResultBuffer use AdcRaw_u16 as dummy buffer,\n        procedure will not fill dummy buffer by call MCAL function.\n        Adc_SetupResultBuffer should be completed before invoke Adc_EnableHardwareTrigger\n        to avoid DET error of ADC.\n        */\n        Ret_t = Adc_SetupResultBuffer\n        (\n            (Adc_GroupType)Cfg_cptst->GrpCfg_cpu32[Cnt_u32],\n            (Adc_ValueGroupType*)&Rt_cptst->AdcSig_ptst[Cnt_u32].AdcRaw_u16\n        );\n        Adc_EnableHardwareTrigger((Adc_GroupType)Cfg_cptst->GrpCfg_cpu32[Cnt_u32]);\n    }\n                                                                    \n\n                                                                                     \n                                                                              \n                                                                               \n                                                                              \n\n    /*extra initialization use callout function for special handling*/\n    FuncCompl_b = Gp_IoMcuAdc_CalloutInit(CoreId_u32);\n\n                                            \n    if ((Ret_t == E_NOT_OK) || (FuncCompl_b == FALSE))\n    {\n        /*record initialization failed error*/\n        Rt_cptst->Det_ptst->IfId_t = GP_IOMCUADC_IFID_INIT;\n        Rt_cptst->Det_ptst->ErrStu_t = GP_IOMCUADC_ERRSTU_INIT_FAILED;\n        /*initialization failed*/\n        Rt_cptst->Det_ptst->InitStu_t = GP_IOMCUADC_INITSTU_INIT_FAILED;\n    }\n    else\n    {\n        /*initialization completed*/\n        Rt_cptst->Det_ptst->InitStu_t = GP_IOMCUADC_INITSTU_INITED;\n    }\n\n    /*clear running counter*/\n    Rt_cptst->Det_ptst->RunCnt_u32 = 0U;\n                                                    \n\n}",
+      "bodyHash": "3211061a584d4957",
+      "sigHash": "25e5a9b40750ee05",
+      "complexity": 5,
+      "infiniteLoop": false,
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.3.2",
+        "workItemKind": "function",
+        "title": "Gp_IoMcuAdc_Init",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "Gp_IoMcuAdc_Init 是 Gp_IoMcuAdc 模块的初始化接口函数，负责为所有通道的 AdcSig 缓冲区及本地实现缓冲区设置初始值，并通过调用 MCAL 的 Adc_SetupResultBuffer 和 Adc_EnableHardwareTrigger 函数启动 ADC 硬件转换。该函数在模块中作为启动入口，依赖于 Gp_IoMcuAdc_CalloutGetCoreId 获取当前核心 ID，并触发 Gp_IoMcuAdc_CalloutInit 执行回调初始化。其执行的前置条件是当前核心已启用，且 MCAL 层的 ADC 初始化函数已执行完毕。函数运行过程中会访问模块全局变量 Gp_IoMcuAdc_rtCont_lcatst 以维护运行时上下文状态。",
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:51:53.297Z"
+      },
+      "innerCondFlags": [
+        "GP_IOMCUADC_SPEC_DEP_IF",
+        "GP_IOMCUADC_DEV_ERROR_DETECT"
+      ],
+      "bodyTextWithPP": "{\n    const   Gp_IoMcuAdc_CfgType*    Cfg_cptst = &Gp_IoMcuAdc_cfgCont_vcatst[0U];\n    const   Gp_IoMcuAdc_RunTimeType*    Rt_cptst = &Gp_IoMcuAdc_rtCont_lcatst[0U];\n    uint32  CoreId_u32 = 0U;\n    uint32  Cnt_u32 = 0U;\n    uint8   ChlNum_u8 = 0U;\n    Std_ReturnType  Ret_t = E_OK;\n    boolean FuncCompl_b = TRUE;\n\n    /*get core ID*/\n    CoreId_u32 = Gp_IoMcuAdc_CalloutGetCoreId();\n    /*get configuration address of current core to local address*/\n    Cfg_cptst = &Gp_IoMcuAdc_cfgCont_vcatst[CoreId_u32];\n    /*get runtime buffer address of current core to local address*/\n    Rt_cptst = &Gp_IoMcuAdc_rtCont_lcatst[CoreId_u32];\n\n    /*initialization for ADC signal channel*/\n    ChlNum_u8 = Cfg_cptst->ChlNum_u8;\n    for (Cnt_u32 = 0U; Cnt_u32 < (uint32)ChlNum_u8; Cnt_u32++)\n    {\n        /*set initial value*/\n        Rt_cptst->AdcSig_ptst[Cnt_u32].AdcRaw_u16 = GP_IOMCUADC_ADCRAW_INVALID;\n        Rt_cptst->AdcSig_ptst[Cnt_u32].Diag_u32 = 0U;\n        Rt_cptst->AdcSigLocalImpl_ptst[Cnt_u32].PollingCnt_u16 = 0U;\n        Rt_cptst->AdcSigLocalImpl_ptst[Cnt_u32].AdcSigErr_t = GP_IOMCUADC_ADCSIGERRSTU_NO_ERR;\n    }\n\n#if ((GP_IOMCUADC_SPEC_DEP_IF == GP_IOMCUADC_SPEC_DEP_IF_AURIX2G_MCAL) || \\\n        (GP_IOMCUADC_SPEC_DEP_IF == GP_IOMCUADC_SPEC_DEP_IF_AURIX3G_MCAL) || \\\n        (GP_IOMCUADC_SPEC_DEP_IF == GP_IOMCUADC_SPEC_DEP_IF_TRAVEO2G_MCAL) || \\\n        (GP_IOMCUADC_SPEC_DEP_IF == GP_IOMCUADC_SPEC_DEP_IF_STELLARPX_MCAL))\n    /*enable HW trigger*/\n    for (Cnt_u32 = 0U; Cnt_u32 < (uint32)Cfg_cptst->GrpNum_u8; Cnt_u32++)\n    {\n        /*invoke MCAL ADC interface*/\n        /*\n        Adc_SetupResultBuffer use AdcRaw_u16 as dummy buffer,\n        procedure will not fill dummy buffer by call MCAL function.\n        Adc_SetupResultBuffer should be completed before invoke Adc_EnableHardwareTrigger\n        to avoid DET error of ADC.\n        */\n        Ret_t = Adc_SetupResultBuffer\n        (\n            (Adc_GroupType)Cfg_cptst->GrpCfg_cpu32[Cnt_u32],\n            (Adc_ValueGroupType*)&Rt_cptst->AdcSig_ptst[Cnt_u32].AdcRaw_u16\n        );\n        Adc_EnableHardwareTrigger((Adc_GroupType)Cfg_cptst->GrpCfg_cpu32[Cnt_u32]);\n    }\n#elif (GP_IOMCUADC_SPEC_DEP_IF == GP_IOMCUADC_SPEC_DEP_IF_UNDEFINED)\n\n#endif  /*#if ((GP_IOMCUADC_SPEC_DEP_IF == GP_IOMCUADC_SPEC_DEP_IF_AURIX2G_MCAL) || \\\n        (GP_IOMCUADC_SPEC_DEP_IF == GP_IOMCUADC_SPEC_DEP_IF_AURIX3G_MCAL) || \\\n        (GP_IOMCUADC_SPEC_DEP_IF == GP_IOMCUADC_SPEC_DEP_IF_TRAVEO2G_MCAL) || \\\n        (GP_IOMCUADC_SPEC_DEP_IF == GP_IOMCUADC_SPEC_DEP_IF_STELLARPX_MCAL))*/\n\n    /*extra initialization use callout function for special handling*/\n    FuncCompl_b = Gp_IoMcuAdc_CalloutInit(CoreId_u32);\n\n#if (GP_IOMCUADC_DEV_ERROR_DETECT == STD_ON)\n    if ((Ret_t == E_NOT_OK) || (FuncCompl_b == FALSE))\n    {\n        /*record initialization failed error*/\n        Rt_cptst->Det_ptst->IfId_t = GP_IOMCUADC_IFID_INIT;\n        Rt_cptst->Det_ptst->ErrStu_t = GP_IOMCUADC_ERRSTU_INIT_FAILED;\n        /*initialization failed*/\n        Rt_cptst->Det_ptst->InitStu_t = GP_IOMCUADC_INITSTU_INIT_FAILED;\n    }\n    else\n    {\n        /*initialization completed*/\n        Rt_cptst->Det_ptst->InitStu_t = GP_IOMCUADC_INITSTU_INITED;\n    }\n\n    /*clear running counter*/\n    Rt_cptst->Det_ptst->RunCnt_u32 = 0U;\n#endif  /*(GP_IOMCUADC_DEV_ERROR_DETECT == STD_ON)*/\n\n}"
+    },
+    {
+      "id": "Gp_IoMcuAdc::Gp_IoMcuAdc_MainFunction",
+      "name": "Gp_IoMcuAdc_MainFunction",
+      "signature": "void Gp_IoMcuAdc_MainFunction(void)",
+      "returnType": "void",
+      "parameters": [],
+      "isStatic": false,
+      "file": "Gp_IoMcuAdc.c",
+      "lineStart": 715,
+      "lineEnd": 782,
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_IoMcuAdc_MainFunction",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "void",
+        "description": "Gp_IoMcuAdc period function.\nthe function will get ADC raw and diagnostic data of all channels except directly read channel\naccording to the configured period, and save in runtime buffer.\nthe function should be invoked in the core which is enable and in period task after Gp_IoMcuAdc_Init is completed.\nhint: every channel which is not configured as directly read has a polling count\nwhich is increased by MainFunction periodically, when it reach the count maximum,\nit will be cleared, then read ADC raw and diagnostic data."
+      },
+      "calls": [
+        "Gp_IoMcuAdc_CalloutGetCoreId",
+        "Gp_IoMcuAdc_CheckInitStu",
+        "Gp_IoMcuAdc_GetAdcRaw",
+        "Gp_IoMcuAdc_GetDiag"
+      ],
+      "calledBy": [],
+      "globalsAccessed": [
+        "Gp_IoMcuAdc_rtCont_lcatst"
+      ],
+      "conditionalFlags": [],
+      "bodyText": "{\n    const   Gp_IoMcuAdc_CfgType*    Cfg_cptst = &Gp_IoMcuAdc_cfgCont_vcatst[0U];\n    const   Gp_IoMcuAdc_RunTimeType*    Rt_cptst = &Gp_IoMcuAdc_rtCont_lcatst[0U];\n    uint32  CoreId_u32 = 0U;\n    uint32  Cnt_u32 = 0U;\n    uint16  ChlNum_u8 = 0U;\n\n                                            \n    boolean ErrFlag_b = FALSE;\n                                                    \n\n    /*get core ID*/\n    CoreId_u32 = Gp_IoMcuAdc_CalloutGetCoreId();\n    /*get configuration address of current core to local address*/\n    Cfg_cptst = &Gp_IoMcuAdc_cfgCont_vcatst[CoreId_u32];\n    /*get runtime buffer address of current core to local address*/\n    Rt_cptst = &Gp_IoMcuAdc_rtCont_lcatst[CoreId_u32];\n\n                                            \n    /*check if the initialization is completed*/\n    ErrFlag_b = Gp_IoMcuAdc_CheckInitStu(GP_IOMCUADC_IFID_MAINFUNC, Rt_cptst);\n    if (ErrFlag_b == FALSE)\n    {\n                                                    \n        /*get ADC raw of all channels and save in runtime buffer*/\n        ChlNum_u8 = Cfg_cptst->ChlNum_u8;\n        for (Cnt_u32 = 0U; Cnt_u32 < (uint32)ChlNum_u8; Cnt_u32++)\n        {\n            /*to avoid read conflict,\n            MainFunction only read ADC raw and diagnostic data when directly read is FALSE.*/\n            if (Cfg_cptst->AdcSigLocalCfg_cptst[Cnt_u32].DirectlyRead_b == FALSE)\n            {\n                /*\n                polling count increase periodically, when reach the count maximum,\n                it will be cleared, then read ADC raw and diagnostic data.\n                */\n                Rt_cptst->AdcSigLocalImpl_ptst[Cnt_u32].PollingCnt_u16++;\n                if (Rt_cptst->AdcSigLocalImpl_ptst[Cnt_u32].PollingCnt_u16 >=\n                        Cfg_cptst->AdcSigLocalCfg_cptst[Cnt_u32].PollingCntMax_u16)\n                {\n                    Rt_cptst->AdcSigLocalImpl_ptst[Cnt_u32].PollingCnt_u16 = 0U;\n                    /*read ADC raw*/\n                    Gp_IoMcuAdc_GetAdcRaw(Cfg_cptst, Rt_cptst, CoreId_u32, (uint8)Cnt_u32);\n                    /*get diagnostic data*/\n                    Gp_IoMcuAdc_GetDiag(Cfg_cptst, Rt_cptst, CoreId_u32, (uint8)Cnt_u32);\n                }\n                else\n                {\n                    /*do nothing*/\n                }\n            }\n            else\n            {\n                /*do nothing*/\n            }\n        }\n                                            \n        /*MainFunction running counter increasing*/\n        Rt_cptst->Det_ptst->RunCnt_u32++;\n    }\n    else\n    {\n        /*do nothing*/\n    }\n                                                    \n\n}",
+      "bodyHash": "028c86198125bab3",
+      "sigHash": "21341cddb157c391",
+      "complexity": 5,
+      "infiniteLoop": false,
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.3.2",
+        "workItemKind": "function",
+        "title": "Gp_IoMcuAdc_MainFunction",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "Gp_IoMcuAdc_MainFunction 是 Gp_IoMcuAdc 模块的周期性主函数，负责按照配置周期获取所有非直接读取通道的 ADC 原始数据及诊断数据，并将其存储至运行时缓冲区。该函数作为模块对外接口，在初始化完成后由核心使能状态下的周期任务调用，内部依次执行核心 ID 获取、初始化状态检查、ADC 原始数据读取及诊断数据读取操作。函数通过维护全局变量 Gp_IoMcuAdc_rtCont_lcatst 中的轮询计数，当计数达到最大值时进行清零并触发数据读取，从而实现非直接读取通道的周期性采样。",
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:52:11.113Z"
+      },
+      "innerCondFlags": [
+        "GP_IOMCUADC_DEV_ERROR_DETECT"
+      ],
+      "bodyTextWithPP": "{\n    const   Gp_IoMcuAdc_CfgType*    Cfg_cptst = &Gp_IoMcuAdc_cfgCont_vcatst[0U];\n    const   Gp_IoMcuAdc_RunTimeType*    Rt_cptst = &Gp_IoMcuAdc_rtCont_lcatst[0U];\n    uint32  CoreId_u32 = 0U;\n    uint32  Cnt_u32 = 0U;\n    uint16  ChlNum_u8 = 0U;\n\n#if (GP_IOMCUADC_DEV_ERROR_DETECT == STD_ON)\n    boolean ErrFlag_b = FALSE;\n#endif  /*(GP_IOMCUADC_DEV_ERROR_DETECT == STD_ON)*/\n\n    /*get core ID*/\n    CoreId_u32 = Gp_IoMcuAdc_CalloutGetCoreId();\n    /*get configuration address of current core to local address*/\n    Cfg_cptst = &Gp_IoMcuAdc_cfgCont_vcatst[CoreId_u32];\n    /*get runtime buffer address of current core to local address*/\n    Rt_cptst = &Gp_IoMcuAdc_rtCont_lcatst[CoreId_u32];\n\n#if (GP_IOMCUADC_DEV_ERROR_DETECT == STD_ON)\n    /*check if the initialization is completed*/\n    ErrFlag_b = Gp_IoMcuAdc_CheckInitStu(GP_IOMCUADC_IFID_MAINFUNC, Rt_cptst);\n    if (ErrFlag_b == FALSE)\n    {\n#endif  /*(GP_IOMCUADC_DEV_ERROR_DETECT == STD_ON)*/\n        /*get ADC raw of all channels and save in runtime buffer*/\n        ChlNum_u8 = Cfg_cptst->ChlNum_u8;\n        for (Cnt_u32 = 0U; Cnt_u32 < (uint32)ChlNum_u8; Cnt_u32++)\n        {\n            /*to avoid read conflict,\n            MainFunction only read ADC raw and diagnostic data when directly read is FALSE.*/\n            if (Cfg_cptst->AdcSigLocalCfg_cptst[Cnt_u32].DirectlyRead_b == FALSE)\n            {\n                /*\n                polling count increase periodically, when reach the count maximum,\n                it will be cleared, then read ADC raw and diagnostic data.\n                */\n                Rt_cptst->AdcSigLocalImpl_ptst[Cnt_u32].PollingCnt_u16++;\n                if (Rt_cptst->AdcSigLocalImpl_ptst[Cnt_u32].PollingCnt_u16 >=\n                        Cfg_cptst->AdcSigLocalCfg_cptst[Cnt_u32].PollingCntMax_u16)\n                {\n                    Rt_cptst->AdcSigLocalImpl_ptst[Cnt_u32].PollingCnt_u16 = 0U;\n                    /*read ADC raw*/\n                    Gp_IoMcuAdc_GetAdcRaw(Cfg_cptst, Rt_cptst, CoreId_u32, (uint8)Cnt_u32);\n                    /*get diagnostic data*/\n                    Gp_IoMcuAdc_GetDiag(Cfg_cptst, Rt_cptst, CoreId_u32, (uint8)Cnt_u32);\n                }\n                else\n                {\n                    /*do nothing*/\n                }\n            }\n            else\n            {\n                /*do nothing*/\n            }\n        }\n#if (GP_IOMCUADC_DEV_ERROR_DETECT == STD_ON)\n        /*MainFunction running counter increasing*/\n        Rt_cptst->Det_ptst->RunCnt_u32++;\n    }\n    else\n    {\n        /*do nothing*/\n    }\n#endif  /*(GP_IOMCUADC_DEV_ERROR_DETECT == STD_ON)*/\n\n}"
+    },
+    {
+      "id": "Gp_IoMcuAdc::Gp_IoMcuAdc_GetAdcSigDiag",
+      "name": "Gp_IoMcuAdc_GetAdcSigDiag",
+      "signature": "Std_ReturnType Gp_IoMcuAdc_GetAdcSigDiag(uint16 Id_u16, uint32* Diag_pu32)",
+      "returnType": "Std_ReturnType",
+      "parameters": [
+        {
+          "type": "uint16",
+          "name": "Id_u16",
+          "pointerDepth": 0
+        },
+        {
+          "type": "uint32",
+          "name": "Diag_pu32",
+          "pointerDepth": 1
+        }
+      ],
+      "isStatic": false,
+      "file": "Gp_IoMcuAdc.c",
+      "lineStart": 801,
+      "lineEnd": 866,
+      "comment": {
+        "paramsIn": [
+          {
+            "raw": "uint16 Id_u16 - signal ID 0~0xFFFF",
+            "description": "signal ID 0~0xFFFF",
+            "name": "Id_u16",
+            "type": "uint16"
+          }
+        ],
+        "paramsInout": [],
+        "paramsOut": [
+          {
+            "raw": "uint32* Diag_pu32 - pointer to buffer of diagnostic data",
+            "description": "pointer to buffer of diagnostic data",
+            "name": "Diag_pu32",
+            "type": "uint32*"
+          }
+        ],
+        "functionName": "Gp_IoMcuAdc_GetAdcSigDiag",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "Std_ReturnType - E_OK/E_NOT_OK",
+        "description": "Gp_IoMcuAdc provide diagnostic data of AdcSig interface.\nuser will get diagnostic data of AdcSig through output argument for the corresponding ID.\nthe function should be invoked in the core which is enable and after Gp_IoMcuAdc_Init is completed\nand Gp_IoMcuAdc_MainFunction has read signal value of all channels except directly read channel.\nhint: the function read the diagnostic data from internal function for current input ID\nif the channel of current ID is configured as directly read channel,\nelse read the diagnostic data from local buffer which is written by Gp_IoMcuAdc_MainFunction."
+      },
+      "calls": [
+        "Gp_IoMcuAdc_CalloutGetCoreId",
+        "Gp_IoMcuAdc_CheckInitStu",
+        "Gp_IoMcuAdc_CheckArgIn",
+        "Gp_IoMcuAdc_GetDiag"
+      ],
+      "calledBy": [],
+      "globalsAccessed": [
+        "Gp_IoMcuAdc_rtCont_lcatst"
+      ],
+      "conditionalFlags": [],
+      "bodyText": "{\n    Std_ReturnType Ret_t = E_NOT_OK;\n    const   Gp_IoMcuAdc_CfgType*    Cfg_cptst = &Gp_IoMcuAdc_cfgCont_vcatst[0U];\n    const   Gp_IoMcuAdc_RunTimeType*    Rt_cptst = &Gp_IoMcuAdc_rtCont_lcatst[0U];\n    const   Gp_IoMcuAdc_AdcSigMappingCfgType*   SmCfg_cptst = &Gp_IoMcuAdc_cfgAdcSigMapping_vcatst[0U];\n    uint32  CoreId_u32 = 0U;\n    uint8   ChlIdx_u8 = 0U;\n\n                                            \n    boolean ErrFlag1_b = FALSE;\n    boolean ErrFlag2_b = FALSE;\n                                                    \n\n    /*get core ID*/\n    CoreId_u32 = Gp_IoMcuAdc_CalloutGetCoreId();\n    /*get configuration address of current core to local address*/\n    Cfg_cptst = &Gp_IoMcuAdc_cfgCont_vcatst[CoreId_u32];\n    /*get runtime buffer address of current core to local address*/\n    Rt_cptst = &Gp_IoMcuAdc_rtCont_lcatst[CoreId_u32];\n\n                                            \n    /*check one by one, do not jump over because of error reporting of one check,\n    this is for covering all error status.*/\n    ErrFlag1_b = Gp_IoMcuAdc_CheckInitStu(GP_IOMCUADC_IFID_GETADCSIGDIAG, Rt_cptst);\n    ErrFlag2_b = Gp_IoMcuAdc_CheckArgIn\n    (\n        GP_IOMCUADC_IFID_GETADCSIGDIAG,\n        SmCfg_cptst,\n        Rt_cptst,\n        CoreId_u32,\n        Id_u16,\n        (uint8*)Diag_pu32\n    );\n    ErrFlag1_b = ErrFlag1_b | ErrFlag2_b;\n    if (ErrFlag1_b == FALSE)\n    {\n                                                    \n        /*get channel index of current signal ID according to the signal mapping configuration*/\n        ChlIdx_u8 = SmCfg_cptst[Id_u16].MappingChlIdx_u8;\n\n        /*get diagnostic data*/\n        if (Cfg_cptst->AdcSigLocalCfg_cptst[ChlIdx_u8].DirectlyRead_b == TRUE)\n        {\n            /*get diagnostic data directly from callout function or get 0 value,\n            diagnostic data is also save in buffer for debug observation.*/\n            Gp_IoMcuAdc_GetDiag(Cfg_cptst, Rt_cptst, CoreId_u32, ChlIdx_u8);\n            *Diag_pu32 = Rt_cptst->AdcSig_ptst[ChlIdx_u8].Diag_u32;\n        }\n        else\n        {\n            /*get diagnostic data from buffer which is read by period in MainFunction*/\n            *Diag_pu32 = Rt_cptst->AdcSig_ptst[ChlIdx_u8].Diag_u32;\n        }\n\n        Ret_t = E_OK;\n                                            \n    }\n    else\n    {\n        Ret_t = E_NOT_OK;\n    }\n                                                    \n\n    return (Ret_t);\n}",
+      "bodyHash": "09f3af7a28f7d0eb",
+      "sigHash": "5865b104759080a2",
+      "complexity": 3,
+      "infiniteLoop": false,
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.3.2",
+        "workItemKind": "function",
+        "title": "Gp_IoMcuAdc_GetAdcSigDiag",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "该函数作为 Gp_IoMcuAdc 模块的对外接口，用于获取指定 ID 对应的 AdcSig 接口的诊断数据，并通过输出参数 Diag_pu32 返回结果。在模块架构中，它依赖于内部函数 Gp_IoMcuAdc_GetDiag 执行具体的数据读取操作，同时调用 Gp_IoMcuAdc_CalloutGetCoreId、Gp_IoMcuAdc_CheckInitStu 和 Gp_IoMcuAdc_CheckArgIn 进行核心 ID 获取、初始化状态检查及输入参数校验。函数执行前必须满足在已启用的核心上运行、Gp_IoMcuAdc_Init 已完成且 Gp_IoMcuAdc_MainFunction 已读取除直接读取通道外所有通道信号值的前置条件。若当前 ID 对应的通道配置为直接读取通道，函数将从内部函数读取诊断数据；否则，将从由 Gp_IoMcuAdc_MainFunction 写入的本地缓冲区中读取数据。该函数访问模块全局变量 Gp_IoMcuAdc_rtCont_lcatst 以支持其内部逻辑处理。",
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:52:31.066Z"
+      },
+      "innerCondFlags": [
+        "GP_IOMCUADC_DEV_ERROR_DETECT"
+      ],
+      "bodyTextWithPP": "{\n    Std_ReturnType Ret_t = E_NOT_OK;\n    const   Gp_IoMcuAdc_CfgType*    Cfg_cptst = &Gp_IoMcuAdc_cfgCont_vcatst[0U];\n    const   Gp_IoMcuAdc_RunTimeType*    Rt_cptst = &Gp_IoMcuAdc_rtCont_lcatst[0U];\n    const   Gp_IoMcuAdc_AdcSigMappingCfgType*   SmCfg_cptst = &Gp_IoMcuAdc_cfgAdcSigMapping_vcatst[0U];\n    uint32  CoreId_u32 = 0U;\n    uint8   ChlIdx_u8 = 0U;\n\n#if (GP_IOMCUADC_DEV_ERROR_DETECT == STD_ON)\n    boolean ErrFlag1_b = FALSE;\n    boolean ErrFlag2_b = FALSE;\n#endif  /*(GP_IOMCUADC_DEV_ERROR_DETECT == STD_ON)*/\n\n    /*get core ID*/\n    CoreId_u32 = Gp_IoMcuAdc_CalloutGetCoreId();\n    /*get configuration address of current core to local address*/\n    Cfg_cptst = &Gp_IoMcuAdc_cfgCont_vcatst[CoreId_u32];\n    /*get runtime buffer address of current core to local address*/\n    Rt_cptst = &Gp_IoMcuAdc_rtCont_lcatst[CoreId_u32];\n\n#if (GP_IOMCUADC_DEV_ERROR_DETECT == STD_ON)\n    /*check one by one, do not jump over because of error reporting of one check,\n    this is for covering all error status.*/\n    ErrFlag1_b = Gp_IoMcuAdc_CheckInitStu(GP_IOMCUADC_IFID_GETADCSIGDIAG, Rt_cptst);\n    ErrFlag2_b = Gp_IoMcuAdc_CheckArgIn\n    (\n        GP_IOMCUADC_IFID_GETADCSIGDIAG,\n        SmCfg_cptst,\n        Rt_cptst,\n        CoreId_u32,\n        Id_u16,\n        (uint8*)Diag_pu32\n    );\n    ErrFlag1_b = ErrFlag1_b | ErrFlag2_b;\n    if (ErrFlag1_b == FALSE)\n    {\n#endif  /*(GP_IOMCUADC_DEV_ERROR_DETECT == STD_ON)*/\n        /*get channel index of current signal ID according to the signal mapping configuration*/\n        ChlIdx_u8 = SmCfg_cptst[Id_u16].MappingChlIdx_u8;\n\n        /*get diagnostic data*/\n        if (Cfg_cptst->AdcSigLocalCfg_cptst[ChlIdx_u8].DirectlyRead_b == TRUE)\n        {\n            /*get diagnostic data directly from callout function or get 0 value,\n            diagnostic data is also save in buffer for debug observation.*/\n            Gp_IoMcuAdc_GetDiag(Cfg_cptst, Rt_cptst, CoreId_u32, ChlIdx_u8);\n            *Diag_pu32 = Rt_cptst->AdcSig_ptst[ChlIdx_u8].Diag_u32;\n        }\n        else\n        {\n            /*get diagnostic data from buffer which is read by period in MainFunction*/\n            *Diag_pu32 = Rt_cptst->AdcSig_ptst[ChlIdx_u8].Diag_u32;\n        }\n\n        Ret_t = E_OK;\n#if (GP_IOMCUADC_DEV_ERROR_DETECT == STD_ON)\n    }\n    else\n    {\n        Ret_t = E_NOT_OK;\n    }\n#endif  /*(GP_IOMCUADC_DEV_ERROR_DETECT == STD_ON)*/\n\n    return (Ret_t);\n}"
+    },
+    {
+      "id": "Gp_IoMcuAdc::Gp_IoMcuAdc_GetAdcSigAdcRaw",
+      "name": "Gp_IoMcuAdc_GetAdcSigAdcRaw",
+      "signature": "Std_ReturnType Gp_IoMcuAdc_GetAdcSigAdcRaw(uint16 Id_u16, uint16* AdcRaw_pu16)",
+      "returnType": "Std_ReturnType",
+      "parameters": [
+        {
+          "type": "uint16",
+          "name": "Id_u16",
+          "pointerDepth": 0
+        },
+        {
+          "type": "uint16",
+          "name": "AdcRaw_pu16",
+          "pointerDepth": 1
+        }
+      ],
+      "isStatic": false,
+      "file": "Gp_IoMcuAdc.c",
+      "lineStart": 885,
+      "lineEnd": 950,
+      "comment": {
+        "paramsIn": [
+          {
+            "raw": "uint16 Id_u16 - signal ID 0~0xFFFF",
+            "description": "signal ID 0~0xFFFF",
+            "name": "Id_u16",
+            "type": "uint16"
+          }
+        ],
+        "paramsInout": [],
+        "paramsOut": [
+          {
+            "raw": "uint16* AdcRaw_pu16 - pointer to buffer of ADC raw",
+            "description": "pointer to buffer of ADC raw",
+            "name": "AdcRaw_pu16",
+            "type": "uint16*"
+          }
+        ],
+        "functionName": "Gp_IoMcuAdc_GetAdcSigAdcRaw",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "Std_ReturnType - E_OK/E_NOT_OK",
+        "description": "Gp_IoMcuAdc provide ADC raw of AdcSig interface.\nuser will get ADC raw of AdcSig through output argument for the corresponding ID.\nthe function should be invoked in the core which is enable and after Gp_IoMcuAdc_Init is completed\nand Gp_IoMcuAdc_MainFunction has read signal value of all channels except directly read channel.\nhint: the function read the ADC raw from internal function for current input ID\nif the channel of current ID is configured as directly read channel,\nelse read the ADC raw from local buffer which is written by Gp_IoMcuAdc_MainFunction."
+      },
+      "calls": [
+        "Gp_IoMcuAdc_CalloutGetCoreId",
+        "Gp_IoMcuAdc_CheckInitStu",
+        "Gp_IoMcuAdc_CheckArgIn",
+        "Gp_IoMcuAdc_GetAdcRaw"
+      ],
+      "calledBy": [],
+      "globalsAccessed": [
+        "Gp_IoMcuAdc_rtCont_lcatst"
+      ],
+      "conditionalFlags": [],
+      "bodyText": "{\n    Std_ReturnType Ret_t = E_NOT_OK;\n    const   Gp_IoMcuAdc_CfgType*    Cfg_cptst = &Gp_IoMcuAdc_cfgCont_vcatst[0U];\n    const   Gp_IoMcuAdc_RunTimeType*    Rt_cptst = &Gp_IoMcuAdc_rtCont_lcatst[0U];\n    const   Gp_IoMcuAdc_AdcSigMappingCfgType*   SmCfg_cptst = &Gp_IoMcuAdc_cfgAdcSigMapping_vcatst[0U];\n    uint32  CoreId_u32 = 0U;\n    uint8   ChlIdx_u8 = 0U;\n\n                                            \n    boolean ErrFlag1_b = FALSE;\n    boolean ErrFlag2_b = FALSE;\n                                                    \n\n    /*get core ID*/\n    CoreId_u32 = Gp_IoMcuAdc_CalloutGetCoreId();\n    /*get configuration address of current core to local address*/\n    Cfg_cptst = &Gp_IoMcuAdc_cfgCont_vcatst[CoreId_u32];\n    /*get runtime buffer address of current core to local address*/\n    Rt_cptst = &Gp_IoMcuAdc_rtCont_lcatst[CoreId_u32];\n\n                                            \n    /*check one by one, do not jump over because of error reporting of one check,\n    this is for covering all error status.*/\n    ErrFlag1_b = Gp_IoMcuAdc_CheckInitStu(GP_IOMCUADC_IFID_GETADCSIGADCRAW, Rt_cptst);\n    ErrFlag2_b = Gp_IoMcuAdc_CheckArgIn\n    (\n        GP_IOMCUADC_IFID_GETADCSIGADCRAW,\n        SmCfg_cptst,\n        Rt_cptst,\n        CoreId_u32,\n        Id_u16,\n        (uint8*)AdcRaw_pu16\n    );\n    ErrFlag1_b = ErrFlag1_b | ErrFlag2_b;\n    if (ErrFlag1_b == FALSE)\n    {\n                                                    \n        /*get channel index of current signal ID according to the signal mapping configuration*/\n        ChlIdx_u8 = SmCfg_cptst[Id_u16].MappingChlIdx_u8;\n\n        /*get ADC raw*/\n        if (Cfg_cptst->AdcSigLocalCfg_cptst[ChlIdx_u8].DirectlyRead_b == TRUE)\n        {\n            /*get ADC raw directly from callout function or result address,\n            ADC raw is also save in buffer for debug observation.*/\n            Gp_IoMcuAdc_GetAdcRaw(Cfg_cptst, Rt_cptst, CoreId_u32, ChlIdx_u8);\n            *AdcRaw_pu16 = Rt_cptst->AdcSig_ptst[ChlIdx_u8].AdcRaw_u16;\n        }\n        else\n        {\n            /*get ADC raw from buffer which is read by period in MainFunction*/\n            *AdcRaw_pu16 = Rt_cptst->AdcSig_ptst[ChlIdx_u8].AdcRaw_u16;\n        }\n\n        Ret_t = E_OK;\n                                            \n    }\n    else\n    {\n        Ret_t = E_NOT_OK;\n    }\n                                                    \n\n    return (Ret_t);\n}",
+      "bodyHash": "debda6e2c5150613",
+      "sigHash": "c4913312b7b07550",
+      "complexity": 3,
+      "infiniteLoop": false,
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.3.2",
+        "workItemKind": "function",
+        "title": "Gp_IoMcuAdc_GetAdcSigAdcRaw",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "该函数作为 Gp_IoMcuAdc 模块的对外接口，用于根据指定的信号 ID 获取 ADC 原始值，并通过输出参数 AdcRaw_pu16 返回结果。在调用内部函数 Gp_IoMcuAdc_GetAdcRaw 获取数据前，函数首先通过 Gp_IoMcuAdc_CalloutGetCoreId 获取当前核心 ID，并调用 Gp_IoMcuAdc_CheckInitStu 和 Gp_IoMcuAdc_CheckArgIn 验证初始化状态及输入参数的有效性。该函数必须在 Gp_IoMcuAdc_Init 完成且 Gp_IoMcuAdc_MainFunction 已读取除直接读取通道外所有信号值后，在已启用的核心中调用。若当前 ID 对应的通道配置为直接读取通道，则直接读取 ADC 原始值；否则从由 Gp_IoMcuAdc_MainFunction 写入的本地缓冲区中读取数据。函数执行过程中会访问模块全局变量 Gp_IoMcuAdc_rtCont_lcatst 以支持内部逻辑处理。",
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:52:49.529Z"
+      },
+      "innerCondFlags": [
+        "GP_IOMCUADC_DEV_ERROR_DETECT"
+      ],
+      "bodyTextWithPP": "{\n    Std_ReturnType Ret_t = E_NOT_OK;\n    const   Gp_IoMcuAdc_CfgType*    Cfg_cptst = &Gp_IoMcuAdc_cfgCont_vcatst[0U];\n    const   Gp_IoMcuAdc_RunTimeType*    Rt_cptst = &Gp_IoMcuAdc_rtCont_lcatst[0U];\n    const   Gp_IoMcuAdc_AdcSigMappingCfgType*   SmCfg_cptst = &Gp_IoMcuAdc_cfgAdcSigMapping_vcatst[0U];\n    uint32  CoreId_u32 = 0U;\n    uint8   ChlIdx_u8 = 0U;\n\n#if (GP_IOMCUADC_DEV_ERROR_DETECT == STD_ON)\n    boolean ErrFlag1_b = FALSE;\n    boolean ErrFlag2_b = FALSE;\n#endif  /*(GP_IOMCUADC_DEV_ERROR_DETECT == STD_ON)*/\n\n    /*get core ID*/\n    CoreId_u32 = Gp_IoMcuAdc_CalloutGetCoreId();\n    /*get configuration address of current core to local address*/\n    Cfg_cptst = &Gp_IoMcuAdc_cfgCont_vcatst[CoreId_u32];\n    /*get runtime buffer address of current core to local address*/\n    Rt_cptst = &Gp_IoMcuAdc_rtCont_lcatst[CoreId_u32];\n\n#if (GP_IOMCUADC_DEV_ERROR_DETECT == STD_ON)\n    /*check one by one, do not jump over because of error reporting of one check,\n    this is for covering all error status.*/\n    ErrFlag1_b = Gp_IoMcuAdc_CheckInitStu(GP_IOMCUADC_IFID_GETADCSIGADCRAW, Rt_cptst);\n    ErrFlag2_b = Gp_IoMcuAdc_CheckArgIn\n    (\n        GP_IOMCUADC_IFID_GETADCSIGADCRAW,\n        SmCfg_cptst,\n        Rt_cptst,\n        CoreId_u32,\n        Id_u16,\n        (uint8*)AdcRaw_pu16\n    );\n    ErrFlag1_b = ErrFlag1_b | ErrFlag2_b;\n    if (ErrFlag1_b == FALSE)\n    {\n#endif  /*(GP_IOMCUADC_DEV_ERROR_DETECT == STD_ON)*/\n        /*get channel index of current signal ID according to the signal mapping configuration*/\n        ChlIdx_u8 = SmCfg_cptst[Id_u16].MappingChlIdx_u8;\n\n        /*get ADC raw*/\n        if (Cfg_cptst->AdcSigLocalCfg_cptst[ChlIdx_u8].DirectlyRead_b == TRUE)\n        {\n            /*get ADC raw directly from callout function or result address,\n            ADC raw is also save in buffer for debug observation.*/\n            Gp_IoMcuAdc_GetAdcRaw(Cfg_cptst, Rt_cptst, CoreId_u32, ChlIdx_u8);\n            *AdcRaw_pu16 = Rt_cptst->AdcSig_ptst[ChlIdx_u8].AdcRaw_u16;\n        }\n        else\n        {\n            /*get ADC raw from buffer which is read by period in MainFunction*/\n            *AdcRaw_pu16 = Rt_cptst->AdcSig_ptst[ChlIdx_u8].AdcRaw_u16;\n        }\n\n        Ret_t = E_OK;\n#if (GP_IOMCUADC_DEV_ERROR_DETECT == STD_ON)\n    }\n    else\n    {\n        Ret_t = E_NOT_OK;\n    }\n#endif  /*(GP_IOMCUADC_DEV_ERROR_DETECT == STD_ON)*/\n\n    return (Ret_t);\n}"
+    }
+  ],
+  "internalFunctions": [
+    {
+      "id": "Gp_IoMcuAdc::Gp_IoMcuAdc_CheckInitStu",
+      "name": "Gp_IoMcuAdc_CheckInitStu",
+      "signature": "boolean Gp_IoMcuAdc_CheckInitStu(Gp_IoMcuAdc_IfIdType IfId_t, Gp_IoMcuAdc_RunTimeType* Rt_cptst)",
+      "returnType": "boolean",
+      "parameters": [
+        {
+          "type": "Gp_IoMcuAdc_IfIdType",
+          "name": "IfId_t",
+          "pointerDepth": 0
+        },
+        {
+          "type": "Gp_IoMcuAdc_RunTimeType",
+          "name": "Rt_cptst",
+          "pointerDepth": 1
+        }
+      ],
+      "isStatic": true,
+      "file": "Gp_IoMcuAdc.c",
+      "lineStart": 332,
+      "lineEnd": 355,
+      "comment": {
+        "paramsIn": [
+          {
+            "raw": "Gp_IoMcuAdc_IfIdType IfId_t - interface ID",
+            "description": "interface ID",
+            "name": "IfId_t",
+            "type": "Gp_IoMcuAdc_IfIdType"
+          },
+          {
+            "raw": "const Gp_IoMcuAdc_RunTimeType* Rt_cptst - pointer to FC runtime buffer",
+            "description": "pointer to FC runtime buffer",
+            "name": "Rt_cptst",
+            "type": "const Gp_IoMcuAdc_RunTimeType*"
+          }
+        ],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_IoMcuAdc_CheckInitStu",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "boolean - TRUE/FALSE",
+        "description": "Gp_IoMcuAdc check initialized status.\nthe function will check if the initialization is completed,\nand return TRUE if initialization status is valid, else return FASLE and save error value.\nhint: it is useful for integration trouble shooting.\nDET buffer only keep the newest error value, if there is a error value recorded yet, it will be covered."
+      },
+      "calls": [],
+      "calledBy": [
+        "Gp_IoMcuAdc_MainFunction",
+        "Gp_IoMcuAdc_GetAdcSigDiag",
+        "Gp_IoMcuAdc_GetAdcSigAdcRaw"
+      ],
+      "globalsAccessed": [],
+      "conditionalFlags": [
+        "GP_IOMCUADC_DEV_ERROR_DETECT"
+      ],
+      "bodyText": "{\n    boolean ErrFlag_b = FALSE;\n    Gp_IoMcuAdc_DevErrorDetectType* Det_ptst = Rt_cptst->Det_ptst;\n\n    /*check if the initialization is completed*/\n    if (Det_ptst->InitStu_t == GP_IOMCUADC_INITSTU_INITED)\n    {\n        ErrFlag_b = FALSE;\n    }\n    else\n    {\n        ErrFlag_b = TRUE;\n        /*record uninitialized error*/\n        Det_ptst->IfId_t = IfId_t;\n        Det_ptst->ErrStu_t = GP_IOMCUADC_ERRSTU_UNINITED;\n    }\n\n    return (ErrFlag_b);\n}",
+      "bodyHash": "78723b63952ee6d9",
+      "sigHash": "28304dcd261e44a4",
+      "complexity": 2,
+      "infiniteLoop": false,
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.4.2",
+        "workItemKind": "function",
+        "title": "Gp_IoMcuAdc_CheckInitStu",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "该函数用于检查指定接口 ID 对应的 ADC 初始化状态是否已完成，若状态有效则返回 TRUE，否则返回 FALSE 并记录错误值。作为模块内部静态函数，它被 Gp_IoMcuAdc_MainFunction、Gp_IoMcuAdc_GetAdcSigDiag 和 Gp_IoMcuAdc_GetAdcSigAdcRaw 调用，以在执行主功能或获取信号前确保初始化流程的正确性。该函数仅在编译宏 GP_IOMCUADC_DEV_ERROR_DETECT 生效时参与编译，主要用于集成阶段的故障排查。在错误处理路径中，若检测到初始化状态无效，函数会将错误值保存至 DET 缓冲区，且 DET 缓冲区仅保留最新的错误值，新错误会覆盖旧错误。",
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:53:11.170Z",
+        "flowchart": "flowchart TD\n    subgraph SG1[\" \"]\n        SG1_NOTE[\"注：仅在 GP_IOMCUADC_DEV_ERROR_DETECT 生效时参与编译\"]\n        SG1_NOTE ~~~ START\n        START([\"开始\"])\n        INIT[\"初始化 ErrFlag_b 为 FALSE<br>获取 Det_ptst 指针\"]\n        CHECK{\"Det_ptst->InitStu_t == GP_IOMCUADC_INITSTU_INITED ?\"}\n        SET_FALSE[\"设置 ErrFlag_b 为 FALSE\"]\n        SET_TRUE[\"设置 ErrFlag_b 为 TRUE<br>记录 IfId_t 和 ErrStu_t 为 UNINITED\"]\n        END([\"结束\"])\n        START --> INIT\n        INIT --> CHECK\n        CHECK -- 是 --> SET_FALSE\n        CHECK -- 否 --> SET_TRUE\n        SET_FALSE --> END\n        SET_TRUE --> END\n    end\n    style SG1 fill:transparent,stroke:#888888,stroke-dasharray:6 4\n    classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700\n    class SG1_NOTE condNote",
+        "flowchartFormat": "mermaid"
+      }
+    },
+    {
+      "id": "Gp_IoMcuAdc::Gp_IoMcuAdc_CheckArgIn",
+      "name": "Gp_IoMcuAdc_CheckArgIn",
+      "signature": "boolean Gp_IoMcuAdc_CheckArgIn(Gp_IoMcuAdc_IfIdType IfId_t, Gp_IoMcuAdc_AdcSigMappingCfgType* SmCfg_cptst, Gp_IoMcuAdc_RunTimeType* Rt_cptst, uint32 ChkCoreId_u32, uint16 ChkId_u16, uint8* ChkArgIn_pu8)",
+      "returnType": "boolean",
+      "parameters": [
+        {
+          "type": "Gp_IoMcuAdc_IfIdType",
+          "name": "IfId_t",
+          "pointerDepth": 0
+        },
+        {
+          "type": "Gp_IoMcuAdc_AdcSigMappingCfgType",
+          "name": "SmCfg_cptst",
+          "pointerDepth": 1
+        },
+        {
+          "type": "Gp_IoMcuAdc_RunTimeType",
+          "name": "Rt_cptst",
+          "pointerDepth": 1
+        },
+        {
+          "type": "uint32",
+          "name": "ChkCoreId_u32",
+          "pointerDepth": 0
+        },
+        {
+          "type": "uint16",
+          "name": "ChkId_u16",
+          "pointerDepth": 0
+        },
+        {
+          "type": "uint8",
+          "name": "ChkArgIn_pu8",
+          "pointerDepth": 1
+        }
+      ],
+      "isStatic": true,
+      "file": "Gp_IoMcuAdc.c",
+      "lineStart": 378,
+      "lineEnd": 417,
+      "comment": {
+        "paramsIn": [
+          {
+            "raw": "Gp_IoMcuAdc_IfIdType IfId_t - interface ID",
+            "description": "interface ID",
+            "name": "IfId_t",
+            "type": "Gp_IoMcuAdc_IfIdType"
+          },
+          {
+            "raw": "const Gp_IoMcuAdc_AdcSigMappingCfgType* SmCfg_cptst - pointer to FC signal mapping Cfg",
+            "description": "pointer to FC signal mapping Cfg",
+            "name": "SmCfg_cptst",
+            "type": "const Gp_IoMcuAdc_AdcSigMappingCfgType*"
+          },
+          {
+            "raw": "const Gp_IoMcuAdc_RunTimeType* Rt_cptst - pointer to FC runtime buffer",
+            "description": "pointer to FC runtime buffer",
+            "name": "Rt_cptst",
+            "type": "const Gp_IoMcuAdc_RunTimeType*"
+          },
+          {
+            "raw": "uint32 ChkCoreId_u32 - core ID 0~5",
+            "description": "core ID 0~5",
+            "name": "ChkCoreId_u32",
+            "type": "uint32"
+          },
+          {
+            "raw": "uint16 ChkId_u16 - signal ID 0~0xFFFF",
+            "description": "signal ID 0~0xFFFF",
+            "name": "ChkId_u16",
+            "type": "uint16"
+          },
+          {
+            "raw": "uint8* ChkArgIn_pu8 - pointer to buffer of output argument",
+            "description": "pointer to buffer of output argument",
+            "name": "ChkArgIn_pu8",
+            "type": "uint8*"
+          }
+        ],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_IoMcuAdc_CheckArgIn",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "boolean - TRUE/FALSE",
+        "description": "Gp_IoMcuAdc check argument input.\nthe function will check if the argument is valid, including the ID is in range of configuration\nand the pointer argument a is not null, and the ID is belong to current core.\nit will return TRUE if argument is valid, else return FASLE and save error value.\nhint: it is useful for integration trouble shooting.\nDET buffer only keep the newest error value, if there is a error value recorded yet, it will be covered."
+      },
+      "calls": [],
+      "calledBy": [
+        "Gp_IoMcuAdc_GetAdcSigDiag",
+        "Gp_IoMcuAdc_GetAdcSigAdcRaw"
+      ],
+      "globalsAccessed": [],
+      "conditionalFlags": [
+        "GP_IOMCUADC_DEV_ERROR_DETECT"
+      ],
+      "bodyText": "{\n    boolean ErrFlag_b = FALSE;\n    Gp_IoMcuAdc_DevErrorDetectType* Det_ptst = Rt_cptst->Det_ptst;\n\n    /*check if the argument is valid*/\n    if ((ChkId_u16 < GP_IOMCUADC_SIG_NUM) &&\n            (ChkArgIn_pu8 != GP_IOMCUADC_NULL_PTR))\n    {\n        /*check if the core ID is consistent*/\n        if (SmCfg_cptst[ChkId_u16].MappingCoreId_u32 == ChkCoreId_u32)\n        {\n            ErrFlag_b = FALSE;\n        }\n        else\n        {\n            ErrFlag_b = TRUE;\n            /*record signal mapping inconsistent error, signal ID is not belong to this core*/\n            Det_ptst->IfId_t = IfId_t;\n            Det_ptst->ErrStu_t = GP_IOMCUADC_ERRSTU_SIG_MAP_INCONSISTENT;\n        }\n    }\n    else\n    {\n        ErrFlag_b = TRUE;\n        /*record invalid argument error*/\n        Det_ptst->IfId_t = IfId_t;\n        Det_ptst->ErrStu_t = GP_IOMCUADC_ERRSTU_INVALID_ARG;\n    }\n\n    return (ErrFlag_b);\n}",
+      "bodyHash": "a6bb0f602f2f0faa",
+      "sigHash": "6629190aeeef8237",
+      "complexity": 4,
+      "infiniteLoop": false,
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.4.2",
+        "workItemKind": "function",
+        "title": "Gp_IoMcuAdc_CheckArgIn",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "该函数用于验证输入参数的有效性，具体检查包括接口ID是否在配置范围内、指针参数非空以及ID是否属于当前核心。作为模块内部函数，它被 `Gp_IoMcuAdc_GetAdcSigDiag` 和 `Gp_IoMcuAdc_GetAdcSigAdcRaw` 调用，用于在执行具体逻辑前进行参数合法性校验。该函数仅在 `GP_IOMCUADC_DEV_ERROR_DETECT` 条件编译宏生效时参与编译。若参数无效，函数返回 FALSE 并将错误值保存至 DET 缓冲区，该缓冲区仅保留最新的错误值，新错误会覆盖旧错误。",
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:53:20.502Z",
+        "flowchart": "flowchart TD\n    subgraph SG1[\" \"]\n        SG1_NOTE[\"注：仅在 GP_IOMCUADC_DEV_ERROR_DETECT 生效时参与编译\"]\n        SG1_NOTE ~~~ START\n        START([\"开始\"])\n        INIT[\"初始化 ErrFlag_b 为 FALSE<br>获取 Det_ptst 指针\"]\n        CHECK_ARG{\"ChkId_u16 < GP_IOMCUADC_SIG_NUM<br>且 ChkArgIn_pu8 != GP_IOMCUADC_NULL_PTR\"}\n        CHECK_CORE{\"SmCfg_cptst[ChkId_u16].MappingCoreId_u32 == ChkCoreId_u32\"}\n        SET_OK[\"设置 ErrFlag_b 为 FALSE\"]\n        SET_ERR_MAP[\"设置 ErrFlag_b 为 TRUE<br>记录 IfId_t<br>记录 ErrStu_t 为 GP_IOMCUADC_ERRSTU_SIG_MAP_INCONSISTENT\"]\n        SET_ERR_ARG[\"设置 ErrFlag_b 为 TRUE<br>记录 IfId_t<br>记录 ErrStu_t 为 GP_IOMCUADC_ERRSTU_INVALID_ARG\"]\n        END([\"结束\"])\n        \n        START --> INIT\n        INIT --> CHECK_ARG\n        CHECK_ARG -- 是 --> CHECK_CORE\n        CHECK_CORE -- 是 --> SET_OK\n        CHECK_CORE -- 否 --> SET_ERR_MAP\n        CHECK_ARG -- 否 --> SET_ERR_ARG\n        SET_OK --> END\n        SET_ERR_MAP --> END\n        SET_ERR_ARG --> END\n    end\n    style SG1 fill:transparent,stroke:#888888,stroke-dasharray:6 4\n    classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700\n    class SG1_NOTE condNote",
+        "flowchartFormat": "mermaid"
+      }
+    },
+    {
+      "id": "Gp_IoMcuAdc::Gp_IoMcuAdc_GetDiag",
+      "name": "Gp_IoMcuAdc_GetDiag",
+      "signature": "void Gp_IoMcuAdc_GetDiag(Gp_IoMcuAdc_CfgType* Cfg_cptst, Gp_IoMcuAdc_RunTimeType* Rt_cptst, uint32 CoreId_u32, uint8 ChlIdx_u8)",
+      "returnType": "void",
+      "parameters": [
+        {
+          "type": "Gp_IoMcuAdc_CfgType",
+          "name": "Cfg_cptst",
+          "pointerDepth": 1
+        },
+        {
+          "type": "Gp_IoMcuAdc_RunTimeType",
+          "name": "Rt_cptst",
+          "pointerDepth": 1
+        },
+        {
+          "type": "uint32",
+          "name": "CoreId_u32",
+          "pointerDepth": 0
+        },
+        {
+          "type": "uint8",
+          "name": "ChlIdx_u8",
+          "pointerDepth": 0
+        }
+      ],
+      "isStatic": true,
+      "file": "Gp_IoMcuAdc.c",
+      "lineStart": 438,
+      "lineEnd": 470,
+      "comment": {
+        "paramsIn": [
+          {
+            "raw": "const Gp_IoMcuAdc_CfgType* Cfg_cptst - pointer to FC Cfg",
+            "description": "pointer to FC Cfg",
+            "name": "Cfg_cptst",
+            "type": "const Gp_IoMcuAdc_CfgType*"
+          },
+          {
+            "raw": "const Gp_IoMcuAdc_RunTimeType* Rt_cptst - pointer to FC runtime buffer",
+            "description": "pointer to FC runtime buffer",
+            "name": "Rt_cptst",
+            "type": "const Gp_IoMcuAdc_RunTimeType*"
+          },
+          {
+            "raw": "uint32 CoreId_u32 - core ID 0~5",
+            "description": "core ID 0~5",
+            "name": "CoreId_u32",
+            "type": "uint32"
+          },
+          {
+            "raw": "uint8 ChlIdx_u8 - channel index 0~255",
+            "description": "channel index 0~255",
+            "name": "ChlIdx_u8",
+            "type": "uint8"
+          }
+        ],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_IoMcuAdc_GetDiag",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "void",
+        "description": "Gp_IoMcuAdc get diagnostic data.\nthe function will get diagnostic data from two ways, callout function or get 0 value.\nhint: this FC version do not support diagnostic function, so it will always get 0 for diagnostic result.\nuser should choose callout way and realize diagnostic function in callout function if there is special requirement."
+      },
+      "calls": [
+        "Gp_IoMcuAdc_CalloutGetDiag"
+      ],
+      "calledBy": [
+        "Gp_IoMcuAdc_MainFunction",
+        "Gp_IoMcuAdc_GetAdcSigDiag"
+      ],
+      "globalsAccessed": [],
+      "conditionalFlags": [],
+      "bodyText": "{\n    boolean FuncCompl_b = TRUE;\n    uint32  Diag_u32 = 0U;\n\n    if (Cfg_cptst->AdcSigLocalCfg_cptst[ChlIdx_u8].DiagCalloutFunc_b == TRUE)\n    {\n        /*this signal use callout function for special handling*/\n        FuncCompl_b = Gp_IoMcuAdc_CalloutGetDiag(CoreId_u32, ChlIdx_u8, &Diag_u32);\n        if (FuncCompl_b == FALSE)\n        {\n            /*record callout function get diagnostic data error*/\n            Rt_cptst->AdcSigLocalImpl_ptst[ChlIdx_u8].AdcSigErr_t |= \n                    GP_IOMCUADC_ADCSIGERRSTU_CALLOUT_GET_DIAG_FAILED;\n        }\n        else\n        {\n            /*save diagnostic data in buffer*/\n            Rt_cptst->AdcSig_ptst[ChlIdx_u8].Diag_u32 = Diag_u32;\n        }\n    }\n    else\n    {\n        /*get diagnostic data, no function in current version*/\n        Rt_cptst->AdcSig_ptst[ChlIdx_u8].Diag_u32 = 0U;\n    }\n}",
+      "bodyHash": "7b53813ee4bbdeec",
+      "sigHash": "b910bca44987987f",
+      "complexity": 3,
+      "infiniteLoop": false,
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.4.2",
+        "workItemKind": "function",
+        "title": "Gp_IoMcuAdc_GetDiag",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "该函数用于获取指定通道（ChlIdx_u8）的诊断数据，作为 Gp_IoMcuAdc 模块内部静态函数运行。它通过调用 Gp_IoMcuAdc_CalloutGetDiag 接口尝试获取诊断值，若未配置或调用失败则返回 0 值，当前版本不支持内置诊断功能，始终依赖外部 Callout 实现或返回默认零值。该函数由 Gp_IoMcuAdc_MainFunction 和 Gp_IoMcuAdc_GetAdcSigDiag 调用，用于在周期性任务或信号诊断查询时提供诊断状态。输入参数包括配置指针 Cfg_cptst、运行时指针 Rt_cptst、核心 ID CoreId_u32 及通道索引 ChlIdx_u8，函数不直接修改全局变量，仅通过 Callout 机制间接影响诊断结果。",
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:53:33.842Z",
+        "flowchart": "flowchart TD\n    START([\"开始\"])\n    INIT{{\"初始化 FuncCompl_b 为 TRUE<br>初始化 Diag_u32 为 0U\"}}\n    J1{\"Cfg_cptst->AdcSigLocalCfg_cptst[ChlIdx_u8].DiagCalloutFunc_b == TRUE ?\"}\n    CALL[[\"Gp_IoMcuAdc_CalloutGetDiag<br>获取诊断数据\"]]\n    J2{\"FuncCompl_b == FALSE ?\"}\n    ERR[/\"记录错误标志<br>Rt_cptst->AdcSigLocalImpl_ptst[ChlIdx_u8].AdcSigErr_t |= GP_IOMCUADC_ADCSIGERRSTU_CALLOUT_GET_DIAG_FAILED\"/]\n    SAVE[/\"保存诊断数据<br>Rt_cptst->AdcSig_ptst[ChlIdx_u8].Diag_u32 = Diag_u32\"/]\n    DEF[/\"设置默认诊断数据<br>Rt_cptst->AdcSig_ptst[ChlIdx_u8].Diag_u32 = 0U\"/]\n    END([\"结束\"])\n\n    START --> INIT\n    INIT --> J1\n    J1 -- 是 --> CALL\n    CALL --> J2\n    J2 -- 是 --> ERR\n    J2 -- 否 --> SAVE\n    J1 -- 否 --> DEF\n    ERR --> END\n    SAVE --> END\n    DEF --> END",
+        "flowchartFormat": "mermaid"
+      }
+    },
+    {
+      "id": "Gp_IoMcuAdc::Gp_IoMcuAdc_GetAdcRaw",
+      "name": "Gp_IoMcuAdc_GetAdcRaw",
+      "signature": "void Gp_IoMcuAdc_GetAdcRaw(Gp_IoMcuAdc_CfgType* Cfg_cptst, Gp_IoMcuAdc_RunTimeType* Rt_cptst, uint32 CoreId_u32, uint8 ChlIdx_u8)",
+      "returnType": "void",
+      "parameters": [
+        {
+          "type": "Gp_IoMcuAdc_CfgType",
+          "name": "Cfg_cptst",
+          "pointerDepth": 1
+        },
+        {
+          "type": "Gp_IoMcuAdc_RunTimeType",
+          "name": "Rt_cptst",
+          "pointerDepth": 1
+        },
+        {
+          "type": "uint32",
+          "name": "CoreId_u32",
+          "pointerDepth": 0
+        },
+        {
+          "type": "uint8",
+          "name": "ChlIdx_u8",
+          "pointerDepth": 0
+        }
+      ],
+      "isStatic": true,
+      "file": "Gp_IoMcuAdc.c",
+      "lineStart": 492,
+      "lineEnd": 548,
+      "comment": {
+        "paramsIn": [
+          {
+            "raw": "const Gp_IoMcuAdc_CfgType* Cfg_cptst - pointer to FC Cfg",
+            "description": "pointer to FC Cfg",
+            "name": "Cfg_cptst",
+            "type": "const Gp_IoMcuAdc_CfgType*"
+          },
+          {
+            "raw": "const Gp_IoMcuAdc_RunTimeType* Rt_cptst - pointer to FC runtime buffer",
+            "description": "pointer to FC runtime buffer",
+            "name": "Rt_cptst",
+            "type": "const Gp_IoMcuAdc_RunTimeType*"
+          },
+          {
+            "raw": "uint32 CoreId_u32 - core ID 0~5",
+            "description": "core ID 0~5",
+            "name": "CoreId_u32",
+            "type": "uint32"
+          },
+          {
+            "raw": "uint8 ChlIdx_u8 - channel index 0~255",
+            "description": "channel index 0~255",
+            "name": "ChlIdx_u8",
+            "type": "uint8"
+          }
+        ],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_IoMcuAdc_GetAdcRaw",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "void",
+        "description": "Gp_IoMcuAdc get ADC raw.\nthe function will get ADC raw from two ways, callout function or result address of configuration.\nand it will check validity if it is configured. program will set invalid value if check result is invalid.\nhint: if result of check validity is invalid, program will set invalid value.\nif user need get the ADC raw directly and do not want be affected by invalid value,\nuser should be set FALSE for the check validity configuration item of this signal.\nuser should choose callout way and realize get ADC raw function in callout function if there is special requirement."
+      },
+      "calls": [
+        "Gp_IoMcuAdc_CalloutGetAdcRaw",
+        "Gp_IoMcuAdc_CheckAdcRawValidity"
+      ],
+      "calledBy": [
+        "Gp_IoMcuAdc_MainFunction",
+        "Gp_IoMcuAdc_GetAdcSigAdcRaw"
+      ],
+      "globalsAccessed": [],
+      "conditionalFlags": [],
+      "bodyText": "{\n    boolean FuncCompl_b = TRUE;\n    uint16  AdcRaw_u16 = 0U;\n    uint32  AdcRes_u32 = 0U;\n    boolean Validity_b = FALSE;\n\n    if (Cfg_cptst->AdcSigLocalCfg_cptst[ChlIdx_u8].AdcRawCalloutFunc_b == TRUE)\n    {\n        /*this signal use callout function for special handling*/\n        FuncCompl_b = Gp_IoMcuAdc_CalloutGetAdcRaw(CoreId_u32, ChlIdx_u8, &AdcRaw_u16);\n        if (FuncCompl_b == FALSE)\n        {\n            /*record callout function get ADC raw error*/\n            Rt_cptst->AdcSigLocalImpl_ptst[ChlIdx_u8].AdcSigErr_t |= \n                    GP_IOMCUADC_ADCSIGERRSTU_CALLOUT_GET_ADCRAW_FAILED;\n        }\n        else\n        {\n            /*save ADC raw in buffer*/\n            Rt_cptst->AdcSig_ptst[ChlIdx_u8].AdcRaw_u16 = AdcRaw_u16;\n        }\n    }\n    else\n    {\n        /*get ADC raw from result address of configuration*/\n        AdcRes_u32 = *Cfg_cptst->AdcSigLocalCfg_cptst[ChlIdx_u8].ResRegOrBuf_pu32;\n        if (Cfg_cptst->AdcSigLocalCfg_cptst[ChlIdx_u8].AdcRawCheckValidity_b == TRUE)\n        {\n            /*get ADC raw validity by check conversion completed bit*/\n            Validity_b = Gp_IoMcuAdc_CheckAdcRawValidity(AdcRes_u32);\n            if (Validity_b == TRUE)\n            {\n                /*write ADC raw*/\n                Rt_cptst->AdcSig_ptst[ChlIdx_u8].AdcRaw_u16 = (uint16)(AdcRes_u32 & 0x0000FFFFU);\n            }\n            else\n            {\n                /*write invalid value,\n                this is used for read and check valid ADC raw\n                until conversion is completed in special application.*/\n                Rt_cptst->AdcSig_ptst[ChlIdx_u8].AdcRaw_u16 = GP_IOMCUADC_ADCRAW_INVALID;\n            }\n        }\n        else\n        {\n            /*do not check validity and write ADC raw*/\n            Rt_cptst->AdcSig_ptst[ChlIdx_u8].AdcRaw_u16 = (uint16)(AdcRes_u32 & 0x0000FFFFU);\n        }\n    }\n}",
+      "bodyHash": "bc22576d65f60b36",
+      "sigHash": "ab4e13d2ef7e535a",
+      "complexity": 5,
+      "infiniteLoop": false,
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.4.2",
+        "workItemKind": "function",
+        "title": "Gp_IoMcuAdc_GetAdcRaw",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "该函数用于获取指定通道和核心ID下的ADC原始值，支持通过配置项选择调用回调函数或直接读取结果地址两种获取方式。作为模块内部函数，它被 `Gp_IoMcuAdc_MainFunction` 和 `Gp_IoMcuAdc_GetAdcSigAdcRaw` 调用，并依赖 `Gp_IoMcuAdc_CalloutGetAdcRaw` 执行回调获取或 `Gp_IoMcuAdc_CheckAdcRawValidity` 执行有效性检查。若配置了有效性检查且检查结果为无效，函数将返回无效值；若用户希望直接获取原始值而不受无效值影响，需将对应信号的有效性检查配置项设为 FALSE。对于有特殊需求的场景，用户应配置为回调方式并在 `Gp_IoMcuAdc_CalloutGetAdcRaw` 中实现具体的获取逻辑。",
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:53:45.799Z",
+        "flowchart": "flowchart TD\n    START([\"开始\"]) --> INIT{{\"初始化 FuncCompl_b 为 TRUE<br>AdcRaw_u16 为 0U<br>AdcRes_u32 为 0U<br>Validity_b 为 FALSE\"}}\n    INIT --> CHECK_CALLOUT{\"Cfg_cptst->AdcSigLocalCfg_cptst[ChlIdx_u8].AdcRawCalloutFunc_b == TRUE ?\"}\n    \n    CHECK_CALLOUT -- 是 --> CALL_CALLOUT[[\"Gp_IoMcuAdc_CalloutGetAdcRaw<br>获取 ADC 原始值\"]]\n    CALL_CALLOUT --> CHECK_FUNC_COMPL{\"FuncCompl_b == FALSE ?\"}\n    CHECK_FUNC_COMPL -- 是 --> SET_ERR[/\"设置错误标志<br>Rt_cptst->AdcSigLocalImpl_ptst[ChlIdx_u8].AdcSigErr_t |= GP_IOMCUADC_ADCSIGERRSTU_CALLOUT_GET_ADCRAW_FAILED\"/]\n    CHECK_FUNC_COMPL -- 否 --> SAVE_RAW[/\"保存 ADC 原始值<br>Rt_cptst->AdcSig_ptst[ChlIdx_u8].AdcRaw_u16 = AdcRaw_u16\"/]\n    SET_ERR --> END([\"结束\"])\n    SAVE_RAW --> END\n    \n    CHECK_CALLOUT -- 否 --> READ_REG[/\"读取 ADC 结果寄存器<br>AdcRes_u32 = *Cfg_cptst->AdcSigLocalCfg_cptst[ChlIdx_u8].ResRegOrBuf_pu32\"/]\n    READ_REG --> CHECK_VALIDITY{\"Cfg_cptst->AdcSigLocalCfg_cptst[ChlIdx_u8].AdcRawCheckValidity_b == TRUE ?\"}\n    \n    CHECK_VALIDITY -- 是 --> CHECK_VALID_FUNC[[\"Gp_IoMcuAdc_CheckAdcRawValidity<br>检查 ADC 原始值有效性\"]]\n    CHECK_VALID_FUNC --> CHECK_VALID_RESULT{\"Validity_b == TRUE ?\"}\n    CHECK_VALID_RESULT -- 是 --> WRITE_VALID[/\"写入有效 ADC 原始值<br>Rt_cptst->AdcSig_ptst[ChlIdx_u8].AdcRaw_u16 = (uint16)(AdcRes_u32 & 0x0000FFFFU)\"/]\n    CHECK_VALID_RESULT -- 否 --> WRITE_INVALID[/\"写入无效 ADC 原始值<br>Rt_cptst->AdcSig_ptst[ChlIdx_u8].AdcRaw_u16 = GP_IOMCUADC_ADCRAW_INVALID\"/]\n    WRITE_VALID --> END\n    WRITE_INVALID --> END\n    \n    CHECK_VALIDITY -- 否 --> WRITE_DIRECT[/\"直接写入 ADC 原始值<br>Rt_cptst->AdcSig_ptst[ChlIdx_u8].AdcRaw_u16 = (uint16)(AdcRes_u32 & 0x0000FFFFU)\"/]\n    WRITE_DIRECT --> END",
+        "flowchartFormat": "mermaid"
+      }
+    },
+    {
+      "id": "Gp_IoMcuAdc::Gp_IoMcuAdc_CheckAdcRawValidity",
+      "name": "Gp_IoMcuAdc_CheckAdcRawValidity",
+      "signature": "boolean Gp_IoMcuAdc_CheckAdcRawValidity(uint32 AdcRes_u32)",
+      "returnType": "boolean",
+      "parameters": [
+        {
+          "type": "uint32",
+          "name": "AdcRes_u32",
+          "pointerDepth": 0
+        }
+      ],
+      "isStatic": true,
+      "file": "Gp_IoMcuAdc.c",
+      "lineStart": 564,
+      "lineEnd": 602,
+      "comment": {
+        "paramsIn": [
+          {
+            "raw": "uint32 AdcRes_u32 - ADC result",
+            "description": "ADC result",
+            "name": "AdcRes_u32",
+            "type": "uint32"
+          }
+        ],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_IoMcuAdc_CheckAdcRawValidity",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "boolean - TRUE/FALSE",
+        "description": "Gp_IoMcuAdc check ADC raw validity.\nthe function will check if new data bit of ADC result is valid, it means conversion is completed,\nand return TRUE else return FASLE.\nhint: the function code is depend on microcontroller which is configurated."
+      },
+      "calls": [],
+      "calledBy": [
+        "Gp_IoMcuAdc_GetAdcRaw"
+      ],
+      "globalsAccessed": [],
+      "conditionalFlags": [],
+      "bodyText": "{\n    boolean Validity_b = FALSE;\n\n                                                                           \n                                                                           \n    /*check bit31*/\n    AdcRes_u32 = AdcRes_u32 & GP_IOMCUADC_ADCRAW_NEW_DATA_FLAG_POSI_AURIX2G_TRAVEO2G;\n    if (AdcRes_u32 == GP_IOMCUADC_ADCRAW_NEW_DATA_FLAG_POSI_AURIX2G_TRAVEO2G)\n    {\n        /*conversion is completed, ADC raw is valid*/\n        Validity_b = TRUE;\n    }\n    else\n    {\n        /*conversion is uncompleted*/\n        Validity_b = FALSE;\n    }\n                                                                         \n    /*check bit19*/\n    AdcRes_u32 = AdcRes_u32 & GP_IOMCUADC_ADCRAW_NEW_DATA_FLAG_POSI_STELLARPX;\n    if (AdcRes_u32 == GP_IOMCUADC_ADCRAW_NEW_DATA_FLAG_POSI_STELLARPX)\n    {\n        /*conversion is completed, ADC raw is valid*/\n        Validity_b = TRUE;\n    }\n    else\n    {\n        /*conversion is uncompleted*/\n        Validity_b = FALSE;\n    }\n                                                                       \n    Validity_b = TRUE;\n                                                                    \n\n                                                                                     \n                                                                             \n    return (Validity_b);\n}",
+      "bodyHash": "d94aeb35170c1675",
+      "sigHash": "08df6010779cba87",
+      "complexity": 3,
+      "infiniteLoop": false,
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.4.2",
+        "workItemKind": "function",
+        "title": "Gp_IoMcuAdc_CheckAdcRawValidity",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "该函数用于检查ADC原始数据的有效性，具体通过验证ADC结果中的新数据位（New Data Bit）来判断转换是否已完成。作为模块内部静态函数，它被 `Gp_IoMcuAdc_GetAdcRaw` 调用，以确保在获取ADC原始值之前数据处于有效状态。若检测到转换已完成且数据有效，函数返回 TRUE；否则返回 FALSE。该函数的具体实现逻辑依赖于所配置微控制器的硬件特性。",
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:54:03.095Z"
+      },
+      "innerCondFlags": [
+        "GP_IOMCUADC_SPEC_DEP_IF"
+      ],
+      "bodyTextWithPP": "{\n    boolean Validity_b = FALSE;\n\n#if ((GP_IOMCUADC_SPEC_DEP_IF == GP_IOMCUADC_SPEC_DEP_IF_AURIX2G_MCAL) || \\\n        (GP_IOMCUADC_SPEC_DEP_IF == GP_IOMCUADC_SPEC_DEP_IF_TRAVEO2G_MCAL))\n    /*check bit31*/\n    AdcRes_u32 = AdcRes_u32 & GP_IOMCUADC_ADCRAW_NEW_DATA_FLAG_POSI_AURIX2G_TRAVEO2G;\n    if (AdcRes_u32 == GP_IOMCUADC_ADCRAW_NEW_DATA_FLAG_POSI_AURIX2G_TRAVEO2G)\n    {\n        /*conversion is completed, ADC raw is valid*/\n        Validity_b = TRUE;\n    }\n    else\n    {\n        /*conversion is uncompleted*/\n        Validity_b = FALSE;\n    }\n#elif (GP_IOMCUADC_SPEC_DEP_IF == GP_IOMCUADC_SPEC_DEP_IF_STELLARPX_MCAL)\n    /*check bit19*/\n    AdcRes_u32 = AdcRes_u32 & GP_IOMCUADC_ADCRAW_NEW_DATA_FLAG_POSI_STELLARPX;\n    if (AdcRes_u32 == GP_IOMCUADC_ADCRAW_NEW_DATA_FLAG_POSI_STELLARPX)\n    {\n        /*conversion is completed, ADC raw is valid*/\n        Validity_b = TRUE;\n    }\n    else\n    {\n        /*conversion is uncompleted*/\n        Validity_b = FALSE;\n    }\n#elif (GP_IOMCUADC_SPEC_DEP_IF == GP_IOMCUADC_SPEC_DEP_IF_AURIX3G_MCAL)\n    Validity_b = TRUE;\n#elif (GP_IOMCUADC_SPEC_DEP_IF == GP_IOMCUADC_SPEC_DEP_IF_UNDEFINED)\n\n#endif  /*#if ((GP_IOMCUADC_SPEC_DEP_IF == GP_IOMCUADC_SPEC_DEP_IF_AURIX2G_MCAL) || \\\n        (GP_IOMCUADC_SPEC_DEP_IF == GP_IOMCUADC_SPEC_DEP_IF_TRAVEO2G_MCAL))*/\n    return (Validity_b);\n}"
+    }
+  ],
+  "internalVariables": [
+    {
+      "id": "Gp_IoMcuAdc::Gp_IoMcuAdc_bufDetCore0_ltst",
+      "name": "Gp_IoMcuAdc_bufDetCore0_ltst",
+      "type": "static Gp_IoMcuAdc_DevErrorDetectType",
+      "isStatic": true,
+      "isConst": false,
+      "isVolatile": false,
+      "file": "Gp_IoMcuAdc.c",
+      "line": 48,
+      "comment": "DET runtime buffer core0",
+      "conditionalFlags": [
+        "GP_IOMCUADC_CORE0_ENABLE",
+        "GP_IOMCUADC_DEV_ERROR_DETECT"
+      ],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.4.1",
+        "workItemKind": "variable",
+        "title": "Gp_IoMcuAdc_bufDetCore0_ltst",
+        "workItemId": null
+      }
+    },
+    {
+      "id": "Gp_IoMcuAdc::Gp_IoMcuAdc_bufAdcSigCore0_latst",
+      "name": "Gp_IoMcuAdc_bufAdcSigCore0_latst",
+      "type": "static Gp_IoMcuAdc_AdcSigType",
+      "isStatic": true,
+      "isConst": false,
+      "isVolatile": false,
+      "file": "Gp_IoMcuAdc.c",
+      "line": 52,
+      "comment": "ADC signal runtime buffer core0",
+      "conditionalFlags": [
+        "GP_IOMCUADC_CORE0_ENABLE"
+      ],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.4.1",
+        "workItemKind": "variable",
+        "title": "Gp_IoMcuAdc_bufAdcSigCore0_latst",
+        "workItemId": null
+      }
+    },
+    {
+      "id": "Gp_IoMcuAdc::Gp_IoMcuAdc_bufAdcSigLocalImplCore0_latst",
+      "name": "Gp_IoMcuAdc_bufAdcSigLocalImplCore0_latst",
+      "type": "static Gp_IoMcuAdc_AdcSigLocalImplType",
+      "isStatic": true,
+      "isConst": false,
+      "isVolatile": false,
+      "file": "Gp_IoMcuAdc.c",
+      "line": 54,
+      "comment": "ADC signal local implement runtime buffer core0",
+      "conditionalFlags": [
+        "GP_IOMCUADC_CORE0_ENABLE"
+      ],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.4.1",
+        "workItemKind": "variable",
+        "title": "Gp_IoMcuAdc_bufAdcSigLocalImplCore0_latst",
+        "workItemId": null
+      }
+    },
+    {
+      "id": "Gp_IoMcuAdc::Gp_IoMcuAdc_bufDetCore1_ltst",
+      "name": "Gp_IoMcuAdc_bufDetCore1_ltst",
+      "type": "static Gp_IoMcuAdc_DevErrorDetectType",
+      "isStatic": true,
+      "isConst": false,
+      "isVolatile": false,
+      "file": "Gp_IoMcuAdc.c",
+      "line": 67,
+      "comment": "DET runtime buffer core1",
+      "conditionalFlags": [
+        "GP_IOMCUADC_CORE1_ENABLE",
+        "GP_IOMCUADC_DEV_ERROR_DETECT"
+      ],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.4.1",
+        "workItemKind": "variable",
+        "title": "Gp_IoMcuAdc_bufDetCore1_ltst",
+        "workItemId": null
+      }
+    },
+    {
+      "id": "Gp_IoMcuAdc::Gp_IoMcuAdc_bufAdcSigCore1_latst",
+      "name": "Gp_IoMcuAdc_bufAdcSigCore1_latst",
+      "type": "static Gp_IoMcuAdc_AdcSigType",
+      "isStatic": true,
+      "isConst": false,
+      "isVolatile": false,
+      "file": "Gp_IoMcuAdc.c",
+      "line": 71,
+      "comment": "ADC signal runtime buffer core1",
+      "conditionalFlags": [
+        "GP_IOMCUADC_CORE1_ENABLE"
+      ],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.4.1",
+        "workItemKind": "variable",
+        "title": "Gp_IoMcuAdc_bufAdcSigCore1_latst",
+        "workItemId": null
+      }
+    },
+    {
+      "id": "Gp_IoMcuAdc::Gp_IoMcuAdc_bufAdcSigLocalImplCore1_latst",
+      "name": "Gp_IoMcuAdc_bufAdcSigLocalImplCore1_latst",
+      "type": "static Gp_IoMcuAdc_AdcSigLocalImplType",
+      "isStatic": true,
+      "isConst": false,
+      "isVolatile": false,
+      "file": "Gp_IoMcuAdc.c",
+      "line": 73,
+      "comment": "ADC signal local implement runtime buffer core1",
+      "conditionalFlags": [
+        "GP_IOMCUADC_CORE1_ENABLE"
+      ],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.4.1",
+        "workItemKind": "variable",
+        "title": "Gp_IoMcuAdc_bufAdcSigLocalImplCore1_latst",
+        "workItemId": null
+      }
+    },
+    {
+      "id": "Gp_IoMcuAdc::Gp_IoMcuAdc_bufDetCore2_ltst",
+      "name": "Gp_IoMcuAdc_bufDetCore2_ltst",
+      "type": "static Gp_IoMcuAdc_DevErrorDetectType",
+      "isStatic": true,
+      "isConst": false,
+      "isVolatile": false,
+      "file": "Gp_IoMcuAdc.c",
+      "line": 86,
+      "comment": "DET runtime buffer core2",
+      "conditionalFlags": [
+        "GP_IOMCUADC_CORE2_ENABLE",
+        "GP_IOMCUADC_DEV_ERROR_DETECT"
+      ],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.4.1",
+        "workItemKind": "variable",
+        "title": "Gp_IoMcuAdc_bufDetCore2_ltst",
+        "workItemId": null
+      }
+    },
+    {
+      "id": "Gp_IoMcuAdc::Gp_IoMcuAdc_bufAdcSigCore2_latst",
+      "name": "Gp_IoMcuAdc_bufAdcSigCore2_latst",
+      "type": "static Gp_IoMcuAdc_AdcSigType",
+      "isStatic": true,
+      "isConst": false,
+      "isVolatile": false,
+      "file": "Gp_IoMcuAdc.c",
+      "line": 90,
+      "comment": "ADC signal runtime buffer core2",
+      "conditionalFlags": [
+        "GP_IOMCUADC_CORE2_ENABLE"
+      ],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.4.1",
+        "workItemKind": "variable",
+        "title": "Gp_IoMcuAdc_bufAdcSigCore2_latst",
+        "workItemId": null
+      }
+    },
+    {
+      "id": "Gp_IoMcuAdc::Gp_IoMcuAdc_bufAdcSigLocalImplCore2_latst",
+      "name": "Gp_IoMcuAdc_bufAdcSigLocalImplCore2_latst",
+      "type": "static Gp_IoMcuAdc_AdcSigLocalImplType",
+      "isStatic": true,
+      "isConst": false,
+      "isVolatile": false,
+      "file": "Gp_IoMcuAdc.c",
+      "line": 92,
+      "comment": "ADC signal local implement runtime buffer core2",
+      "conditionalFlags": [
+        "GP_IOMCUADC_CORE2_ENABLE"
+      ],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.4.1",
+        "workItemKind": "variable",
+        "title": "Gp_IoMcuAdc_bufAdcSigLocalImplCore2_latst",
+        "workItemId": null
+      }
+    },
+    {
+      "id": "Gp_IoMcuAdc::Gp_IoMcuAdc_bufDetCore3_ltst",
+      "name": "Gp_IoMcuAdc_bufDetCore3_ltst",
+      "type": "static Gp_IoMcuAdc_DevErrorDetectType",
+      "isStatic": true,
+      "isConst": false,
+      "isVolatile": false,
+      "file": "Gp_IoMcuAdc.c",
+      "line": 105,
+      "comment": "DET runtime buffer core3",
+      "conditionalFlags": [
+        "GP_IOMCUADC_CORE3_ENABLE",
+        "GP_IOMCUADC_DEV_ERROR_DETECT"
+      ],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.4.1",
+        "workItemKind": "variable",
+        "title": "Gp_IoMcuAdc_bufDetCore3_ltst",
+        "workItemId": null
+      }
+    },
+    {
+      "id": "Gp_IoMcuAdc::Gp_IoMcuAdc_bufAdcSigCore3_latst",
+      "name": "Gp_IoMcuAdc_bufAdcSigCore3_latst",
+      "type": "static Gp_IoMcuAdc_AdcSigType",
+      "isStatic": true,
+      "isConst": false,
+      "isVolatile": false,
+      "file": "Gp_IoMcuAdc.c",
+      "line": 109,
+      "comment": "ADC signal runtime buffer core3",
+      "conditionalFlags": [
+        "GP_IOMCUADC_CORE3_ENABLE"
+      ],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.4.1",
+        "workItemKind": "variable",
+        "title": "Gp_IoMcuAdc_bufAdcSigCore3_latst",
+        "workItemId": null
+      }
+    },
+    {
+      "id": "Gp_IoMcuAdc::Gp_IoMcuAdc_bufAdcSigLocalImplCore3_latst",
+      "name": "Gp_IoMcuAdc_bufAdcSigLocalImplCore3_latst",
+      "type": "static Gp_IoMcuAdc_AdcSigLocalImplType",
+      "isStatic": true,
+      "isConst": false,
+      "isVolatile": false,
+      "file": "Gp_IoMcuAdc.c",
+      "line": 111,
+      "comment": "ADC signal local implement runtime buffer core3",
+      "conditionalFlags": [
+        "GP_IOMCUADC_CORE3_ENABLE"
+      ],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.4.1",
+        "workItemKind": "variable",
+        "title": "Gp_IoMcuAdc_bufAdcSigLocalImplCore3_latst",
+        "workItemId": null
+      }
+    },
+    {
+      "id": "Gp_IoMcuAdc::Gp_IoMcuAdc_bufDetCore4_ltst",
+      "name": "Gp_IoMcuAdc_bufDetCore4_ltst",
+      "type": "static Gp_IoMcuAdc_DevErrorDetectType",
+      "isStatic": true,
+      "isConst": false,
+      "isVolatile": false,
+      "file": "Gp_IoMcuAdc.c",
+      "line": 124,
+      "comment": "DET runtime buffer core4",
+      "conditionalFlags": [
+        "GP_IOMCUADC_CORE4_ENABLE",
+        "GP_IOMCUADC_DEV_ERROR_DETECT"
+      ],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.4.1",
+        "workItemKind": "variable",
+        "title": "Gp_IoMcuAdc_bufDetCore4_ltst",
+        "workItemId": null
+      }
+    },
+    {
+      "id": "Gp_IoMcuAdc::Gp_IoMcuAdc_bufAdcSigCore4_latst",
+      "name": "Gp_IoMcuAdc_bufAdcSigCore4_latst",
+      "type": "static Gp_IoMcuAdc_AdcSigType",
+      "isStatic": true,
+      "isConst": false,
+      "isVolatile": false,
+      "file": "Gp_IoMcuAdc.c",
+      "line": 128,
+      "comment": "ADC signal runtime buffer core4",
+      "conditionalFlags": [
+        "GP_IOMCUADC_CORE4_ENABLE"
+      ],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.4.1",
+        "workItemKind": "variable",
+        "title": "Gp_IoMcuAdc_bufAdcSigCore4_latst",
+        "workItemId": null
+      }
+    },
+    {
+      "id": "Gp_IoMcuAdc::Gp_IoMcuAdc_bufAdcSigLocalImplCore4_latst",
+      "name": "Gp_IoMcuAdc_bufAdcSigLocalImplCore4_latst",
+      "type": "static Gp_IoMcuAdc_AdcSigLocalImplType",
+      "isStatic": true,
+      "isConst": false,
+      "isVolatile": false,
+      "file": "Gp_IoMcuAdc.c",
+      "line": 130,
+      "comment": "ADC signal local implement runtime buffer core4",
+      "conditionalFlags": [
+        "GP_IOMCUADC_CORE4_ENABLE"
+      ],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.4.1",
+        "workItemKind": "variable",
+        "title": "Gp_IoMcuAdc_bufAdcSigLocalImplCore4_latst",
+        "workItemId": null
+      }
+    },
+    {
+      "id": "Gp_IoMcuAdc::Gp_IoMcuAdc_bufDetCore5_ltst",
+      "name": "Gp_IoMcuAdc_bufDetCore5_ltst",
+      "type": "static Gp_IoMcuAdc_DevErrorDetectType",
+      "isStatic": true,
+      "isConst": false,
+      "isVolatile": false,
+      "file": "Gp_IoMcuAdc.c",
+      "line": 143,
+      "comment": "DET runtime buffer core5",
+      "conditionalFlags": [
+        "GP_IOMCUADC_CORE5_ENABLE",
+        "GP_IOMCUADC_DEV_ERROR_DETECT"
+      ],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.4.1",
+        "workItemKind": "variable",
+        "title": "Gp_IoMcuAdc_bufDetCore5_ltst",
+        "workItemId": null
+      }
+    },
+    {
+      "id": "Gp_IoMcuAdc::Gp_IoMcuAdc_bufAdcSigCore5_latst",
+      "name": "Gp_IoMcuAdc_bufAdcSigCore5_latst",
+      "type": "static Gp_IoMcuAdc_AdcSigType",
+      "isStatic": true,
+      "isConst": false,
+      "isVolatile": false,
+      "file": "Gp_IoMcuAdc.c",
+      "line": 147,
+      "comment": "ADC signal runtime buffer core5",
+      "conditionalFlags": [
+        "GP_IOMCUADC_CORE5_ENABLE"
+      ],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.4.1",
+        "workItemKind": "variable",
+        "title": "Gp_IoMcuAdc_bufAdcSigCore5_latst",
+        "workItemId": null
+      }
+    },
+    {
+      "id": "Gp_IoMcuAdc::Gp_IoMcuAdc_bufAdcSigLocalImplCore5_latst",
+      "name": "Gp_IoMcuAdc_bufAdcSigLocalImplCore5_latst",
+      "type": "static Gp_IoMcuAdc_AdcSigLocalImplType",
+      "isStatic": true,
+      "isConst": false,
+      "isVolatile": false,
+      "file": "Gp_IoMcuAdc.c",
+      "line": 149,
+      "comment": "ADC signal local implement runtime buffer core5",
+      "conditionalFlags": [
+        "GP_IOMCUADC_CORE5_ENABLE"
+      ],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.4.1",
+        "workItemKind": "variable",
+        "title": "Gp_IoMcuAdc_bufAdcSigLocalImplCore5_latst",
+        "workItemId": null
+      }
+    },
+    {
+      "id": "Gp_IoMcuAdc::Gp_IoMcuAdc_rtCont_lcatst",
+      "name": "Gp_IoMcuAdc_rtCont_lcatst",
+      "type": "static const Gp_IoMcuAdc_RunTimeType",
+      "isStatic": true,
+      "isConst": true,
+      "isVolatile": false,
+      "file": "Gp_IoMcuAdc.c",
+      "line": 160,
+      "comment": "FC runtime buffer address container for multi-core",
+      "conditionalFlags": [],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.4.1",
+        "workItemKind": "variable",
+        "title": "Gp_IoMcuAdc_rtCont_lcatst",
+        "workItemId": null
+      }
+    }
+  ],
+  "providedVariables": [],
+  "calledExternalFunctions": [
+    {
+      "name": "Gp_IoMcuAdc_CalloutGetAdcRaw",
+      "signature": "boolean Gp_IoMcuAdc_CalloutGetAdcRaw(uint32 CoreId_u32, uint8 ChlIdx_u8, uint16* AdcRaw_pu16)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [
+          {
+            "raw": "uint32 CoreId_u32 - core ID 0~5",
+            "description": "core ID 0~5",
+            "name": "CoreId_u32",
+            "type": "uint32"
+          },
+          {
+            "raw": "uint8 ChlIdx_u8 - channel index 0~255",
+            "description": "channel index 0~255",
+            "name": "ChlIdx_u8",
+            "type": "uint8"
+          }
+        ],
+        "paramsInout": [],
+        "paramsOut": [
+          {
+            "raw": "uint16* AdcRaw_pu16 - pointer to buffer of ADC raw",
+            "description": "pointer to buffer of ADC raw",
+            "name": "AdcRaw_pu16",
+            "type": "uint16*"
+          }
+        ],
+        "functionName": "Gp_IoMcuAdc_CalloutGetAdcRaw",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "boolean - TRUE/FALSE",
+        "description": "get ADC raw callout function for special handling."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "Gp_IoMcuAdc_GetAdcRaw"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_IoMcuAdc_CalloutGetAdcRaw",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "该 Callout 用于实现 ADC 原始值获取的特殊处理逻辑，由模块在调用 Gp_IoMcuAdc_GetAdcRaw 时触发。集成方需根据传入的核心 ID (CoreId_u32) 和通道索引 (ChlIdx_u8) 读取对应的 ADC 原始值，并通过输出参数 AdcRaw_pu16 返回该值。函数返回 TRUE 表示获取成功，FALSE 表示获取失败。",
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:55:19.039Z"
+      }
+    },
+    {
+      "name": "Gp_IoMcuAdc_CalloutGetCoreId",
+      "signature": "uint32 Gp_IoMcuAdc_CalloutGetCoreId(void)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_IoMcuAdc_CalloutGetCoreId",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "uint32 - core ID",
+        "description": "get core ID callout function, the function should get core ID from lower driver,\nand make sure of core ID is available(core ID is valid and is enabled in configuration and is used as index 0~5)."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "Gp_IoMcuAdc_Init",
+        "Gp_IoMcuAdc_MainFunction",
+        "Gp_IoMcuAdc_GetAdcSigDiag",
+        "Gp_IoMcuAdc_GetAdcSigAdcRaw"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_IoMcuAdc_CalloutGetCoreId",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "集成方需实现该函数以从底层驱动获取当前核心的ID，并确保返回的ID有效、已在配置中启用且作为0~5范围内的索引使用。该函数返回一个uint32类型的核心ID，供Gp_IoMcuAdc_Init、Gp_IoMcuAdc_MainFunction、Gp_IoMcuAdc_GetAdcSigDiag及Gp_IoMcuAdc_GetAdcSigAdcRaw在初始化、主功能执行及信号诊断或原始值获取时调用。",
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:55:21.791Z"
+      }
+    },
+    {
+      "name": "Gp_IoMcuAdc_CalloutGetDiag",
+      "signature": "boolean Gp_IoMcuAdc_CalloutGetDiag(uint32 CoreId_u32, uint8 ChlIdx_u8, uint32* Diag_pu32)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [
+          {
+            "raw": "uint32 CoreId_u32 - core ID 0~5",
+            "description": "core ID 0~5",
+            "name": "CoreId_u32",
+            "type": "uint32"
+          },
+          {
+            "raw": "uint8 ChlIdx_u8 - channel index 0~255",
+            "description": "channel index 0~255",
+            "name": "ChlIdx_u8",
+            "type": "uint8"
+          }
+        ],
+        "paramsInout": [],
+        "paramsOut": [
+          {
+            "raw": "uint32* Diag_pu32 - pointer to buffer of diagnostic data",
+            "description": "pointer to buffer of diagnostic data",
+            "name": "Diag_pu32",
+            "type": "uint32*"
+          }
+        ],
+        "functionName": "Gp_IoMcuAdc_CalloutGetDiag",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "boolean - TRUE/FALSE",
+        "description": "get diagnostic data callout function for special handling."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "Gp_IoMcuAdc_GetDiag"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_IoMcuAdc_CalloutGetDiag",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "该 Callout 由 Gp_IoMcuAdc_GetDiag 在获取诊断数据时调用，集成方需实现针对特定核心（CoreId_u32）和通道（ChlIdx_u8）的特殊诊断数据处理逻辑，并将结果写入 Diag_pu32 指向的缓冲区。返回值 TRUE 表示诊断数据获取成功，FALSE 表示失败。",
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:55:23.775Z"
+      }
+    },
+    {
+      "name": "Gp_IoMcuAdc_CalloutInit",
+      "signature": "boolean Gp_IoMcuAdc_CalloutInit(uint32 CoreId_u32)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [
+          {
+            "raw": "uint32 CoreId_u32 - core ID 0~5",
+            "description": "core ID 0~5",
+            "name": "CoreId_u32",
+            "type": "uint32"
+          }
+        ],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_IoMcuAdc_CalloutInit",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "boolean - TRUE/FALSE",
+        "description": "initialize callout function for special application requirement."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "Gp_IoMcuAdc_Init"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_IoMcuAdc_CalloutInit",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "该 Callout 由 Gp_IoMcuAdc_Init 在初始化阶段调用，集成方需实现针对特定应用需求的初始化逻辑。参数 CoreId_u32 指定执行初始化的核心 ID（0~5），返回值 boolean 用于指示初始化是否成功（TRUE 表示成功，FALSE 表示失败）。",
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:55:25.493Z"
+      }
+    },
+    {
+      "name": "Adc_EnableHardwareTrigger",
+      "signature": "",
+      "group": "External",
+      "comment": null,
+      "calledFrom": [
+        "Gp_IoMcuAdc_Init"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.2.2",
+        "workItemKind": "table",
+        "title": "External 接口函数",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "Gp_IoMcuAdc_Init 调用 Adc_EnableHardwareTrigger 以在初始化阶段启用 ADC 的硬件触发功能，从而确保模数转换能够由外部硬件信号自动启动。",
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:56:04.508Z"
+      }
+    },
+    {
+      "name": "Adc_SetupResultBuffer",
+      "signature": "",
+      "group": "External",
+      "comment": null,
+      "calledFrom": [
+        "Gp_IoMcuAdc_Init"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.2.2",
+        "workItemKind": "table",
+        "title": "External 接口函数",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "Gp_IoMcuAdc_Init 调用 Adc_SetupResultBuffer 以初始化 ADC 结果缓冲区，为后续读取 ADC 转换结果提供存储支持。",
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:56:05.498Z"
+      }
+    }
+  ],
+  "types": [
+    {
+      "id": "Gp_IoMcuAdc::Gp_IoMcuAdc_InitStuType",
+      "name": "Gp_IoMcuAdc_InitStuType",
+      "kind": "typedef",
+      "underlyingType": "uint8",
+      "comment": "specifies the initialized status type",
+      "file": "Gp_IoMcuAdc_Types.h",
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.1.2",
+        "workItemKind": "type",
+        "title": "Gp_IoMcuAdc_InitStuType",
+        "workItemId": null
+      },
+      "relatedDefines": [
+        {
+          "name": "GP_IOMCUADC_INITSTU_UNDEF",
+          "value": "((Gp_IoMcuAdc_InitStuType)0x00U)",
+          "isFunctionLike": false,
+          "comment": "undefined status",
+          "file": "Gp_IoMcuAdc_Types.h",
+          "kind": "general",
+          "usages": [],
+          "affects": [],
+          "polarion": {
+            "isWorkItem": false,
+            "chapter": "6.1",
+            "workItemKind": "config",
+            "title": "GP_IOMCUADC_INITSTU_UNDEF",
+            "workItemId": null
+          }
+        },
+        {
+          "name": "GP_IOMCUADC_INITSTU_INIT_FAILED",
+          "value": "((Gp_IoMcuAdc_InitStuType)0x01U)",
+          "isFunctionLike": false,
+          "comment": "initialization failed",
+          "file": "Gp_IoMcuAdc_Types.h",
+          "kind": "general",
+          "usages": [],
+          "affects": [],
+          "polarion": {
+            "isWorkItem": false,
+            "chapter": "6.1",
+            "workItemKind": "config",
+            "title": "GP_IOMCUADC_INITSTU_INIT_FAILED",
+            "workItemId": null
+          }
+        },
+        {
+          "name": "GP_IOMCUADC_INITSTU_INITED",
+          "value": "((Gp_IoMcuAdc_InitStuType)0x02U)",
+          "isFunctionLike": false,
+          "comment": "initialized",
+          "file": "Gp_IoMcuAdc_Types.h",
+          "kind": "general",
+          "usages": [],
+          "affects": [],
+          "polarion": {
+            "isWorkItem": false,
+            "chapter": "6.1",
+            "workItemKind": "config",
+            "title": "GP_IOMCUADC_INITSTU_INITED",
+            "workItemId": null
+          }
+        }
+      ],
+      "generated": {
+        "comment": "该类型用于指定 Gp_IoMcuAdc 模块的初始化状态。",
+        "defines": {
+          "GP_IOMCUADC_INITSTU_UNDEF": "表示未定义状态。",
+          "GP_IOMCUADC_INITSTU_INIT_FAILED": "表示初始化失败。",
+          "GP_IOMCUADC_INITSTU_INITED": "表示已初始化。"
+        },
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:55:27.907Z"
+      }
+    },
+    {
+      "id": "Gp_IoMcuAdc::Gp_IoMcuAdc_IfIdType",
+      "name": "Gp_IoMcuAdc_IfIdType",
+      "kind": "typedef",
+      "underlyingType": "uint8",
+      "comment": "specifies the interface ID type",
+      "file": "Gp_IoMcuAdc_Types.h",
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.1.2",
+        "workItemKind": "type",
+        "title": "Gp_IoMcuAdc_IfIdType",
+        "workItemId": null
+      },
+      "relatedDefines": [
+        {
+          "name": "GP_IOMCUADC_IFID_UNDEF",
+          "value": "((Gp_IoMcuAdc_IfIdType)0x00U)",
+          "isFunctionLike": false,
+          "comment": "undefined interface ID",
+          "file": "Gp_IoMcuAdc_Types.h",
+          "kind": "general",
+          "usages": [],
+          "affects": [],
+          "polarion": {
+            "isWorkItem": false,
+            "chapter": "6.1",
+            "workItemKind": "config",
+            "title": "GP_IOMCUADC_IFID_UNDEF",
+            "workItemId": null
+          }
+        },
+        {
+          "name": "GP_IOMCUADC_IFID_INIT",
+          "value": "((Gp_IoMcuAdc_IfIdType)0x01U)",
+          "isFunctionLike": false,
+          "comment": "Init",
+          "file": "Gp_IoMcuAdc_Types.h",
+          "kind": "general",
+          "usages": [],
+          "affects": [],
+          "polarion": {
+            "isWorkItem": false,
+            "chapter": "6.1",
+            "workItemKind": "config",
+            "title": "GP_IOMCUADC_IFID_INIT",
+            "workItemId": null
+          }
+        },
+        {
+          "name": "GP_IOMCUADC_IFID_MAINFUNC",
+          "value": "((Gp_IoMcuAdc_IfIdType)0x02U)",
+          "isFunctionLike": false,
+          "comment": "MainFunction",
+          "file": "Gp_IoMcuAdc_Types.h",
+          "kind": "general",
+          "usages": [],
+          "affects": [],
+          "polarion": {
+            "isWorkItem": false,
+            "chapter": "6.1",
+            "workItemKind": "config",
+            "title": "GP_IOMCUADC_IFID_MAINFUNC",
+            "workItemId": null
+          }
+        },
+        {
+          "name": "GP_IOMCUADC_IFID_GETADCSIGDIAG",
+          "value": "((Gp_IoMcuAdc_IfIdType)0x03U)",
+          "isFunctionLike": false,
+          "comment": "GetAdcSigDiag",
+          "file": "Gp_IoMcuAdc_Types.h",
+          "kind": "general",
+          "usages": [],
+          "affects": [],
+          "polarion": {
+            "isWorkItem": false,
+            "chapter": "6.1",
+            "workItemKind": "config",
+            "title": "GP_IOMCUADC_IFID_GETADCSIGDIAG",
+            "workItemId": null
+          }
+        },
+        {
+          "name": "GP_IOMCUADC_IFID_GETADCSIGADCRAW",
+          "value": "((Gp_IoMcuAdc_IfIdType)0x04U)",
+          "isFunctionLike": false,
+          "comment": "GetAdcSigAdcRaw",
+          "file": "Gp_IoMcuAdc_Types.h",
+          "kind": "general",
+          "usages": [],
+          "affects": [],
+          "polarion": {
+            "isWorkItem": false,
+            "chapter": "6.1",
+            "workItemKind": "config",
+            "title": "GP_IOMCUADC_IFID_GETADCSIGADCRAW",
+            "workItemId": null
+          }
+        }
+      ],
+      "generated": {
+        "comment": "该类型用于指定 Gp_IoMcuAdc 模块的接口 ID，以区分不同的服务调用。",
+        "defines": {
+          "GP_IOMCUADC_IFID_UNDEF": "未定义的接口 ID。",
+          "GP_IOMCUADC_IFID_INIT": "Init 服务的接口 ID。",
+          "GP_IOMCUADC_IFID_MAINFUNC": "MainFunction 服务的接口 ID。",
+          "GP_IOMCUADC_IFID_GETADCSIGDIAG": "GetAdcSigDiag 服务的接口 ID。",
+          "GP_IOMCUADC_IFID_GETADCSIGADCRAW": "GetAdcSigAdcRaw 服务的接口 ID。"
+        },
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:55:31.926Z"
+      }
+    },
+    {
+      "id": "Gp_IoMcuAdc::Gp_IoMcuAdc_ErrStuType",
+      "name": "Gp_IoMcuAdc_ErrStuType",
+      "kind": "typedef",
+      "underlyingType": "uint8",
+      "comment": "specifies the error status type",
+      "file": "Gp_IoMcuAdc_Types.h",
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.1.2",
+        "workItemKind": "type",
+        "title": "Gp_IoMcuAdc_ErrStuType",
+        "workItemId": null
+      },
+      "relatedDefines": [
+        {
+          "name": "GP_IOMCUADC_ERRSTU_NO_ERR",
+          "value": "((Gp_IoMcuAdc_ErrStuType)0x00U)",
+          "isFunctionLike": false,
+          "comment": "no error",
+          "file": "Gp_IoMcuAdc_Types.h",
+          "kind": "general",
+          "usages": [],
+          "affects": [],
+          "polarion": {
+            "isWorkItem": false,
+            "chapter": "6.1",
+            "workItemKind": "config",
+            "title": "GP_IOMCUADC_ERRSTU_NO_ERR",
+            "workItemId": null
+          }
+        },
+        {
+          "name": "GP_IOMCUADC_ERRSTU_INIT_FAILED",
+          "value": "((Gp_IoMcuAdc_ErrStuType)0x01U)",
+          "isFunctionLike": false,
+          "comment": "initialization failed",
+          "file": "Gp_IoMcuAdc_Types.h",
+          "kind": "general",
+          "usages": [],
+          "affects": [],
+          "polarion": {
+            "isWorkItem": false,
+            "chapter": "6.1",
+            "workItemKind": "config",
+            "title": "GP_IOMCUADC_ERRSTU_INIT_FAILED",
+            "workItemId": null
+          }
+        },
+        {
+          "name": "GP_IOMCUADC_ERRSTU_UNINITED",
+          "value": "((Gp_IoMcuAdc_ErrStuType)0x02U)",
+          "isFunctionLike": false,
+          "comment": "uninitialized",
+          "file": "Gp_IoMcuAdc_Types.h",
+          "kind": "general",
+          "usages": [],
+          "affects": [],
+          "polarion": {
+            "isWorkItem": false,
+            "chapter": "6.1",
+            "workItemKind": "config",
+            "title": "GP_IOMCUADC_ERRSTU_UNINITED",
+            "workItemId": null
+          }
+        },
+        {
+          "name": "GP_IOMCUADC_ERRSTU_INVALID_ARG",
+          "value": "((Gp_IoMcuAdc_ErrStuType)0x03U)",
+          "isFunctionLike": false,
+          "comment": "invalid argument",
+          "file": "Gp_IoMcuAdc_Types.h",
+          "kind": "general",
+          "usages": [],
+          "affects": [],
+          "polarion": {
+            "isWorkItem": false,
+            "chapter": "6.1",
+            "workItemKind": "config",
+            "title": "GP_IOMCUADC_ERRSTU_INVALID_ARG",
+            "workItemId": null
+          }
+        },
+        {
+          "name": "GP_IOMCUADC_ERRSTU_SIG_MAP_INCONSISTENT",
+          "value": "((Gp_IoMcuAdc_ErrStuType)0x04U)",
+          "isFunctionLike": false,
+          "comment": "signal ID is not belong to this core",
+          "file": "Gp_IoMcuAdc_Types.h",
+          "kind": "general",
+          "usages": [],
+          "affects": [],
+          "polarion": {
+            "isWorkItem": false,
+            "chapter": "6.1",
+            "workItemKind": "config",
+            "title": "GP_IOMCUADC_ERRSTU_SIG_MAP_INCONSISTENT",
+            "workItemId": null
+          }
+        }
+      ],
+      "generated": {
+        "comment": "该类型用于指定 Gp_IoMcuAdc 模块的错误状态，基于 uint8 定义。",
+        "defines": {
+          "GP_IOMCUADC_ERRSTU_NO_ERR": "表示无错误。",
+          "GP_IOMCUADC_ERRSTU_INIT_FAILED": "表示初始化失败。",
+          "GP_IOMCUADC_ERRSTU_UNINITED": "表示未初始化。",
+          "GP_IOMCUADC_ERRSTU_INVALID_ARG": "表示参数无效。",
+          "GP_IOMCUADC_ERRSTU_SIG_MAP_INCONSISTENT": "表示信号 ID 不属于当前核心。"
+        },
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:55:35.578Z"
+      }
+    },
+    {
+      "id": "Gp_IoMcuAdc::Gp_IoMcuAdc_AdcSigErrStuType",
+      "name": "Gp_IoMcuAdc_AdcSigErrStuType",
+      "kind": "typedef",
+      "underlyingType": "uint8",
+      "comment": "specifies the ADC signal error status type, each error status occupy 1 bit",
+      "file": "Gp_IoMcuAdc_Types.h",
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.1.2",
+        "workItemKind": "type",
+        "title": "Gp_IoMcuAdc_AdcSigErrStuType",
+        "workItemId": null
+      },
+      "relatedDefines": [
+        {
+          "name": "GP_IOMCUADC_ADCSIGERRSTU_NO_ERR",
+          "value": "((Gp_IoMcuAdc_AdcSigErrStuType)0x00U)",
+          "isFunctionLike": false,
+          "comment": "no error",
+          "file": "Gp_IoMcuAdc_Types.h",
+          "kind": "general",
+          "usages": [],
+          "affects": [],
+          "polarion": {
+            "isWorkItem": false,
+            "chapter": "6.1",
+            "workItemKind": "config",
+            "title": "GP_IOMCUADC_ADCSIGERRSTU_NO_ERR",
+            "workItemId": null
+          }
+        },
+        {
+          "name": "GP_IOMCUADC_ADCSIGERRSTU_CALLOUT_GET_DIAG_FAILED",
+          "value": "((Gp_IoMcuAdc_AdcSigErrStuType)0x01U)",
+          "isFunctionLike": false,
+          "comment": "callout get diagnostic data failed",
+          "file": "Gp_IoMcuAdc_Types.h",
+          "kind": "general",
+          "usages": [],
+          "affects": [],
+          "polarion": {
+            "isWorkItem": false,
+            "chapter": "6.1",
+            "workItemKind": "config",
+            "title": "GP_IOMCUADC_ADCSIGERRSTU_CALLOUT_GET_DIAG_FAILED",
+            "workItemId": null
+          }
+        },
+        {
+          "name": "GP_IOMCUADC_ADCSIGERRSTU_CALLOUT_GET_ADCRAW_FAILED",
+          "value": "((Gp_IoMcuAdc_AdcSigErrStuType)0x02U)",
+          "isFunctionLike": false,
+          "comment": "callout get ADC raw failed",
+          "file": "Gp_IoMcuAdc_Types.h",
+          "kind": "general",
+          "usages": [],
+          "affects": [],
+          "polarion": {
+            "isWorkItem": false,
+            "chapter": "6.1",
+            "workItemKind": "config",
+            "title": "GP_IOMCUADC_ADCSIGERRSTU_CALLOUT_GET_ADCRAW_FAILED",
+            "workItemId": null
+          }
+        }
+      ],
+      "generated": {
+        "comment": "该类型用于指定 ADC 信号错误状态，每个错误状态占用 1 位。",
+        "defines": {
+          "GP_IOMCUADC_ADCSIGERRSTU_NO_ERR": "表示无错误。",
+          "GP_IOMCUADC_ADCSIGERRSTU_CALLOUT_GET_DIAG_FAILED": "表示调用获取诊断数据失败。",
+          "GP_IOMCUADC_ADCSIGERRSTU_CALLOUT_GET_ADCRAW_FAILED": "表示调用获取 ADC 原始值失败。"
+        },
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:55:38.580Z"
+      }
+    },
+    {
+      "id": "Gp_IoMcuAdc::Gp_IoMcuAdc_AdcSigType",
+      "name": "Gp_IoMcuAdc_AdcSigType",
+      "kind": "struct",
+      "elements": [
+        {
+          "name": "Diag_u32",
+          "type": "uint32",
+          "comment": "diagnostic data"
+        },
+        {
+          "name": "AdcRaw_u16",
+          "type": "uint16",
+          "comment": "ADC raw, this data is read from ADC converter of MCU or external device"
+        }
+      ],
+      "comment": null,
+      "file": "Gp_IoMcuAdc_Types.h",
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.1.2",
+        "workItemKind": "type",
+        "title": "Gp_IoMcuAdc_AdcSigType",
+        "workItemId": null
+      },
+      "generated": {
+        "comment": "该结构体用于封装 Gp_IoMcuAdc 模块中 ADC 信号的原始数据及对应的诊断信息。",
+        "elements": {
+          "Diag_u32": "存储诊断数据。",
+          "AdcRaw_u16": "存储从 MCU 或外部设备的 ADC 转换器读取的 ADC 原始数据。"
+        },
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:55:40.934Z"
+      }
+    },
+    {
+      "id": "Gp_IoMcuAdc::Gp_IoMcuAdc_AdcSigLocalCfgType",
+      "name": "Gp_IoMcuAdc_AdcSigLocalCfgType",
+      "kind": "struct",
+      "elements": [
+        {
+          "name": "ResRegOrBuf_pu32",
+          "type": "uint32 *",
+          "comment": "pointer to result register or buffer"
+        },
+        {
+          "name": "ResValidReg_pu32",
+          "type": "uint32 *",
+          "comment": "pointer to result validity register, only available for AURIX3G"
+        },
+        {
+          "name": "PollingCntMax_u16",
+          "type": "uint16",
+          "comment": "ADC signal polling count maximum, ADC signal period/MainFunction period"
+        },
+        {
+          "name": "DiagCalloutFunc_b",
+          "type": "boolean",
+          "comment": "enable/disable get diagnostic data callout function for special handling"
+        },
+        {
+          "name": "AdcRawCalloutFunc_b",
+          "type": "boolean",
+          "comment": "enable/disable get ADC raw callout function for special handling"
+        },
+        {
+          "name": "DirectlyRead_b",
+          "type": "boolean",
+          "comment": "enable/disable ADC raw and diagnostic data directly read"
+        },
+        {
+          "name": "AdcRawCheckValidity_b",
+          "type": "boolean",
+          "comment": "enable/disable ADC raw check validity"
+        }
+      ],
+      "comment": null,
+      "file": "Gp_IoMcuAdc_Types.h",
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.1.2",
+        "workItemKind": "type",
+        "title": "Gp_IoMcuAdc_AdcSigLocalCfgType",
+        "workItemId": null
+      },
+      "generated": {
+        "comment": "该结构体用于配置 ADC 信号在 Gp_IoMcuAdc 模块中的本地处理参数，包括结果寄存器地址、轮询计数限制以及各类回调函数和直接读取功能的使能状态。",
+        "elements": {
+          "ResRegOrBuf_pu32": "指向结果寄存器或缓冲区的指针。",
+          "ResValidReg_pu32": "指向结果有效性寄存器的指针，仅适用于 AURIX3G 平台。",
+          "PollingCntMax_u16": "ADC 信号轮询计数最大值，定义为 ADC 信号周期与主函数周期的比值。",
+          "DiagCalloutFunc_b": "使能或禁用用于特殊处理的诊断数据获取回调函数。",
+          "AdcRawCalloutFunc_b": "使能或禁用用于特殊处理的 ADC 原始数据获取回调函数。",
+          "DirectlyRead_b": "使能或禁用直接读取 ADC 原始数据和诊断数据的功能。",
+          "AdcRawCheckValidity_b": "使能或禁用 ADC 原始数据的有效性检查功能。"
+        },
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:55:46.905Z"
+      }
+    },
+    {
+      "id": "Gp_IoMcuAdc::Gp_IoMcuAdc_AdcSigLocalImplType",
+      "name": "Gp_IoMcuAdc_AdcSigLocalImplType",
+      "kind": "struct",
+      "elements": [
+        {
+          "name": "PollingCnt_u16",
+          "type": "uint16",
+          "comment": "polling count"
+        },
+        {
+          "name": "AdcSigErr_t",
+          "type": "Gp_IoMcuAdc_AdcSigErrStuType",
+          "comment": "ADC signal error status"
+        }
+      ],
+      "comment": null,
+      "file": "Gp_IoMcuAdc_Types.h",
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.1.2",
+        "workItemKind": "type",
+        "title": "Gp_IoMcuAdc_AdcSigLocalImplType",
+        "workItemId": null
+      },
+      "generated": {
+        "comment": "该结构体用于在 Gp_IoMcuAdc 模块内部存储 ADC 信号相关的本地实现状态，包括轮询计数和错误状态。",
+        "elements": {
+          "PollingCnt_u16": "记录 ADC 信号的轮询计数值。",
+          "AdcSigErr_t": "存储 ADC 信号的错误状态信息。"
+        },
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:55:49.198Z"
+      }
+    },
+    {
+      "id": "Gp_IoMcuAdc::Gp_IoMcuAdc_DevErrorDetectType",
+      "name": "Gp_IoMcuAdc_DevErrorDetectType",
+      "kind": "struct",
+      "elements": [
+        {
+          "name": "RunCnt_u32",
+          "type": "uint32",
+          "comment": "period interface running counter"
+        },
+        {
+          "name": "InitStu_t",
+          "type": "Gp_IoMcuAdc_InitStuType",
+          "comment": "initialized status"
+        },
+        {
+          "name": "IfId_t",
+          "type": "Gp_IoMcuAdc_IfIdType",
+          "comment": "DET record error interface ID"
+        },
+        {
+          "name": "ErrStu_t",
+          "type": "Gp_IoMcuAdc_ErrStuType",
+          "comment": "DET record error status"
+        }
+      ],
+      "comment": null,
+      "file": "Gp_IoMcuAdc_Types.h",
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.1.2",
+        "workItemKind": "type",
+        "title": "Gp_IoMcuAdc_DevErrorDetectType",
+        "workItemId": null
+      },
+      "generated": {
+        "comment": "该结构体用于存储 Gp_IoMcuAdc 模块中 DET（开发错误检测）相关的状态信息，包括运行计数、初始化状态、错误接口 ID 及错误状态。",
+        "elements": {
+          "RunCnt_u32": "周期接口的运行计数器。",
+          "InitStu_t": "初始化状态。",
+          "IfId_t": "DET 记录错误时的接口 ID。",
+          "ErrStu_t": "DET 记录错误时的状态。"
+        },
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:55:52.236Z"
+      }
+    },
+    {
+      "id": "Gp_IoMcuAdc::Gp_IoMcuAdc_CfgType",
+      "name": "Gp_IoMcuAdc_CfgType",
+      "kind": "struct",
+      "elements": [
+        {
+          "name": "AdcSigLocalCfg_cptst",
+          "type": "const Gp_IoMcuAdc_AdcSigLocalCfgType *",
+          "comment": null
+        },
+        {
+          "name": "GrpCfg_cpu32",
+          "type": "const uint32 *",
+          "comment": "pointer to ADC group configuration"
+        },
+        {
+          "name": "GrpNum_u8",
+          "type": "uint8",
+          "comment": "ADC group number"
+        },
+        {
+          "name": "ChlNum_u8",
+          "type": "uint8",
+          "comment": "ADC channel number"
+        }
+      ],
+      "comment": null,
+      "file": "Gp_IoMcuAdc_Types.h",
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.1.2",
+        "workItemKind": "type",
+        "title": "Gp_IoMcuAdc_CfgType",
+        "workItemId": null
+      },
+      "generated": {
+        "comment": "Gp_IoMcuAdc_CfgType 结构体用于存储 ADC 模块的静态配置信息，包括信号本地配置、组配置指针及组与通道的数量，供 Gp_IoMcuAdc_GetDiag 和 Gp_IoMcuAdc_GetAdcRaw 函数使用。",
+        "elements": {
+          "AdcSigLocalCfg_cptst": "指向 Gp_IoMcuAdc_AdcSigLocalCfgType 类型的常量指针，用于访问 ADC 信号的本地配置。",
+          "GrpCfg_cpu32": "指向 uint32 类型的常量指针，指向 ADC 组配置数据。",
+          "GrpNum_u8": "uint8 类型变量，表示 ADC 组的数量。",
+          "ChlNum_u8": "uint8 类型变量，表示 ADC 通道的数量。"
+        },
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:55:57.208Z"
+      }
+    },
+    {
+      "id": "Gp_IoMcuAdc::Gp_IoMcuAdc_RunTimeType",
+      "name": "Gp_IoMcuAdc_RunTimeType",
+      "kind": "struct",
+      "elements": [
+        {
+          "name": "Det_ptst",
+          "type": "Gp_IoMcuAdc_DevErrorDetectType *",
+          "comment": "pointer to DET buffer"
+        },
+        {
+          "name": "AdcSig_ptst",
+          "type": "Gp_IoMcuAdc_AdcSigType *",
+          "comment": "pointer to ADC signal buffer"
+        },
+        {
+          "name": "AdcSigLocalImpl_ptst",
+          "type": "Gp_IoMcuAdc_AdcSigLocalImplType* AdcSigLocalImpl_ptst *",
+          "comment": "pointer to ADC signal local implement buffer"
+        }
+      ],
+      "comment": null,
+      "file": "Gp_IoMcuAdc_Types.h",
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.1.2",
+        "workItemKind": "type",
+        "title": "Gp_IoMcuAdc_RunTimeType",
+        "workItemId": null
+      },
+      "generated": {
+        "comment": "Gp_IoMcuAdc_RunTimeType 结构体用于在 Gp_IoMcuAdc 模块中封装运行时所需的 DET 错误检测缓冲区、ADC 信号缓冲区及 ADC 信号本地实现缓冲区的指针。",
+        "elements": {
+          "Det_ptst": "指向 Gp_IoMcuAdc_DevErrorDetectType 类型的 DET 缓冲区指针。",
+          "AdcSig_ptst": "指向 Gp_IoMcuAdc_AdcSigType 类型的 ADC 信号缓冲区指针。",
+          "AdcSigLocalImpl_ptst": "指向 Gp_IoMcuAdc_AdcSigLocalImplType 类型的 ADC 信号本地实现缓冲区指针。"
+        },
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:56:01.376Z"
+      }
+    },
+    {
+      "id": "Gp_IoMcuAdc::Gp_IoMcuAdc_AdcSigMappingCfgType",
+      "name": "Gp_IoMcuAdc_AdcSigMappingCfgType",
+      "kind": "struct",
+      "elements": [
+        {
+          "name": "MappingCoreId_u32",
+          "type": "uint32",
+          "comment": "signal mapping core"
+        },
+        {
+          "name": "MappingChlIdx_u8",
+          "type": "uint8",
+          "comment": "signal mapping channel index"
+        }
+      ],
+      "comment": null,
+      "file": "Gp_IoMcuAdc_Types.h",
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.1.2",
+        "workItemKind": "type",
+        "title": "Gp_IoMcuAdc_AdcSigMappingCfgType",
+        "workItemId": null
+      },
+      "generated": {
+        "comment": "该结构体用于定义 ADC 信号映射配置，包含映射核心 ID 和通道索引信息。",
+        "elements": {
+          "MappingCoreId_u32": "信号映射核心 ID。",
+          "MappingChlIdx_u8": "信号映射通道索引。"
+        },
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:56:03.398Z"
+      }
+    }
+  ],
+  "configMacros": [
+    {
+      "name": "GP_IOMCUADC_CORE0_ENABLE",
+      "value": "(STD_ON)",
+      "isFunctionLike": false,
+      "comment": null,
+      "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.h",
+      "kind": "functional",
+      "usages": [
+        {
+          "kind": "reference",
+          "file": "ConfTemplate\\Gp_IoMcuAdc_Callout.c",
+          "line": 82,
+          "context": "if (((GP_IOMCUADC_CORE0_ENABLE == STD_ON) && (CoreId_u32 == GP_IOMCUADC_CORE0_ID"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.c",
+          "line": 98,
+          "context": "#if (GP_IOMCUADC_CORE0_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.h",
+          "line": 49,
+          "context": "#if (GP_IOMCUADC_CORE0_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 42,
+          "context": "#if (GP_IOMCUADC_CORE0_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 164,
+          "context": "#if (GP_IOMCUADC_CORE0_ENABLE == STD_ON)"
+        }
+      ],
+      "affects": [
+        "Gp_IoMcuAdc_bufAdcSigCore0_latst",
+        "Gp_IoMcuAdc_bufAdcSigLocalImplCore0_latst",
+        "Gp_IoMcuAdc_bufDetCore0_ltst"
+      ],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "6.2",
+        "workItemKind": "config",
+        "title": "GP_IOMCUADC_CORE0_ENABLE",
+        "workItemId": null
+      },
+      "generated": {
+        "valueEffect": "该配置项用于控制 Gp_IoMcuAdc 模块中 Core0 相关 ADC 信号处理功能的启用状态。当取值为 STD_ON 时，系统保留并编译 Gp_IoMcuAdc_bufAdcSigCore0_latst、Gp_IoMcuAdc_bufAdcSigLocalImplCore0_latst 及 Gp_IoMcuAdc_bufDetCore0_ltst 等变量及其相关逻辑；当取值为 STD_OFF 时，上述变量及相关代码将被条件编译裁剪，从而移除 Core0 对应的 ADC 信号存储与处理功能。",
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:54:16.665Z"
+      }
+    },
+    {
+      "name": "GP_IOMCUADC_CORE1_ENABLE",
+      "value": "(STD_OFF)",
+      "isFunctionLike": false,
+      "comment": null,
+      "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.h",
+      "kind": "functional",
+      "usages": [
+        {
+          "kind": "reference",
+          "file": "ConfTemplate\\Gp_IoMcuAdc_Callout.c",
+          "line": 83,
+          "context": "((GP_IOMCUADC_CORE1_ENABLE == STD_ON) && (CoreId_u32 == GP_IOMCUADC_CORE1_ID)) |"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.c",
+          "line": 112,
+          "context": "#if (GP_IOMCUADC_CORE1_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.h",
+          "line": 57,
+          "context": "#if (GP_IOMCUADC_CORE1_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 61,
+          "context": "#if (GP_IOMCUADC_CORE1_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 180,
+          "context": "#if (GP_IOMCUADC_CORE1_ENABLE == STD_ON)"
+        }
+      ],
+      "affects": [
+        "Gp_IoMcuAdc_bufAdcSigCore1_latst",
+        "Gp_IoMcuAdc_bufAdcSigLocalImplCore1_latst",
+        "Gp_IoMcuAdc_bufDetCore1_ltst"
+      ],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "6.2",
+        "workItemKind": "config",
+        "title": "GP_IOMCUADC_CORE1_ENABLE",
+        "workItemId": null
+      },
+      "generated": {
+        "valueEffect": "该配置项用于控制 Gp_IoMcuAdc 模块中 Core1 相关 ADC 信号处理功能的启用与裁剪。当取值为 STD_ON 时，系统保留并编译 Gp_IoMcuAdc_bufAdcSigCore1_latst、Gp_IoMcuAdc_bufAdcSigLocalImplCore1_latst 及 Gp_IoMcuAdc_bufDetCore1_ltst 等变量，以支持 Core1 的 ADC 信号缓存与检测功能；当取值为 STD_OFF 时，上述变量及相关逻辑将被条件编译移除，从而减少代码体积并关闭 Core1 的 ADC 处理特性。",
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:54:20.030Z"
+      }
+    },
+    {
+      "name": "GP_IOMCUADC_CORE2_ENABLE",
+      "value": "(STD_OFF)",
+      "isFunctionLike": false,
+      "comment": null,
+      "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.h",
+      "kind": "functional",
+      "usages": [
+        {
+          "kind": "reference",
+          "file": "ConfTemplate\\Gp_IoMcuAdc_Callout.c",
+          "line": 84,
+          "context": "((GP_IOMCUADC_CORE2_ENABLE == STD_ON) && (CoreId_u32 == GP_IOMCUADC_CORE2_ID)) |"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.c",
+          "line": 126,
+          "context": "#if (GP_IOMCUADC_CORE2_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.h",
+          "line": 65,
+          "context": "#if (GP_IOMCUADC_CORE2_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 80,
+          "context": "#if (GP_IOMCUADC_CORE2_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 196,
+          "context": "#if (GP_IOMCUADC_CORE2_ENABLE == STD_ON)"
+        }
+      ],
+      "affects": [
+        "Gp_IoMcuAdc_bufAdcSigCore2_latst",
+        "Gp_IoMcuAdc_bufAdcSigLocalImplCore2_latst",
+        "Gp_IoMcuAdc_bufDetCore2_ltst"
+      ],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "6.2",
+        "workItemKind": "config",
+        "title": "GP_IOMCUADC_CORE2_ENABLE",
+        "workItemId": null
+      },
+      "generated": {
+        "valueEffect": "该配置项用于控制 Gp_IoMcuAdc 模块中 Core2 相关 ADC 信号处理功能的启用状态。当取值为 STD_ON 时，系统保留并编译 Gp_IoMcuAdc_bufAdcSigCore2_latst、Gp_IoMcuAdc_bufAdcSigLocalImplCore2_latst 及 Gp_IoMcuAdc_bufDetCore2_ltst 等变量，以支持 Core2 的 ADC 信号缓存与检测逻辑；当取值为 STD_OFF 时，上述变量及相关代码段将被条件编译裁剪，从而移除 Core2 相关的 ADC 处理功能以优化资源占用。",
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:54:23.405Z"
+      }
+    },
+    {
+      "name": "GP_IOMCUADC_CORE3_ENABLE",
+      "value": "(STD_OFF)",
+      "isFunctionLike": false,
+      "comment": null,
+      "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.h",
+      "kind": "functional",
+      "usages": [
+        {
+          "kind": "reference",
+          "file": "ConfTemplate\\Gp_IoMcuAdc_Callout.c",
+          "line": 85,
+          "context": "((GP_IOMCUADC_CORE3_ENABLE == STD_ON) && (CoreId_u32 == GP_IOMCUADC_CORE3_ID)) |"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.c",
+          "line": 140,
+          "context": "#if (GP_IOMCUADC_CORE3_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.h",
+          "line": 73,
+          "context": "#if (GP_IOMCUADC_CORE3_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 99,
+          "context": "#if (GP_IOMCUADC_CORE3_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 212,
+          "context": "#if (GP_IOMCUADC_CORE3_ENABLE == STD_ON)"
+        }
+      ],
+      "affects": [
+        "Gp_IoMcuAdc_bufAdcSigCore3_latst",
+        "Gp_IoMcuAdc_bufAdcSigLocalImplCore3_latst",
+        "Gp_IoMcuAdc_bufDetCore3_ltst"
+      ],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "6.2",
+        "workItemKind": "config",
+        "title": "GP_IOMCUADC_CORE3_ENABLE",
+        "workItemId": null
+      },
+      "generated": {
+        "valueEffect": "该配置项用于控制 Gp_IoMcuAdc 模块中 Core3 相关 ADC 信号处理功能的启用或禁用。当取值为 STD_ON 时，系统会编译并保留 Gp_IoMcuAdc_bufAdcSigCore3_latst、Gp_IoMcuAdc_bufAdcSigLocalImplCore3_latst 及 Gp_IoMcuAdc_bufDetCore3_ltst 等变量，以支持 Core3 的 ADC 信号存储与检测逻辑；当取值为 STD_OFF 时，上述变量及相关代码段将被条件编译裁剪，从而移除 Core3 相关的功能实现。",
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:54:26.696Z"
+      }
+    },
+    {
+      "name": "GP_IOMCUADC_CORE4_ENABLE",
+      "value": "(STD_OFF)",
+      "isFunctionLike": false,
+      "comment": null,
+      "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.h",
+      "kind": "functional",
+      "usages": [
+        {
+          "kind": "reference",
+          "file": "ConfTemplate\\Gp_IoMcuAdc_Callout.c",
+          "line": 86,
+          "context": "((GP_IOMCUADC_CORE4_ENABLE == STD_ON) && (CoreId_u32 == GP_IOMCUADC_CORE4_ID)) |"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.c",
+          "line": 154,
+          "context": "#if (GP_IOMCUADC_CORE4_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.h",
+          "line": 81,
+          "context": "#if (GP_IOMCUADC_CORE4_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 118,
+          "context": "#if (GP_IOMCUADC_CORE4_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 228,
+          "context": "#if (GP_IOMCUADC_CORE4_ENABLE == STD_ON)"
+        }
+      ],
+      "affects": [
+        "Gp_IoMcuAdc_bufAdcSigCore4_latst",
+        "Gp_IoMcuAdc_bufAdcSigLocalImplCore4_latst",
+        "Gp_IoMcuAdc_bufDetCore4_ltst"
+      ],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "6.2",
+        "workItemKind": "config",
+        "title": "GP_IOMCUADC_CORE4_ENABLE",
+        "workItemId": null
+      },
+      "generated": {
+        "valueEffect": "该配置项用于控制 Gp_IoMcuAdc 模块中 Core4 相关 ADC 信号处理功能的启用状态。当取值为 STD_ON 时，系统保留并编译 Gp_IoMcuAdc_bufAdcSigCore4_latst、Gp_IoMcuAdc_bufAdcSigLocalImplCore4_latst 及 Gp_IoMcuAdc_bufDetCore4_ltst 等变量及其相关逻辑；当取值为 STD_OFF 时，上述变量及相关代码段将被条件编译裁剪，从而移除 Core4 对应的功能实现。",
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:54:29.704Z"
+      }
+    },
+    {
+      "name": "GP_IOMCUADC_CORE5_ENABLE",
+      "value": "(STD_OFF)",
+      "isFunctionLike": false,
+      "comment": null,
+      "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.h",
+      "kind": "functional",
+      "usages": [
+        {
+          "kind": "reference",
+          "file": "ConfTemplate\\Gp_IoMcuAdc_Callout.c",
+          "line": 87,
+          "context": "((GP_IOMCUADC_CORE5_ENABLE == STD_ON) && (CoreId_u32 == GP_IOMCUADC_CORE5_ID)))"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.c",
+          "line": 168,
+          "context": "#if (GP_IOMCUADC_CORE5_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.h",
+          "line": 89,
+          "context": "#if (GP_IOMCUADC_CORE5_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 137,
+          "context": "#if (GP_IOMCUADC_CORE5_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 244,
+          "context": "#if (GP_IOMCUADC_CORE5_ENABLE == STD_ON)"
+        }
+      ],
+      "affects": [
+        "Gp_IoMcuAdc_bufAdcSigCore5_latst",
+        "Gp_IoMcuAdc_bufAdcSigLocalImplCore5_latst",
+        "Gp_IoMcuAdc_bufDetCore5_ltst"
+      ],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "6.2",
+        "workItemKind": "config",
+        "title": "GP_IOMCUADC_CORE5_ENABLE",
+        "workItemId": null
+      },
+      "generated": {
+        "valueEffect": "该配置项用于控制 Gp_IoMcuAdc 模块中 Core5 相关 ADC 信号处理功能的启用或禁用。当取值为 STD_ON 时，系统保留并编译 Gp_IoMcuAdc_bufAdcSigCore5_latst、Gp_IoMcuAdc_bufAdcSigLocalImplCore5_latst 及 Gp_IoMcuAdc_bufDetCore5_ltst 等变量及其相关逻辑；当取值为 STD_OFF 时，上述变量及相关代码段将被条件编译裁剪，从而移除 Core5 对应的功能实现。",
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:54:32.727Z"
+      }
+    },
+    {
+      "name": "GP_IOMCUADC_GRP_NUM_IN_CORE0",
+      "value": "((uint8)1U)",
+      "isFunctionLike": false,
+      "comment": null,
+      "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.h",
+      "kind": "general",
+      "usages": [
+        {
+          "kind": "arrayDim",
+          "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.c",
+          "line": 49,
+          "context": "GP_IOMCUADC_STATIC_ const   uint32  Gp_IoMcuAdc_cfgGrpCore0_lcau32[GP_IOMCUADC_G"
+        },
+        {
+          "kind": "reference",
+          "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.c",
+          "line": 101,
+          "context": "GP_IOMCUADC_GRP_NUM_IN_CORE0,"
+        }
+      ],
+      "affects": [],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "6.1",
+        "workItemKind": "config",
+        "title": "GP_IOMCUADC_GRP_NUM_IN_CORE0",
+        "workItemId": null
+      },
+      "generated": {
+        "valueEffect": "GP_IOMCUADC_GRP_NUM_IN_CORE0 用于定义在 Core0 上配置的 ADC 组数量。该值作为数组维度，决定了相关数据结构的大小，当前取值为 1 表示仅配置 1 个 ADC 组。若该值增加，系统将支持更多 ADC 组，但需确保硬件资源及内存空间充足。",
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:54:34.568Z"
+      }
+    },
+    {
+      "name": "GP_IOMCUADC_SIG_NUM_IN_CORE0",
+      "value": "((uint8)1U)",
+      "isFunctionLike": false,
+      "comment": null,
+      "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.h",
+      "kind": "general",
+      "usages": [
+        {
+          "kind": "arrayDim",
+          "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.c",
+          "line": 44,
+          "context": "[GP_IOMCUADC_SIG_NUM_IN_CORE0] ="
+        },
+        {
+          "kind": "reference",
+          "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.c",
+          "line": 102,
+          "context": "GP_IOMCUADC_SIG_NUM_IN_CORE0,"
+        },
+        {
+          "kind": "arrayDim",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 52,
+          "context": "GP_IOMCUADC_STATIC_ Gp_IoMcuAdc_AdcSigType  Gp_IoMcuAdc_bufAdcSigCore0_latst[GP_"
+        },
+        {
+          "kind": "arrayDim",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 55,
+          "context": "[GP_IOMCUADC_SIG_NUM_IN_CORE0];"
+        }
+      ],
+      "affects": [],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "6.1",
+        "workItemKind": "config",
+        "title": "GP_IOMCUADC_SIG_NUM_IN_CORE0",
+        "workItemId": null
+      },
+      "generated": {
+        "valueEffect": "该配置项用于定义 Core0 中 ADC 信号的数量，其值直接决定了相关数组的维度大小。当前取值为 1，表示在 Core0 中仅配置了一个 ADC 信号，若修改该数值，将相应改变数组的分配空间及信号处理范围。",
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:54:36.109Z"
+      }
+    },
+    {
+      "name": "GP_IOMCUADC_GRP_NUM_IN_CORE1",
+      "value": "((uint8)0U)",
+      "isFunctionLike": false,
+      "comment": null,
+      "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.h",
+      "kind": "general",
+      "usages": [
+        {
+          "kind": "reference",
+          "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.c",
+          "line": 115,
+          "context": "GP_IOMCUADC_GRP_NUM_IN_CORE1,"
+        }
+      ],
+      "affects": [],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "6.1",
+        "workItemKind": "config",
+        "title": "GP_IOMCUADC_GRP_NUM_IN_CORE1",
+        "workItemId": null
+      },
+      "generated": {
+        "valueEffect": "该配置项用于定义在核心1（Core1）中分配的ADC组数量。当前取值为0，表示在核心1中未分配任何ADC组，相关硬件资源可能由其他核心管理或处于未启用状态。若配置为大于0的数值，则系统将在核心1中初始化并管理相应数量的ADC组。",
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:54:37.855Z"
+      }
+    },
+    {
+      "name": "GP_IOMCUADC_SIG_NUM_IN_CORE1",
+      "value": "((uint8)0U)",
+      "isFunctionLike": false,
+      "comment": null,
+      "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.h",
+      "kind": "general",
+      "usages": [
+        {
+          "kind": "reference",
+          "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.c",
+          "line": 116,
+          "context": "GP_IOMCUADC_SIG_NUM_IN_CORE1,"
+        },
+        {
+          "kind": "arrayDim",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 71,
+          "context": "GP_IOMCUADC_STATIC_ Gp_IoMcuAdc_AdcSigType  Gp_IoMcuAdc_bufAdcSigCore1_latst[GP_"
+        },
+        {
+          "kind": "arrayDim",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 74,
+          "context": "[GP_IOMCUADC_SIG_NUM_IN_CORE1];"
+        }
+      ],
+      "affects": [],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "6.1",
+        "workItemKind": "config",
+        "title": "GP_IOMCUADC_SIG_NUM_IN_CORE1",
+        "workItemId": null
+      },
+      "generated": {
+        "valueEffect": "GP_IOMCUADC_SIG_NUM_IN_CORE1 用于定义在 Core1 中处理的 ADC 信号数量，其值直接决定了相关数组的维度大小。当前取值为 0 时，表示 Core1 不处理任何 ADC 信号，对应的数组维度为 0。该配置项作为通用基础行为，其取值需与系统整体信号分配策略保持一致，以确保多核环境下信号处理的完整性。",
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:54:39.976Z"
+      }
+    },
+    {
+      "name": "GP_IOMCUADC_GRP_NUM_IN_CORE2",
+      "value": "((uint8)0U)",
+      "isFunctionLike": false,
+      "comment": null,
+      "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.h",
+      "kind": "general",
+      "usages": [
+        {
+          "kind": "reference",
+          "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.c",
+          "line": 129,
+          "context": "GP_IOMCUADC_GRP_NUM_IN_CORE2,"
+        }
+      ],
+      "affects": [],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "6.1",
+        "workItemKind": "config",
+        "title": "GP_IOMCUADC_GRP_NUM_IN_CORE2",
+        "workItemId": null
+      },
+      "generated": {
+        "valueEffect": "该配置项用于定义 Gp_IoMcuAdc 模块在 Core2 中管理的 ADC 组数量。当前取值为 0，表示该模块在 Core2 上未配置任何 ADC 组，相关功能在此核心上处于禁用状态。若配置为非零数值，则模块将在 Core2 上初始化并管理相应数量的 ADC 组资源。",
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:54:41.929Z"
+      }
+    },
+    {
+      "name": "GP_IOMCUADC_SIG_NUM_IN_CORE2",
+      "value": "((uint8)0U)",
+      "isFunctionLike": false,
+      "comment": null,
+      "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.h",
+      "kind": "general",
+      "usages": [
+        {
+          "kind": "reference",
+          "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.c",
+          "line": 130,
+          "context": "GP_IOMCUADC_SIG_NUM_IN_CORE2,"
+        },
+        {
+          "kind": "arrayDim",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 90,
+          "context": "GP_IOMCUADC_STATIC_ Gp_IoMcuAdc_AdcSigType  Gp_IoMcuAdc_bufAdcSigCore2_latst[GP_"
+        },
+        {
+          "kind": "arrayDim",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 93,
+          "context": "[GP_IOMCUADC_SIG_NUM_IN_CORE2];"
+        }
+      ],
+      "affects": [],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "6.1",
+        "workItemKind": "config",
+        "title": "GP_IOMCUADC_SIG_NUM_IN_CORE2",
+        "workItemId": null
+      },
+      "generated": {
+        "valueEffect": "该配置项用于定义 Core2 中信号的数量，其值被用作数组的维度以分配相应的存储空间。当前取值为 0，表示在 Core2 中未配置任何信号，相关数组大小为 0。",
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:54:43.166Z"
+      }
+    },
+    {
+      "name": "GP_IOMCUADC_GRP_NUM_IN_CORE3",
+      "value": "((uint8)0U)",
+      "isFunctionLike": false,
+      "comment": null,
+      "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.h",
+      "kind": "general",
+      "usages": [
+        {
+          "kind": "reference",
+          "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.c",
+          "line": 143,
+          "context": "GP_IOMCUADC_GRP_NUM_IN_CORE3,"
+        }
+      ],
+      "affects": [],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "6.1",
+        "workItemKind": "config",
+        "title": "GP_IOMCUADC_GRP_NUM_IN_CORE3",
+        "workItemId": null
+      },
+      "generated": {
+        "valueEffect": "该配置项用于定义在 Core3 中配置的 ADC 组数量。当前取值为 0，表示在 Core3 中未分配任何 ADC 组。若该值设置为大于 0 的数值，则系统将在 Core3 中初始化相应数量的 ADC 组资源。",
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:54:44.722Z"
+      }
+    },
+    {
+      "name": "GP_IOMCUADC_SIG_NUM_IN_CORE3",
+      "value": "((uint8)0U)",
+      "isFunctionLike": false,
+      "comment": null,
+      "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.h",
+      "kind": "general",
+      "usages": [
+        {
+          "kind": "reference",
+          "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.c",
+          "line": 144,
+          "context": "GP_IOMCUADC_SIG_NUM_IN_CORE3,"
+        },
+        {
+          "kind": "arrayDim",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 109,
+          "context": "GP_IOMCUADC_STATIC_ Gp_IoMcuAdc_AdcSigType  Gp_IoMcuAdc_bufAdcSigCore3_latst[GP_"
+        },
+        {
+          "kind": "arrayDim",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 112,
+          "context": "[GP_IOMCUADC_SIG_NUM_IN_CORE3];"
+        }
+      ],
+      "affects": [],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "6.1",
+        "workItemKind": "config",
+        "title": "GP_IOMCUADC_SIG_NUM_IN_CORE3",
+        "workItemId": null
+      },
+      "generated": {
+        "valueEffect": "该配置项用于定义在 Core3 中处理的 ADC 信号数量，其值被用作数组维度的大小以分配相应的存储资源。当前取值为 0 表示在 Core3 中不处理任何 ADC 信号，相关数组维度为 0。若配置为大于 0 的数值，则 Core3 将处理对应数量的 ADC 信号，并相应调整数组大小以容纳这些信号数据。",
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:54:46.893Z"
+      }
+    },
+    {
+      "name": "GP_IOMCUADC_GRP_NUM_IN_CORE4",
+      "value": "((uint8)0U)",
+      "isFunctionLike": false,
+      "comment": null,
+      "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.h",
+      "kind": "general",
+      "usages": [
+        {
+          "kind": "reference",
+          "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.c",
+          "line": 157,
+          "context": "GP_IOMCUADC_GRP_NUM_IN_CORE4,"
+        }
+      ],
+      "affects": [],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "6.1",
+        "workItemKind": "config",
+        "title": "GP_IOMCUADC_GRP_NUM_IN_CORE4",
+        "workItemId": null
+      },
+      "generated": {
+        "valueEffect": "该配置项用于定义 Gp_IoMcuAdc 模块在核心 4（Core 4）上管理的 ADC 分组数量。当前取值为 0，表示该模块在核心 4 上不启用任何 ADC 分组，即不执行相关的 ADC 初始化或数据读取操作。若配置为大于 0 的数值，则模块将在核心 4 上初始化并管理相应数量的 ADC 分组，具体行为取决于其他相关配置项的定义。",
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:54:49.306Z"
+      }
+    },
+    {
+      "name": "GP_IOMCUADC_SIG_NUM_IN_CORE4",
+      "value": "((uint8)0U)",
+      "isFunctionLike": false,
+      "comment": null,
+      "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.h",
+      "kind": "general",
+      "usages": [
+        {
+          "kind": "reference",
+          "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.c",
+          "line": 158,
+          "context": "GP_IOMCUADC_SIG_NUM_IN_CORE4,"
+        },
+        {
+          "kind": "arrayDim",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 128,
+          "context": "GP_IOMCUADC_STATIC_ Gp_IoMcuAdc_AdcSigType  Gp_IoMcuAdc_bufAdcSigCore4_latst[GP_"
+        },
+        {
+          "kind": "arrayDim",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 131,
+          "context": "[GP_IOMCUADC_SIG_NUM_IN_CORE4];"
+        }
+      ],
+      "affects": [],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "6.1",
+        "workItemKind": "config",
+        "title": "GP_IOMCUADC_SIG_NUM_IN_CORE4",
+        "workItemId": null
+      },
+      "generated": {
+        "valueEffect": "GP_IOMCUADC_SIG_NUM_IN_CORE4 用于定义在核心4上处理的 ADC 信号数量，其值直接决定了相关数组的维度大小。当前取值为 0 表示核心4不分配任何 ADC 信号，对应的数组维度为 0，即该核心不参与 ADC 信号处理。若配置为大于 0 的数值，则相应数组将按该数值分配空间，以支持核心4处理指定数量的 ADC 信号。",
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:54:51.644Z"
+      }
+    },
+    {
+      "name": "GP_IOMCUADC_GRP_NUM_IN_CORE5",
+      "value": "((uint8)0U)",
+      "isFunctionLike": false,
+      "comment": null,
+      "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.h",
+      "kind": "general",
+      "usages": [
+        {
+          "kind": "reference",
+          "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.c",
+          "line": 171,
+          "context": "GP_IOMCUADC_GRP_NUM_IN_CORE5,"
+        }
+      ],
+      "affects": [],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "6.1",
+        "workItemKind": "config",
+        "title": "GP_IOMCUADC_GRP_NUM_IN_CORE5",
+        "workItemId": null
+      },
+      "generated": {
+        "valueEffect": "该配置项用于定义在 Core5 中分配的 ADC 组数量。当前取值为 0，表示在 Core5 中未分配任何 ADC 组。若配置为大于 0 的数值，则将在 Core5 中启用相应数量的 ADC 组资源。",
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:54:53.164Z"
+      }
+    },
+    {
+      "name": "GP_IOMCUADC_SIG_NUM_IN_CORE5",
+      "value": "((uint8)0U)",
+      "isFunctionLike": false,
+      "comment": null,
+      "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.h",
+      "kind": "general",
+      "usages": [
+        {
+          "kind": "reference",
+          "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.c",
+          "line": 172,
+          "context": "GP_IOMCUADC_SIG_NUM_IN_CORE5,"
+        },
+        {
+          "kind": "arrayDim",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 147,
+          "context": "GP_IOMCUADC_STATIC_ Gp_IoMcuAdc_AdcSigType  Gp_IoMcuAdc_bufAdcSigCore5_latst[GP_"
+        },
+        {
+          "kind": "arrayDim",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 150,
+          "context": "[GP_IOMCUADC_SIG_NUM_IN_CORE5];"
+        }
+      ],
+      "affects": [],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "6.1",
+        "workItemKind": "config",
+        "title": "GP_IOMCUADC_SIG_NUM_IN_CORE5",
+        "workItemId": null
+      },
+      "generated": {
+        "valueEffect": "GP_IOMCUADC_SIG_NUM_IN_CORE5 用于定义在 Core5 中处理的 ADC 信号数量，该值被用作数组维度以分配相应的存储资源。当前取值为 0 表示在 Core5 中不配置任何 ADC 信号，相关数组大小为 0。若取值为正整数 N，则系统将在 Core5 中分配大小为 N 的数组以支持 N 个 ADC 信号的处理。",
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:54:55.379Z"
+      }
+    },
+    {
+      "name": "GP_IOMCUADC_SIG_NUM",
+      "value": "(1U)",
+      "isFunctionLike": false,
+      "comment": "signal number is total number of providing from all cores",
+      "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.h",
+      "kind": "general",
+      "usages": [
+        {
+          "kind": "arrayDim",
+          "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.c",
+          "line": 182,
+          "context": "const   Gp_IoMcuAdc_AdcSigMappingCfgType    Gp_IoMcuAdc_cfgAdcSigMapping_vcatst["
+        },
+        {
+          "kind": "arrayDim",
+          "file": "ConfTemplate\\Gp_IoMcuAdc_CfgData.h",
+          "line": 40,
+          "context": "extern  const   Gp_IoMcuAdc_AdcSigMappingCfgType    Gp_IoMcuAdc_cfgAdcSigMapping"
+        },
+        {
+          "kind": "reference",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 392,
+          "context": "if ((ChkId_u16 < GP_IOMCUADC_SIG_NUM) &&"
+        }
+      ],
+      "affects": [],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "6.1",
+        "workItemKind": "config",
+        "title": "GP_IOMCUADC_SIG_NUM",
+        "workItemId": null
+      },
+      "generated": {
+        "valueEffect": "GP_IOMCUADC_SIG_NUM 定义了 Gp_IoMcuAdc 模块中所有核心提供的信号总数，该值用于确定相关数组的维度大小。当前取值为 1U，表示系统仅配置了一个信号，若增加该数值，相应数组的内存占用将线性增加以容纳更多信号数据。",
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:54:57.125Z"
+      }
+    },
+    {
+      "name": "GP_IOMCUADC_DEV_ERROR_DETECT",
+      "value": "(STD_ON)",
+      "isFunctionLike": false,
+      "comment": "development error detect",
+      "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.h",
+      "kind": "functional",
+      "usages": [
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 46,
+          "context": "#if (GP_IOMCUADC_DEV_ERROR_DETECT == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 65,
+          "context": "#if (GP_IOMCUADC_DEV_ERROR_DETECT == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 84,
+          "context": "#if (GP_IOMCUADC_DEV_ERROR_DETECT == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 103,
+          "context": "#if (GP_IOMCUADC_DEV_ERROR_DETECT == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 122,
+          "context": "#if (GP_IOMCUADC_DEV_ERROR_DETECT == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 141,
+          "context": "#if (GP_IOMCUADC_DEV_ERROR_DETECT == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 165,
+          "context": "#if (GP_IOMCUADC_DEV_ERROR_DETECT == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 181,
+          "context": "#if (GP_IOMCUADC_DEV_ERROR_DETECT == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 197,
+          "context": "#if (GP_IOMCUADC_DEV_ERROR_DETECT == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 213,
+          "context": "#if (GP_IOMCUADC_DEV_ERROR_DETECT == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 229,
+          "context": "#if (GP_IOMCUADC_DEV_ERROR_DETECT == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 245,
+          "context": "#if (GP_IOMCUADC_DEV_ERROR_DETECT == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 270,
+          "context": "#if (GP_IOMCUADC_DEV_ERROR_DETECT == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 314,
+          "context": "#if (GP_IOMCUADC_DEV_ERROR_DETECT == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 677,
+          "context": "#if (GP_IOMCUADC_DEV_ERROR_DETECT == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 723,
+          "context": "#if (GP_IOMCUADC_DEV_ERROR_DETECT == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 734,
+          "context": "#if (GP_IOMCUADC_DEV_ERROR_DETECT == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 772,
+          "context": "#if (GP_IOMCUADC_DEV_ERROR_DETECT == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 810,
+          "context": "#if (GP_IOMCUADC_DEV_ERROR_DETECT == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 822,
+          "context": "#if (GP_IOMCUADC_DEV_ERROR_DETECT == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 857,
+          "context": "#if (GP_IOMCUADC_DEV_ERROR_DETECT == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 894,
+          "context": "#if (GP_IOMCUADC_DEV_ERROR_DETECT == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 906,
+          "context": "#if (GP_IOMCUADC_DEV_ERROR_DETECT == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 941,
+          "context": "#if (GP_IOMCUADC_DEV_ERROR_DETECT == STD_ON)"
+        }
+      ],
+      "affects": [
+        "Gp_IoMcuAdc_CheckArgIn",
+        "Gp_IoMcuAdc_CheckInitStu",
+        "Gp_IoMcuAdc_bufDetCore0_ltst",
+        "Gp_IoMcuAdc_bufDetCore1_ltst",
+        "Gp_IoMcuAdc_bufDetCore2_ltst",
+        "Gp_IoMcuAdc_bufDetCore3_ltst",
+        "Gp_IoMcuAdc_bufDetCore4_ltst",
+        "Gp_IoMcuAdc_bufDetCore5_ltst"
+      ],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "6.2",
+        "workItemKind": "config",
+        "title": "GP_IOMCUADC_DEV_ERROR_DETECT",
+        "workItemId": null
+      },
+      "generated": {
+        "valueEffect": "该配置项控制 Gp_IoMcuAdc 模块中开发错误检测功能的启用状态。当取值为 STD_ON 时，系统启用参数合法性检查及初始化状态校验，具体表现为激活 Gp_IoMcuAdc_CheckArgIn 和 Gp_IoMcuAdc_CheckInitStu 函数，并开启针对 Core0 至 Core5 的缓冲区检测逻辑（Gp_IoMcuAdc_bufDetCore0_ltst 至 Gp_IoMcuAdc_bufDetCore5_ltst）。当取值为 STD_OFF 时，上述 24 处条件编译代码段被裁剪，模块将跳过所有开发错误检测逻辑以减小代码体积。",
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:55:00.736Z"
+      }
+    },
+    {
+      "name": "GP_IOMCUADC_SPEC_DEP_IF_UNDEFINED",
+      "value": "(0U)",
+      "isFunctionLike": false,
+      "comment": "define for specific dependent interface",
+      "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.h",
+      "kind": "general",
+      "usages": [
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 597,
+          "context": "#elif (GP_IOMCUADC_SPEC_DEP_IF == GP_IOMCUADC_SPEC_DEP_IF_UNDEFINED)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 667,
+          "context": "#elif (GP_IOMCUADC_SPEC_DEP_IF == GP_IOMCUADC_SPEC_DEP_IF_UNDEFINED)"
+        }
+      ],
+      "affects": [],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "6.1",
+        "workItemKind": "config",
+        "title": "GP_IOMCUADC_SPEC_DEP_IF_UNDEFINED",
+        "workItemId": null
+      },
+      "generated": {
+        "valueEffect": "该配置项用于定义 Gp_IoMcuAdc 模块中特定依赖接口的行为模式。当取值设为 GP_IOMCUADC_SPEC_DEP_IF_UNDEFINED 时，将触发条件编译逻辑，从而裁剪或启用与未定义依赖接口相关的代码段。",
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:55:02.243Z"
+      }
+    },
+    {
+      "name": "GP_IOMCUADC_SPEC_DEP_IF_AURIX2G_MCAL",
+      "value": "(1U)",
+      "isFunctionLike": false,
+      "comment": null,
+      "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.h",
+      "kind": "general",
+      "usages": [
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 568,
+          "context": "#if ((GP_IOMCUADC_SPEC_DEP_IF == GP_IOMCUADC_SPEC_DEP_IF_AURIX2G_MCAL) || \\"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 646,
+          "context": "#if ((GP_IOMCUADC_SPEC_DEP_IF == GP_IOMCUADC_SPEC_DEP_IF_AURIX2G_MCAL) || \\"
+        }
+      ],
+      "affects": [],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "6.1",
+        "workItemKind": "config",
+        "title": "GP_IOMCUADC_SPEC_DEP_IF_AURIX2G_MCAL",
+        "workItemId": null
+      },
+      "generated": {
+        "valueEffect": "该配置项用于控制 Gp_IoMcuAdc 模块中针对 AURIX2G 平台 MCAL 接口的特定功能实现是否启用。当取值为 1U 时，条件编译表达式成立，模块将包含并编译与 AURIX2G MCAL 相关的代码逻辑；若取值不为 1U，则相关代码段将被裁剪，不生成对应的二进制代码。",
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:55:04.390Z"
+      }
+    },
+    {
+      "name": "GP_IOMCUADC_SPEC_DEP_IF_AURIX3G_MCAL",
+      "value": "(2U)",
+      "isFunctionLike": false,
+      "comment": null,
+      "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.h",
+      "kind": "general",
+      "usages": [
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 595,
+          "context": "#elif (GP_IOMCUADC_SPEC_DEP_IF == GP_IOMCUADC_SPEC_DEP_IF_AURIX3G_MCAL)"
+        },
+        {
+          "kind": "reference",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 647,
+          "context": "(GP_IOMCUADC_SPEC_DEP_IF == GP_IOMCUADC_SPEC_DEP_IF_AURIX3G_MCAL) || \\"
+        },
+        {
+          "kind": "reference",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 670,
+          "context": "(GP_IOMCUADC_SPEC_DEP_IF == GP_IOMCUADC_SPEC_DEP_IF_AURIX3G_MCAL) || \\"
+        }
+      ],
+      "affects": [],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "6.1",
+        "workItemKind": "config",
+        "title": "GP_IOMCUADC_SPEC_DEP_IF_AURIX3G_MCAL",
+        "workItemId": null
+      },
+      "generated": {
+        "valueEffect": "该配置项用于指定 Gp_IoMcuAdc 模块所依赖的底层 MCAL 接口规范版本，当前取值 (2U) 对应 AURIX3G 平台的特定 MCAL 接口定义。当条件编译表达式 (GP_IOMCUADC_SPEC_DEP_IF == GP_IOMCUADC_SPEC_DEP_IF_AURIX3G_MCAL) 成立时，模块将启用针对 AURIX3G 平台的特定代码逻辑或接口适配，否则将裁剪相关代码路径。该配置项与 GP_IOMCUADC_SPEC_DEP_IF 存在直接依赖关系，其取值决定了模块在不同硬件平台下的接口行为差异。",
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:55:07.714Z"
+      }
+    },
+    {
+      "name": "GP_IOMCUADC_SPEC_DEP_IF_TRAVEO2G_MCAL",
+      "value": "(3U)",
+      "isFunctionLike": false,
+      "comment": null,
+      "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.h",
+      "kind": "general",
+      "usages": [
+        {
+          "kind": "reference",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 569,
+          "context": "(GP_IOMCUADC_SPEC_DEP_IF == GP_IOMCUADC_SPEC_DEP_IF_TRAVEO2G_MCAL))"
+        },
+        {
+          "kind": "reference",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 600,
+          "context": "(GP_IOMCUADC_SPEC_DEP_IF == GP_IOMCUADC_SPEC_DEP_IF_TRAVEO2G_MCAL))*/"
+        },
+        {
+          "kind": "reference",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 648,
+          "context": "(GP_IOMCUADC_SPEC_DEP_IF == GP_IOMCUADC_SPEC_DEP_IF_TRAVEO2G_MCAL) || \\"
+        },
+        {
+          "kind": "reference",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 671,
+          "context": "(GP_IOMCUADC_SPEC_DEP_IF == GP_IOMCUADC_SPEC_DEP_IF_TRAVEO2G_MCAL) || \\"
+        }
+      ],
+      "affects": [],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "6.1",
+        "workItemKind": "config",
+        "title": "GP_IOMCUADC_SPEC_DEP_IF_TRAVEO2G_MCAL",
+        "workItemId": null
+      },
+      "generated": {
+        "valueEffect": "该配置项用于指定 Gp_IoMcuAdc 模块在 Traveo2G 平台下所依赖的 MCAL 接口版本或规格标识。当前取值为 3U，表示模块采用第 3 版 MCAL 接口规范进行编译和链接。由于静态分析仅显示该宏被引用 4 处且未提供其他候选取值或条件编译分支，无法确定其他数值的具体行为差异，该值作为通用基础配置固定了底层硬件抽象层的接口兼容性。",
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:55:10.285Z"
+      }
+    },
+    {
+      "name": "GP_IOMCUADC_SPEC_DEP_IF_STELLARPX_MCAL",
+      "value": "(4U)",
+      "isFunctionLike": false,
+      "comment": null,
+      "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.h",
+      "kind": "general",
+      "usages": [
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 582,
+          "context": "#elif (GP_IOMCUADC_SPEC_DEP_IF == GP_IOMCUADC_SPEC_DEP_IF_STELLARPX_MCAL)"
+        },
+        {
+          "kind": "reference",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 649,
+          "context": "(GP_IOMCUADC_SPEC_DEP_IF == GP_IOMCUADC_SPEC_DEP_IF_STELLARPX_MCAL))"
+        },
+        {
+          "kind": "reference",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 672,
+          "context": "(GP_IOMCUADC_SPEC_DEP_IF == GP_IOMCUADC_SPEC_DEP_IF_STELLARPX_MCAL))*/"
+        }
+      ],
+      "affects": [],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "6.1",
+        "workItemKind": "config",
+        "title": "GP_IOMCUADC_SPEC_DEP_IF_STELLARPX_MCAL",
+        "workItemId": null
+      },
+      "generated": {
+        "valueEffect": "该配置项用于定义 Gp_IoMcuAdc 模块所依赖的底层接口规范类型，当前取值为 4U，表示模块适配 StellarPX 平台的 MCAL 接口规范。当该宏值与 GP_IOMCUADC_SPEC_DEP_IF 相等时，条件编译将启用针对 StellarPX MCAL 接口的特定代码逻辑，从而确保上层应用与底层驱动之间的接口兼容性。",
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:55:12.469Z"
+      }
+    },
+    {
+      "name": "GP_IOMCUADC_SPEC_DEP_IF",
+      "value": "(GP_IOMCUADC_SPEC_DEP_IF_UNDEFINED)",
+      "isFunctionLike": false,
+      "comment": "specific dependent interface",
+      "file": "ConfTemplate\\Gp_IoMcuAdc_Cfg.h",
+      "kind": "general",
+      "usages": [
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 568,
+          "context": "#if ((GP_IOMCUADC_SPEC_DEP_IF == GP_IOMCUADC_SPEC_DEP_IF_AURIX2G_MCAL) || \\"
+        },
+        {
+          "kind": "reference",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 569,
+          "context": "(GP_IOMCUADC_SPEC_DEP_IF == GP_IOMCUADC_SPEC_DEP_IF_TRAVEO2G_MCAL))"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 582,
+          "context": "#elif (GP_IOMCUADC_SPEC_DEP_IF == GP_IOMCUADC_SPEC_DEP_IF_STELLARPX_MCAL)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 595,
+          "context": "#elif (GP_IOMCUADC_SPEC_DEP_IF == GP_IOMCUADC_SPEC_DEP_IF_AURIX3G_MCAL)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 597,
+          "context": "#elif (GP_IOMCUADC_SPEC_DEP_IF == GP_IOMCUADC_SPEC_DEP_IF_UNDEFINED)"
+        },
+        {
+          "kind": "reference",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 600,
+          "context": "(GP_IOMCUADC_SPEC_DEP_IF == GP_IOMCUADC_SPEC_DEP_IF_TRAVEO2G_MCAL))*/"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 646,
+          "context": "#if ((GP_IOMCUADC_SPEC_DEP_IF == GP_IOMCUADC_SPEC_DEP_IF_AURIX2G_MCAL) || \\"
+        },
+        {
+          "kind": "reference",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 647,
+          "context": "(GP_IOMCUADC_SPEC_DEP_IF == GP_IOMCUADC_SPEC_DEP_IF_AURIX3G_MCAL) || \\"
+        },
+        {
+          "kind": "reference",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 648,
+          "context": "(GP_IOMCUADC_SPEC_DEP_IF == GP_IOMCUADC_SPEC_DEP_IF_TRAVEO2G_MCAL) || \\"
+        },
+        {
+          "kind": "reference",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 649,
+          "context": "(GP_IOMCUADC_SPEC_DEP_IF == GP_IOMCUADC_SPEC_DEP_IF_STELLARPX_MCAL))"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 667,
+          "context": "#elif (GP_IOMCUADC_SPEC_DEP_IF == GP_IOMCUADC_SPEC_DEP_IF_UNDEFINED)"
+        },
+        {
+          "kind": "reference",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 670,
+          "context": "(GP_IOMCUADC_SPEC_DEP_IF == GP_IOMCUADC_SPEC_DEP_IF_AURIX3G_MCAL) || \\"
+        },
+        {
+          "kind": "reference",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 671,
+          "context": "(GP_IOMCUADC_SPEC_DEP_IF == GP_IOMCUADC_SPEC_DEP_IF_TRAVEO2G_MCAL) || \\"
+        },
+        {
+          "kind": "reference",
+          "file": "Gp_IoMcuAdc.c",
+          "line": 672,
+          "context": "(GP_IOMCUADC_SPEC_DEP_IF == GP_IOMCUADC_SPEC_DEP_IF_STELLARPX_MCAL))*/"
+        }
+      ],
+      "affects": [],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "6.1",
+        "workItemKind": "config",
+        "title": "GP_IOMCUADC_SPEC_DEP_IF",
+        "workItemId": null
+      },
+      "generated": {
+        "valueEffect": "GP_IOMCUADC_SPEC_DEP_IF 用于指定 Gp_IoMcuAdc 模块所依赖的具体底层 MCU 抽象层（MCAL）接口类型。当取值为 GP_IOMCUADC_SPEC_DEP_IF_AURIX2G_MCAL、GP_IOMCUADC_SPEC_DEP_IF_STELLARPX_MCAL 或 GP_IOMCUADC_SPEC_DEP_IF_AURIX3G_MCAL 时，模块将分别适配 AURIX 2G、Stellar PX 或 AURIX 3G 平台的特定硬件接口；若取值为 GP_IOMCUADC_SPEC_DEP_IF_UNDEFINED，则表示未定义具体的依赖接口，通常用于基础配置或裁剪场景。该配置项通过条件编译控制代码中不同平台相关逻辑的启用与禁用，直接影响模块与底层驱动层的交互方式。",
+        "llmModel": "openai-compatible:qwen3.8-27b",
+        "generatedAt": "2026-09-03T01:55:16.665Z"
+      }
+    }
+  ],
+  "interfaceOverview": {
+    "diagram": "%%{init: {\"flowchart\": {\"rankSpacing\": 10, \"nodeSpacing\": 16}}}%%\nflowchart LR\n    Caller([\"外部调用方<br/>（其他 FC / RTE / 集成代码）\"])\n    subgraph MOD[\" \"]\n        direction TB\n        MT[\"<b>Gp_IoMcuAdc</b><br/><b>提供的外部接口</b>（4 个）<br/>────────────\"]\n        MT ~~~ P0(\"Gp_IoMcuAdc_<br/>Init\") ~~~ P1(\"Gp_IoMcuAdc_<br/>MainFunction\") ~~~ P2(\"Gp_IoMcuAdc_<br/>GetAdcSigDiag\") ~~~ P3(\"Gp_IoMcuAdc_<br/>GetAdcSigAdcRaw\")\n    end\n    G0[\"<b>External</b>（2 个）<br/>──────────<br/>Adc_EnableHardwareTrigger<br/>Adc_SetupResultBuffer\"]\n    Caller -->|call| MOD\n    MOD -->|call| G0\n    classDef caller fill:#eaeef2,stroke:#57606a,color:#1f2328\n    classDef provided fill:#b6e3ff,stroke:#0969da,color:#0a3069\n    classDef extgroup fill:#f6f8fa,stroke:#57606a,color:#1f2328\n    class Caller caller\n    class P0,P1,P2,P3 provided\n    class G0 extgroup\n    style MOD fill:#fbfcfd,stroke:#d0d7de,stroke-width:1px\n    style MT fill:transparent,stroke:transparent,color:#1f2328",
+    "diagramFormat": "mermaid",
+    "polarion": {
+      "isWorkItem": true,
+      "chapter": "5.1",
+      "workItemKind": "diagram",
+      "title": "功能接口总图",
+      "workItemId": null
+    }
+  },
+  "callGraphs": [
+    {
+      "name": "Gp_IoMcuAdc_Init",
+      "diagram": "flowchart LR\n    N0[\"Gp_IoMcuAdc_Init\"]\n    N1[\"CalloutGetCoreId\"]\n    N0 -->|call| N1\n    N2[\"CalloutInit\"]\n    N0 -->|call| N2\n    classDef entry fill:#0a3069,stroke:#0a3069,color:#ffffff\n    classDef internal fill:#eaeef2,stroke:#57606a,color:#1f2328\n    classDef provided fill:#b6e3ff,stroke:#0969da,color:#0a3069\n    classDef callout fill:#ffe9a8,stroke:#bf8700,color:#1f2328\n    class N0 entry\n    class N1,N2 callout",
+      "diagramFormat": "mermaid",
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.1",
+        "workItemKind": "diagram",
+        "title": "Gp_IoMcuAdc_Init 调用图",
+        "workItemId": null
+      }
+    },
+    {
+      "name": "Gp_IoMcuAdc_MainFunction",
+      "diagram": "flowchart LR\n    N0[\"Gp_IoMcuAdc_MainFunction\"]\n    N1[\"CalloutGetCoreId\"]\n    N0 -->|call| N1\n    N2[\"Gp_IoMcuAdc_CheckInitStu\"]\n    N0 -->|call| N2\n    N3[\"Gp_IoMcuAdc_GetAdcRaw\"]\n    N0 -->|call| N3\n    N4[\"CalloutGetAdcRaw\"]\n    N3 -->|call| N4\n    N5[\"Gp_IoMcuAdc_CheckAdcRawValidity\"]\n    N3 -->|call| N5\n    N6[\"Gp_IoMcuAdc_GetDiag\"]\n    N0 -->|call| N6\n    N7[\"CalloutGetDiag\"]\n    N6 -->|call| N7\n    classDef entry fill:#0a3069,stroke:#0a3069,color:#ffffff\n    classDef internal fill:#eaeef2,stroke:#57606a,color:#1f2328\n    classDef provided fill:#b6e3ff,stroke:#0969da,color:#0a3069\n    classDef callout fill:#ffe9a8,stroke:#bf8700,color:#1f2328\n    class N0 entry\n    class N2,N3,N5,N6 internal\n    class N1,N4,N7 callout",
+      "diagramFormat": "mermaid",
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.1",
+        "workItemKind": "diagram",
+        "title": "Gp_IoMcuAdc_MainFunction 调用图",
+        "workItemId": null
+      }
+    },
+    {
+      "name": "Gp_IoMcuAdc_GetAdcSigDiag",
+      "diagram": "flowchart LR\n    N0[\"Gp_IoMcuAdc_GetAdcSigDiag\"]\n    N1[\"CalloutGetCoreId\"]\n    N0 -->|call| N1\n    N2[\"Gp_IoMcuAdc_CheckInitStu\"]\n    N0 -->|call| N2\n    N3[\"Gp_IoMcuAdc_CheckArgIn\"]\n    N0 -->|call| N3\n    N4[\"Gp_IoMcuAdc_GetDiag\"]\n    N0 -->|call| N4\n    N5[\"CalloutGetDiag\"]\n    N4 -->|call| N5\n    classDef entry fill:#0a3069,stroke:#0a3069,color:#ffffff\n    classDef internal fill:#eaeef2,stroke:#57606a,color:#1f2328\n    classDef provided fill:#b6e3ff,stroke:#0969da,color:#0a3069\n    classDef callout fill:#ffe9a8,stroke:#bf8700,color:#1f2328\n    class N0 entry\n    class N2,N3,N4 internal\n    class N1,N5 callout",
+      "diagramFormat": "mermaid",
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.1",
+        "workItemKind": "diagram",
+        "title": "Gp_IoMcuAdc_GetAdcSigDiag 调用图",
+        "workItemId": null
+      }
+    },
+    {
+      "name": "Gp_IoMcuAdc_GetAdcSigAdcRaw",
+      "diagram": "flowchart LR\n    N0[\"Gp_IoMcuAdc_GetAdcSigAdcRaw\"]\n    N1[\"CalloutGetCoreId\"]\n    N0 -->|call| N1\n    N2[\"Gp_IoMcuAdc_CheckInitStu\"]\n    N0 -->|call| N2\n    N3[\"Gp_IoMcuAdc_CheckArgIn\"]\n    N0 -->|call| N3\n    N4[\"Gp_IoMcuAdc_GetAdcRaw\"]\n    N0 -->|call| N4\n    N5[\"CalloutGetAdcRaw\"]\n    N4 -->|call| N5\n    N6[\"Gp_IoMcuAdc_CheckAdcRawValidity\"]\n    N4 -->|call| N6\n    classDef entry fill:#0a3069,stroke:#0a3069,color:#ffffff\n    classDef internal fill:#eaeef2,stroke:#57606a,color:#1f2328\n    classDef provided fill:#b6e3ff,stroke:#0969da,color:#0a3069\n    classDef callout fill:#ffe9a8,stroke:#bf8700,color:#1f2328\n    class N0 entry\n    class N2,N3,N4,N6 internal\n    class N1,N5 callout",
+      "diagramFormat": "mermaid",
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.1",
+        "workItemKind": "diagram",
+        "title": "Gp_IoMcuAdc_GetAdcSigAdcRaw 调用图",
+        "workItemId": null
+      }
+    }
+  ],
+  "dynamicDesign": {
+    "stateMachine": {
+      "name": "Gp_IoMcuAdc 状态机",
+      "diagram": "stateDiagram-v2\n    [*] --> UNDEF\n    UNDEF --> INITED : Gp_IoMcuAdc_Init\n    UNDEF --> INIT_FAILED : Gp_IoMcuAdc_Init\n    INITED --> INITED : Gp_IoMcuAdc_CheckInitStu\n    INIT_FAILED --> INITED : Gp_IoMcuAdc_Init\n    INIT_FAILED --> INIT_FAILED : Gp_IoMcuAdc_CheckInitStu",
+      "diagramFormat": "mermaid",
+      "states": [
+        {
+          "name": "GP_IOMCUADC_INITSTU_UNDEF",
+          "description": "undefined status"
+        },
+        {
+          "name": "GP_IOMCUADC_INITSTU_INIT_FAILED",
+          "description": "initialization failed"
+        },
+        {
+          "name": "GP_IOMCUADC_INITSTU_INITED",
+          "description": "initialized"
+        }
+      ],
+      "transitions": [],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.3.1",
+        "workItemKind": "statemachine",
+        "title": "Gp_IoMcuAdc 状态机",
+        "workItemId": null
+      }
+    },
+    "sequences": [
+      {
+        "name": "Initialization",
+        "diagram": "sequenceDiagram\n    participant EcuM as EcuM\n    participant Gp_IoMcuAdc as Gp_IoMcuAdc\n    participant Callout as Callout\n    participant Adc as Adc\n\n    EcuM->>Gp_IoMcuAdc: Gp_IoMcuAdc_Init\n    Gp_IoMcuAdc->>Callout: Gp_IoMcuAdc_CalloutGetCoreId\n    Gp_IoMcuAdc->>Adc: Adc_SetupResultBuffer\n    Gp_IoMcuAdc->>Adc: Adc_EnableHardwareTrigger\n    Gp_IoMcuAdc->>Callout: Gp_IoMcuAdc_CalloutInit",
+        "diagramFormat": "mermaid",
+        "description": "Gp_IoMcuAdc initialization function.",
+        "polarion": {
+          "isWorkItem": true,
+          "chapter": "5.3.2",
+          "workItemKind": "sequence",
+          "title": "Gp_IoMcuAdc Initialization 序列图",
+          "workItemId": null
+        }
+      },
+      {
+        "name": "Runtime",
+        "diagram": "sequenceDiagram\n    participant OS as OS\n    participant Gp_IoMcuAdc as Gp_IoMcuAdc\n    participant Callout as Callout\n\n    OS->>Gp_IoMcuAdc: Gp_IoMcuAdc_MainFunction\n    Gp_IoMcuAdc->>Callout: Gp_IoMcuAdc_CalloutGetCoreId\n    Callout-->>Gp_IoMcuAdc: CoreId\n    Gp_IoMcuAdc->>Gp_IoMcuAdc: Gp_IoMcuAdc_CheckInitStu\n    Gp_IoMcuAdc->>Gp_IoMcuAdc: Gp_IoMcuAdc_GetAdcRaw\n    Gp_IoMcuAdc->>Gp_IoMcuAdc: Gp_IoMcuAdc_GetDiag",
+        "diagramFormat": "mermaid",
+        "description": "Gp_IoMcuAdc period function.",
+        "polarion": {
+          "isWorkItem": true,
+          "chapter": "5.3.2",
+          "workItemKind": "sequence",
+          "title": "Gp_IoMcuAdc Runtime 序列图",
+          "workItemId": null
+        }
+      }
+    ]
+  },
+  "functionalDescription": "Gp_IoMcuAdc 模块负责管理 MCU 的 ADC 信号接口，提供初始化、周期性处理及诊断数据获取功能。该模块通过配置项支持多核心使能控制，并具备开发错误检测机制。它通过四个对外接口函数与系统其他部分交互，并预留了四个 Callout 配置点供集成方扩展实现。\n\n- 提供 Gp_IoMcuAdc_Init 函数用于执行模块初始化，并维护 GP_IOMCUADC_INITSTU_UNDEF、GP_IOMCUADC_INITSTU_INIT_FAILED 和 GP_IOMCUADC_INITSTU_INITED 三种内部状态。\n- 提供 Gp_IoMcuAdc_MainFunction 函数作为周期性主函数，执行模块的定期任务。\n- 提供 Gp_IoMcuAdc_GetAdcSigDiag 函数用于获取 AdcSig 接口的诊断数据。\n- 提供 Gp_IoMcuAdc_GetAdcSigAdcRaw 函数用于获取 AdcSig 接口的 ADC 原始值。\n- 通过 GP_IOMCUADC_CORE0_ENABLE 至 GP_IOMCUADC_CORE5_ENABLE 配置项控制不同核心的功能使能，当前仅 CORE0 启用。\n- 通过 GP_IOMCUADC_DEV_ERROR_DETECT 配置项控制开发错误检测功能的开启，并依赖两个外部模块接口及提供四个 Callout 配置点。"
+}

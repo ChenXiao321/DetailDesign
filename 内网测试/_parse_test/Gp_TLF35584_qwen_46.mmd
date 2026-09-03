@@ -1,0 +1,26 @@
+flowchart TD
+    START(["开始"])
+    INIT{{"初始化指针 Data_pst 指向<br>Gp_TLF35584_rtData_ltst"}}
+    J1{"Data_pst->SetMode_u8 ==<br>GP_TLF35584_STANDBY_STATE<br>?"}
+    A1["Data_pst->SetMode_u8 = 0U"]
+    A2[["Gp_TLF35584_SwitchToStandb<br>yMode 切换至待机模式"]]
+    J2{"Data_pst->SetMode_u8 ==<br>GP_TLF35584_NORMAL_STATE ?"}
+    B1["Data_pst->SetMode_u8 = 0U"]
+    B2["Data_pst->StatusData_tst.S<br>tateVar_u8 =<br>GP_TLF35584_PREPARERUN_STA<br>TE"]
+    J3{"Data_pst->SetMode_u8 ==<br>GP_TLF35584_PORST_STATE ?"}
+    C1[["Gp_TLF35584_SetPorstMode<br>设置PORST模式"]]
+    END(["结束"])
+
+    START --> INIT
+    INIT --> J1
+    J1 -- 是 --> A1
+    A1 --> A2
+    A2 --> END
+    J1 -- 否 --> J2
+    J2 -- 是 --> B1
+    B1 --> B2
+    B2 --> END
+    J2 -- 否 --> J3
+    J3 -- 是 --> C1
+    C1 --> END
+    J3 -- 否 --> END

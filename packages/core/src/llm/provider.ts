@@ -6,7 +6,7 @@
 export interface LLMConfig {
   baseUrl: string;     // 如 http://qwen-server:8000/v1（只给 host:port 时自动补 /v1）
   apiKey: string;      // 本地部署通常任意值即可
-  model: string;       // 如 qwen3.6-35b-a3b
+  model: string;       // 如 qwen3.8-27b
   temperature?: number;
   maxTokens?: number;
   timeoutMs?: number;  // 单次请求超时，默认 180s（35B 级模型长输出较慢）
@@ -58,6 +58,9 @@ export class OpenAICompatibleProvider implements LLMProvider {
       ],
       temperature: opts?.temperature ?? this.config.temperature ?? 0.2,
       max_tokens: opts?.maxTokens ?? this.config.maxTokens ?? 4096,
+      // Qwen3 系思考模型（vLLM --reasoning-parser）：思考链会挤占 max_tokens 致 content=null，
+      // 关掉思考模式；服务器不认识此参数时由下方 reasoning_content 兜底
+      chat_template_kwargs: { enable_thinking: false },
     });
     const timeoutMs = this.config.timeoutMs ?? DEFAULT_TIMEOUT_MS;
 
@@ -86,9 +89,11 @@ export class OpenAICompatibleProvider implements LLMProvider {
         }
 
         const data = await resp.json() as {
-          choices?: { message?: { content?: string } }[];
+          choices?: { message?: { content?: string | null; reasoning_content?: string | null } }[];
         };
-        const content = data.choices?.[0]?.message?.content;
+        const msg = data.choices?.[0]?.message;
+        // content 优先；思考模型在 enable_thinking 未生效时正文在 reasoning_content（可能是思考链，但好过判空失败）
+        const content = msg?.content || msg?.reasoning_content;
         if (!content) throw new Error('LLM 返回为空');
         return content.trim();
       } catch (err) {
@@ -147,7 +152,7 @@ export function resolveConfig(overrides?: Partial<LLMConfig>): LLMConfig {
   return {
     baseUrl: overrides?.baseUrl ?? process.env.LLD_LLM_BASE_URL ?? '',
     apiKey: overrides?.apiKey ?? process.env.LLD_LLM_API_KEY ?? 'local',
-    model: overrides?.model ?? process.env.LLD_LLM_MODEL ?? 'qwen3.6-35b-a3b',
+    model: overrides?.model ?? process.env.LLD_LLM_MODEL ?? 'qwen3.8-27b',
     temperature: overrides?.temperature,
     maxTokens: overrides?.maxTokens,
     timeoutMs: overrides?.timeoutMs ?? (process.env.LLD_LLM_TIMEOUT_MS ? Number(process.env.LLD_LLM_TIMEOUT_MS) : undefined),

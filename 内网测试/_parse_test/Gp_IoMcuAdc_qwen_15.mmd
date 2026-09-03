@@ -1,0 +1,7 @@
+stateDiagram-v2
+    [*] --> UNDEF
+    UNDEF --> INITED : Gp_IoMcuAdc_Init
+    UNDEF --> INIT_FAILED : Gp_IoMcuAdc_Init
+    INITED --> INITED : Gp_IoMcuAdc_CheckInitStu
+    INIT_FAILED --> INITED : Gp_IoMcuAdc_Init
+    INIT_FAILED --> INIT_FAILED : Gp_IoMcuAdc_CheckInitStu

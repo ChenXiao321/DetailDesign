@@ -1,0 +1,11 @@
+sequenceDiagram
+    participant EcuM as EcuM
+    participant Gp_IoMcuAdc as Gp_IoMcuAdc
+    participant Callout as Callout
+    participant Adc as Adc
+
+    EcuM->>Gp_IoMcuAdc: Gp_IoMcuAdc_Init
+    Gp_IoMcuAdc->>Callout: Gp_IoMcuAdc_CalloutGetCoreId
+    Gp_IoMcuAdc->>Adc: Adc_SetupResultBuffer
+    Gp_IoMcuAdc->>Adc: Adc_EnableHardwareTrigger
+    Gp_IoMcuAdc->>Callout: Gp_IoMcuAdc_CalloutInit

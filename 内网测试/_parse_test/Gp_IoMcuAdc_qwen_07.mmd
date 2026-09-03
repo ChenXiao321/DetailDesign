@@ -1,0 +1,70 @@
+flowchart TD
+    START(["开始"])
+    INIT["初始化局部变量<br>Cfg_cptst, Rt_cptst,<br>CoreId_u32, Cnt_u32,<br>ChlNum_u8, ErrFlag_b"]
+    GET_CORE[["Gp_IoMcuAdc_CalloutGetCore<br>Id 获取核心ID"]]
+    LOAD_CFG[/"读取配置指针<br>Cfg_cptst = &Gp_IoMcuAdc_cfgCont_vcatst[CoreId_u32]/]
+    LOAD_RT[/"读取运行时指针<br>Rt_cptst = &Gp_IoMcuAdc_rtCont_lcatst[CoreId_u32]/]
+    CHECK_INIT[["Gp_IoMcuAdc_CheckInitStu<br>检查初始化状态"]]
+    INIT_OK{"ErrFlag_b == FALSE ?"}
+    
+    subgraph LOOP_BODY[" "]
+        direction TB
+        GET_CHL[/"读取通道数量<br>ChlNum_u8 =<br>Cfg_cptst->ChlNum_u8"/]
+        LOOP_PRE{{"Cnt_u32 = 0U"}}
+        LOOP_COND{"Cnt_u32 < ChlNum_u8 ?"}
+        
+        subgraph DIRECT_CHECK[" "]
+            direction TB
+            DIRECT_READ{"DirectlyRead_b == FALSE ?"}
+            
+            subgraph POLLING_LOGIC[" "]
+                direction TB
+                INC_POLL["PollingCnt_u16++"]
+                POLL_MAX{"PollingCnt_u16 >=<br>PollingCntMax_u16 ?"}
+                RESET_POLL["PollingCnt_u16 = 0U"]
+                GET_RAW[["Gp_IoMcuAdc_GetAdcRaw<br>读取ADC原始值"]]
+                GET_DIAG[["Gp_IoMcuAdc_GetDiag<br>获取诊断数据"]]
+            end
+        end
+        
+        LOOP_INC["Cnt_u32++"]
+    end
+    
+    INC_RUN["Rt_cptst->Det_ptst->RunCnt<br>_u32++"]
+    END(["结束"])
+    INC_POLL ~~~ END
+    POLL_MAX ~~~ END
+    RESET_POLL ~~~ END
+    GET_RAW ~~~ END
+    GET_DIAG ~~~ END
+    LOOP_INC ~~~ END
+
+    START --> INIT
+    INIT --> GET_CORE
+    GET_CORE --> LOAD_CFG
+    LOAD_CFG --> LOAD_RT
+    LOAD_RT --> CHECK_INIT
+    CHECK_INIT --> INIT_OK
+    
+    INIT_OK -- 否 --> END
+    INIT_OK -- 是 --> GET_CHL
+    GET_CHL --> LOOP_PRE
+    LOOP_PRE --> LOOP_COND
+    
+    LOOP_COND -- 否 --> INC_RUN
+    LOOP_COND -- 是 --> DIRECT_READ
+    
+    DIRECT_READ -- 是 --> INC_POLL
+    DIRECT_READ -- 否 --> LOOP_INC
+    
+    INC_POLL --> POLL_MAX
+    POLL_MAX -- 是 --> RESET_POLL
+    RESET_POLL --> GET_RAW
+    GET_RAW --> GET_DIAG
+    GET_DIAG --> LOOP_INC
+    
+    POLL_MAX -- 否 --> LOOP_INC
+    
+    LOOP_INC --> LOOP_COND
+    
+    INC_RUN --> END

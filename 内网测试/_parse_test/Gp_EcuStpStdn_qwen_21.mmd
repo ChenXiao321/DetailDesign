@@ -1,0 +1,34 @@
+sequenceDiagram
+    participant OS as OS
+    participant Gp_EcuStpShdn as Gp_EcuStpShdn
+    participant CO as Callout
+    participant Gp_RstM as Gp_RstM
+    participant Gp_TstApp as Gp_TstApp
+    participant SBC as SBC
+
+    OS->>Gp_EcuStpShdn: Gp_EcuStpShdn_Startup
+    Gp_EcuStpShdn->>CO: Gp_EcuStpShdn_CalloutGetCoreId
+    Gp_EcuStpShdn->>CO: Gp_EcuStpShdn_CalloutInitStageOneCore0
+    Gp_EcuStpShdn->>Gp_RstM: Gp_RstM_InitOne
+    Gp_EcuStpShdn->>Gp_EcuStpShdn: GP_ECUSTPSHDN_NOP
+    Gp_EcuStpShdn->>Gp_TstApp: Gp_TstApp_PreRunInit
+    Gp_EcuStpShdn->>Gp_TstApp: Gp_TstApp_PreRunPhase
+    Gp_EcuStpShdn->>CO: Gp_EcuStpShdn_CalloutGetSysTimeMs
+    Gp_EcuStpShdn->>Gp_RstM: Gp_RstM_InitTwo
+    Gp_EcuStpShdn->>Gp_RstM: Gp_RstM_Init
+    Gp_EcuStpShdn->>Gp_RstM: Gp_RstM_GetLastRstTypeInfo
+    Gp_EcuStpShdn->>CO: Gp_EcuStpShdn_CalloutPwrShdnInStpPhase
+    alt Power Shutdown Flag Set
+        Gp_EcuStpShdn->>Gp_EcuStpShdn: Enter StpStageTwo_pf
+    else Safe State Flag Set
+        Gp_EcuStpShdn->>CO: Gp_EcuStpShdn_CalloutSbcInitInSafeState
+        Gp_EcuStpShdn->>CO: Gp_EcuStpShdn_CalloutSafeState
+    else Normal Startup
+        Gp_EcuStpShdn->>Gp_EcuStpShdn: Gp_EcuStpShdn_MstProcMcuPreRunTest
+        Gp_EcuStpShdn->>Gp_EcuStpShdn: Gp_EcuStpShdn_MstPostInit
+        Gp_EcuStpShdn->>CO: Gp_EcuStpShdn_CalloutSbcInit
+        Gp_EcuStpShdn->>Gp_EcuStpShdn: Gp_EcuStpShdn_CheckInitRslt
+        alt Init Failed
+            Gp_EcuStpShdn->>CO: Gp_EcuStpShdn_CalloutInitFailedHnd
+        end
+    end

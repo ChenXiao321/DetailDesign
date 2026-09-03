@@ -52,6 +52,30 @@ export function wrapFlowchartLabels(src: string): string {
 }
 
 /**
+ * Mermaid 图源静态检查（报告生成时调用，打印警告不阻断）。
+ * 动机：LLM 生成的图源偶有定界符错误（Qwen 批次实测：平行四边形 `[/"..."/]` 写成
+ * `[/".../"]` 或漏收尾引号 `[/".../]`），mermaid 词法报错 → 该图渲染失败且
+ * mermaid.run 整批 reject。这里在生成期就把可疑行点出来，避免到浏览器端才发现。
+ * 返回问题描述列表（含行号），空数组 = 未发现问题。
+ */
+export function lintMermaidSource(src: string): string[] {
+  const problems: string[] = [];
+  if (!/^\s*(flowchart|graph|sequenceDiagram|stateDiagram)/.test(src)) return problems;
+  src.split('\n').forEach((raw, i) => {
+    const line = raw.trim();
+    if (!line || line.startsWith('%%')) return;
+    // 引号配平：本项目图源均为单行节点定义/连线，引号必成对出现
+    const quotes = (line.match(/"/g) ?? []).length;
+    if (quotes % 2 !== 0)
+      problems.push(`第${i + 1}行引号不配平: ${line.slice(0, 80)}`);
+    // 平行四边形 [/"..."/] 的收尾必须是 "/] 而非 /"]（引号在斜杠前）
+    if (line.includes('[/"') && !line.includes('"/]'))
+      problems.push(`第${i + 1}行平行四边形收尾应为 "/]: ${line.slice(0, 80)}`);
+  });
+  return problems;
+}
+
+/**
  * 「结束」节点钉底：dagre 最长路径排名把结束放在其入边来源（多为循环条件菱形）的下一层，
  * 循环体更深时结束会悬在图中间（如 CheckInitRslt：D1 --否--> END 与循环体同层）。
  * 这里在 DAG（去回边）上从「开始」算最长路径深度，从所有不浅于结束的节点各引一条

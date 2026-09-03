@@ -251,9 +251,10 @@ async function main(): Promise<void> {
   console.error(`用法:
   lld ping                              LLM 连通性自检（/models + 最小 chat 调用）
   lld analyze <模块目录> [--out 产物目录]   静态分析，产出 lld_model.json
-  lld gen <模块目录> [--out 产物目录] [--mock] [--resume] [--only 函数名,dynamic,configs,callouts,flowcharts]
+  lld gen <模块目录> [--out 产物目录] [--mock] [--resume] [--only 函数名,dynamic,configs,callouts,flowcharts,types,externals,description]
                                         LLM 生成设计内容，产出 lld_design.json（增量落盘，中断可 --resume 续跑）
                                         --only flowcharts 仅重刷各函数流程图（可叠加函数名缩小范围），保留描述
+                                        --only types / externals / description 分别补类型描述 / 非Callout外部接口说明 / 5.1模块功能描述
   lld report <模块目录> [--out 产物目录]    生成 HTML 评审报告 lld_report.html
   lld polarion <模块目录> [--out 产物目录] export
                                         生成 Polarion Word 导入文件（<out>/polarion/polarion_workitems.docx + manifest csv + figs/）

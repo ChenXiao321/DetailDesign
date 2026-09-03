@@ -1,0 +1,38 @@
+flowchart LR
+    N0["Gp_TLF35584_SetWkUpTimer"]
+    N1["Gp_TLF35584_WriteCmd"]
+    N0 -->|call| N1
+    N2["Gp_TLF35584_UnlockSeq"]
+    N0 -->|call| N2
+    N3["Gp_TLF35584_WriteCmd"]
+    N2 -->|call| N3
+    N4["Gp_TLF35584_TransmitData"]
+    N2 -->|call| N4
+    N5["CalloutSpiTransSync"]
+    N4 -->|call| N5
+    N6["CalloutDemReport"]
+    N4 -->|call| N6
+    N7["Gp_TLF35584_TransmitData"]
+    N0 -->|call| N7
+    N8["CalloutSpiTransSync"]
+    N7 -->|call| N8
+    N9["CalloutDemReport"]
+    N7 -->|call| N9
+    N10["Gp_TLF35584_LockSeq"]
+    N0 -->|call| N10
+    N11["Gp_TLF35584_WriteCmd"]
+    N10 -->|call| N11
+    N12["Gp_TLF35584_TransmitData"]
+    N10 -->|call| N12
+    N13["CalloutSpiTransSync"]
+    N12 -->|call| N13
+    N14["CalloutDemReport"]
+    N12 -->|call| N14
+    classDef entry fill:#0a3069,stroke:#0a3069,color:#ffffff
+    classDef internal fill:#eaeef2,stroke:#57606a,color:#1f2328
+    classDef provided fill:#b6e3ff,stroke:#0969da,color:#0a3069
+    classDef callout fill:#ffe9a8,stroke:#bf8700,color:#1f2328
+    class N0 entry
+    class N1,N3,N4,N7,N11,N12 internal
+    class N2,N10 provided
+    class N5,N6,N8,N9,N13,N14 callout

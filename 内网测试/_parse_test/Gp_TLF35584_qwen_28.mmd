@@ -1,0 +1,84 @@
+flowchart TD
+    START(["开始"])
+    INIT{{"初始化局部变量<br>Data_pst 指向<br>Gp_TLF35584_rtData_ltst<br>SignTmp_u32 = 0U<br>Rsp_u8 = 0U<br>Rsp_conter = 0U"}}
+    READ1[/"读取<br>Gp_TLF35584_idxResTable_lc<br>au32[UsedSeed_u8] 赋值给<br>SignTmp_u32"/]
+    READ2[/"读取<br>Data_pst->StatusData_tst.R<br>spCnt_u8 赋值给 Rsp_conter"/]
+    J1{"Rsp_conter == 3U ?"}
+    
+    subgraph LANE_3[" "]
+        direction TB
+        P3_1["计算第1个密码 Rsp_u8<br>SignTmp_u32 &<br>GP_TLF35584_FWDSEVICE_FIRS<br>T >> GP_TLF35584_FIRSTCODE"]
+        W3_1[/"写入<br>TxBuf_au16[GP_TLF35584_RSP<br>0]<br>调用<br>Gp_TLF35584_WriteCmd(GP_TL<br>F35584_REG_FWDRSP, Rsp_u8)"/]
+        P3_2["计算第2个密码 Rsp_u8<br>SignTmp_u32 &<br>GP_TLF35584_FWDSEVICE_SECO<br>ND >><br>GP_TLF35584_SECONDCODE"]
+        W3_2[/"写入<br>TxBuf_au16[GP_TLF35584_RSP<br>1]<br>调用<br>Gp_TLF35584_WriteCmd(GP_TL<br>F35584_REG_FWDRSP, Rsp_u8)"/]
+        P3_3["计算第3个密码 Rsp_u8<br>SignTmp_u32 &<br>GP_TLF35584_FWDSEVICE_THIR<br>D >> GP_TLF35584_THIRDCODE"]
+        W3_3[/"写入<br>TxBuf_au16[GP_TLF35584_RSP<br>2]<br>调用<br>Gp_TLF35584_WriteCmd(GP_TL<br>F35584_REG_FWDRSP, Rsp_u8)"/]
+        P3_4["计算第4个密码 Rsp_u8<br>SignTmp_u32 &<br>GP_TLF35584_FWDSEVICE_FORT<br>H >> GP_TLF35584_FORTHCODE"]
+        W3_4[/"写入<br>TxBuf_au16[GP_TLF35584_RSP<br>3]<br>调用<br>Gp_TLF35584_WriteCmd(GP_TL<br>F35584_REG_FWDRSPSYNC,<br>Rsp_u8)"/]
+        SET3["设置<br>Data_pst->SpiData_tst.CntT<br>x_u16 = 4U"]
+        CALL3[["Gp_TLF35584_TransmitData(4<br>U)"]]
+        P3_1 --> W3_1 --> P3_2 --> W3_2 --> P3_3 --> W3_3 --> P3_4 --> W3_4 --> SET3 --> CALL3
+    end
+    style LANE_3 fill:transparent,stroke:transparent
+
+    J2{"Rsp_conter == 2 ?"}
+    
+    subgraph LANE_2[" "]
+        direction TB
+        P2_1["计算第1个密码 Rsp_u8<br>SignTmp_u32 &<br>GP_TLF35584_FWDSEVICE_FIRS<br>T >> GP_TLF35584_FIRSTCODE"]
+        W2_1[/"写入<br>TxBuf_au16[GP_TLF35584_RSP<br>0]<br>调用<br>Gp_TLF35584_WriteCmd(GP_TL<br>F35584_REG_FWDRSP, Rsp_u8)"/]
+        P2_2["计算第2个密码 Rsp_u8<br>SignTmp_u32 &<br>GP_TLF35584_FWDSEVICE_SECO<br>ND >><br>GP_TLF35584_SECONDCODE"]
+        W2_2[/"写入<br>TxBuf_au16[GP_TLF35584_RSP<br>1]<br>调用<br>Gp_TLF35584_WriteCmd(GP_TL<br>F35584_REG_FWDRSP, Rsp_u8)"/]
+        P2_3["计算第3个密码 Rsp_u8<br>SignTmp_u32 &<br>GP_TLF35584_FWDSEVICE_THIR<br>D >> GP_TLF35584_THIRDCODE"]
+        W2_3[/"写入<br>TxBuf_au16[GP_TLF35584_RSP<br>2]<br>调用<br>Gp_TLF35584_WriteCmd(GP_TL<br>F35584_REG_FWDRSP, Rsp_u8)"/]
+        SET2["设置<br>Data_pst->SpiData_tst.CntT<br>x_u16 = 3U"]
+        CALL2[["Gp_TLF35584_TransmitData(3<br>U)"]]
+        P2_1 --> W2_1 --> P2_2 --> W2_2 --> P2_3 --> W2_3 --> SET2 --> CALL2
+    end
+    style LANE_2 fill:transparent,stroke:transparent
+
+    J3{"Rsp_conter == 1 ?"}
+    
+    subgraph LANE_1[" "]
+        direction TB
+        P1_1["计算第1个密码 Rsp_u8<br>SignTmp_u32 &<br>GP_TLF35584_FWDSEVICE_FIRS<br>T >> GP_TLF35584_FIRSTCODE"]
+        W1_1[/"写入<br>TxBuf_au16[GP_TLF35584_RSP<br>0]<br>调用<br>Gp_TLF35584_WriteCmd(GP_TL<br>F35584_REG_FWDRSP, Rsp_u8)"/]
+        P1_2["计算第2个密码 Rsp_u8<br>SignTmp_u32 &<br>GP_TLF35584_FWDSEVICE_SECO<br>ND >><br>GP_TLF35584_SECONDCODE"]
+        W1_2[/"写入<br>TxBuf_au16[GP_TLF35584_RSP<br>1]<br>调用<br>Gp_TLF35584_WriteCmd(GP_TL<br>F35584_REG_FWDRSP, Rsp_u8)"/]
+        SET1["设置<br>Data_pst->SpiData_tst.CntT<br>x_u16 = 2U"]
+        CALL1[["Gp_TLF35584_TransmitData(2<br>U)"]]
+        P1_1 --> W1_1 --> P1_2 --> W1_2 --> SET1 --> CALL1
+    end
+    style LANE_1 fill:transparent,stroke:transparent
+
+    J4{"Rsp_conter == 0 ?"}
+    
+    subgraph LANE_0[" "]
+        direction TB
+        P0_1["计算第1个密码 Rsp_u8<br>SignTmp_u32 &<br>GP_TLF35584_FWDSEVICE_FIRS<br>T >> GP_TLF35584_FIRSTCODE"]
+        W0_1[/"写入<br>TxBuf_au16[GP_TLF35584_RSP<br>0]<br>调用<br>Gp_TLF35584_WriteCmd(GP_TL<br>F35584_REG_FWDRSP, Rsp_u8)"/]
+        SET0["设置<br>Data_pst->SpiData_tst.CntT<br>x_u16 = 1U"]
+        CALL0[["Gp_TLF35584_TransmitData(1<br>U)"]]
+        P0_1 --> W0_1 --> SET0 --> CALL0
+    end
+    style LANE_0 fill:transparent,stroke:transparent
+
+    J5{"其他情况 ?"}
+    ERR["Unexpected error"]
+    END(["结束"])
+
+    START --> INIT --> READ1 --> READ2 --> J1
+    J1 -- 是 --> P3_1
+    J1 -- 否 --> J2
+    J2 -- 是 --> P2_1
+    J2 -- 否 --> J3
+    J3 -- 是 --> P1_1
+    J3 -- 否 --> J4
+    J4 -- 是 --> P0_1
+    J4 -- 否 --> J5
+    J5 -- 是 --> ERR
+    CALL3 --> END
+    CALL2 --> END
+    CALL1 --> END
+    CALL0 --> END
+    ERR --> END

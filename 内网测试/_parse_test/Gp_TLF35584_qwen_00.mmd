@@ -1,0 +1,24 @@
+flowchart BT
+    Gp_TLF35584_Callout_c["«Source»<br><b>Gp_TLF35584_<br>Callout.c</b>"]
+    Gp_TLF35584_Callout_h["«header»<br><b>Gp_TLF35584_<br>Callout.h</b>"]
+    Gp_TLF35584_Cfg_h["«header»<br><b>Gp_TLF35584_<br>Cfg.h</b>"]
+    Gp_TLF35584_Cfg_c["«Source»<br><b>Gp_TLF35584_<br>Cfg.c</b>"]
+    Gp_TLF35584_Reg_h["«header»<br><b>Gp_TLF35584_<br>Reg.h</b>"]
+    Gp_TLF35584_Types_h["«header»<br><b>Gp_TLF35584_<br>Types.h</b>"]
+    Gp_TLF35584_c["«Source»<br><b>Gp_TLF35584.c</b>"]
+    Gp_TLF35584_h["«header»<br><b>Gp_TLF35584.h</b>"]
+    Std_Types_h["«header»<br><b>Std_Types.h</b>"]
+    Gp_TLF35584_Callout_c -.->|"«include»"| Gp_TLF35584_Callout_h
+    Gp_TLF35584_Callout_h -.->|"«include»"| Gp_TLF35584_Cfg_h
+    Gp_TLF35584_Cfg_c -.->|"«include»"| Gp_TLF35584_Cfg_h
+    Gp_TLF35584_Cfg_h -.->|"«include»"| Gp_TLF35584_Reg_h
+    Gp_TLF35584_Cfg_h -.->|"«include»"| Gp_TLF35584_Types_h
+    Gp_TLF35584_c -.->|"«include»"| Gp_TLF35584_h
+    Gp_TLF35584_c -.->|"«include»"| Gp_TLF35584_Callout_h
+    Gp_TLF35584_h -.->|"«include»"| Gp_TLF35584_Cfg_h
+    Gp_TLF35584_Reg_h -.->|"«include»"| Gp_TLF35584_Types_h
+    Gp_TLF35584_Types_h -.->|"«include»"| Std_Types_h
+    classDef header fill:#dae8fc,stroke:#6c8ebf,color:#1a1a1a
+    classDef source fill:#d5e8d4,stroke:#82b366,color:#1a1a1a
+    class Gp_TLF35584_Callout_h,Gp_TLF35584_Cfg_h,Gp_TLF35584_Reg_h,Gp_TLF35584_Types_h,Gp_TLF35584_h,Std_Types_h header
+    class Gp_TLF35584_Callout_c,Gp_TLF35584_Cfg_c,Gp_TLF35584_c source

@@ -1,0 +1,44 @@
+flowchart TD
+    START(["开始"]) --> INIT{{"初始化 Data_pst 指向<br>Gp_TLF35584_rtData_ltst<br>AbistCtrl0_u8 = 0U<br>AbistSlect0_u8 = 0U<br>Monsf1_u8 = 0U<br>Ret_t = E_NOT_OK"}}
+    INIT --> CALL_START[["Gp_TimeCal_CaptureStart(&G<br>p_TLF35584_SingAnalogBistC<br>al_lst)"]]
+    CALL_START --> LOOP_CHECK{"Ret_t == E_NOT_OK"}
+    LOOP_CHECK -- 否 --> RETURN["return(Ret_t)"]
+    RETURN --> END(["结束"])
+    READ_CMD3 ~~~ END
+    SET_CNT ~~~ END
+    CALL_TX ~~~ END
+    PARSE_RX ~~~ END
+    CHECK_CTRL ~~~ END
+    SET_ERR0 ~~~ END
+    CLEAR_ERR0 ~~~ END
+    CHECK_SELECT ~~~ END
+    SET_ERR1 ~~~ END
+    CLEAR_ERR1 ~~~ END
+    CHECK_MONSF1 ~~~ END
+    SET_ERR2 ~~~ END
+    CLEAR_ERR2 ~~~ END
+    SET_OK ~~~ END
+    LOOP_CHECK -- 是 --> CALL_STOP[["Gp_TimeCal_CaptureStop(&Gp<br>_TLF35584_SingAnalogBistCa<br>l_lst)"]]
+    CALL_STOP --> CHECK_TIME{"Gp_TLF35584_SingAnalogBist<br>Cal_lst.Interval_Us_f32 ><br>GP_TLF35584_ABIST_SINGLE_M<br>AXTIME"}
+    CHECK_TIME -- 是 --> BREAK["break"]
+    BREAK --> RETURN
+    CHECK_TIME -- 否 --> READ_CMD1[/"读取<br>GP_TLF35584_REG_MONSF1<br>命令至 TxBuf_au16[0U]/"]
+    READ_CMD1 --> READ_CMD2[/"读取<br>GP_TLF35584_REG_ABIST_CTRL<br>0 命令至 TxBuf_au16[1U]/"]
+    READ_CMD2 --> READ_CMD3[/"读取<br>GP_TLF35584_REG_ABIST_SELE<br>CT0 命令至 TxBuf_au16[2U]/"]
+    READ_CMD3 --> SET_CNT["Data_pst->SpiData_tst.CntT<br>x_u16 = 3U"]
+    SET_CNT --> CALL_TX[["Gp_TLF35584_TransmitData(D<br>ata_pst->SpiData_tst.CntTx<br>_u16)"]]
+    CALL_TX --> PARSE_RX["Monsf1_u8 =<br>RxBuf_au16[0U]& 0xFF<br>AbistCtrl0_u8 =<br>RxBuf_au16[1U] & 0xFF<br>AbistSlect0_u8 =<br>RxBuf_au16[2U] & 0xFF"]
+    PARSE_RX --> CHECK_CTRL{"(AbistCtrl0_u8 &<br>GP_TLF35584_BIST_SUCCEED)<br>==<br>GP_TLF35584_BIST_SUCCEED"}
+    CHECK_CTRL -- 否 --> SET_ERR0["Ret_t |= E_NOT_OK<br>Data_pst->ErrData_tst.Bist<br>ErrPath_u32 |=<br>GP_TLF35584_BIST_ERROR_0"]
+    SET_ERR0 --> LOOP_CHECK
+    CHECK_CTRL -- 是 --> CLEAR_ERR0["Data_pst->ErrData_tst.Bist<br>ErrPath_u32 &=<br>~GP_TLF35584_BIST_ERROR_0"]
+    CLEAR_ERR0 --> CHECK_SELECT{"(AbistSlect0_u8 &<br>GP_TLF35584_UCOV_SELECT0)<br>== GP_TLF35584_NO_ERROR"}
+    CHECK_SELECT -- 否 --> SET_ERR1["Ret_t |= E_NOT_OK<br>Data_pst->ErrData_tst.Bist<br>ErrPath_u32 |=<br>GP_TLF35584_BIST_ERROR_1"]
+    SET_ERR1 --> LOOP_CHECK
+    CHECK_SELECT -- 是 --> CLEAR_ERR1["Data_pst->ErrData_tst.Bist<br>ErrPath_u32 &=<br>~GP_TLF35584_BIST_ERROR_1"]
+    CLEAR_ERR1 --> CHECK_MONSF1{"(Monsf1_u8 &<br>GP_TLF35584_UCOV_MONSF1)<br>== GP_TLF35584_UCOV_MONSF1"}
+    CHECK_MONSF1 -- 否 --> SET_ERR2["Ret_t |= E_NOT_OK<br>Data_pst->ErrData_tst.Bist<br>ErrPath_u32 |=<br>GP_TLF35584_BIST_ERROR_2"]
+    SET_ERR2 --> LOOP_CHECK
+    CHECK_MONSF1 -- 是 --> CLEAR_ERR2["Data_pst->ErrData_tst.Bist<br>ErrPath_u32 &=<br>~GP_TLF35584_BIST_ERROR_2"]
+    CLEAR_ERR2 --> SET_OK["Ret_t = E_OK"]
+    SET_OK --> LOOP_CHECK

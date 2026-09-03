@@ -1,0 +1,20 @@
+flowchart LR
+    N_CfgTbl["配置表函数指针引用"]
+    N_Gp_EcuStpShdn_CalloutInitStageTwoCore0["CalloutInitStageTwoCore0"]
+    N_CfgTbl -->|call（函数指针间接调用）| N_Gp_EcuStpShdn_CalloutInitStageTwoCore0
+    N_Gp_EcuStpShdn_CalloutInitStageTwoCore1["CalloutInitStageTwoCore1"]
+    N_CfgTbl -->|call（函数指针间接调用）| N_Gp_EcuStpShdn_CalloutInitStageTwoCore1
+    N_Gp_EcuStpShdn_CalloutInitStageTwoCore2["CalloutInitStageTwoCore2"]
+    N_CfgTbl -->|call（函数指针间接调用）| N_Gp_EcuStpShdn_CalloutInitStageTwoCore2
+    N_Gp_EcuStpShdn_CalloutInitStageTwoCore3["CalloutInitStageTwoCore3"]
+    N_CfgTbl -->|call（函数指针间接调用）| N_Gp_EcuStpShdn_CalloutInitStageTwoCore3
+    N_Gp_EcuStpShdn_CalloutInitStageTwoCore4["CalloutInitStageTwoCore4"]
+    N_CfgTbl -->|call（函数指针间接调用）| N_Gp_EcuStpShdn_CalloutInitStageTwoCore4
+    N_Gp_EcuStpShdn_CalloutInitStageTwoCore5["CalloutInitStageTwoCore5"]
+    N_CfgTbl -->|call（函数指针间接调用）| N_Gp_EcuStpShdn_CalloutInitStageTwoCore5
+    classDef entry fill:#0a3069,stroke:#0a3069,color:#ffffff
+    classDef internal fill:#eaeef2,stroke:#57606a,color:#1f2328
+    classDef provided fill:#b6e3ff,stroke:#0969da,color:#0a3069
+    classDef callout fill:#ffe9a8,stroke:#bf8700,color:#1f2328
+    class N_CfgTbl internal
+    class N_Gp_EcuStpShdn_CalloutInitStageTwoCore0,N_Gp_EcuStpShdn_CalloutInitStageTwoCore1,N_Gp_EcuStpShdn_CalloutInitStageTwoCore2,N_Gp_EcuStpShdn_CalloutInitStageTwoCore3,N_Gp_EcuStpShdn_CalloutInitStageTwoCore4,N_Gp_EcuStpShdn_CalloutInitStageTwoCore5 callout

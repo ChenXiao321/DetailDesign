@@ -1,0 +1,127 @@
+flowchart TD
+    START(["开始"]) --> INIT_VARS["初始化局部变量<br>CoreId_u32, Cnt_u32,<br>SbcInfo_u32,<br>RstTypePlt_u8,<br>RstTypeMcal_u8, RstId_u8,<br>RstCoreId_u8"]
+    INIT_VARS --> GET_CORE_ID[["Gp_EcuStpShdn_CalloutGetCo<br>reId 获取核心ID"]]
+    GET_CORE_ID --> SET_RT_ADDR["设置 Rt_cptst<br>指向当前核心运行时缓冲区"]
+    SET_RT_ADDR --> SET_SAT_IMPL["设置 SatImpl_ptst<br>指向当前核心本地实现"]
+    
+    SET_SAT_IMPL --> CHECK_CORE0_STAGE1{"CoreId_u32 ==<br>GP_ECUSTPSHDN_CORE0_ID ?"}
+    
+    CHECK_CORE0_STAGE1 -- 是 --> MASTER_STAGE1_INIT
+    CHECK_CORE0_STAGE1 -- 否 --> SAT_STAGE1_INIT
+    
+    subgraph LANE_MASTER_STAGE1[" "]
+        direction TB
+        MASTER_STAGE1_INIT["Master Stage 1<br>Initialization"]
+        MASTER_STAGE1_INIT --> INIT_SAT_RSLT["SatImpl_ptst->InitRsltAllB<br>its_u32 = 0U"]
+        INIT_SAT_RSLT --> LOOP_INIT_RSLT_PRE{{"Cnt_u32 = 0U"}}
+        LOOP_INIT_RSLT_PRE --> LOOP_INIT_RSLT_COND{"Cnt_u32 <<br>GP_ECUSTPSHDN_INIT_RSLT_RE<br>C_NUM ?"}
+        LOOP_INIT_RSLT_COND -- 是 --> LOOP_INIT_RSLT_BODY["SatImpl_ptst->InitCheckRsl<br>t_t[Cnt_u32] = E_OK"]
+        LOOP_INIT_RSLT_BODY --> LOOP_INIT_RSLT_INC["Cnt_u32++"]
+        LOOP_INIT_RSLT_INC --> LOOP_INIT_RSLT_COND
+        LOOP_INIT_RSLT_COND -- 否 --> INIT_MST_TIME_PRE{{"Cnt_u32 = 0U"}}
+        INIT_MST_TIME_PRE --> INIT_MST_TIME_COND{"Cnt_u32 <<br>GP_ECUSTPSHDN_MST_TIME_STA<br>MP_NUM ?"}
+        INIT_MST_TIME_COND -- 是 --> INIT_MST_TIME_BODY["MstImpl_ptst->TimeStamp_u3<br>2[Cnt_u32] = 0U"]
+        INIT_MST_TIME_BODY --> INIT_MST_TIME_INC["Cnt_u32++"]
+        INIT_MST_TIME_INC --> INIT_MST_TIME_COND
+        INIT_MST_TIME_COND -- 否 --> SET_MST_DEFAULTS["设置 MstImpl_ptst 默认值<br>McuPreTestRslt,<br>McuRunTestRslt, SbcInfo,<br>StpStage, SelfTest,<br>RstType, RstId,<br>RstCoreId,SafeState,<br>TryPwrShdn"]
+        SET_MST_DEFAULTS --> SET_SAT_TIME["SatImpl_ptst->TimeStamp_u3<br>2 = 0U"]
+        SET_SAT_TIME --> CALL_INIT_STAGE1[["Gp_EcuStpShdn_CalloutInitS<br>tageOneCore0<br>调用核心0初始化回调"]]
+        CALL_INIT_STAGE1 --> CALL_RSTM_INIT1[["Gp_RstM_InitOne<br>调用复位管理初始化1"]]
+        CALL_RSTM_INIT1 --> SET_STAGE2["MstImpl_ptst->StpStage_t<br>=GP_ECUSTPSHDN_STPSTAGE_TW<br>O"]
+    end
+    style LANE_MASTER_STAGE1 fill:transparent,stroke:transparent
+    
+    subgraph LANE_SAT_STAGE1[" "]
+        direction TB
+        SAT_STAGE1_INIT["Satellite Stage 1<br>Initialization"]
+        SAT_STAGE1_INIT --> INIT_SAT_RSLT_SAT["SatImpl_ptst->InitRsltAllB<br>its_u32 = 0U"]
+        INIT_SAT_RSLT_SAT --> LOOP_SAT_RSLT_PRE{{"Cnt_u32 = 0U"}}
+        LOOP_SAT_RSLT_PRE --> LOOP_SAT_RSLT_COND{"Cnt_u32 <<br>GP_ECUSTPSHDN_INIT_RSLT_RE<br>C_NUM ?"}
+        LOOP_SAT_RSLT_COND -- 是 --> LOOP_SAT_RSLT_BODY["SatImpl_ptst->InitCheckRsl<br>t_t[Cnt_u32] = E_OK"]
+        LOOP_SAT_RSLT_BODY --> LOOP_SAT_RSLT_INC["Cnt_u32++"]
+        LOOP_SAT_RSLT_INC --> LOOP_SAT_RSLT_COND
+        LOOP_SAT_RSLT_COND -- 否 --> SET_SAT_TIME_SAT["SatImpl_ptst->TimeStamp_u3<br>2 = 0U"]
+        SET_SAT_TIME_SAT --> WAIT_STAGE2_PRE{{"等待 Stage 2"}}
+        WAIT_STAGE2_PRE --> WAIT_STAGE2_J{" "}
+        WAIT_STAGE2_J --> WAIT_STAGE2_COND{"MstImpl_ptst->StpStage_t<br>!=<br>GP_ECUSTPSHDN_STPSTAGE_TWO<br>?"}
+        WAIT_STAGE2_COND -- 是 --> WAIT_STAGE2_NOP[["GP_ECUSTPSHDN_NOP 空操作"]]
+        WAIT_STAGE2_NOP --- WAIT_STAGE2_J
+        WAIT_STAGE2_COND -- 否 --> EXIT_SAT_STAGE1["退出 Stage 1 等待"]
+    end
+    style LANE_SAT_STAGE1 fill:transparent,stroke:transparent
+    style WAIT_STAGE2_J fill:transparent,stroke:transparent
+    
+    SET_STAGE2 --> MERGE_STAGE2
+    EXIT_SAT_STAGE1 --> MERGE_STAGE2
+    
+    MERGE_STAGE2["进入 Stage 2"] --> CALL_PRERUN_INIT[["Gp_TstApp_PreRunInit<br>预运行初始化"]]
+    CALL_PRERUN_INIT --> CALL_PRERUN_PHASE[["Gp_TstApp_PreRunPhase<br>预运行阶段测试"]]
+    CALL_PRERUN_PHASE --> RECORD_PRERUN_TIME["记录 PreRun 完成时间戳<br>MstImpl_ptst->TimeStamp_u3<br>2[PRERUN] =<br>Gp_EcuStpShdn_CalloutGetSy<br>sTimeMs()"]
+    
+    RECORD_PRERUN_TIME --> CHECK_CORE0_STAGE2{"CoreId_u32 ==<br>GP_ECUSTPSHDN_CORE0_ID ?"}
+    
+    CHECK_CORE0_STAGE2 -- 是 --> MASTER_STAGE2_INIT
+    CHECK_CORE0_STAGE2 -- 否 --> SAT_STAGE2_WAIT
+    
+    subgraph LANE_MASTER_STAGE2[" "]
+        direction TB
+        MASTER_STAGE2_INIT["Master Stage 2<br>Initialization"]
+        MASTER_STAGE2_INIT --> CALL_RSTM_INIT2[["Gp_RstM_InitTwo<br>调用复位管理初始化2"]]
+        CALL_RSTM_INIT2 --> CALL_RSTM_INIT[["Gp_RstM_Init<br>调用复位管理初始化"]]
+        CALL_RSTM_INIT --> CALL_GET_RST_INFO[["Gp_RstM_GetLastRstTypeInfo<br>获取上次复位类型信息"]]
+        CALL_GET_RST_INFO --> SET_RST_INFO["设置 MstImpl_ptst 复位信息<br>RstTypePlt, RstTypeMcal,<br>RstId, RstCoreId"]
+        SET_RST_INFO --> CHECK_PWR_SHDN{"MstImpl_ptst->TryPwrShdn_b<br>== TRUE ?"}
+        CHECK_PWR_SHDN -- 是 --> CALL_PWR_SHDN[["Gp_EcuStpShdn_CalloutPwrSh<br>dnInStpPhase<br>调用电源关闭回调"]]
+        CALL_PWR_SHDN --> END_FUNC(["结束"])
+        CHECK_PWR_SHDN -- 否 --> CHECK_SAFE_STATE{"MstImpl_ptst->SafeState_b<br>== TRUE ?"}
+        CHECK_SAFE_STATE -- 是 --> CALL_STAGE2_PF_SAFE[["Rt_cptst->StpStageTwo_pf<br>调用 Stage 2 处理函数"]]
+        CALL_STAGE2_PF_SAFE --> CALL_SBC_INIT_SAFE[["Gp_EcuStpShdn_CalloutSbcIn<br>itInSafeState<br>调用安全状态SBC 初始化"]]
+        CALL_SBC_INIT_SAFE --> SET_SBC_INFO_SAFE["MstImpl_ptst->SbcInfo_u32<br>= SbcInfo_u32"]
+        SET_SBC_INFO_SAFE --> CALL_SAFE_STATE[["Gp_EcuStpShdn_CalloutSafeS<br>tate 调用安全状态回调"]]
+        CALL_SAFE_STATE --> SET_STAGE3["MstImpl_ptst->StpStage_t<br>=GP_ECUSTPSHDN_STPSTAGE_TH<br>REE"]
+        CHECK_SAFE_STATE -- 否 --> CALL_MST_PRE_RUN_TEST[["Gp_EcuStpShdn_MstProcMcuPr<br>eRunTest 处理 MCU<br>预运行测试"]]
+        CALL_MST_PRE_RUN_TEST --> CALL_STAGE2_PF_NORMAL[["Rt_cptst->StpStageTwo_pf<br>调用 Stage 2 处理函数"]]
+        CALL_STAGE2_PF_NORMAL --> RECORD_MST_INIT_TIME["记录 Master<br>初始化完成时间戳<br>MstImpl_ptst->TimeStamp_u3<br>2[MST_INIT] =<br>Gp_EcuStpShdn_CalloutGetSy<br>sTimeMs()"]
+        RECORD_MST_INIT_TIME --> CALL_MST_POST_INIT[["Gp_EcuStpShdn_MstPostInit<br>调用 Master 后初始化"]]
+        CALL_MST_POST_INIT --> CALL_SBC_INIT[["Gp_EcuStpShdn_CalloutSbcIn<br>it 调用 SBC 初始化"]]
+        CALL_SBC_INIT --> SET_SBC_INFO_NORMAL["MstImpl_ptst->SbcInfo_u32<br>= SbcInfo_u32"]
+        SET_SBC_INFO_NORMAL --> RECORD_MST_POST_TIME["记录 Master<br>后初始化完成时间戳<br>MstImpl_ptst->TimeStamp_u3<br>2[MST_POST_INIT] =<br>Gp_EcuStpShdn_CalloutGetSy<br>sTimeMs()"]
+        RECORD_MST_POST_TIME --> SET_STAGE3
+    end
+    style LANE_MASTER_STAGE2 fill:transparent,stroke:transparent
+    
+    subgraph LANE_SAT_STAGE2[" "]
+        direction TB
+        SAT_STAGE2_WAIT["Satellite Stage 2 Wait"]
+        SAT_STAGE2_WAIT --> WAIT_STAGE3_PRE{{"等待 Stage 3"}}
+        WAIT_STAGE3_PRE --> WAIT_STAGE3_J{" "}
+        WAIT_STAGE3_J --> WAIT_STAGE3_COND{"MstImpl_ptst->StpStage_t<br>!=<br>GP_ECUSTPSHDN_STPSTAGE_THR<br>EE ?"}
+        WAIT_STAGE3_COND -- 是 --> WAIT_STAGE3_NOP[["GP_ECUSTPSHDN_NOP 空操作"]]
+        WAIT_STAGE3_NOP --- WAIT_STAGE3_J
+        WAIT_STAGE3_COND -- 否 --> EXIT_SAT_STAGE2["退出 Stage 2 等待"]
+    end
+    style LANE_SAT_STAGE2 fill:transparent,stroke:transparent
+    style WAIT_STAGE3_J fill:transparent,stroke:transparent
+    
+    SET_STAGE3 --> MERGE_STAGE3
+    EXIT_SAT_STAGE2 --> MERGE_STAGE3
+    
+    MERGE_STAGE3["进入 Stage 3"] --> CHECK_CORE0_STAGE3{"CoreId_u32 ==<br>GP_ECUSTPSHDN_CORE0_ID ?"}
+    
+    CHECK_CORE0_STAGE3 -- 是 --> END_FUNC
+    CHECK_CORE0_STAGE3 -- 否 --> SAT_STAGE3_INIT
+    
+    subgraph LANE_SAT_STAGE3[" "]
+        direction TB
+        SAT_STAGE3_INIT["Satellite Stage 3<br>Initialization"]
+        SAT_STAGE3_INIT --> CALL_STAGE2_PF_SAT[["Rt_cptst->StpStageTwo_pf<br>调用 Stage 2 处理函数"]]
+        CALL_STAGE2_PF_SAT --> RECORD_SAT_TIME["记录 Satellite<br>初始化完成时间戳<br>SatImpl_ptst->TimeStamp_u3<br>2 =<br>Gp_EcuStpShdn_CalloutGetSy<br>sTimeMs()"]
+        RECORD_SAT_TIME --> CHECK_SAFE_STATE_SAT{"MstImpl_ptst->SafeState_b<br>== FALSE ?"}
+        CHECK_SAFE_STATE_SAT -- 是 --> CALL_CHECK_INIT_RSLT[["Gp_EcuStpShdn_CheckInitRsl<br>t 检查初始化结果"]]
+        CALL_CHECK_INIT_RSLT --> CHECK_INIT_RSLT_BITS{"SatImpl_ptst->InitRsltAllB<br>its_u32 != 0U ?"}
+        CHECK_INIT_RSLT_BITS -- 是 --> CALL_INIT_FAILED[["Gp_EcuStpShdn_CalloutInitF<br>ailedHnd 调用初始化失败处理"]]
+        CALL_INIT_FAILED --> END_FUNC
+        CHECK_INIT_RSLT_BITS -- 否 --> END_FUNC
+        CHECK_SAFE_STATE_SAT -- 否 --> END_FUNC
+    end
+    style LANE_SAT_STAGE3 fill:transparent,stroke:transparent

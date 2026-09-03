@@ -1,0 +1,11 @@
+flowchart TD
+    START(["开始"])
+    INIT{{"初始化 Data_pst 指向<br>Gp_TLF35584_rtData_ltst"}}
+    SET_FLAG["设置<br>Data_pst->WdiRestoreFlag_b<br>为 TRUE"]
+    CALL_WDI[["Gp_TLF35584_CalloutWdiServ<br>ice 拉低 WDI 信号"]]
+    END(["结束"])
+
+    START --> INIT
+    INIT --> SET_FLAG
+    SET_FLAG --> CALL_WDI
+    CALL_WDI --> END

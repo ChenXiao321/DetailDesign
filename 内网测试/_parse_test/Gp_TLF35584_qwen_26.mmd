@@ -1,0 +1,8 @@
+flowchart TD
+    START(["开始"]) --> INIT["初始化 Data_pst 指向<br>Gp_TLF35584_rtData_ltst<br>初始化 Scmd_u8 为 0U"]
+    INIT --> CALC["计算 Scmd_u8 =<br>Data_pst->StatusData_tst.L<br>astWwdScmd_u8 ^<br>GP_TLF35584_WWDSCMDMASK"]
+    CALC --> CALL_WRITE[["Gp_TLF35584_WriteCmd 写入<br>WWDSCMD 寄存器"]]
+    CALL_WRITE --> ASSIGN_TX["赋值<br>Data_pst->SpiData_tst.TxBu<br>f_au16[0U] 为 WriteCmd<br>返回值"]
+    ASSIGN_TX --> ASSIGN_CNT["赋值<br>Data_pst->SpiData_tst.CntT<br>x_u16 为 1U"]
+    ASSIGN_CNT --> CALL_TX[["Gp_TLF35584_TransmitData<br>发送 SPI 数据"]]
+    CALL_TX --> END(["结束"])

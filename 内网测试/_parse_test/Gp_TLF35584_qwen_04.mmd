@@ -1,0 +1,127 @@
+flowchart LR
+    N0["Gp_TLF35584_Bist"]
+    N1["Gp_TLF35584_PreInit"]
+    N0 -->|call| N1
+    N2["CalloutWdiService"]
+    N1 -->|call| N2
+    N3["Gp_TLF35584_GetWakeAndRese<br>tInfo"]
+    N0 -->|call| N3
+    N4["Gp_TLF35584_ColdStartAndPo<br>rst"]
+    N3 -->|call| N4
+    N5["Gp_TLF35584_ReadCmd"]
+    N4 -->|call| N5
+    N6["Gp_TLF35584_WriteCmd"]
+    N4 -->|call| N6
+    N7["Gp_TLF35584_TransmitData"]
+    N4 -->|call| N7
+    N8["CalloutSpiTransSync"]
+    N7 -->|call| N8
+    N9["CalloutDemReport"]
+    N7 -->|call| N9
+    N10["Gp_TLF35584_GetResetType"]
+    N4 -->|call| N10
+    N11["Gp_TLF35584_UpdateFlagReg"]
+    N10 -->|call| N11
+    N12["Gp_TLF35584_ReadCmd"]
+    N11 -->|call| N12
+    N13["Gp_TLF35584_TransmitData"]
+    N11 -->|call| N13
+    N14["CalloutSpiTransSync"]
+    N13 -->|call| N14
+    N15["CalloutDemReport"]
+    N13 -->|call| N15
+    N16["Gp_TLF35584_GetWakeUpSourc<br>e"]
+    N3 -->|call| N16
+    N17["Gp_TLF35584_UpdateFlagReg"]
+    N16 -->|call| N17
+    N18["Gp_TLF35584_ReadCmd"]
+    N17 -->|call| N18
+    N19["Gp_TLF35584_TransmitData"]
+    N17 -->|call| N19
+    N20["CalloutSpiTransSync"]
+    N19 -->|call| N20
+    N21["CalloutDemReport"]
+    N19 -->|call| N21
+    N22["Gp_TLF35584_ClearFlagReg"]
+    N3 -->|call| N22
+    N23["Gp_TLF35584_WriteCmd"]
+    N22 -->|call| N23
+    N24["Gp_TLF35584_TransmitData"]
+    N22 -->|call| N24
+    N25["CalloutSpiTransSync"]
+    N24 -->|call| N25
+    N26["CalloutDemReport"]
+    N24 -->|call| N26
+    N27["Gp_TLF35584_SafetypathBist"]
+    N0 -->|call| N27
+    N28["Gp_TLF35584_SingleOvSafety<br>PathBist"]
+    N27 -->|call| N28
+    N29["Gp_TLF35584_WriteCmd"]
+    N28 -->|call| N29
+    N30["Gp_TLF35584_ReadCmd"]
+    N28 -->|call| N30
+    N31["Gp_TLF35584_TransmitData"]
+    N28 -->|call| N31
+    N32["CalloutSpiTransSync"]
+    N31 -->|call| N32
+    N33["CalloutDemReport"]
+    N31 -->|call| N33
+    N34["Gp_TLF35584_SinSafetyBistC<br>heck"]
+    N28 -->|call| N34
+    N35["Gp_TLF35584_ReadCmd"]
+    N34 -->|call| N35
+    N36["Gp_TLF35584_TransmitData"]
+    N34 -->|call| N36
+    N37["CalloutSpiTransSync"]
+    N36 -->|call| N37
+    N38["CalloutDemReport"]
+    N36 -->|call| N38
+    N39["Gp_TLF35584_ClearFlagReg"]
+    N28 -->|call| N39
+    N40["Gp_TLF35584_WriteCmd"]
+    N39 -->|call| N40
+    N41["Gp_TLF35584_TransmitData"]
+    N39 -->|call| N41
+    N42["CalloutSpiTransSync"]
+    N41 -->|call| N42
+    N43["CalloutDemReport"]
+    N41 -->|call| N43
+    N44["Gp_TLF35584_AllCompartorSa<br>fetyPathBist"]
+    N27 -->|call| N44
+    N45["Gp_TLF35584_ReadCmd"]
+    N44 -->|call| N45
+    N46["Gp_TLF35584_AllCompartorSa<br>fetyCmd"]
+    N44 -->|call| N46
+    N47["Gp_TLF35584_WriteCmd"]
+    N46 -->|call| N47
+    N48["CalloutStmSwDalayNus"]
+    N46 -->|call| N48
+    N49["Gp_TLF35584_TransmitData"]
+    N46 -->|call| N49
+    N50["CalloutSpiTransSync"]
+    N49 -->|call| N50
+    N51["CalloutDemReport"]
+    N49 -->|call| N51
+    N52["Gp_TLF35584_AllSafetyBistC<br>heck"]
+    N44 -->|call| N52
+    N53["Gp_TLF35584_ReadCmd"]
+    N52 -->|call| N53
+    N54["Gp_TLF35584_TransmitData"]
+    N52 -->|call| N54
+    N55["CalloutSpiTransSync"]
+    N54 -->|call| N55
+    N56["CalloutDemReport"]
+    N54 -->|call| N56
+    N57["Gp_TLF35584_ClearFlagReg"]
+    N44 -->|call| N57
+    N58["Gp_TLF35584_WriteCmd"]
+    N57 -->|call| N58
+    N59["Gp_TLF35584_TransmitData"]
+    N57 -->|call| N59
+    classDef entry fill:#0a3069,stroke:#0a3069,color:#ffffff
+    classDef internal fill:#eaeef2,stroke:#57606a,color:#1f2328
+    classDef provided fill:#b6e3ff,stroke:#0969da,color:#0a3069
+    classDef callout fill:#ffe9a8,stroke:#bf8700,color:#1f2328
+    class N0 entry
+    class N1,N3,N4,N5,N6,N7,N10,N11,N12,N13,N16,N17,N18,N19,N22,N23,N24,N27,N28,N29,N30,N31,N34,N35,N36,N39,N40,N41,N44,N45,N46,N47,N49,N52,N53,N54,N57,N58,N59 internal
+    class N2,N8,N9,N14,N15,N20,N21,N25,N26,N32,N33,N37,N38,N42,N43,N48,N50,N51,N55,N56 callout

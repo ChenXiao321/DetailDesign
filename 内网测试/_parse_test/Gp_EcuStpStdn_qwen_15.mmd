@@ -1,0 +1,62 @@
+flowchart TD
+    START(["开始"])
+    INIT["初始化 MstImpl_ptst 指向<br>Gp_EcuStpShdn_bufMstLocalI<br>mpl_ltst<br>初始化 CoreId_u32 为 0U"]
+    GET_CORE[["Gp_EcuStpShdn_CalloutGetCo<br>reId 获取核心ID"]]
+    CHECK_CORE{"CoreId_u32 ==<br>GP_ECUSTPSHDN_CORE0_ID ?"}
+    
+    subgraph LANE_CORE0[" "]
+        direction TB
+        CHECK_TS{"MstImpl_ptst->TimeStamp_u3<br>2[GP_ECUSTPSHDN_MST_TIME_S<br>TAMP_LAST_SAT_INIT] == 0U<br>?"}
+        GET_TS[["Gp_EcuStpShdn_GetLastSatTi<br>meStamp<br>获取最后卫星初始化时间戳"]]
+        SET_TS["MstImpl_ptst->TimeStamp_u3<br>2[GP_ECUSTPSHDN_MST_TIME_S<br>TAMP_LAST_SAT_INIT] =<br>获取的时间戳"]
+        NOOP_CORE0["无操作"]
+    end
+    style LANE_CORE0 fill:transparent,stroke:transparent
+    
+    NOOP_CORE_OTHER["无操作"]
+    
+    CHECK_STATE{"(MstImpl_ptst->TryPwrShdn_<br>b == FALSE) &&<br>(MstImpl_ptst->SafeState_b<br>== FALSE) ?"}
+    
+    RUN_TEST[["Gp_TstApp_RunTimePhase<br>执行MCU运行时测试"]]
+    
+    subgraph LANE_RUNTIME_CORE0[" "]
+        direction TB
+        CHECK_TEST_CORE0{"CoreId_u32 ==<br>GP_ECUSTPSHDN_CORE0_ID ?"}
+        CHECK_TEST_RESULT{"Gp_EcuStpShdn_CalloutChkMc<br>uRunTimeTest() == FALSE ?"}
+        HANDLE_FAIL[["Gp_EcuStpShdn_CalloutMcuRu<br>nTimeTestFailedHnd<br>处理MCU运行时测试失败"]]
+        NOOP_TEST_PASS["无操作"]
+    end
+    style LANE_RUNTIME_CORE0 fill:transparent,stroke:transparent
+    
+    NOOP_RUNTIME_OTHER["无操作"]
+    NOOP_STATE["无操作"]
+    END(["结束"])
+
+    START --> INIT
+    INIT --> GET_CORE
+    GET_CORE --> CHECK_CORE
+    
+    CHECK_CORE -- 是 --> CHECK_TS
+    CHECK_TS -- 是 --> GET_TS
+    GET_TS --> SET_TS
+    SET_TS --> CHECK_STATE
+    CHECK_TS -- 否 --> NOOP_CORE0
+    NOOP_CORE0 --> CHECK_STATE
+    
+    CHECK_CORE -- 否 --> NOOP_CORE_OTHER
+    NOOP_CORE_OTHER --> CHECK_STATE
+    
+    CHECK_STATE -- 是 --> RUN_TEST
+    RUN_TEST --> CHECK_TEST_CORE0
+    
+    CHECK_TEST_CORE0 -- 是 --> CHECK_TEST_RESULT
+    CHECK_TEST_RESULT -- 是 --> HANDLE_FAIL
+    HANDLE_FAIL --> END
+    CHECK_TEST_RESULT -- 否 --> NOOP_TEST_PASS
+    NOOP_TEST_PASS --> END
+    
+    CHECK_TEST_CORE0 -- 否 --> NOOP_RUNTIME_OTHER
+    NOOP_RUNTIME_OTHER --> END
+    
+    CHECK_STATE -- 否 --> NOOP_STATE
+    NOOP_STATE --> END

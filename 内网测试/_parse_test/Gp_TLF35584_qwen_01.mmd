@@ -1,0 +1,24 @@
+%%{init: {"flowchart": {"rankSpacing": 10, "nodeSpacing": 16}}}%%
+flowchart LR
+    Caller(["外部调用方<br/>（其他 FC / RTE / 集成代码）"])
+    subgraph MOD[" "]
+        direction TB
+        MT["<b>Gp_TLF35584</b><br/><b>提供的外部接口</b>（12 个）<br/>────────────"]
+        MT ~~~ P0("Gp_TLF35584_<br/>Init") ~~~ P1("Gp_TLF35584_<br/>MainFunction") ~~~ P2("Gp_TLF35584_<br/>SetWdgTriggerCondition") ~~~ P3("Gp_TLF35584_<br/>GetDevSigModeIn")
+        MT ~~~ P4("Gp_TLF35584_<br/>SetDevSigModeOut") ~~~ P5("Gp_TLF35584_<br/>GetDevSigDiag") ~~~ P6("Gp_TLF35584_<br/>Bist") ~~~ P7("Gp_TLF35584_<br/>GetSystemUnusualReason")
+        MT ~~~ P8("Gp_TLF35584_<br/>SetDevMpsMode") ~~~ P9("Gp_TLF35584_<br/>UnlockSeq") ~~~ P10("Gp_TLF35584_<br/>LockSeq") ~~~ P11("Gp_TLF35584_<br/>SetWkUpTimer")
+    end
+    G0["<b>External</b>（3 个）<br/>──────────<br/>CalloutEnableIntrrupt<br/>Smu_ActivateFSP<br/>Smu_ReleaseFSP"]
+    G1["<b>Gp_TimeCal</b>（2 个）<br/>──────────<br/>Gp_TimeCal_CaptureStart<br/>Gp_TimeCal_CaptureStop"]
+    Caller -->|call| MOD
+    MOD -->|call| G0
+    MOD -->|call| G1
+    classDef caller fill:#eaeef2,stroke:#57606a,color:#1f2328
+    classDef provided fill:#b6e3ff,stroke:#0969da,color:#0a3069
+    classDef extgroup fill:#f6f8fa,stroke:#57606a,color:#1f2328
+    class Caller caller
+    class P0,P1,P2,P3,P4,P5,P6,P7,P8,P9,P10,P11 provided
+    class G0 extgroup
+    class G1 extgroup
+    style MOD fill:#fbfcfd,stroke:#d0d7de,stroke-width:1px
+    style MT fill:transparent,stroke:transparent,color:#1f2328

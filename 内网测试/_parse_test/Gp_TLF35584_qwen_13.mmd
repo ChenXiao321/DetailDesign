@@ -1,0 +1,8 @@
+flowchart TD
+    Start(["开始"]) --> Init["初始化 Data_pst 指向<br>Gp_TLF35584_rtData_ltst<br>初始化 Ret_t 为 E_NOT_OK"]
+    Init --> CheckPtr{"DevMode_pu8 !=<br>GP_TLF35584_NULL_PTR"}
+    CheckPtr -- 是 --> SetOK["Ret_t = E_OK"]
+    SetOK --> WriteData[/"*DevMode_pu8 =<br>Data_pst->StatusData_tst.D<br>eviceState_u8"/]
+    WriteData --> End(["结束"])
+    CheckPtr -- 否 --> SetErr["Ret_t = E_NOT_OK"]
+    SetErr --> End

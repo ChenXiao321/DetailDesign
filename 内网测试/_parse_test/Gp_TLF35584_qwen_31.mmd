@@ -1,0 +1,36 @@
+flowchart TD
+    START(["开始"])
+    INIT{{"初始化 Data_pst 指向<br>Gp_TLF35584_rtData_ltst"}}
+    J1{"Data_pst->StatusData_tst.W<br>dMode_u8 ==<br>GP_TLF35584_FWD_SPI ?"}
+    P1[["Gp_TLF35584_FwdSpiService<br>传入 LastSeed_u8"]]
+    J2{"Data_pst->StatusData_tst.W<br>dMode_u8 ==<br>GP_TLF35584_FWD_WWD_SPI ?"}
+    P2[["Gp_TLF35584_FwdSpiService<br>传入 LastSeed_u8"]]
+    P3[["Gp_TLF35584_WwdSpiService"]]
+    J3{"Data_pst->StatusData_tst.W<br>dMode_u8 ==<br>GP_TLF35584_WWD_WDI ?"}
+    P4[["Gp_TLF35584_WwdWdiService"]]
+    J4{"Data_pst->StatusData_tst.W<br>dMode_u8 ==<br>GP_TLF35584_WWD_SPI ?"}
+    P5[["Gp_TLF35584_WwdSpiService"]]
+    J5{"Data_pst->StatusData_tst.W<br>dMode_u8 ==<br>GP_TLF35584_FWD_SPI_WWD_WD<br>I ?"}
+    P6[["Gp_TLF35584_FwdSpiService<br>传入 LastSeed_u8"]]
+    P7[["Gp_TLF35584_WwdWdiService"]]
+    END(["结束"])
+
+    START --> INIT
+    INIT --> J1
+    J1 -- 是 --> P1
+    P1 --> END
+    J1 -- 否 --> J2
+    J2 -- 是 --> P2
+    P2 --> P3
+    P3 --> END
+    J2 -- 否 --> J3
+    J3 -- 是 --> P4
+    P4 --> END
+    J3 -- 否 --> J4
+    J4 -- 是 --> P5
+    P5 --> END
+    J4 -- 否 --> J5
+    J5 -- 是 --> P6
+    P6 --> P7
+    P7 --> END
+    J5 -- 否 --> END

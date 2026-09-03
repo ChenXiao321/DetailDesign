@@ -1,0 +1,28 @@
+flowchart TD
+    START(["开始"])
+    INIT{{"初始化 Data_pst 指向<br>Gp_TLF35584_rtData_ltst"}}
+    START --> INIT
+    INIT --> W1[/"写入 TxBuf_au16[0U] 为<br>ABIST_CTRL1_OV 命令"/]
+    W1 --> C1[/"设置 CntTx_u16 为 1U"/]
+    C1 --> T1[["Gp_TLF35584_TransmitData<br>发送数据"]]
+    T1 --> D1[["Gp_TLF35584_CalloutStmSwDa<br>layNus 延时 50ns"]]
+    D1 --> W2[/"写入 TxBuf_au16[0U] 为<br>ABIST_CTRL1_CLOCK 命令"/]
+    W2 --> C2[/"设置 CntTx_u16 为 1U"/]
+    C2 --> T2[["Gp_TLF35584_TransmitData<br>发送数据"]]
+    T2 --> D2[["Gp_TLF35584_CalloutStmSwDa<br>layNus 延时 50ns"]]
+    D2 --> W3[/"写入 TxBuf_au16[0U] 为<br>ABIST_CTRL1_OV 命令"/]
+    W3 --> C3[/"设置 CntTx_u16 为 1U"/]
+    C3 --> T3[["Gp_TLF35584_TransmitData<br>发送数据"]]
+    T3 --> D3[["Gp_TLF35584_CalloutStmSwDa<br>layNus 延时 50ns"]]
+    D3 --> W4[/"写入 TxBuf_au16[0U] 为<br>ABIST_CTRL1_DISABLE 命令"/]
+    W4 --> C4[/"设置 CntTx_u16 为 1U"/]
+    C4 --> T4[["Gp_TLF35584_TransmitData<br>发送数据"]]
+    T4 --> D4[["Gp_TLF35584_CalloutStmSwDa<br>layNus 延时 50ns"]]
+    D4 --> W5[/"写入 TxBuf_au16[0U] 为<br>ABIST_SELECT0_OV 命令"/]
+    W5 --> W6[/"写入 TxBuf_au16[1U] 为<br>ABIST_SELECT1_UV 命令"/]
+    W6 --> W7[/"写入 TxBuf_au16[2U] 为<br>ABIST_SELECT2_IN 命令"/]
+    W7 --> W8[/"写入 TxBuf_au16[3U] 为<br>ABIST_CTRL0_SAFETY 命令"/]
+    W8 --> C5[/"设置 CntTx_u16 为 4U"/]
+    C5 --> T5[["Gp_TLF35584_TransmitData<br>发送数据"]]
+    T5 --> D5[["Gp_TLF35584_CalloutStmSwDa<br>layNus 延时 1000us"]]
+    D5 --> END(["结束"])

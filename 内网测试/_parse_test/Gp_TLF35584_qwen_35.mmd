@@ -1,0 +1,25 @@
+flowchart TD
+    Start(["开始"])
+    Init1{{"初始化 Data_pst 指向<br>Gp_TLF35584_rtData_ltst"}}
+    Init2{{"初始化 DevCtrl_u8 为 0xEA"}}
+    Init3{{"计算 DevCtrlN_u8 为 0xFF<br>异或 DevCtrl_u8"}}
+    Write1[/"调用 Gp_TLF35584_WriteCmd<br>写入 DEVCTRL 寄存器到<br>TxBuf_au16[0]"/]
+    Write2[/"调用 Gp_TLF35584_WriteCmd<br>写入 DEVCTRLN 寄存器到<br>TxBuf_au16[1]"/]
+    SetCnt1["设置 CntTx_u16 为 2"]
+    CallTransmit1[["Gp_TLF35584_TransmitData<br>发送 2 字节数据"]]
+    Write3[/"调用 Gp_TLF35584_ReadCmd<br>读取 DEVSTAT 寄存器到<br>TxBuf_au16[0]"/]
+    SetCnt2["设置 CntTx_u16 为 1"]
+    CallTransmit2[["Gp_TLF35584_TransmitData<br>发送 1 字节数据"]]
+    End(["结束"])
+
+    Start --> Init1
+    Init1 --> Init2
+    Init2 --> Init3
+    Init3 --> Write1
+    Write1 --> Write2
+    Write2 --> SetCnt1
+    SetCnt1 --> CallTransmit1
+    CallTransmit1 --> Write3
+    Write3 --> SetCnt2
+    SetCnt2 --> CallTransmit2
+    CallTransmit2 --> End

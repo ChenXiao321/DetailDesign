@@ -31,6 +31,15 @@ export interface ParsedCFile {
   lines: string[];
 }
 
+export interface CondRegion {
+  /** 区域宏（取 #if 表达式首个标识符） */
+  macro: string;
+  /** 区域首行行号（0-based，#if 指令行的下一行起算） */
+  from: number;
+  /** 区域末行行号（0-based，#endif 指令行） */
+  to: number;
+}
+
 export interface PreprocessedSource {
   /** 预处理后的干净 C 源码（行数与原始一致） */
   clean: string;
@@ -38,6 +47,8 @@ export interface PreprocessedSource {
   originalLines: string[];
   /** 每行生效的条件编译宏（从原始源码扫描，0-based 行号 → 宏名列表） */
   condFlagsAt: (line: number) => string[];
+  /** 全部条件编译区域（含嵌套），供函数体内 #if 段定位 */
+  condRegions: CondRegion[];
 }
 
 /**
@@ -53,6 +64,9 @@ export function preprocessSource(source: string): PreprocessedSource {
   // 条件编译区域扫描（栈式）
   const flagStack: string[] = [];
   const lineFlags: string[][] = [];
+  // 区域栈与已完成区域（供函数体内 #if 段定位）
+  const regionStack: { macro: string; from: number }[] = [];
+  const condRegions: CondRegion[] = [];
 
   let blankContinuation = false;
   for (let i = 0; i < cleanLines.length; i++) {
@@ -64,14 +78,19 @@ export function preprocessSource(source: string): PreprocessedSource {
 
     if (blankContinuation || trimmed.startsWith('#')) {
       // 条件指令要先更新栈（基于原始文本）
-      const mIf = trimmed.match(/^#\s*(?:if|ifdef|ifndef)\s+(.+)$/);
+      // 注意：宏名前缀顺序必须先长后短（ifdef/ifndef 在 if 前），且 \b 边界——
+      // TLF 源码大量 `#if(GP_TLF35584_X == ...)` 写法（if 后无空白），旧正则 \s+ 要求空白导致栈永不入栈
+      const mIf = trimmed.match(/^#\s*(?:ifdef|ifndef|if)\b\s*(.+)$/);
       const mEnd = trimmed.match(/^#\s*endif\b/);
       if (mIf) {
         const expr = mIf[1].replace(/\/\*.*?\*\//g, '').trim();
         const macro = expr.match(/[A-Za-z_][A-Za-z0-9_]*/)?.[0] ?? expr;
         flagStack.push(macro);
+        regionStack.push({ macro, from: i + 1 });
       } else if (mEnd) {
         flagStack.pop();
+        const open = regionStack.pop();
+        if (open) condRegions.push({ macro: open.macro, from: open.from, to: i });
       }
       // #else/#elif 不改变栈深
       blankContinuation = /\\\s*$/.test(line);
@@ -94,6 +113,7 @@ export function preprocessSource(source: string): PreprocessedSource {
     clean,
     originalLines,
     condFlagsAt: (line: number) => lineFlags[line] ?? [],
+    condRegions,
   };
 }
 

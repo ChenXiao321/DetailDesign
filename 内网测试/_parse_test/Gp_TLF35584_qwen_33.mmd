@@ -1,0 +1,38 @@
+flowchart TD
+    Start(["开始"])
+    Init{{"初始化 Data_pst 指向<br>Gp_TLF35584_rtData_ltst<br>初始化 TempValue_u8 为 0U"}}
+    CheckFlag{"Data_pst->WdiRestoreFlag_b<br>== TRUE ?"}
+    SetFlag["Data_pst->WdiRestoreFlag_b<br>= FALSE"]
+    CallWdi[["Gp_TLF35584_CalloutWdiServ<br>ice(STD_HIGH)"]]
+    UpdateReg[["Gp_TLF35584_UpdateStatusRe<br>g()"]]
+    ReadDevStat[/"读取<br>Gp_TLF35584_idxStatusRegVa<br>lue_lau8[GP_TLF35584_REG_D<br>EVSTAT_INDEX] 到<br>TempValue_u8"/]
+    CalcDevState["Data_pst->StatusData_tst.D<br>eviceState_u8 =<br>TempValue_u8 &<br>GP_TLF35584_DEVICESTATE_MA<br>SK"]
+    ReadWwdStat[/"读取<br>Gp_TLF35584_idxStatusRegVa<br>lue_lau8[GP_TLF35584_REG_W<br>WDSTAT_INDEX] 到<br>TempValue_u8"/]
+    CalcWwdErr["Data_pst->StatusData_tst.W<br>wdErrCnt_u8 =<br>TempValue_u8&<br>GP_TLF35584_WWDERRCNT_MASK"]
+    ReadFwdStat0[/"读取<br>Gp_TLF35584_idxStatusRegVa<br>lue_lau8[GP_TLF35584_REG_F<br>WDSTAT0_INDEX] 到<br>TempValue_u8"/]
+    CalcLastSeed["Data_pst->StatusData_tst.L<br>astSeed_u8 = TempValue_u8<br>& GP_TLF35584_FWDQUESTMASK"]
+    CalcRspCnt["Data_pst->StatusData_tst.R<br>spCnt_u8 = (TempValue_u8<br>&GP_TLF35584_FWDRSPMASK)<br>>><br>GP_TLF35584_REGISTER_OFFSE<br>T_4"]
+    ReadFwdStat1[/"读取<br>Gp_TLF35584_idxStatusRegVa<br>lue_lau8[GP_TLF35584_REG_F<br>WDSTAT1_INDEX] 到<br>TempValue_u8"/]
+    CalcFwdErr["Data_pst->StatusData_tst.F<br>wdErrCnt_u8 =<br>TempValue_u8&<br>GP_TLF35584_FWDERRCNT_MASK"]
+    ReadWwdScmd[/"读取<br>Gp_TLF35584_idxStatusRegVa<br>lue_lau8[GP_TLF35584_REG_W<br>WDSCMD_INDEX] 到<br>TempValue_u8"/]
+    CalcLastWwdScmd["Data_pst->StatusData_tst.L<br>astWwdScmd_u8 =<br>TempValue_u8 >><br>GP_TLF35584_REGISTER_OFFSE<br>T_7"]
+    End(["结束"])
+
+    Start --> Init
+    Init --> CheckFlag
+    CheckFlag -- 是 --> SetFlag
+    SetFlag --> CallWdi
+    CallWdi --> UpdateReg
+    CheckFlag -- 否 --> UpdateReg
+    UpdateReg --> ReadDevStat
+    ReadDevStat --> CalcDevState
+    CalcDevState --> ReadWwdStat
+    ReadWwdStat --> CalcWwdErr
+    CalcWwdErr --> ReadFwdStat0
+    ReadFwdStat0 --> CalcLastSeed
+    CalcLastSeed --> CalcRspCnt
+    CalcRspCnt --> ReadFwdStat1
+    ReadFwdStat1 --> CalcFwdErr
+    CalcFwdErr --> ReadWwdScmd
+    ReadWwdScmd --> CalcLastWwdScmd
+    CalcLastWwdScmd --> End

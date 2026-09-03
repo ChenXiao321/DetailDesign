@@ -1,0 +1,5 @@
+flowchart TD
+    START(["开始"]) --> INIT{{"初始化 RegValue_u16"}}
+    INIT --> CALC["计算 RegValue_u16 =<br>((RegData_u8 & 0x3F) << 8)"]
+    CALC --> RET[/"返回 RegValue_u16"/]
+    RET --> END(["结束"])

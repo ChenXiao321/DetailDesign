@@ -2,7 +2,7 @@
   "llm": {
     "baseUrl": "http://<qwen-server>:8000",
     "apiKey": "local",
-    "model": "qwen3.6-35b-a3b",
+    "model": "qwen3.8-27b",
     "timeoutMs": 180000
   },
   "polarion": {

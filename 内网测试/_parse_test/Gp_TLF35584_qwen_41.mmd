@@ -1,0 +1,31 @@
+flowchart TD
+    START(["开始"])
+    INIT{{"初始化 Data_pst 指向<br>Gp_TLF35584_rtData_ltst<br>初始化 RwdCfgVal_u8 为 0U<br>初始化 RwdCfgVal1_u8 为 0U"}}
+    READ_CMD[/"调用 Gp_TLF35584_ReadCmd<br>读取<br>GP_TLF35584_REG_RWDCFG0<br>存入 TxBuf_au16[0U]"/]
+    SET_CNT["设置 CntTx_u16 为 1U"]
+    TRANSMIT_1[["调用<br>Gp_TLF35584_TransmitData<br>发送 1 字节数据"]]
+    GET_VAL[/"从 RxBuf_au16[0U]<br>读取当前WDG 配置状态<br>存入 RwdCfgVal_u8"/]
+    MASK_CYC["RwdCfgVal_u8 与 0xFEU<br>进行按位与操作<br>清除 WDCYC 位 (0.1ms)"]
+    MASK_DIS["RwdCfgVal1_u8 与 0xF3U<br>进行按位与操作<br>禁用 FWD/WWD"]
+    UNLOCK[["调用<br>Gp_TLF35584_UnlockSeq解锁<br>序列"]]
+    WRITE_CMD_1[/"调用 Gp_TLF35584_WriteCmd<br>写入<br>GP_TLF35584_REG_WDCFG0<br>值为 RwdCfgVal1_u8<br>存入 TxBuf_au16[0U]"/]
+    WRITE_CMD_2[/"调用 Gp_TLF35584_WriteCmd<br>写入<br>GP_TLF35584_REG_WDCFG0<br>值为 RwdCfgVal_u8<br>存入 TxBuf_au16[1U]"/]
+    SET_CNT_2["设置 CntTx_u16 为 2U"]
+    TRANSMIT_2[["调用<br>Gp_TLF35584_TransmitData<br>发送 2 字节数据"]]
+    LOCK[["调用 Gp_TLF35584_LockSeq<br>锁定序列"]]
+    END(["结束"])
+
+    START --> INIT
+    INIT --> READ_CMD
+    READ_CMD --> SET_CNT
+    SET_CNT --> TRANSMIT_1
+    TRANSMIT_1 --> GET_VAL
+    GET_VAL --> MASK_CYC
+    MASK_CYC --> MASK_DIS
+    MASK_DIS --> UNLOCK
+    UNLOCK --> WRITE_CMD_1
+    WRITE_CMD_1 --> WRITE_CMD_2
+    WRITE_CMD_2 --> SET_CNT_2
+    SET_CNT_2 --> TRANSMIT_2
+    TRANSMIT_2 --> LOCK
+    LOCK --> END

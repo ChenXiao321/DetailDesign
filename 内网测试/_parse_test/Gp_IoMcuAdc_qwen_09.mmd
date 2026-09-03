@@ -1,0 +1,43 @@
+flowchart TD
+    START(["开始"])
+    INIT["初始化 Ret_t 为 E_NOT_OK<br>初始化 Cfg_cptst 指向<br>Gp_IoMcuAdc_cfgCont_vcatst<br>[0U]<br>初始化 Rt_cptst 指向<br>Gp_IoMcuAdc_rtCont_lcatst[<br>0U]<br>初始化 SmCfg_cptst 指向<br>Gp_IoMcuAdc_cfgAdcSigMappi<br>ng_vcatst[0U]<br>初始化 CoreId_u32 为 0U<br>初始化 ChlIdx_u8 为 0U<br>初始化 ErrFlag1_b 为 FALSE<br>初始化 ErrFlag2_b 为 FALSE"]
+    CALL_CORE[["Gp_IoMcuAdc_CalloutGetCore<br>Id 获取核心ID"]]
+    ASSIGN_CORE["CoreId_u32 赋值<br>Gp_IoMcuAdc_CalloutGetCore<br>Id 返回值"]
+    ASSIGN_CFG["Cfg_cptst 赋值<br>Gp_IoMcuAdc_cfgCont_vcatst<br>[CoreId_u32] 地址"]
+    ASSIGN_RT["Rt_cptst 赋值<br>Gp_IoMcuAdc_rtCont_lcatst[<br>CoreId_u32] 地址"]
+    CALL_INIT[["Gp_IoMcuAdc_CheckInitStu<br>检查初始化状态"]]
+    ASSIGN_ERR1["ErrFlag1_b 赋值<br>Gp_IoMcuAdc_CheckInitStu<br>返回值"]
+    CALL_ARG[["Gp_IoMcuAdc_CheckArgIn<br>检查输入参数"]]
+    ASSIGN_ERR2["ErrFlag2_b 赋值<br>Gp_IoMcuAdc_CheckArgIn<br>返回值"]
+    OR_ERR["ErrFlag1_b 执行或运算<br>ErrFlag1_b | ErrFlag2_b"]
+    CHECK_ERR{"ErrFlag1_b == FALSE ?"}
+    READ_CHL["ChlIdx_u8 赋值<br>SmCfg_cptst[Id_u16].Mappin<br>gChlIdx_u8"]
+    CHECK_DIRECT{"Cfg_cptst->AdcSigLocalCfg_<br>cptst[ChlIdx_u8].DirectlyR<br>ead_b == TRUE ?"}
+    CALL_RAW[["Gp_IoMcuAdc_GetAdcRaw<br>获取ADC原始值"]]
+    WRITE_RAW1["*AdcRaw_pu16 赋值<br>Rt_cptst->AdcSig_ptst[ChlI<br>dx_u8].AdcRaw_u16"]
+    WRITE_RAW2["*AdcRaw_pu16 赋值<br>Rt_cptst->AdcSig_ptst[ChlI<br>dx_u8].AdcRaw_u16"]
+    SET_OK["Ret_t 赋值 E_OK"]
+    SET_NOT_OK["Ret_t 赋值 E_NOT_OK"]
+    END(["结束"])
+
+    START --> INIT
+    INIT --> CALL_CORE
+    CALL_CORE --> ASSIGN_CORE
+    ASSIGN_CORE --> ASSIGN_CFG
+    ASSIGN_CFG --> ASSIGN_RT
+    ASSIGN_RT --> CALL_INIT
+    CALL_INIT --> ASSIGN_ERR1
+    ASSIGN_ERR1 --> CALL_ARG
+    CALL_ARG --> ASSIGN_ERR2
+    ASSIGN_ERR2 --> OR_ERR
+    OR_ERR --> CHECK_ERR
+    CHECK_ERR -- 是 --> READ_CHL
+    READ_CHL --> CHECK_DIRECT
+    CHECK_DIRECT -- 是 --> CALL_RAW
+    CALL_RAW --> WRITE_RAW1
+    WRITE_RAW1 --> SET_OK
+    CHECK_DIRECT -- 否 --> WRITE_RAW2
+    WRITE_RAW2 --> SET_OK
+    CHECK_ERR -- 否 --> SET_NOT_OK
+    SET_OK --> END
+    SET_NOT_OK --> END

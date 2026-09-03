@@ -1,0 +1,18 @@
+flowchart TD
+    Start(["开始"]) --> Init["初始化 Data_pst 指向<br>Gp_TLF35584_rtData_ltst<br>初始化 Ret_t 为 E_NOT_OK"]
+    Init --> CallCmd[["Gp_TLF35584_AllCompartorSa<br>fetyCmd"]]
+    CallCmd --> CallCheck[["Gp_TLF35584_AllSafetyBistC<br>heck"]]
+    CallCheck --> CheckRet{"Ret_t == E_OK ?"}
+    CheckRet -- 是 --> ClearFlag[["Gp_TLF35584_ClearFlagReg"]]
+    CheckRet -- 否 --> SetErr["Data_pst->ErrData_tst.Bist<br>ErrPath_u32 |=<br>GP_TLF35584_BIST_ERROR_8"]
+    SetErr --> ReadReg1[/"读取 GP_TLF35584_REG_MONSF1 存入 TxBuf_au16[0U]/]
+    ReadReg1 --> ReadReg2[/"读取 GP_TLF35584_REG_MONSF2 存入 TxBuf_au16[1U]/]
+    ReadReg2 --> ReadReg3[/"读取 GP_TLF35584_REG_MONSF3 存入 TxBuf_au16[2U]/]
+    ReadReg3 --> ReadReg4[/"读取 GP_TLF35584_REG_ABIST_CTRL0 存入 TxBuf_au16[3U]/]
+    ReadReg4 --> ReadReg5[/"读取 GP_TLF35584_REG_VMONSTAT 存入 TxBuf_au16[4U]/]
+    ReadReg5 --> ReadReg6[/"读取 GP_TLF35584_REG_DEVSTAT 存入 TxBuf_au16[5U]/]
+    ReadReg6 --> SetCnt["Data_pst->SpiData_tst.CntT<br>x_u16 = 6U"]
+    SetCnt --> Transmit[["Gp_TLF35584_TransmitData"]]
+    Transmit --> SaveRxBuf["保存 RxBuf_au16[0U] 至<br>Gp_TLF35584_BistErrRestore<br>_lau8[5U]<br>保存 RxBuf_au16[1U] 至<br>Gp_TLF35584_BistErrRestore<br>_lau8[6U]<br>保存 RxBuf_au16[2U] 至<br>Gp_TLF35584_BistErrRestore<br>_lau8[7U]<br>保存 RxBuf_au16[3U] 至<br>Gp_TLF35584_BistErrRestore<br>_lau8[8U]<br>保存 RxBuf_au16[4U] 至<br>Gp_TLF35584_BistErrRestore<br>_lau8[9U]<br>保存 RxBuf_au16[5U] 至<br>Gp_TLF35584_BistErrRestore<br>_lau8[10U]"]
+    ClearFlag --> End(["结束"])
+    SaveRxBuf --> End

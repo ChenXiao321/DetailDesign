@@ -1,0 +1,20 @@
+flowchart TD
+    subgraph SG1[" "]
+        SG1_NOTE["注：仅在<br>GP_IOMCUADC_DEV_ERROR_DETE<br>CT 生效时参与编译"]
+        SG1_NOTE ~~~ START
+        START(["开始"])
+        INIT["初始化 ErrFlag_b 为 FALSE<br>获取 Det_ptst 指针"]
+        CHECK{"Det_ptst->InitStu_t ==<br>GP_IOMCUADC_INITSTU_INITED<br>?"}
+        SET_FALSE["设置 ErrFlag_b 为 FALSE"]
+        SET_TRUE["设置 ErrFlag_b 为 TRUE<br>记录 IfId_t 和 ErrStu_t<br>为UNINITED"]
+        END(["结束"])
+        START --> INIT
+        INIT --> CHECK
+        CHECK -- 是 --> SET_FALSE
+        CHECK -- 否 --> SET_TRUE
+        SET_FALSE --> END
+        SET_TRUE --> END
+    end
+    style SG1 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+    classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700
+    class SG1_NOTE condNote

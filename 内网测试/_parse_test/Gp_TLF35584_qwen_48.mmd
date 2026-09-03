@@ -1,0 +1,55 @@
+flowchart TD
+    START(["开始"])
+    INIT{{"初始化 Data_pst 指向<br>Gp_TLF35584_rtData_ltst<br>初始化 Return_u8 为<br>E_NOT_OK"}}
+    CALL1[["Gp_TLF35584_DisableWdgFsp<br>禁用看门狗"]]
+    CALL2[["Gp_TLF35584_ClearFlagReg<br>清除标志寄存器"]]
+    CALL3[["Gp_TLF35584_SwitchToNormal<br>Mode 切换至正常模式"]]
+    CALL4[["Gp_TLF35584_CalloutStmSwDa<br>layNus 延时<br>GP_TLF35584_MODE_SWITCH_DE<br>LAY"]]
+    CALL5[["Gp_TLF35584_GetState<br>获取设备状态"]]
+    CHECK1{"Data_pst->StatusData_tst.D<br>eviceState_u8 ==<br>GP_TLF35584_NORMAL_STATE"}
+    
+    CHECK1 -- 否 --> ERR9[/"设置 BistErrPath_u32 置位<br>GP_TLF35584_BIST_ERROR_9"/]
+    ERR9 --> END(["结束"])
+    
+    CHECK1 -- 是 --> CALL6[["Gp_TLF35584_UnlockSeq<br>解锁序列"]]
+    CALL7[["Gp_TLF35584_WriteCmd<br>写入命令<br>GP_TLF35584_REG_WDCFG0<br>0x94U"]]
+    ASSIGN1["Data_pst->SpiData_tst.TxBu<br>f_au16[0U] = 返回值<br>Data_pst->SpiData_tst.CntT<br>x_u16 = 1U"]
+    CALL8[["Gp_TLF35584_TransmitData<br>发送数据 CntTx_u16"]]
+    CALL9[["Gp_TLF35584_LockSeq<br>锁定序列"]]
+    CALL10[["Gp_TLF35584_SetPorstMode<br>设置复位模式<br>GP_TLF35584_FWD_RESET_ACTI<br>ON"]]
+    CALL11[["Gp_TLF35584_GetResetType<br>获取复位类型<br>GP_TLF35584_GETRST_RUN"]]
+    CALL12[["Gp_TLF35584_CalloutStmSwDa<br>layNus 延时<br>GP_TLF35584_MODE_SWITCH_DE<br>LAY"]]
+    CALL13[["Gp_TLF35584_GetState<br>获取设备状态"]]
+    CHECK2{"(Data_pst->StatusData_tst.<br>DeviceState_u8 ==<br>GP_TLF35584_INIT_STATE) &&<br>(Data_pst->StatusData_tst.<br>ResetType_u8 &<br>GP_TLF35584_RESET_FWDF)<br>==GP_TLF35584_RESET_FWDF"}
+    
+    CHECK2 -- 否 --> ERR10[/"设置 BistErrPath_u32 置位<br>GP_TLF35584_BIST_ERROR_10"/]
+    ERR10 --> END
+    
+    CHECK2 -- 是 --> CALL14[["Gp_TLF35584_CalloutSafeSta<br>teConfirm 确认安全状态"]]
+    ASSIGN2["Return_u8 = 返回值"]
+    CHECK3{"Return_u8 == E_OK"}
+    
+    CHECK3 -- 是 --> CALL15[["Gp_TLF35584_ClearFlagReg<br>清除标志寄存器"]]
+    CALL15 --> END
+    
+    CHECK3 -- 否 --> ERR11[/"设置 BistErrPath_u32 置位<br>GP_TLF35584_BIST_ERROR_11"/]
+    ERR11 --> END
+
+    START --> INIT
+    INIT --> CALL1
+    CALL1 --> CALL2
+    CALL2 --> CALL3
+    CALL3 --> CALL4
+    CALL4 --> CALL5
+    CALL5 --> CHECK1
+    CALL6 --> CALL7
+    CALL7 --> ASSIGN1
+    ASSIGN1 --> CALL8
+    CALL8 --> CALL9
+    CALL9 --> CALL10
+    CALL10 --> CALL11
+    CALL11 --> CALL12
+    CALL12 --> CALL13
+    CALL13 --> CHECK2
+    CALL14 --> ASSIGN2
+    ASSIGN2 --> CHECK3

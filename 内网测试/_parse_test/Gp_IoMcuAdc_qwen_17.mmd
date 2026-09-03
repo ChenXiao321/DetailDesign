@@ -1,0 +1,11 @@
+sequenceDiagram
+    participant OS as OS
+    participant Gp_IoMcuAdc as Gp_IoMcuAdc
+    participant Callout as Callout
+
+    OS->>Gp_IoMcuAdc: Gp_IoMcuAdc_MainFunction
+    Gp_IoMcuAdc->>Callout: Gp_IoMcuAdc_CalloutGetCoreId
+    Callout-->>Gp_IoMcuAdc: CoreId
+    Gp_IoMcuAdc->>Gp_IoMcuAdc: Gp_IoMcuAdc_CheckInitStu
+    Gp_IoMcuAdc->>Gp_IoMcuAdc: Gp_IoMcuAdc_GetAdcRaw
+    Gp_IoMcuAdc->>Gp_IoMcuAdc: Gp_IoMcuAdc_GetDiag

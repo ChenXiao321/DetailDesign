@@ -54,15 +54,17 @@ function renderDraft(draft: WorkItemDraft, cfg: PolarionConfig, staticVars: Read
     case 'callout':
       parts.push(calloutCard(e.ext, e.secNo));
       break;
-    case 'external-table':
+    case 'external-table': {
+      const extDesc = e.ext.generated?.detailedDescription ?? e.ext.comment?.description;
       parts.push(`<table>
 <tr><th>接口函数</th><td><code>${esc(e.ext.name)}</code></td></tr>
 <tr><th>语法</th><td><code>${esc(e.ext.signature || e.ext.name)}</code></td></tr>
 <tr><th>来源分组</th><td>${esc(e.ext.group)}</td></tr>
 <tr><th>模块内调用者</th><td>${e.ext.calledFrom.map(esc).join(', ')}</td></tr>
-${e.ext.comment?.description ? `<tr><th>说明</th><td>${esc(e.ext.comment.description)}</td></tr>` : ''}
+${extDesc ? `<tr><th>说明</th><td>${esc(extDesc)}</td></tr>` : ''}
 </table>`);
       break;
+    }
     case 'diagram': {
       const holder = e.holder as { description?: string; states?: { name: string; description: string }[]; transitions?: { from: string; to: string; trigger: string; description: string }[] };
       if (holder.description) parts.push(`<p>${esc(holder.description)}</p>`);

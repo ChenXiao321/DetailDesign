@@ -1,0 +1,22 @@
+flowchart TD
+    START(["开始"])
+    INIT{{"初始化 Data_pst 指向<br>Gp_TLF35584_rtData_ltst"}}
+    READ_CMD[/"读取<br>GP_TLF35584_REG_DEVCFG1<br>寄存器值至 TxBuf_au16[0U]"/]
+    WRITE_CMD[/"写入<br>GP_TLF35584_REG_DEVCFG1_VA<br>LUE 至 TxBuf_au16[1U]"/]
+    SET_CNT["设置 CntTx_u16 为 2U"]
+    TRANSMIT[["Gp_TLF35584_TransmitData<br>发送数据"]]
+    CHECK_COLD{"(RxBuf_au16[0U] &<br>GP_TLF35584_COLD_ON_MASK)<br>==<br>GP_TLF35584_COLD_ON_FLAG ?"}
+    SET_POR["设置 SystemPor_bk_u8 为<br>GP_TLF35584_SIGNAL_VALID"]
+    GET_RST[["Gp_TLF35584_GetResetType<br>获取复位类型"]]
+    END(["结束"])
+
+    START --> INIT
+    INIT --> READ_CMD
+    READ_CMD --> WRITE_CMD
+    WRITE_CMD --> SET_CNT
+    SET_CNT --> TRANSMIT
+    TRANSMIT --> CHECK_COLD
+    CHECK_COLD -- 是 --> SET_POR
+    CHECK_COLD -- 否 --> GET_RST
+    SET_POR --> END
+    GET_RST --> END

@@ -1,0 +1,15 @@
+flowchart TD
+    START(["开始"]) --> INIT["初始化 Validity_b 为 FALSE"]
+    INIT --> MASK1["AdcRes_u32 与<br>GP_IOMCUADC_ADCRAW_NEW_DAT<br>A_FLAG_POSI_AURIX2G_TRAVEO<br>2G 进行按位与操作"]
+    MASK1 --> CHECK1{"AdcRes_u32 是否等于<br>GP_IOMCUADC_ADCRAW_NEW_DAT<br>A_FLAG_POSI_AURIX2G_TRAVEO<br>2G"}
+    CHECK1 -- 是 --> SET_TRUE1["设置 Validity_b 为 TRUE"]
+    CHECK1 -- 否 --> SET_FALSE1["设置 Validity_b 为 FALSE"]
+    SET_TRUE1 --> MASK2["AdcRes_u32 与<br>GP_IOMCUADC_ADCRAW_NEW_DAT<br>A_FLAG_POSI_STELLARPX<br>进行按位与操作"]
+    SET_FALSE1 --> MASK2
+    MASK2 --> CHECK2{"AdcRes_u32 是否等于<br>GP_IOMCUADC_ADCRAW_NEW_DAT<br>A_FLAG_POSI_STELLARPX"}
+    CHECK2 -- 是 --> SET_TRUE2["设置 Validity_b 为 TRUE"]
+    CHECK2 -- 否 --> SET_FALSE2["设置 Validity_b 为 FALSE"]
+    SET_TRUE2 --> FORCE_TRUE["强制设置 Validity_b 为<br>TRUE"]
+    SET_FALSE2 --> FORCE_TRUE
+    FORCE_TRUE --> RETURN["返回 Validity_b"]
+    RETURN --> END(["结束"])

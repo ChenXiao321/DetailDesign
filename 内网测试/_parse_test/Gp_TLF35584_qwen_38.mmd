@@ -1,0 +1,21 @@
+flowchart TD
+    START(["开始"]) --> INIT{{"初始化 Data_pst 指向<br>Gp_TLF35584_rtData_ltst<br>初始化 Wakeup_u8 为 0U"}}
+    INIT --> CALL[["Gp_TLF35584_UpdateFlagReg<br>更新标志寄存器"]]
+    CALL --> READ[/"读取<br>Gp_TLF35584_idxFlagRegValu<br>e_lau8 中 WKSF 索引值<br>与<br>GP_TLF35584_WAKE_UP_MASK<br>进行按位与运算<br>结果存入 Wakeup_u8"/]
+    READ --> J1{"Wakeup_u8 &<br>GP_TLF35584_WAK_MASK ==<br>GP_TLF35584_WAK_MASK"}
+    J1 -- 是 --> SET_WAK["设置<br>Data_pst->StatusData_tst.W<br>akeupSource_bk_u8 为<br>GP_TLF35584_WAK_FLAG"]
+    J1 -- 否 --> J2{"Wakeup_u8 &<br>GP_TLF35584_ENA_MASK ==<br>GP_TLF35584_ENA_MASK"}
+    J2 -- 是 --> SET_ENA["设置<br>Data_pst->StatusData_tst.W<br>akeupSource_bk_u8 为<br>GP_TLF35584_ENA_FLAG"]
+    J2 -- 否 --> J3{"Wakeup_u8 &<br>GP_TLF35584_QUC_MASK ==<br>GP_TLF35584_QUC_MASK"}
+    J3 -- 是 --> SET_QUC["设置<br>Data_pst->StatusData_tst.W<br>akeupSource_bk_u8 为<br>GP_TLF35584_QUC_FLAG"]
+    J3 -- 否 --> J4{"Wakeup_u8 &<br>GP_TLF35584_TIMER_MASK ==<br>GP_TLF35584_TIMER_MASK"}
+    J4 -- 是 --> SET_TIMER["设置<br>Data_pst->StatusData_tst.W<br>akeupSource_bk_u8 为<br>GP_TLF35584_TIMER_FLAG"]
+    J4 -- 否 --> J5{"Wakeup_u8 &<br>GP_TLF35584_SPI_MASK ==<br>GP_TLF35584_SPI_MASK"}
+    J5 -- 是 --> SET_SPI["设置<br>Data_pst->StatusData_tst.W<br>akeupSource_bk_u8 为<br>GP_TLF35584_SPI_FLAG"]
+    J5 -- 否 --> SET_INVALID["设置<br>Data_pst->StatusData_tst.W<br>akeupSource_bk_u8 为<br>GP_TLF35584_SIGNAL_INVALID"]
+    SET_WAK --> END(["结束"])
+    SET_ENA --> END
+    SET_QUC --> END
+    SET_TIMER --> END
+    SET_SPI --> END
+    SET_INVALID --> END

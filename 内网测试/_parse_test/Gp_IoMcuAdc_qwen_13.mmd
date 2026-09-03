@@ -1,0 +1,23 @@
+flowchart TD
+    START(["开始"]) --> INIT{{"初始化 FuncCompl_b 为 TRUE<br>AdcRaw_u16 为 0U<br>AdcRes_u32 为 0U<br>Validity_b 为 FALSE"}}
+    INIT --> CHECK_CALLOUT{"Cfg_cptst->AdcSigLocalCfg_<br>cptst[ChlIdx_u8].AdcRawCal<br>loutFunc_b == TRUE ?"}
+    
+    CHECK_CALLOUT -- 是 --> CALL_CALLOUT[["Gp_IoMcuAdc_CalloutGetAdcR<br>aw<br>获取 ADC 原始值"]]
+    CALL_CALLOUT --> CHECK_FUNC_COMPL{"FuncCompl_b == FALSE ?"}
+    CHECK_FUNC_COMPL -- 是 --> SET_ERR[/"设置错误标志<br>Rt_cptst->AdcSigLocalImpl_<br>ptst[ChlIdx_u8].AdcSigErr_<br>t |=<br>GP_IOMCUADC_ADCSIGERRSTU_C<br>ALLOUT_GET_ADCRAW_FAILED"/]
+    CHECK_FUNC_COMPL -- 否 --> SAVE_RAW[/"保存 ADC 原始值<br>Rt_cptst->AdcSig_ptst[ChlI<br>dx_u8].AdcRaw_u16 =<br>AdcRaw_u16"/]
+    SET_ERR --> END(["结束"])
+    SAVE_RAW --> END
+    
+    CHECK_CALLOUT -- 否 --> READ_REG[/"读取 ADC 结果寄存器<br>AdcRes_u32 =<br>*Cfg_cptst->AdcSigLocalCfg<br>_cptst[ChlIdx_u8].ResRegOr<br>Buf_pu32"/]
+    READ_REG --> CHECK_VALIDITY{"Cfg_cptst->AdcSigLocalCfg_<br>cptst[ChlIdx_u8].AdcRawChe<br>ckValidity_b == TRUE ?"}
+    
+    CHECK_VALIDITY -- 是 --> CHECK_VALID_FUNC[["Gp_IoMcuAdc_CheckAdcRawVal<br>idity<br>检查 ADC 原始值有效性"]]
+    CHECK_VALID_FUNC --> CHECK_VALID_RESULT{"Validity_b == TRUE ?"}
+    CHECK_VALID_RESULT -- 是 --> WRITE_VALID[/"写入有效 ADC 原始值<br>Rt_cptst->AdcSig_ptst[ChlI<br>dx_u8].AdcRaw_u16 =<br>(uint16)(AdcRes_u32 &<br>0x0000FFFFU)"/]
+    CHECK_VALID_RESULT -- 否 --> WRITE_INVALID[/"写入无效 ADC 原始值<br>Rt_cptst->AdcSig_ptst[ChlI<br>dx_u8].AdcRaw_u16 =<br>GP_IOMCUADC_ADCRAW_INVALID"/]
+    WRITE_VALID --> END
+    WRITE_INVALID --> END
+    
+    CHECK_VALIDITY -- 否 --> WRITE_DIRECT[/"直接写入 ADC 原始值<br>Rt_cptst->AdcSig_ptst[ChlI<br>dx_u8].AdcRaw_u16 =<br>(uint16)(AdcRes_u32 &<br>0x0000FFFFU)"/]
+    WRITE_DIRECT --> END

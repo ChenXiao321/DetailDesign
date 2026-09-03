@@ -1,0 +1,47 @@
+﻿详细设计生成 Agent —— 离线迁移包（Qwen 实测用）
+================================================
+
+包内已包含全部 npm 依赖（node_modules）和已构建产物（packages/*/dist），
+目标机器【不需要】 npm install、不需要上外网。
+
+■ Node.js 运行时（已随包附带 node-v22.20.0-win-x64.zip）
+  1. 解压 node-v22.20.0-win-x64.zip 到迁移包同一目录
+  2. 不能配全局环境变量时，两种用法二选一：
+     a) 双击【启动命令行.bat】——打开一个已临时配好 PATH 的命令行窗口，
+        窗口内直接用 node 命令即可（关掉窗口不影响系统）
+     b) 或用 node.exe 完整路径调用，例如：
+        <解压目录>\node-v22.20.0-win-x64\node.exe packages\cli\dist\index.js ping
+  3. 自检：node -v  应显示 v22.20.0
+  （注意：不要用 Node v25.2.1，其 V8 正则引擎有 bug）
+
+■ 部署步骤
+  1. 把 lld-agent-迁移包.zip 解压到目标机器任意目录（路径含中文/空格均可）
+  2. 编辑 lld.config.json：把 apiKey 的 REPLACE_WITH_REAL_KEY 改成真实 key
+     （服务器开了 401 认证，key 向部署方索取；其余字段已配好：
+      baseUrl http://10.0.75.130:4000，model qwen3.8-27b）
+  3. 自检 CLI：
+       node packages/cli/dist/index.js --help
+  4. LLM 连通性自检：
+       node packages/cli/dist/index.js ping
+
+■ 实测步骤（详细说明见 README.md「迁移到目标环境运行」一节）
+  # 静态分析（离线）
+  node packages/cli/dist/index.js analyze 测试模块/Gp_EcuStpStdn --out 测试产出/Gp_EcuStpStdn_qwen
+
+  # 先单点试一个函数，确认 Qwen 输出格式兼容
+  node packages/cli/dist/index.js gen 测试模块/Gp_EcuStpStdn --out 测试产出/Gp_EcuStpStdn_qwen --only Gp_EcuStpShdn_Startup
+
+  # 全量跑（约 55 次 LLM 调用；中断后加 --resume 续跑）
+  node packages/cli/dist/index.js gen 测试模块/Gp_EcuStpStdn --out 测试产出/Gp_EcuStpStdn_qwen
+
+  产物 lld_design.json 拷回开发机后即可离线出报告：
+  node packages/cli/dist/index.js report 测试模块/Gp_EcuStpStdn --out 测试产出/Gp_EcuStpStdn_qwen
+
+■ 常见问题
+  - ping 报 401：apiKey 没改或不对。用 curl 独立验证 key：
+      curl http://10.0.75.130:4000/v1/models -H "Authorization: Bearer 真实key"
+  - ping 不通（超时）：先 curl http://10.0.75.130:4000/v1/models 确认网络可达
+  - 模型 id 以 /v1/models 返回为准，若与 qwen3.8-27b 不一致，
+    改 lld.config.json 的 model 字段与返回完全一致
+  - Cannot find module '@lld/core'：node_modules/@lld 下的目录失效，
+    正常情况下迁移包内是真实目录副本不会出此问题；若出现，检查该目录内容是否完整

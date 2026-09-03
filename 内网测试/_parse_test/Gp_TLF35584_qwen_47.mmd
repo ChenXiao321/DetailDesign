@@ -1,0 +1,14 @@
+flowchart TD
+    START(["开始"]) --> INIT["初始化指针 Data_pst 指向<br>Gp_TLF35584_rtData_ltst"]
+    INIT --> ASSIGN1["设置<br>StatusData_tst.WdMode_u8<br>为 GP_TLF35584_WD_MODE"]
+    ASSIGN1 --> ASSIGN2["设置<br>StatusData_tst.StateVar_u8<br>为<br>GP_TLF35584_INITIAL_TASK"]
+    ASSIGN2 --> ASSIGN3["设置 ReInitRetry_u8 为 0U"]
+    ASSIGN3 --> ASSIGN4["设置<br>StatusData_tst.ResetType_u<br>8 为 0U"]
+    ASSIGN4 --> ASSIGN5["设置<br>StatusData_tst.WakeupSourc<br>e_u8 为 0U"]
+    ASSIGN5 --> ASSIGN6["设置<br>StatusData_tst.ResetType_b<br>k_u8 为 0U"]
+    ASSIGN6 --> ASSIGN7["设置<br>StatusData_tst.SystemPor_b<br>k_u8 为 0U"]
+    ASSIGN7 --> ASSIGN8["设置<br>StatusData_tst.WakeupSourc<br>e_bk_u8 为 0U"]
+    ASSIGN8 --> ASSIGN9["设置<br>StatusData_tst.BistFunctCa<br>lled_u8 为 FALSE"]
+    ASSIGN9 --> ASSIGN10["设置 WdiRestoreFlag_b 为<br>FALSE"]
+    ASSIGN10 --> CALL[["Gp_TLF35584_CalloutWdiServ<br>ice STD_HIGH"]]
+    CALL --> END(["结束"])

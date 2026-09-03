@@ -2,7 +2,7 @@ import type {
   ModuleModel, ConfigMacro, ConfigUsage, ExternalInterface,
 } from '../model/types.js';
 import { esc, escRaw, functionCard, calloutCard } from './cards.js';
-import { wrapFlowchartLabels, pinEndNodeToBottom } from './mermaidPre.js';
+import { wrapFlowchartLabels, pinEndNodeToBottom, lintMermaidSource } from './mermaidPre.js';
 import { mermaidRenderScript } from './renderScript.js';
 
 /** 文件用途说明（4.1 文件说明表）：按角色 + 分析数据生成中文描述 */
@@ -106,9 +106,13 @@ export function generateHtmlReport(model: ModuleModel, opts?: { mermaidJs?: stri
   const fnCount = model.providedFunctions.length + model.internalFunctions.length;
   const generatedCount = [...model.providedFunctions, ...model.internalFunctions].filter(f => f.generated).length;
 
-  const diagramBlock = (src: string) => opts?.mermaidJs
-    ? `<div class="mermaid">${escRaw(wrapFlowchartLabels(pinEndNodeToBottom(src)))}</div>`
-    : `<pre class="plantuml">${escRaw(src)}</pre>`;
+  const diagramBlock = (src: string) => {
+    // 生成期静态检查：定界符错误的图源会在浏览器端 mermaid 词法报错整图失败，提前点名
+    for (const p of lintMermaidSource(src)) console.warn(`⚠ 图源检查: ${p}\n  图源开头: ${src.split('\n').slice(0, 2).join(' | ').slice(0, 100)}`);
+    return opts?.mermaidJs
+      ? `<div class="mermaid">${escRaw(wrapFlowchartLabels(pinEndNodeToBottom(src)))}</div>`
+      : `<pre class="plantuml">${escRaw(src)}</pre>`;
+  };
 
   // ---- 外部接口按组归类（5.2.1.1 与 5.2.2 共用） ----
   const groups = new Map<string, typeof model.calledExternalFunctions>();
@@ -126,14 +130,25 @@ export function generateHtmlReport(model: ModuleModel, opts?: { mermaidJs?: stri
     ...model.types.flatMap(t => [t.underlyingType ?? '', ...(t.elements ?? []).map(e => e.type)]),
   ].join(' ');
   const usedStdTypes = STD_TYPES.filter(t => new RegExp(`\\b${t}\\b`).test(scanText));
-  // 外部类型探测：按 AUTOSAR 命名约定取 XxxType 形标识符，排除本模块已定义类型与 Std_Types，
-  // 按模块前缀归组（Dem_EventIdType → Dem）；无下划线前缀的（如 CounterType）归入「其他」
+  // 外部类型探测：按 AUTOSAR 命名约定取 XxxType 形标识符，排除本模块已定义类型、Std_Types 与已知函数名
+  //（TLF 有函数 Gp_TLF35584_GetResetType 以 Type 结尾会被误当类型）。
+  // 模块名归组：标准 AUTOSAR 前缀取首段（Dem_EventIdType → Dem）；项目根前缀（module 首段，如 Gp）下的
+  // 名字取「去 Type 后缀后的前两段」（Gp_TimeCalType → Gp_TimeCal）——首段 Gp 是产品族前缀而非模块名；
+  // 无下划线前缀的（如 CounterType）归入「其他」
   const localTypeNames = new Set(model.types.map(t => t.name));
+  const knownFnNames = new Set(
+    [...model.providedFunctions, ...model.internalFunctions, ...model.calledExternalFunctions]
+      .map(f => f.name),
+  );
+  const rootPrefix = model.module.split('_')[0];
   const extTypeGroups = new Map<string, Set<string>>();
   for (const tok of scanText.match(/[A-Za-z_]\w*/g) ?? []) {
     if (!/Type$/.test(tok)) continue;
-    if (localTypeNames.has(tok) || STD_TYPES.includes(tok)) continue;
-    const mod = tok.includes('_') ? tok.split('_')[0] : '其他';
+    if (localTypeNames.has(tok) || STD_TYPES.includes(tok) || knownFnNames.has(tok)) continue;
+    const stripped = tok.replace(/Type$/, '');
+    const mod = tok.startsWith(`${rootPrefix}_`) && stripped.includes('_')
+      ? stripped.split('_').slice(0, 2).join('_')
+      : tok.includes('_') ? tok.split('_')[0] : '其他';
     if (!extTypeGroups.has(mod)) extTypeGroups.set(mod, new Set());
     extTypeGroups.get(mod)!.add(tok);
   }
@@ -156,16 +171,16 @@ export function generateHtmlReport(model: ModuleModel, opts?: { mermaidJs?: stri
       const defs = t.relatedDefines!;
       attrRows.push(`<tr><td class="label">Range</td><td><code>${esc(numOf(defs[0].value))} - ${esc(numOf(defs[defs.length - 1].value))}</code></td></tr>`);
     }
-    attrRows.push(`<tr><td class="label">Description</td><td>${esc(t.comment) || '<span class="todo">（待补充）</span>'}</td></tr>`);
+    attrRows.push(`<tr><td class="label">Description</td><td>${esc(t.generated?.comment || t.comment) || '<span class="todo">（待补充）</span>'}</td></tr>`);
 
     let detailTable = '';
     if (t.kind === 'typedef' && (t.relatedDefines?.length ?? 0) > 0) {
       const rows = t.relatedDefines!.map(d =>
-        `<tr><td><code>${esc(d.name)}</code></td><td><code>${esc(d.value)}</code></td><td>${esc(d.comment)}</td></tr>`).join('');
+        `<tr><td><code>${esc(d.name)}</code></td><td><code>${esc(d.value)}</code></td><td>${esc(t.generated?.defines?.[d.name] ?? d.comment)}</td></tr>`).join('');
       detailTable = `<table class="simple"><tr><th>常量名称</th><th>值</th><th>说明</th></tr>${rows}</table>`;
     } else if (t.kind === 'struct') {
       const rows = (t.elements ?? []).map(e =>
-        `<tr><td><code>${esc(e.name)}</code></td><td><code>${esc(e.type)}</code></td><td>${esc(e.comment)}</td></tr>`).join('');
+        `<tr><td><code>${esc(e.name)}</code></td><td><code>${esc(e.type)}</code></td><td>${esc(t.generated?.elements?.[e.name] ?? e.comment)}</td></tr>`).join('');
       detailTable = `<table class="simple"><tr><th>元素名称</th><th>数据类型</th><th>说明</th></tr>${rows}</table>`;
     }
     return `<h3>${esc(t.name)} <span class="badge">工作项 · 5.2.1.2</span></h3>
@@ -181,7 +196,8 @@ ${detailTable}`;
     .filter(([group]) => group !== 'Callout')
     .map(([group, items]) => {
     const rows = items.map(e =>
-      `<tr><td><code>${esc(e.name)}</code></td><td>${esc(e.comment?.description ?? '')}${e.commentSource === 'inferred' ? ' <span class="inferred">推断，待确认</span>' : ''}</td><td class="muted small">${e.calledFrom.map(esc).join(', ')}</td></tr>`).join('');
+      // 说明列：LLM 生成优先；无生成内容时回退头文件注释，推断来源的标注「推断，待确认」
+      `<tr><td><code>${esc(e.name)}</code></td><td>${esc(e.generated?.detailedDescription ?? e.comment?.description ?? '')}${!e.generated?.detailedDescription && e.commentSource === 'inferred' ? ' <span class="inferred">推断，待确认</span>' : ''}</td><td class="muted small">${e.calledFrom.map(esc).join(', ')}</td></tr>`).join('');
     return `<h3>${esc(group)} <span class="badge">${items.length} 个接口</span></h3>
 <table class="simple"><tr><th>接口</th><th>说明</th><th>模块内调用者</th></tr>${rows}</table>`;
   }).join('\n');
@@ -249,9 +265,31 @@ ${detailTable}`;
     : '注：箭头指向被包含的头文件（模板约定：箭头指向被调用的元素）。MemMap.h 为内存映射包装文件，默认被本模块各文件包含，图中不再画出。';
 
   // ---- 5.1 功能描述 ----
-  const functionalDescSection = model.functionalDescription
-    ? `<p>${esc(model.functionalDescription)}</p>`
-    : '<p class="todo">（待生成：模块级功能描述，由 LLM 基于接口与动态设计事实生成）</p>';
+  // LLM 输出为「总述段落 + \n- 要点」；连续的 "- " 行渲染为列表，其余行各成段落
+  let functionalDescSection: string;
+  if (!model.functionalDescription) {
+    functionalDescSection = '<p class="todo">（待生成：模块级功能描述，由 LLM 基于接口与动态设计事实生成）</p>';
+  } else {
+    const fdParts: string[] = [];
+    let fdBullets: string[] = [];
+    const flushBullets = () => {
+      if (fdBullets.length > 0) {
+        fdParts.push(`<ul>${fdBullets.map(b => `<li>${b}</li>`).join('')}</ul>`);
+        fdBullets = [];
+      }
+    };
+    for (const line of model.functionalDescription.split('\n')) {
+      const bullet = line.match(/^\s*[-•]\s+(.*)$/);
+      if (bullet) {
+        fdBullets.push(esc(bullet[1]));
+      } else {
+        flushBullets();
+        if (line.trim()) fdParts.push(`<p>${esc(line)}</p>`);
+      }
+    }
+    flushBullets();
+    functionalDescSection = fdParts.join('\n');
+  }
   // 功能接口总图：analyze 时静态生成并存入模型（工作项 · 5.1），此处仅渲染
   const overviewSection = model.interfaceOverview ? `
 <h3>功能接口总图 <span class="badge">工作项 · ${esc(model.interfaceOverview.polarion.chapter)}</span></h3>
@@ -426,26 +464,46 @@ ${callouts.map((e, i) => calloutCard(e, `${calloutSecNo}.${i + 1}`)).join('\n')}
   // ---- 1~3 章（固定套话 + 术语表自动筛选；文档骨架内容，非工作项） ----
   const allText = [
     model.module,
-    ...allFns.map(f => `${f.name} ${f.signature}`),
-    ...model.calledExternalFunctions.map(e => e.name),
-    ...model.configMacros.map(c => c.name),
+    ...allFns.map(f => `${f.name} ${f.signature} ${f.generated?.detailedDescription ?? ''}`),
+    ...model.calledExternalFunctions.map(e => `${e.name} ${e.generated?.detailedDescription ?? ''}`),
+    ...model.configMacros.map(c => `${c.name} ${c.generated?.valueEffect ?? ''}`),
+    ...model.types.map(t => `${t.name} ${t.comment} ${t.generated?.comment ?? ''}`),
     model.functionalDescription ?? '',
+    // 序列图/状态机图源也属文档内容（含 actor OS 等角色名）
+    model.dynamicDesign?.stateMachine?.diagram ?? '',
+    ...(model.dynamicDesign?.sequences ?? []).map(s => `${s.name} ${s.diagram} ${s.description}`),
   ].join(' ');
   // 候选缩写词典：仅列本文档/代码中实际出现的
   const ABBR_CANDIDATES: [string, string][] = [
+    ['ABIST', 'Analog Built-In Self Test 模拟内建自测试'],
     ['ADC', 'Analog to Digital Converter 模数转换器'],
     ['ASIL', 'Automotive Safety Integrity Level 汽车安全完整性等级'],
+    ['ASW', 'Application Software 应用软件'],
     ['AUTOSAR', 'AUTomotive Open System ARchitecture 汽车开放系统架构'],
+    ['BIST', 'Built-In Self Test 内建自测试'],
     ['Callout', 'Callout 函数：由集成方在配置代码中实现，模块通过调用 Callout 适配项目策略'],
+    ['DEM', 'Diagnostic Event Manager 诊断事件管理模块（AUTOSAR）'],
+    ['DET', 'Default Error Tracer 默认错误追踪模块（AUTOSAR）'],
+    ['ECU', 'Electronic Control Unit 电子控制单元'],
     ['EcuM', 'ECU State Manager ECU 状态管理模块'],
+    ['ENA', 'Enable 使能信号（TLF35584 唤醒源之一）'],
+    ['ERR', 'Error 错误指示信号（TLF35584 安全路径）'],
     ['FC', 'Function Cluster 功能簇'],
+    ['FWD', 'Functional Watchdog 功能看门狗'],
     ['LLD', 'Low Level Design 详细设计'],
     ['MCAL', 'Microcontroller Abstraction Layer 微控制器抽象层'],
     ['MCU', 'Microcontroller Unit 微控制器'],
     ['OS', 'Operating System 操作系统'],
+    ['PORST', 'Power-On Reset 上电复位'],
+    ['ROT', 'Reset Output 复位输出信号（TLF35584）'],
     ['RTE', 'Runtime Environment 运行时环境'],
     ['SBC', 'System Basis Chip 系统基础芯片'],
+    ['SPI', 'Serial Peripheral Interface 串行外设接口'],
+    ['SSC', 'Safe State Control 安全状态控制（TLF35584）'],
+    ['WAK', 'Wake-up 唤醒信号（TLF35584 唤醒源之一）'],
     ['Wdg', 'Watchdog 看门狗'],
+    ['WDI', 'Watchdog Input 看门狗输入信号（TLF35584）'],
+    ['WWD', 'Window Watchdog 窗口看门狗'],
   ];
   const abbrRows = ABBR_CANDIDATES
     .filter(([abbr]) => new RegExp(`\\b${abbr}\\b`, 'i').test(allText))

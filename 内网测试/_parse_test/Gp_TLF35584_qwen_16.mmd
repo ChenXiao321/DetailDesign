@@ -1,0 +1,28 @@
+flowchart TD
+    START(["开始"])
+    INIT{{"初始化 Data_pst 指向<br>Gp_TLF35584_rtData_ltst<br>初始化 Ret_t 为 E_NOT_OK"}}
+    PREINIT[["Gp_TLF35584_PreInit<br>执行预初始化"]]
+    GETINFO[["Gp_TLF35584_GetWakeAndRese<br>tInfo 获取唤醒和复位信息"]]
+    SETFLAG["设置<br>Data_pst->StatusData_tst.B<br>istFunctCalled_u8 为 TRUE"]
+    SAFETYBIST[["Gp_TLF35584_SafetypathBist<br>执行安全路径 BIST"]]
+    FWDBIST[["Gp_TLF35584_FwdBist 执行<br>FWD BIST"]]
+    WWDBIST[["Gp_TLF35584_WwdBist 执行<br>WWD BIST"]]
+    ERRPINBIST[["Gp_TLF35584_Errpin_Bist<br>执行 Error Pin BIST"]]
+    CHECKERR{"Data_pst->ErrData_tst.Bist<br>ErrPath_u32 > 0U"}
+    SETFAIL["设置<br>Data_pst->StatusData_tst.B<br>istSuccessful_u8 为<br>GP_TLF35584_FAILED"]
+    SETOK["设置 Ret_t 为 E_OK<br>设置<br>Data_pst->StatusData_tst.B<br>istSuccessful_u8 为<br>GP_TLF35584_PASS"]
+    END(["结束"])
+
+    START --> INIT
+    INIT --> PREINIT
+    PREINIT --> GETINFO
+    GETINFO --> SETFLAG
+    SETFLAG --> SAFETYBIST
+    SAFETYBIST --> FWDBIST
+    FWDBIST --> WWDBIST
+    WWDBIST --> ERRPINBIST
+    ERRPINBIST --> CHECKERR
+    CHECKERR -- 是 --> SETFAIL
+    CHECKERR -- 否 --> SETOK
+    SETFAIL --> END
+    SETOK --> END

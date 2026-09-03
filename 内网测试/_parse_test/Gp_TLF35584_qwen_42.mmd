@@ -1,0 +1,29 @@
+flowchart TD
+    START(["开始"]) --> INIT["初始化 Data_pst 指向<br>Gp_TLF35584_rtData_ltst<br>初始化 Cnt_u32 为 0U"]
+    INIT --> UNLOCK[["Gp_TLF35584_UnlockSeq<br>解锁序列"]]
+    UNLOCK --> PREP1{{"Cnt_u32 = 0U"}}
+    PREP1 --> COND1{"Cnt_u32 <<br>GP_TLF35584_INIT_REG_NUM ?"}
+    COND1 -- 是 --> BODY1["Data_pst->SpiData_tst.TxBu<br>f_au16[Cnt_u32] =<br>Gp_TLF35584_WriteCmd(...)"]
+    BODY1 --> INC1["Cnt_u32++"]
+    INC1 --> COND1
+    COND1 -- 否 --> SET_CNT1["Data_pst->SpiData_tst.CntT<br>x_u16 =<br>GP_TLF35584_INIT_REG_NUM"]
+    SET_CNT1 --> TX1[["Gp_TLF35584_TransmitData<br>发送初始化数据"]]
+    TX1 --> LOCK[["Gp_TLF35584_LockSeq<br>锁定序列"]]
+    LOCK --> DELAY[["Gp_TLF35584_CalloutStmSwDa<br>layNus 模式切换延时"]]
+    DELAY --> PREP2{{"Cnt_u32 = 0U"}}
+    PREP2 --> COND2{"Cnt_u32 <<br>GP_TLF35584_STATUS_REG_NUM<br>?"}
+    COND2 -- 是 --> BODY2["Data_pst->SpiData_tst.TxBu<br>f_au16[Cnt_u32] =<br>Gp_TLF35584_ReadCmd(...)"]
+    BODY2 --> INC2["Cnt_u32++"]
+    INC2 --> COND2
+    COND2 -- 否 --> SET_CNT2["Data_pst->SpiData_tst.CntT<br>x_u16 =<br>GP_TLF35584_STATUS_REG_NUM"]
+    SET_CNT2 --> TX2[["Gp_TLF35584_TransmitData<br>发送状态读取命令"]]
+    TX2 --> PREP3{{"Cnt_u32 = 0U"}}
+    PREP3 --> COND3{"Cnt_u32 <<br>GP_TLF35584_PROTECT_REG_NU<br>M ?"}
+    COND3 -- 是 --> CHECK{"RxBuf_au16[Cnt_u32 +<br>STU_REG_OFFSET] !=<br>idxRtRegValue_cau8[Cnt_u32<br>+ INIT_REG_OFFSET] ?"}
+    CHECK -- 是 --> ERR_SET["Data_pst->ErrData_tst.Driv<br>erErrPath_u32 |=<br>GP_TLF35584_PROTECT_REG_ER<br>R"]
+    ERR_SET --> DEM[["Gp_TLF35584_CalloutDemRepo<br>rt 报告保护寄存器故障"]]
+    DEM --> BREAK["break 跳出循环"]
+    BREAK --> END(["结束"])
+    CHECK -- 否 --> INC3["Cnt_u32++"]
+    INC3 --> COND3
+    COND3 -- 否 --> END

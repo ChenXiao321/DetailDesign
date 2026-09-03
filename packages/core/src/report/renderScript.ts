@@ -39,7 +39,10 @@ export function mermaidRenderScript(): string {
 // ⑤ 标签重挂：边标签投影到原路径取弧长占比，平移到新路径同占比处——否则路由大改后
 //    标签留在旧干线旁（D1--否-->END 的「否」字离新线 87px）。
 window.addEventListener('DOMContentLoaded', async () => {
-  await mermaid.run({ querySelector: '.mermaid' });
+  // 单图语法错误时 mermaid.run 会 reject（其余图已照常渲染成 error 占位 svg），
+  // 不 catch 的话后面 ORTHO 直角化整段不执行，全报告退化为 dagre 斜线（Qwen 批次实测踩中，
+  // 且 unhandled rejection 不触发 window.onerror，调试页 __errs 抓不到）。
+  try { await mermaid.run({ querySelector: '.mermaid' }); } catch (e) { /* 继续直角化已渲染的图 */ }
   // 调试钩子：file URL 带 #debug-orig 时把 dagre 原始路径存到 data-orig，供离线比对直角化改动
   if (location.hash === '#debug-orig')
     document.querySelectorAll('svg path.flowchart-link').forEach((p) => {

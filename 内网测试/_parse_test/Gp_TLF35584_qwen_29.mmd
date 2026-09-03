@@ -1,0 +1,45 @@
+flowchart TD
+    START(["开始"])
+    INIT{{"初始化 Data_pst 指向<br>Gp_TLF35584_rtData_ltst"}}
+    DECIDE{"WrongSlect_u8 ==<br>GP_TLF35584_FWD_RESET_ACTI<br>ON"}
+    
+    subgraph LANE_FWD[" "]
+        direction TB
+        W1[/"写入 TxBuf_au16[0] 为<br>FWDRSP 错误应答"/]
+        W2[/"写入 TxBuf_au16[1] 为<br>FWDRSP 错误应答"/]
+        W3[/"写入 TxBuf_au16[2] 为<br>FWDRSP 错误应答"/]
+        W4[/"写入 TxBuf_au16[3] 为<br>FWDRSPSYNC 错误应答"/]
+        SET_CNT["设置 CntTx_u16 为 4U"]
+        CALL_TX[["Gp_TLF35584_TransmitData<br>发送数据"]]
+    end
+    
+    subgraph LANE_ELSE[" "]
+        direction TB
+        CALL_DELAY[["Gp_TLF35584_CalloutStmSwDa<br>layNus 延时等待"]]
+        CALL_GET1[["Gp_TLF35584_GetWdgInfo<br>获取看门狗信息"]]
+        CALL_WWD1[["Gp_TLF35584_WwdSpiService<br>执行 WWD SPI 服务"]]
+        CALL_GET2[["Gp_TLF35584_GetWdgInfo<br>获取看门狗信息"]]
+        CALL_WWD2[["Gp_TLF35584_WwdSpiService<br>执行 WWD SPI 服务"]]
+    end
+    
+    END(["结束"])
+    
+    START --> INIT
+    INIT --> DECIDE
+    DECIDE -- 是 --> W1
+    W1 --> W2
+    W2 --> W3
+    W3 --> W4
+    W4 --> SET_CNT
+    SET_CNT --> CALL_TX
+    CALL_TX --> END
+    
+    DECIDE -- 否 --> CALL_DELAY
+    CALL_DELAY --> CALL_GET1
+    CALL_GET1 --> CALL_WWD1
+    CALL_WWD1 --> CALL_GET2
+    CALL_GET2 --> CALL_WWD2
+    CALL_WWD2 --> END
+    
+    style LANE_FWD fill:transparent,stroke:transparent
+    style LANE_ELSE fill:transparent,stroke:transparent

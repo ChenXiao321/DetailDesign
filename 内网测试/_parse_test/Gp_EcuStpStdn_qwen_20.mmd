@@ -1,0 +1,10 @@
+stateDiagram-v2
+    [*] --> UNDEF
+    UNDEF --> ONE : Gp_EcuStpShdn_Startup
+    ONE --> TWO : Gp_EcuStpShdn_Startup
+    TWO --> THREE : Gp_EcuStpShdn_Startup
+    THREE --> [*] : Gp_EcuStpShdn_Mainfunction
+    note right of UNDEF : undefined status
+    note right of ONE : startup stage one
+    note right of TWO : startup stage two
+    note right of THREE : startup stage three

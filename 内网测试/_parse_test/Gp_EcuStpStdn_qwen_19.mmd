@@ -1,0 +1,17 @@
+flowchart TD
+    Start(["开始"]) --> Init1["初始化 TimeStamp_u32 数组<br>TimeStamp_u32[0] = 0<br>TimeStamp_u32[1] =<br>Gp_EcuStpShdn_bufSatLocalI<br>mplCore1_ltst.TimeStamp_u3<br>2<br>TimeStamp_u32[2] =<br>Gp_EcuStpShdn_bufSatLocalI<br>mplCore2_ltst.TimeStamp_u3<br>2<br>TimeStamp_u32[3] =<br>Gp_EcuStpShdn_bufSatLocalI<br>mplCore3_ltst.TimeStamp_u3<br>2<br>TimeStamp_u32[4] =<br>Gp_EcuStpShdn_bufSatLocalI<br>mplCore4_ltst.TimeStamp_u3<br>2<br>TimeStamp_u32[5] =<br>Gp_EcuStpShdn_bufSatLocalI<br>mplCore5_ltst.TimeStamp_u3<br>2"]
+    Init1 --> Init2{{"初始化 Cnt_u32 = 0<br>初始化 MaxTimeStamp_u32 =<br>0"}}
+    Init2 --> LoopCond{"Cnt_u32 <<br>GP_ECUSTPSHDN_ACTIVE_CORE_<br>NUM ?"}
+    LoopCond -- 是 --> ReadTS[/"读取<br>TimeStamp_u32[Cnt_u32]"/]
+    ReadTS --> Compare{"MaxTimeStamp_u32 <<br>TimeStamp_u32[Cnt_u32] ?"}
+    Compare -- 是 --> UpdateMax["MaxTimeStamp_u32 =<br>TimeStamp_u32[Cnt_u32]"]
+    Compare -- 否 --> DoNothing["do nothing"]
+    UpdateMax --> IncCnt["Cnt_u32++"]
+    DoNothing --> IncCnt
+    IncCnt --> LoopCond
+    LoopCond -- 否 --> ReturnVal["return MaxTimeStamp_u32"]
+    ReturnVal --> End(["结束"])
+    Compare ~~~ End
+    UpdateMax ~~~ End
+    IncCnt ~~~ End
+    DoNothing ~~~ End

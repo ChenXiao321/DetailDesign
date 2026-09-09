@@ -2,7 +2,7 @@ import type {
   ModuleModel, ConfigMacro, ConfigUsage, ExternalInterface,
 } from '../model/types.js';
 import { esc, escRaw, functionCard, calloutCard } from './cards.js';
-import { wrapFlowchartLabels, pinEndNodeToBottom, lintMermaidSource } from './mermaidPre.js';
+import { wrapFlowchartLabels, pinEndNodeToBottom, lintMermaidSource, lintFlowchartStructure } from './mermaidPre.js';
 import { mermaidRenderScript } from './renderScript.js';
 
 /** 文件用途说明（4.1 文件说明表）：按角色 + 分析数据生成中文描述 */
@@ -107,8 +107,9 @@ export function generateHtmlReport(model: ModuleModel, opts?: { mermaidJs?: stri
   const generatedCount = [...model.providedFunctions, ...model.internalFunctions].filter(f => f.generated).length;
 
   const diagramBlock = (src: string) => {
-    // 生成期静态检查：定界符错误的图源会在浏览器端 mermaid 词法报错整图失败，提前点名
-    for (const p of lintMermaidSource(src)) console.warn(`⚠ 图源检查: ${p}\n  图源开头: ${src.split('\n').slice(0, 2).join(' | ').slice(0, 100)}`);
+    // 生成期静态检查：定界符错误的图源会在浏览器端 mermaid 词法报错整图失败，提前点名；
+    // 结构 lint（孤儿节点/幽灵节点/断链等）只警告不阻断，便于 report 阶段发现存量产物问题
+    for (const p of [...lintMermaidSource(src), ...lintFlowchartStructure(src)]) console.warn(`⚠ 图源检查: ${p}\n  图源开头: ${src.split('\n').slice(0, 2).join(' | ').slice(0, 100)}`);
     return opts?.mermaidJs
       ? `<div class="mermaid">${escRaw(wrapFlowchartLabels(pinEndNodeToBottom(src)))}</div>`
       : `<pre class="plantuml">${escRaw(src)}</pre>`;
@@ -481,7 +482,6 @@ ${callouts.map((e, i) => calloutCard(e, `${calloutSecNo}.${i + 1}`)).join('\n')}
     ['ASW', 'Application Software 应用软件'],
     ['AUTOSAR', 'AUTomotive Open System ARchitecture 汽车开放系统架构'],
     ['BIST', 'Built-In Self Test 内建自测试'],
-    ['Callout', 'Callout 函数：由集成方在配置代码中实现，模块通过调用 Callout 适配项目策略'],
     ['DEM', 'Diagnostic Event Manager 诊断事件管理模块（AUTOSAR）'],
     ['DET', 'Default Error Tracer 默认错误追踪模块（AUTOSAR）'],
     ['ECU', 'Electronic Control Unit 电子控制单元'],
@@ -509,10 +509,14 @@ ${callouts.map((e, i) => calloutCard(e, `${calloutSecNo}.${i + 1}`)).join('\n')}
     .filter(([abbr]) => new RegExp(`\\b${abbr}\\b`, 'i').test(allText))
     .map(([abbr, desc]) => `<tr><td><code>${esc(abbr)}</code></td><td>${esc(desc)}</td></tr>`)
     .join('');
+  // 术语定义：Callout 是术语而非缩写，归 3.2；与缩写同样按文档实际出现过滤（无 Callout 的模块不列）
   const DEF_ROWS: [string, string][] = [
     ['可重入性', '函数在同时多次调用，例如操作系统在进程调度过程中，或者单片机、处理器等中断的时候会发生重入的现象。（可重入函数可以在任意时刻被打断，稍后再继续运行，不会丢失数据；不可重入函数不能由超过一个任务共享，除非能确保函数的互斥）'],
     ['静态全局变量', 'static 声明的文件作用域变量（内部链接），仅本模块内可见，外部模块不可直接访问；本报告 5.2.4.1 节列出。'],
   ];
+  if (/\bCallout\b/.test(allText)) {
+    DEF_ROWS.unshift(['Callout', 'Callout 函数：由集成方在配置代码中实现，模块通过调用 Callout 适配项目策略']);
+  }
   const defRows = DEF_ROWS.map(([n, d]) => `<tr><td>${esc(n)}</td><td>${esc(d)}</td></tr>`).join('');
   const preSection = `
 <h2 id="s1">1 目的</h2>

@@ -8,6 +8,7 @@ import {
   buildCalloutDescriptionPrompt, buildTypeDescriptionPrompt,
   buildExternalDescriptionPrompt, buildModuleDescriptionPrompt,
 } from '../llm/prompts.js';
+import { lintMermaidSource, lintFlowchartStructure } from '../report/mermaidPre.js';
 
 /** 从 LLM 输出中提取 Mermaid 源码（剥 ```mermaid 围栏）；非法则抛错 */
 function extractMermaid(expectedStart: RegExp, kindHint: string): (output: string) => string {
@@ -22,7 +23,7 @@ function extractMermaid(expectedStart: RegExp, kindHint: string): (output: strin
       const startIdx = lines.findIndex(l => expectedStart.test(l.trim()));
       if (startIdx > 0) text = lines.slice(startIdx).join('\n').trim();
     }
-    const firstLine = text.split('\n')[0].trim();
+    const firstLine = text.replace(/\n/g, '\n      ').trim();
     if (!expectedStart.test(firstLine)) {
       // 面向模型的中文反馈（会随重试回喂给 LLM），避免只给正则表达式
       throw new Error(`你的输出不是有效的 Mermaid 图代码。要求：第一行必须是 ${kindHint}，只输出图代码本身，不要输出任何解释、描述或分析文字。请重新输出。`);
@@ -41,6 +42,20 @@ function extractMermaid(expectedStart: RegExp, kindHint: string): (output: strin
     }
     return text;
   };
+}
+
+/** 流程图输出校验：extractMermaid 提取 + 词法 lint + 结构 lint；问题拼成中文反馈随重试回喂 */
+function validateFlowchart(output: string): string {
+  const text = extractMermaid(/^(flowchart|graph)\s+(TD|TB|BT|LR|RL)/, 'flowchart TD')(output);
+  const problems = [...lintMermaidSource(text), ...lintFlowchartStructure(text)];
+  if (problems.length > 0) {
+    throw new Error(
+      `你的流程图存在以下 ${problems.length} 个问题：\n` +
+      problems.map((p, i) => `${i + 1}. ${p}`).join('\n') +
+      '\n请修正后重新输出完整的图代码（仍然只输出图代码本身）。',
+    );
+  }
+  return text;
 }
 
 /** 带重试的生成（格式校验失败时把错误回喂） */
@@ -153,9 +168,8 @@ async function genFlowchart(
 ): Promise<void> {
   if (!needsFlowchart(fn)) return;
   const fc = buildFlowchartPrompt(model, fn);
-  const diagram = await generateWithRetry(
-    provider, fc.system, fc.user, extractMermaid(/^(flowchart|graph)\s+(TD|TB|BT|LR|RL)/, 'flowchart TD'),
-  );
+  // 流程图结构复杂、校验严格，给 3 次重试（其余生成维持默认 2 次）
+  const diagram = await generateWithRetry(provider, fc.system, fc.user, validateFlowchart, 3);
   fn.generated = fn.generated ?? {
     detailedDescription: '', llmModel: provider.name, generatedAt: new Date().toISOString(),
   };
@@ -226,7 +240,7 @@ async function generateDynamicDesign(
         name,
         diagram: part.diagram,
         diagramFormat: 'mermaid',
-        description: fn.comment?.description?.split('\n')[0] ?? '',
+        description: fn.comment?.description?.replace(/\n/g, '\n      ') ?? '',
         polarion: {
           isWorkItem: true, chapter: '5.3.2', workItemKind: 'sequence',
           title: part.role ? `${model.module} ${scenario} 序列图（${part.role}）` : `${model.module} ${scenario} 序列图`,
@@ -269,8 +283,8 @@ export async function generateDesign(
       try {
         await genFlowchart(model, fn, provider);
       } catch (err) {
-        log(`  ⚠ 失败（已跳过，可 --resume 重试）: ${fn.name} — ${(err as Error).message.split('\n')[0]}`);
-        opts?.failures?.push(`${fn.name}: ${(err as Error).message.split('\n')[0]}`);
+        log(`  ⚠ 失败（已跳过，可 --resume 重试）: ${fn.name} — ${(err as Error).message.replace(/\n/g, '\n      ')}`);
+        opts?.failures?.push(`${fn.name}: ${(err as Error).message.replace(/\n/g, '\n      ')}`);
       }
     }
     return model;
@@ -290,8 +304,8 @@ export async function generateDesign(
     try {
       await enrichFunction(model, fn, provider);
     } catch (err) {
-      log(`  ⚠ 失败（已跳过，可 --resume 重试）: ${fn.name} — ${(err as Error).message.split('\n')[0]}`);
-      opts?.failures?.push(`${fn.name}: ${(err as Error).message.split('\n')[0]}`);
+      log(`  ⚠ 失败（已跳过，可 --resume 重试）: ${fn.name} — ${(err as Error).message.replace(/\n/g, '\n      ')}`);
+      opts?.failures?.push(`${fn.name}: ${(err as Error).message.replace(/\n/g, '\n      ')}`);
     }
   }
 
@@ -313,8 +327,8 @@ export async function generateDesign(
           sequences: keepSeq ? existing!.sequences : fresh.sequences,
         };
       } catch (err) {
-        log(`  ⚠ 动态设计失败（已跳过，可 --resume 重试）: ${(err as Error).message.split('\n')[0]}`);
-        opts?.failures?.push(`dynamic: ${(err as Error).message.split('\n')[0]}`);
+        log(`  ⚠ 动态设计失败（已跳过，可 --resume 重试）: ${(err as Error).message.replace(/\n/g, '\n      ')}`);
+        opts?.failures?.push(`dynamic: ${(err as Error).message.replace(/\n/g, '\n      ')}`);
       }
     }
   }
@@ -340,8 +354,8 @@ export async function generateDesign(
           generatedAt: new Date().toISOString(),
         };
       } catch (err) {
-        log(`  ⚠ 失败（已跳过，可 --resume 重试）: ${macro.name} — ${(err as Error).message.split('\n')[0]}`);
-        opts?.failures?.push(`${macro.name}: ${(err as Error).message.split('\n')[0]}`);
+        log(`  ⚠ 失败（已跳过，可 --resume 重试）: ${macro.name} — ${(err as Error).message.replace(/\n/g, '\n      ')}`);
+        opts?.failures?.push(`${macro.name}: ${(err as Error).message.replace(/\n/g, '\n      ')}`);
       }
     }
   }
@@ -366,8 +380,8 @@ export async function generateDesign(
           generatedAt: new Date().toISOString(),
         };
       } catch (err) {
-        log(`  ⚠ 失败（已跳过，可 --resume 重试）: ${ext.name} — ${(err as Error).message.split('\n')[0]}`);
-        opts?.failures?.push(`${ext.name}: ${(err as Error).message.split('\n')[0]}`);
+        log(`  ⚠ 失败（已跳过，可 --resume 重试）: ${ext.name} — ${(err as Error).message.replace(/\n/g, '\n      ')}`);
+        opts?.failures?.push(`${ext.name}: ${(err as Error).message.replace(/\n/g, '\n      ')}`);
       }
     }
   }
@@ -388,8 +402,8 @@ export async function generateDesign(
           generatedAt: new Date().toISOString(),
         };
       } catch (err) {
-        log(`  ⚠ 失败（已跳过，可 --resume 重试）: ${t.name} — ${(err as Error).message.split('\n')[0]}`);
-        opts?.failures?.push(`${t.name}: ${(err as Error).message.split('\n')[0]}`);
+        log(`  ⚠ 失败（已跳过，可 --resume 重试）: ${t.name} — ${(err as Error).message.replace(/\n/g, '\n      ')}`);
+        opts?.failures?.push(`${t.name}: ${(err as Error).message.replace(/\n/g, '\n      ')}`);
       }
     }
   }
@@ -414,8 +428,8 @@ export async function generateDesign(
           generatedAt: new Date().toISOString(),
         };
       } catch (err) {
-        log(`  ⚠ 失败（已跳过，可 --resume 重试）: ${ext.name} — ${(err as Error).message.split('\n')[0]}`);
-        opts?.failures?.push(`${ext.name}: ${(err as Error).message.split('\n')[0]}`);
+        log(`  ⚠ 失败（已跳过，可 --resume 重试）: ${ext.name} — ${(err as Error).message.replace(/\n/g, '\n      ')}`);
+        opts?.failures?.push(`${ext.name}: ${(err as Error).message.replace(/\n/g, '\n      ')}`);
       }
     }
   }
@@ -434,8 +448,8 @@ export async function generateDesign(
         });
         model.functionalDescription = text;
       } catch (err) {
-        log(`  ⚠ 模块功能描述失败（已跳过，可 --resume 重试）: ${(err as Error).message.split('\n')[0]}`);
-        opts?.failures?.push(`description: ${(err as Error).message.split('\n')[0]}`);
+        log(`  ⚠ 模块功能描述失败（已跳过，可 --resume 重试）: ${(err as Error).message.replace(/\n/g, '\n      ')}`);
+        opts?.failures?.push(`description: ${(err as Error).message.replace(/\n/g, '\n      ')}`);
       }
     }
   }

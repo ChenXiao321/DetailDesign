@@ -80,10 +80,10 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
 <p>本文档适用于 Gp_IoMcuAdc 软件单元的开发、评审与维护。</p>
 <h2 id="s3">3 定义和缩写</h2>
 <h3>3.1 缩写</h3>
-<table class="simple"><tr><th>缩写</th><th>描述</th></tr><tr><td><code>ADC</code></td><td>Analog to Digital Converter 模数转换器</td></tr><tr><td><code>Callout</code></td><td>Callout 函数：由集成方在配置代码中实现，模块通过调用 Callout 适配项目策略</td></tr><tr><td><code>MCU</code></td><td>Microcontroller Unit 微控制器</td></tr></table>
+<table class="simple"><tr><th>缩写</th><th>描述</th></tr><tr><td><code>ADC</code></td><td>Analog to Digital Converter 模数转换器</td></tr><tr><td><code>DET</code></td><td>Default Error Tracer 默认错误追踪模块（AUTOSAR）</td></tr><tr><td><code>EcuM</code></td><td>ECU State Manager ECU 状态管理模块</td></tr><tr><td><code>MCAL</code></td><td>Microcontroller Abstraction Layer 微控制器抽象层</td></tr><tr><td><code>MCU</code></td><td>Microcontroller Unit 微控制器</td></tr><tr><td><code>OS</code></td><td>Operating System 操作系统</td></tr></table>
 <p class="muted">注：仅列出本模块文档/代码中实际出现的缩写，可按项目需要补充。</p>
 <h3>3.2 定义</h3>
-<table class="simple"><tr><th>名称</th><th>描述</th></tr><tr><td>可重入性</td><td>函数在同时多次调用，例如操作系统在进程调度过程中，或者单片机、处理器等中断的时候会发生重入的现象。（可重入函数可以在任意时刻被打断，稍后再继续运行，不会丢失数据；不可重入函数不能由超过一个任务共享，除非能确保函数的互斥）</td></tr><tr><td>静态全局变量</td><td>static 声明的文件作用域变量（内部链接），仅本模块内可见，外部模块不可直接访问；本报告 5.2.4.1 节列出。</td></tr></table>
+<table class="simple"><tr><th>名称</th><th>描述</th></tr><tr><td>Callout</td><td>Callout 函数：由集成方在配置代码中实现，模块通过调用 Callout 适配项目策略</td></tr><tr><td>可重入性</td><td>函数在同时多次调用，例如操作系统在进程调度过程中，或者单片机、处理器等中断的时候会发生重入的现象。（可重入函数可以在任意时刻被打断，稍后再继续运行，不会丢失数据；不可重入函数不能由超过一个任务共享，除非能确保函数的互斥）</td></tr><tr><td>静态全局变量</td><td>static 声明的文件作用域变量（内部链接），仅本模块内可见，外部模块不可直接访问；本报告 5.2.4.1 节列出。</td></tr></table>
 
 <h2 id="s4">4 程序系统结构</h2>
 <h3>4.1 文件说明</h3>
@@ -410,97 +410,105 @@ flowchart LR
     <tr><td class="label">Return value</td><td>void</td></tr>
     <tr><td class="label">Description</td><td class="desc">Gp_IoMcuAdc_Init 是 Gp_IoMcuAdc 模块的初始化接口函数，负责为所有通道的 AdcSig 缓冲区及本地实现缓冲区设置初始值，并通过调用 MCAL 的 Adc_SetupResultBuffer 和 Adc_EnableHardwareTrigger 函数启动 ADC 硬件转换。该函数在模块中作为启动入口，依赖于 Gp_IoMcuAdc_CalloutGetCoreId 获取当前核心 ID，并触发 Gp_IoMcuAdc_CalloutInit 执行回调初始化。其执行的前置条件是当前核心已启用，且 MCAL 层的 ADC 初始化函数已执行完毕。函数运行过程中会访问模块全局变量 Gp_IoMcuAdc_rtCont_lcatst 以维护运行时上下文状态。</td></tr>
     <tr><td class="label">流程图</td><td><div class="mermaid">flowchart TD
-    Start(["开始"])
-    InitVars["初始化局部变量&lt;br&gt;Cfg_cptst, Rt_cptst,&lt;br&gt;CoreId_u32, Cnt_u32,&lt;br&gt;ChlNum_u8, Ret_t,&lt;br&gt;FuncCompl_b"]
-    GetCoreId[["Gp_IoMcuAdc_CalloutGetCore&lt;br&gt;Id 获取核心ID"]]
-    SetCfgPtr["设置 Cfg_cptst&lt;br&gt;指向当前核心配置"]
-    SetRtPtr["设置 Rt_cptst&lt;br&gt;指向当前核心运行时数据"]
-    GetChlNum["读取 ChlNum_u8"]
-    Loop1Init{{"Cnt_u32 = 0U"}}
-    Loop1Cond{"Cnt_u32 &lt; ChlNum_u8 ?"}
-    Loop1Body["初始化 ADC 信号通道&lt;br&gt;设置 AdcRaw_u16,&lt;br&gt;Diag_u32,PollingCnt_u16,&lt;br&gt;AdcSigErr_t"]
-    Loop1Inc["Cnt_u32++"]
-    Loop2Init{{"Cnt_u32 = 0U"}}
-    Loop2Cond{"Cnt_u32 &lt; GrpNum_u8 ?"}
-    SetupBuffer[["Adc_SetupResultBuffer&lt;br&gt;设置结果缓冲区"]]
-    EnableTrigger[["Adc_EnableHardwareTrigger&lt;br&gt;使能硬件触发"]]
-    Loop2Inc["Cnt_u32++"]
-    CalloutInit[["Gp_IoMcuAdc_CalloutInit&lt;br&gt;执行额外初始化"]]
-    CheckFail{"Ret_t == E_NOT_OK 或&lt;br&gt;FuncCompl_b == FALSE ?"}
-    SetFail["记录初始化失败错误&lt;br&gt;设置 IfId_t, ErrStu_t,&lt;br&gt;InitStu_t"]
-    SetSuccess["设置初始化完成状态&lt;br&gt;InitStu_t =&lt;br&gt;GP_IOMCUADC_INITSTU_INITED"]
-    ClearRunCnt["清除运行计数器&lt;br&gt;RunCnt_u32 = 0U"]
-    End(["结束"])
+    START(["开始"]) --&gt; INIT_VARS["初始化局部变量&lt;br&gt;Cfg_cptst, Rt_cptst,&lt;br&gt;CoreId_u32, Cnt_u32,&lt;br&gt;ChlNum_u8, Ret_t,&lt;br&gt;FuncCompl_b"]
+    INIT_VARS --&gt; GET_CORE_ID[["Gp_IoMcuAdc_CalloutGetCore&lt;br&gt;Id&lt;br&gt;获取核心ID"]]
+    GET_CORE_ID --&gt; GET_CFG["获取当前核心配置地址&lt;br&gt;Cfg_cptst =&lt;br&gt;&amp;Gp_IoMcuAdc_cfgCont_vcats&lt;br&gt;t[CoreId_u32]"]
+    GET_CFG --&gt; GET_RT["获取当前核心运行时地址&lt;br&gt;Rt_cptst =&lt;br&gt;&amp;Gp_IoMcuAdc_rtCont_lcatst&lt;br&gt;[CoreId_u32]"]
+    GET_RT --&gt; GET_CHL_NUM["读取通道数量&lt;br&gt;ChlNum_u8 =&lt;br&gt;Cfg_cptst-&gt;ChlNum_u8"]
+    GET_CHL_NUM --&gt; LOOP_PREP{{"循环计数器初始化&lt;br&gt;Cnt_u32 = 0U"}}
+    LOOP_PREP --&gt; LOOP_COND{"Cnt_u32 &lt; ChlNum_u8 ?"}
+    LOOP_COND -- 否 --&gt; CALL_INIT
+    LOOP_COND -- 是 --&gt; SET_RAW["设置初始值&lt;br&gt;Rt_cptst-&gt;AdcSig_ptst[Cnt_&lt;br&gt;u32].AdcRaw_u16 =&lt;br&gt;GP_IOMCUADC_ADCRAW_INVALID"]
+    SET_RAW --&gt; SET_DIAG["设置诊断值&lt;br&gt;Rt_cptst-&gt;AdcSig_ptst[Cnt_&lt;br&gt;u32].Diag_u32 = 0U"]
+    SET_DIAG --&gt; SET_POLL["设置轮询计数&lt;br&gt;Rt_cptst-&gt;AdcSigLocalImpl_&lt;br&gt;ptst[Cnt_u32].PollingCnt_u&lt;br&gt;16 = 0U"]
+    SET_POLL --&gt; SET_ERR["设置错误状态&lt;br&gt;Rt_cptst-&gt;AdcSigLocalImpl_&lt;br&gt;ptst[Cnt_u32].AdcSigErr_t&lt;br&gt;=&lt;br&gt;GP_IOMCUADC_ADCSIGERRSTU_N&lt;br&gt;O_ERR"]
+    SET_ERR --&gt; LOOP_INC["Cnt_u32++"]
+    LOOP_INC --&gt; LOOP_COND
 
-    Start --&gt; InitVars
-    InitVars --&gt; GetCoreId
-    GetCoreId --&gt; SetCfgPtr
-    SetCfgPtr --&gt; SetRtPtr
-    SetRtPtr --&gt; GetChlNum
-    GetChlNum --&gt; Loop1Init
-    Loop1Init --&gt; Loop1Cond
-    Loop1Cond -- 是 --&gt; Loop1Body
-    Loop1Body --&gt; Loop1Inc
-    Loop1Inc --&gt; Loop1Cond
-    Loop1Cond -- 否 --&gt; Loop2Init
-    Loop2Init --&gt; Loop2Cond
-    Loop2Cond -- 是 --&gt; SetupBuffer
-    SetupBuffer --&gt; EnableTrigger
-    EnableTrigger --&gt; Loop2Inc
-    Loop2Inc --&gt; Loop2Cond
-    Loop2Cond -- 否 --&gt; CalloutInit
-    CalloutInit --&gt; CheckFail
-    CheckFail -- 是 --&gt; SetFail
-    CheckFail -- 否 --&gt; SetSuccess
-    SetFail --&gt; ClearRunCnt
-    SetSuccess --&gt; ClearRunCnt
-    ClearRunCnt --&gt; End</div>
+    subgraph SG1[" "]
+        SG1_NOTE["注：仅在&lt;br&gt;GP_IOMCUADC_SPEC_DEP_IF&lt;br&gt;为AURIX2G_MCAL,&lt;br&gt;AURIX3G_MCAL,&lt;br&gt;TRAVEO2G_MCAL 或&lt;br&gt;STELLARPX_MCAL 时参与编译"]
+        SG1_NOTE ~~~ HW_LOOP_PREP
+        HW_LOOP_PREP{{"硬件触发循环初始化&lt;br&gt;Cnt_u32 = 0U"}}
+        HW_LOOP_PREP --&gt; HW_LOOP_COND{"Cnt_u32 &lt; Cfg_cptst-&gt;GrpNum_u8 ?"}
+        HW_LOOP_COND -- 否 --&gt; CALL_INIT
+        HW_LOOP_COND -- 是 --&gt; SETUP_BUF[["Adc_SetupResultBuffer&lt;br&gt;设置ADC结果缓冲区"]]
+        SETUP_BUF --&gt; ENABLE_TRIG[["Adc_EnableHardwareTrigger&lt;br&gt;使能硬件触发"]]
+        ENABLE_TRIG --&gt; HW_LOOP_INC["Cnt_u32++"]
+        HW_LOOP_INC --&gt; HW_LOOP_COND
+    end
+    style SG1 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+    classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700
+    class SG1_NOTE condNote
+
+    CALL_INIT[["Gp_IoMcuAdc_CalloutInit&lt;br&gt;调用初始化回调函数"]]
+    CALL_INIT --&gt; DET_CHECK
+
+    subgraph SG2[" "]
+        SG2_NOTE["注：仅在&lt;br&gt;GP_IOMCUADC_DEV_ERROR_DETE&lt;br&gt;CT 等于 STD_ON 时参与编译"]
+        SG2_NOTE ~~~ DET_CHECK
+        DET_CHECK{"(Ret_t == E_NOT_OK) ||&lt;br&gt;(FuncCompl_b == FALSE) ?"}
+        DET_CHECK -- 是 --&gt; SET_DET_ERR["记录初始化失败错误&lt;br&gt;Rt_cptst-&gt;Det_ptst-&gt;IfId_t&lt;br&gt;= GP_IOMCUADC_IFID_INIT&lt;br&gt;Rt_cptst-&gt;Det_ptst-&gt;ErrStu&lt;br&gt;_t =&lt;br&gt;GP_IOMCUADC_ERRSTU_INIT_FA&lt;br&gt;ILED"]
+        SET_DET_ERR --&gt; SET_INIT_FAIL["设置初始化状态为失败&lt;br&gt;Rt_cptst-&gt;Det_ptst-&gt;InitSt&lt;br&gt;u_t =&lt;br&gt;GP_IOMCUADC_INITSTU_INIT_F&lt;br&gt;AILED"]
+        SET_INIT_FAIL --&gt; CLEAR_RUN_CNT
+        DET_CHECK -- 否 --&gt; SET_INIT_OK["设置初始化状态为完成&lt;br&gt;Rt_cptst-&gt;Det_ptst-&gt;InitSt&lt;br&gt;u_t =&lt;br&gt;GP_IOMCUADC_INITSTU_INITED"]
+        SET_INIT_OK --&gt; CLEAR_RUN_CNT
+        CLEAR_RUN_CNT["清除运行计数器&lt;br&gt;Rt_cptst-&gt;Det_ptst-&gt;RunCnt&lt;br&gt;_u32 = 0U"]
+    end
+    style SG2 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+    class SG2_NOTE condNote
+
+    DET_CHECK --&gt; END(["结束"])
+    CLEAR_RUN_CNT --&gt; END</div>
 <details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">flowchart TD
-    Start(["开始"])
-    InitVars["初始化局部变量&lt;br&gt;Cfg_cptst, Rt_cptst, CoreId_u32, Cnt_u32, ChlNum_u8, Ret_t, FuncCompl_b"]
-    GetCoreId[["Gp_IoMcuAdc_CalloutGetCoreId 获取核心ID"]]
-    SetCfgPtr["设置 Cfg_cptst 指向当前核心配置"]
-    SetRtPtr["设置 Rt_cptst 指向当前核心运行时数据"]
-    GetChlNum["读取 ChlNum_u8"]
-    Loop1Init{{"Cnt_u32 = 0U"}}
-    Loop1Cond{"Cnt_u32 &lt; ChlNum_u8 ?"}
-    Loop1Body["初始化 ADC 信号通道&lt;br&gt;设置 AdcRaw_u16, Diag_u32, PollingCnt_u16, AdcSigErr_t"]
-    Loop1Inc["Cnt_u32++"]
-    Loop2Init{{"Cnt_u32 = 0U"}}
-    Loop2Cond{"Cnt_u32 &lt; GrpNum_u8 ?"}
-    SetupBuffer[["Adc_SetupResultBuffer 设置结果缓冲区"]]
-    EnableTrigger[["Adc_EnableHardwareTrigger 使能硬件触发"]]
-    Loop2Inc["Cnt_u32++"]
-    CalloutInit[["Gp_IoMcuAdc_CalloutInit 执行额外初始化"]]
-    CheckFail{"Ret_t == E_NOT_OK 或 FuncCompl_b == FALSE ?"}
-    SetFail["记录初始化失败错误&lt;br&gt;设置 IfId_t, ErrStu_t, InitStu_t"]
-    SetSuccess["设置初始化完成状态&lt;br&gt;InitStu_t = GP_IOMCUADC_INITSTU_INITED"]
-    ClearRunCnt["清除运行计数器&lt;br&gt;RunCnt_u32 = 0U"]
-    End(["结束"])
+    START(["开始"]) --&gt; INIT_VARS["初始化局部变量&lt;br&gt;Cfg_cptst, Rt_cptst, CoreId_u32, Cnt_u32, ChlNum_u8, Ret_t, FuncCompl_b"]
+    INIT_VARS --&gt; GET_CORE_ID[["Gp_IoMcuAdc_CalloutGetCoreId&lt;br&gt;获取核心ID"]]
+    GET_CORE_ID --&gt; GET_CFG["获取当前核心配置地址&lt;br&gt;Cfg_cptst = &amp;Gp_IoMcuAdc_cfgCont_vcatst[CoreId_u32]"]
+    GET_CFG --&gt; GET_RT["获取当前核心运行时地址&lt;br&gt;Rt_cptst = &amp;Gp_IoMcuAdc_rtCont_lcatst[CoreId_u32]"]
+    GET_RT --&gt; GET_CHL_NUM["读取通道数量&lt;br&gt;ChlNum_u8 = Cfg_cptst-&gt;ChlNum_u8"]
+    GET_CHL_NUM --&gt; LOOP_PREP{{"循环计数器初始化&lt;br&gt;Cnt_u32 = 0U"}}
+    LOOP_PREP --&gt; LOOP_COND{"Cnt_u32 &lt; ChlNum_u8 ?"}
+    LOOP_COND -- 否 --&gt; CALL_INIT
+    LOOP_COND -- 是 --&gt; SET_RAW["设置初始值&lt;br&gt;Rt_cptst-&gt;AdcSig_ptst[Cnt_u32].AdcRaw_u16 = GP_IOMCUADC_ADCRAW_INVALID"]
+    SET_RAW --&gt; SET_DIAG["设置诊断值&lt;br&gt;Rt_cptst-&gt;AdcSig_ptst[Cnt_u32].Diag_u32 = 0U"]
+    SET_DIAG --&gt; SET_POLL["设置轮询计数&lt;br&gt;Rt_cptst-&gt;AdcSigLocalImpl_ptst[Cnt_u32].PollingCnt_u16 = 0U"]
+    SET_POLL --&gt; SET_ERR["设置错误状态&lt;br&gt;Rt_cptst-&gt;AdcSigLocalImpl_ptst[Cnt_u32].AdcSigErr_t = GP_IOMCUADC_ADCSIGERRSTU_NO_ERR"]
+    SET_ERR --&gt; LOOP_INC["Cnt_u32++"]
+    LOOP_INC --&gt; LOOP_COND
 
-    Start --&gt; InitVars
-    InitVars --&gt; GetCoreId
-    GetCoreId --&gt; SetCfgPtr
-    SetCfgPtr --&gt; SetRtPtr
-    SetRtPtr --&gt; GetChlNum
-    GetChlNum --&gt; Loop1Init
-    Loop1Init --&gt; Loop1Cond
-    Loop1Cond -- 是 --&gt; Loop1Body
-    Loop1Body --&gt; Loop1Inc
-    Loop1Inc --&gt; Loop1Cond
-    Loop1Cond -- 否 --&gt; Loop2Init
-    Loop2Init --&gt; Loop2Cond
-    Loop2Cond -- 是 --&gt; SetupBuffer
-    SetupBuffer --&gt; EnableTrigger
-    EnableTrigger --&gt; Loop2Inc
-    Loop2Inc --&gt; Loop2Cond
-    Loop2Cond -- 否 --&gt; CalloutInit
-    CalloutInit --&gt; CheckFail
-    CheckFail -- 是 --&gt; SetFail
-    CheckFail -- 否 --&gt; SetSuccess
-    SetFail --&gt; ClearRunCnt
-    SetSuccess --&gt; ClearRunCnt
-    ClearRunCnt --&gt; End</pre></details></td></tr>
+    subgraph SG1[" "]
+        SG1_NOTE["注：仅在 GP_IOMCUADC_SPEC_DEP_IF 为 AURIX2G_MCAL, AURIX3G_MCAL, TRAVEO2G_MCAL 或 STELLARPX_MCAL 时参与编译"]
+        SG1_NOTE ~~~ HW_LOOP_PREP
+        HW_LOOP_PREP{{"硬件触发循环初始化&lt;br&gt;Cnt_u32 = 0U"}}
+        HW_LOOP_PREP --&gt; HW_LOOP_COND{"Cnt_u32 &lt; Cfg_cptst-&gt;GrpNum_u8 ?"}
+        HW_LOOP_COND -- 否 --&gt; CALL_INIT
+        HW_LOOP_COND -- 是 --&gt; SETUP_BUF[["Adc_SetupResultBuffer&lt;br&gt;设置ADC结果缓冲区"]]
+        SETUP_BUF --&gt; ENABLE_TRIG[["Adc_EnableHardwareTrigger&lt;br&gt;使能硬件触发"]]
+        ENABLE_TRIG --&gt; HW_LOOP_INC["Cnt_u32++"]
+        HW_LOOP_INC --&gt; HW_LOOP_COND
+    end
+    style SG1 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+    classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700
+    class SG1_NOTE condNote
+
+    CALL_INIT[["Gp_IoMcuAdc_CalloutInit&lt;br&gt;调用初始化回调函数"]]
+    CALL_INIT --&gt; DET_CHECK
+
+    subgraph SG2[" "]
+        SG2_NOTE["注：仅在 GP_IOMCUADC_DEV_ERROR_DETECT 等于 STD_ON 时参与编译"]
+        SG2_NOTE ~~~ DET_CHECK
+        DET_CHECK{"(Ret_t == E_NOT_OK) || (FuncCompl_b == FALSE) ?"}
+        DET_CHECK -- 是 --&gt; SET_DET_ERR["记录初始化失败错误&lt;br&gt;Rt_cptst-&gt;Det_ptst-&gt;IfId_t = GP_IOMCUADC_IFID_INIT&lt;br&gt;Rt_cptst-&gt;Det_ptst-&gt;ErrStu_t = GP_IOMCUADC_ERRSTU_INIT_FAILED"]
+        SET_DET_ERR --&gt; SET_INIT_FAIL["设置初始化状态为失败&lt;br&gt;Rt_cptst-&gt;Det_ptst-&gt;InitStu_t = GP_IOMCUADC_INITSTU_INIT_FAILED"]
+        SET_INIT_FAIL --&gt; CLEAR_RUN_CNT
+        DET_CHECK -- 否 --&gt; SET_INIT_OK["设置初始化状态为完成&lt;br&gt;Rt_cptst-&gt;Det_ptst-&gt;InitStu_t = GP_IOMCUADC_INITSTU_INITED"]
+        SET_INIT_OK --&gt; CLEAR_RUN_CNT
+        CLEAR_RUN_CNT["清除运行计数器&lt;br&gt;Rt_cptst-&gt;Det_ptst-&gt;RunCnt_u32 = 0U"]
+    end
+    style SG2 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+    class SG2_NOTE condNote
+
+    DET_CHECK --&gt; END(["结束"])
+    CLEAR_RUN_CNT --&gt; END</pre></details></td></tr>
     <tr><td class="label">调用</td><td class="muted small">Gp_IoMcuAdc_CalloutGetCoreId<br>Adc_SetupResultBuffer<br>Adc_EnableHardwareTrigger<br>Gp_IoMcuAdc_CalloutInit</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_IoMcuAdc_rtCont_lcatst</td></tr>
   </table>
   <div class="wi-footer">
@@ -529,145 +537,81 @@ flowchart LR
     <tr><td class="label">Return value</td><td>void</td></tr>
     <tr><td class="label">Description</td><td class="desc">Gp_IoMcuAdc_MainFunction 是 Gp_IoMcuAdc 模块的周期性主函数，负责按照配置周期获取所有非直接读取通道的 ADC 原始数据及诊断数据，并将其存储至运行时缓冲区。该函数作为模块对外接口，在初始化完成后由核心使能状态下的周期任务调用，内部依次执行核心 ID 获取、初始化状态检查、ADC 原始数据读取及诊断数据读取操作。函数通过维护全局变量 Gp_IoMcuAdc_rtCont_lcatst 中的轮询计数，当计数达到最大值时进行清零并触发数据读取，从而实现非直接读取通道的周期性采样。</td></tr>
     <tr><td class="label">流程图</td><td><div class="mermaid">flowchart TD
-    START(["开始"])
-    INIT["初始化局部变量&lt;br&gt;Cfg_cptst, Rt_cptst,&lt;br&gt;CoreId_u32, Cnt_u32,&lt;br&gt;ChlNum_u8, ErrFlag_b"]
-    GET_CORE[["Gp_IoMcuAdc_CalloutGetCore&lt;br&gt;Id 获取核心ID"]]
-    LOAD_CFG[/"读取配置指针&lt;br&gt;Cfg_cptst =&lt;br&gt;&amp;Gp_IoMcuAdc_cfgCont_vcats&lt;br&gt;t[CoreId_u32]"/]
-    LOAD_RT[/"读取运行时指针&lt;br&gt;Rt_cptst =&lt;br&gt;&amp;Gp_IoMcuAdc_rtCont_lcatst&lt;br&gt;[CoreId_u32]"/]
-    CHECK_INIT[["Gp_IoMcuAdc_CheckInitStu&lt;br&gt;检查初始化状态"]]
-    INIT_OK{"ErrFlag_b == FALSE ?"}
-    
-    subgraph LOOP_BODY[" "]
-        direction TB
-        GET_CHL[/"读取通道数量&lt;br&gt;ChlNum_u8 =&lt;br&gt;Cfg_cptst-&gt;ChlNum_u8"/]
-        LOOP_PRE{{"Cnt_u32 = 0U"}}
-        LOOP_COND{"Cnt_u32 &lt; ChlNum_u8 ?"}
-        
-        subgraph DIRECT_CHECK[" "]
-            direction TB
-            DIRECT_READ{"DirectlyRead_b == FALSE ?"}
-            
-            subgraph POLLING_LOGIC[" "]
-                direction TB
-                INC_POLL["PollingCnt_u16++"]
-                POLL_MAX{"PollingCnt_u16 &gt;=&lt;br&gt;PollingCntMax_u16 ?"}
-                RESET_POLL["PollingCnt_u16 = 0U"]
-                GET_RAW[["Gp_IoMcuAdc_GetAdcRaw&lt;br&gt;读取ADC原始值"]]
-                GET_DIAG[["Gp_IoMcuAdc_GetDiag&lt;br&gt;获取诊断数据"]]
-            end
-        end
-        
-        LOOP_INC["Cnt_u32++"]
-    end
-    
-    INC_RUN["Rt_cptst-&gt;Det_ptst-&gt;RunCnt&lt;br&gt;_u32++"]
-    END(["结束"])
-    INC_POLL ~~~ END
-    POLL_MAX ~~~ END
-    RESET_POLL ~~~ END
-    GET_RAW ~~~ END
-    GET_DIAG ~~~ END
-    LOOP_INC ~~~ END
+    Start(["开始"]) --&gt; InitVars["初始化局部变量&lt;br&gt;Cfg_cptst, Rt_cptst,&lt;br&gt;CoreId_u32, Cnt_u32,&lt;br&gt;ChlNum_u8"]
+    InitVars --&gt; GetCoreId[["Gp_IoMcuAdc_CalloutGetCore&lt;br&gt;Id&lt;br&gt;获取当前核心ID"]]
+    GetCoreId --&gt; AssignCfg["赋值 Cfg_cptst&lt;br&gt;指向当前核心配置"]
+    AssignCfg --&gt; AssignRt["赋值 Rt_cptst&lt;br&gt;指向当前核心运行时缓冲区"]
+    AssignRt --&gt; CheckInit
 
-    START --&gt; INIT
-    INIT --&gt; GET_CORE
-    GET_CORE --&gt; LOAD_CFG
-    LOAD_CFG --&gt; LOAD_RT
-    LOAD_RT --&gt; CHECK_INIT
-    CHECK_INIT --&gt; INIT_OK
-    
-    INIT_OK -- 否 --&gt; END
-    INIT_OK -- 是 --&gt; GET_CHL
-    GET_CHL --&gt; LOOP_PRE
-    LOOP_PRE --&gt; LOOP_COND
-    
-    LOOP_COND -- 否 --&gt; INC_RUN
-    LOOP_COND -- 是 --&gt; DIRECT_READ
-    
-    DIRECT_READ -- 是 --&gt; INC_POLL
-    DIRECT_READ -- 否 --&gt; LOOP_INC
-    
-    INC_POLL --&gt; POLL_MAX
-    POLL_MAX -- 是 --&gt; RESET_POLL
-    RESET_POLL --&gt; GET_RAW
-    GET_RAW --&gt; GET_DIAG
-    GET_DIAG --&gt; LOOP_INC
-    
-    POLL_MAX -- 否 --&gt; LOOP_INC
-    
-    LOOP_INC --&gt; LOOP_COND
-    
-    INC_RUN --&gt; END
-    style LOOP_BODY fill:transparent,stroke:transparent
-    style DIRECT_CHECK fill:transparent,stroke:transparent
-    style POLLING_LOGIC fill:transparent,stroke:transparent</div>
+    subgraph SG1[" "]
+        SG1_NOTE["注：仅在&lt;br&gt;GP_IOMCUADC_DEV_ERROR_DETE&lt;br&gt;CT 等于 STD_ON 时参与编译"]
+        SG1_NOTE ~~~ CheckInit
+        CheckInit[["Gp_IoMcuAdc_CheckInitStu&lt;br&gt;检查初始化状态"]]
+        CheckInit --&gt; InitCheck{"ErrFlag_b == FALSE ?"}
+        InitCheck -- 是 --&gt; LoopPrep
+        InitCheck -- 否 --&gt; DoNothing1["do nothing"]
+        DoNothing1 --&gt; End
+    LoopInc ~~~ End
+    IncPolling ~~~ End
+    PollingMaxCheck ~~~ End
+    ResetPolling ~~~ End
+    GetAdcRaw ~~~ End
+    GetDiag ~~~ End
+    end
+
+    LoopPrep{{"Cnt_u32 = 0U"}} --&gt; LoopCond{"Cnt_u32 &lt; ChlNum_u8 ?"}
+    LoopCond -- 否 --&gt; PostLoop
+    LoopCond -- 是 --&gt; DirectReadCheck{"DirectlyRead_b == FALSE ?"}
+    DirectReadCheck -- 否 --&gt; LoopInc
+    DirectReadCheck -- 是 --&gt; IncPolling["PollingCnt_u16++"]
+    IncPolling --&gt; PollingMaxCheck{"PollingCnt_u16 &gt;=&lt;br&gt;PollingCntMax_u16 ?"}
+    PollingMaxCheck -- 否 --&gt; LoopInc
+    PollingMaxCheck -- 是 --&gt; ResetPolling["PollingCnt_u16 = 0U"]
+    ResetPolling --&gt; GetAdcRaw[["Gp_IoMcuAdc_GetAdcRaw&lt;br&gt;读取ADC原始值"]]
+    GetAdcRaw --&gt; GetDiag[["Gp_IoMcuAdc_GetDiag&lt;br&gt;获取诊断数据"]]
+    GetDiag --&gt; LoopInc
+    LoopInc["Cnt_u32++"] --&gt; LoopCond
+
+    PostLoop["MainFunction running&lt;br&gt;counter increasing&lt;br&gt;Rt_cptst-&gt;Det_ptst-&gt;RunCnt&lt;br&gt;_u32++"] --&gt; End(["结束"])
+
+    style SG1 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+    classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700
+    class SG1_NOTE condNote</div>
 <details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">flowchart TD
-    START(["开始"])
-    INIT["初始化局部变量&lt;br&gt;Cfg_cptst, Rt_cptst, CoreId_u32, Cnt_u32, ChlNum_u8, ErrFlag_b"]
-    GET_CORE[["Gp_IoMcuAdc_CalloutGetCoreId 获取核心ID"]]
-    LOAD_CFG[/"读取配置指针&lt;br&gt;Cfg_cptst = &amp;Gp_IoMcuAdc_cfgCont_vcatst[CoreId_u32]"/]
-    LOAD_RT[/"读取运行时指针&lt;br&gt;Rt_cptst = &amp;Gp_IoMcuAdc_rtCont_lcatst[CoreId_u32]"/]
-    CHECK_INIT[["Gp_IoMcuAdc_CheckInitStu 检查初始化状态"]]
-    INIT_OK{"ErrFlag_b == FALSE ?"}
-    
-    subgraph LOOP_BODY[" "]
-        direction TB
-        GET_CHL[/"读取通道数量&lt;br&gt;ChlNum_u8 = Cfg_cptst-&gt;ChlNum_u8"/]
-        LOOP_PRE{{"Cnt_u32 = 0U"}}
-        LOOP_COND{"Cnt_u32 &lt; ChlNum_u8 ?"}
-        
-        subgraph DIRECT_CHECK[" "]
-            direction TB
-            DIRECT_READ{"DirectlyRead_b == FALSE ?"}
-            
-            subgraph POLLING_LOGIC[" "]
-                direction TB
-                INC_POLL["PollingCnt_u16++"]
-                POLL_MAX{"PollingCnt_u16 &gt;= PollingCntMax_u16 ?"}
-                RESET_POLL["PollingCnt_u16 = 0U"]
-                GET_RAW[["Gp_IoMcuAdc_GetAdcRaw 读取ADC原始值"]]
-                GET_DIAG[["Gp_IoMcuAdc_GetDiag 获取诊断数据"]]
-            end
-        end
-        
-        LOOP_INC["Cnt_u32++"]
-    end
-    
-    INC_RUN["Rt_cptst-&gt;Det_ptst-&gt;RunCnt_u32++"]
-    END(["结束"])
+    Start(["开始"]) --&gt; InitVars["初始化局部变量&lt;br&gt;Cfg_cptst, Rt_cptst, CoreId_u32, Cnt_u32, ChlNum_u8"]
+    InitVars --&gt; GetCoreId[["Gp_IoMcuAdc_CalloutGetCoreId&lt;br&gt;获取当前核心ID"]]
+    GetCoreId --&gt; AssignCfg["赋值 Cfg_cptst&lt;br&gt;指向当前核心配置"]
+    AssignCfg --&gt; AssignRt["赋值 Rt_cptst&lt;br&gt;指向当前核心运行时缓冲区"]
+    AssignRt --&gt; CheckInit
 
-    START --&gt; INIT
-    INIT --&gt; GET_CORE
-    GET_CORE --&gt; LOAD_CFG
-    LOAD_CFG --&gt; LOAD_RT
-    LOAD_RT --&gt; CHECK_INIT
-    CHECK_INIT --&gt; INIT_OK
-    
-    INIT_OK -- 否 --&gt; END
-    INIT_OK -- 是 --&gt; GET_CHL
-    GET_CHL --&gt; LOOP_PRE
-    LOOP_PRE --&gt; LOOP_COND
-    
-    LOOP_COND -- 否 --&gt; INC_RUN
-    LOOP_COND -- 是 --&gt; DIRECT_READ
-    
-    DIRECT_READ -- 是 --&gt; INC_POLL
-    DIRECT_READ -- 否 --&gt; LOOP_INC
-    
-    INC_POLL --&gt; POLL_MAX
-    POLL_MAX -- 是 --&gt; RESET_POLL
-    RESET_POLL --&gt; GET_RAW
-    GET_RAW --&gt; GET_DIAG
-    GET_DIAG --&gt; LOOP_INC
-    
-    POLL_MAX -- 否 --&gt; LOOP_INC
-    
-    LOOP_INC --&gt; LOOP_COND
-    
-    INC_RUN --&gt; END
-    style LOOP_BODY fill:transparent,stroke:transparent
-    style DIRECT_CHECK fill:transparent,stroke:transparent
-    style POLLING_LOGIC fill:transparent,stroke:transparent</pre></details></td></tr>
+    subgraph SG1[" "]
+        SG1_NOTE["注：仅在 GP_IOMCUADC_DEV_ERROR_DETECT 等于 STD_ON 时参与编译"]
+        SG1_NOTE ~~~ CheckInit
+        CheckInit[["Gp_IoMcuAdc_CheckInitStu&lt;br&gt;检查初始化状态"]]
+        CheckInit --&gt; InitCheck{"ErrFlag_b == FALSE ?"}
+        InitCheck -- 是 --&gt; LoopPrep
+        InitCheck -- 否 --&gt; DoNothing1["do nothing"]
+        DoNothing1 --&gt; End
+    end
+
+    LoopPrep{{"Cnt_u32 = 0U"}} --&gt; LoopCond{"Cnt_u32 &lt; ChlNum_u8 ?"}
+    LoopCond -- 否 --&gt; PostLoop
+    LoopCond -- 是 --&gt; DirectReadCheck{"DirectlyRead_b == FALSE ?"}
+    DirectReadCheck -- 否 --&gt; LoopInc
+    DirectReadCheck -- 是 --&gt; IncPolling["PollingCnt_u16++"]
+    IncPolling --&gt; PollingMaxCheck{"PollingCnt_u16 &gt;= PollingCntMax_u16 ?"}
+    PollingMaxCheck -- 否 --&gt; LoopInc
+    PollingMaxCheck -- 是 --&gt; ResetPolling["PollingCnt_u16 = 0U"]
+    ResetPolling --&gt; GetAdcRaw[["Gp_IoMcuAdc_GetAdcRaw&lt;br&gt;读取ADC原始值"]]
+    GetAdcRaw --&gt; GetDiag[["Gp_IoMcuAdc_GetDiag&lt;br&gt;获取诊断数据"]]
+    GetDiag --&gt; LoopInc
+    LoopInc["Cnt_u32++"] --&gt; LoopCond
+
+    PostLoop["MainFunction running counter increasing&lt;br&gt;Rt_cptst-&gt;Det_ptst-&gt;RunCnt_u32++"] --&gt; End(["结束"])
+
+    style SG1 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+    classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700
+    class SG1_NOTE condNote</pre></details></td></tr>
     <tr><td class="label">调用</td><td class="muted small">Gp_IoMcuAdc_CalloutGetCoreId<br>Gp_IoMcuAdc_CheckInitStu<br>Gp_IoMcuAdc_GetAdcRaw<br>Gp_IoMcuAdc_GetDiag</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_IoMcuAdc_rtCont_lcatst</td></tr>
   </table>
   <div class="wi-footer">
@@ -696,75 +640,81 @@ flowchart LR
     <tr><td class="label">Return value</td><td>Std_ReturnType - E_OK/E_NOT_OK</td></tr>
     <tr><td class="label">Description</td><td class="desc">该函数作为 Gp_IoMcuAdc 模块的对外接口，用于获取指定 ID 对应的 AdcSig 接口的诊断数据，并通过输出参数 Diag_pu32 返回结果。在模块架构中，它依赖于内部函数 Gp_IoMcuAdc_GetDiag 执行具体的数据读取操作，同时调用 Gp_IoMcuAdc_CalloutGetCoreId、Gp_IoMcuAdc_CheckInitStu 和 Gp_IoMcuAdc_CheckArgIn 进行核心 ID 获取、初始化状态检查及输入参数校验。函数执行前必须满足在已启用的核心上运行、Gp_IoMcuAdc_Init 已完成且 Gp_IoMcuAdc_MainFunction 已读取除直接读取通道外所有通道信号值的前置条件。若当前 ID 对应的通道配置为直接读取通道，函数将从内部函数读取诊断数据；否则，将从由 Gp_IoMcuAdc_MainFunction 写入的本地缓冲区中读取数据。该函数访问模块全局变量 Gp_IoMcuAdc_rtCont_lcatst 以支持其内部逻辑处理。</td></tr>
     <tr><td class="label">流程图</td><td><div class="mermaid">flowchart TD
-    START(["开始"])
-    INIT{{"初始化局部变量&lt;br&gt;Ret_t = E_NOT_OK&lt;br&gt;CoreId_u32 = 0U&lt;br&gt;ChlIdx_u8 = 0U&lt;br&gt;ErrFlag1_b = FALSE&lt;br&gt;ErrFlag2_b = FALSE"}}
-    CALL_CORE[["Gp_IoMcuAdc_CalloutGetCore&lt;br&gt;Id&lt;br&gt;获取核心ID"]]
-    READ_CFG[/"读取配置指针&lt;br&gt;Cfg_cptst =&lt;br&gt;&amp;Gp_IoMcuAdc_cfgCont_vcats&lt;br&gt;t[CoreId_u32]"/]
-    READ_RT[/"读取运行时指针&lt;br&gt;Rt_cptst =&lt;br&gt;&amp;Gp_IoMcuAdc_rtCont_lcatst&lt;br&gt;[CoreId_u32]"/]
-    CALL_CHECK1[["Gp_IoMcuAdc_CheckInitStu&lt;br&gt;检查初始化状态"]]
-    CALL_CHECK2[["Gp_IoMcuAdc_CheckArgIn&lt;br&gt;检查输入参数"]]
-    OR_FLAGS["合并错误标志&lt;br&gt;ErrFlag1_b = ErrFlag1_b |&lt;br&gt;ErrFlag2_b"]
-    CHECK_ERR{"ErrFlag1_b == FALSE ?"}
-    READ_MAP[/"读取通道索引&lt;br&gt;ChlIdx_u8 =&lt;br&gt;SmCfg_cptst[Id_u16].Mappin&lt;br&gt;gChlIdx_u8"/]
-    CHECK_DIRECT{"Cfg_cptst-&gt;AdcSigLocalCfg_&lt;br&gt;cptst[ChlIdx_u8].DirectlyR&lt;br&gt;ead_b == TRUE ?"}
-    CALL_DIAG[["Gp_IoMcuAdc_GetDiag&lt;br&gt;获取诊断数据"]]
-    WRITE_DIAG[/"写入诊断数据&lt;br&gt;*Diag_pu32 =&lt;br&gt;Rt_cptst-&gt;AdcSig_ptst[ChlI&lt;br&gt;dx_u8].Diag_u32"/]
-    SET_OK["设置返回状态&lt;br&gt;Ret_t = E_OK"]
-    SET_NOT_OK["设置返回状态&lt;br&gt;Ret_t = E_NOT_OK"]
-    END(["结束"])
+    START(["开始"]) --&gt; INIT
+    INIT{{"初始化 Ret_t 为 E_NOT_OK&lt;br&gt;初始化 Cfg_cptst 指向&lt;br&gt;Gp_IoMcuAdc_cfgCont_vcatst&lt;br&gt;[0U]&lt;br&gt;初始化 Rt_cptst 指向&lt;br&gt;Gp_IoMcuAdc_rtCont_lcatst[&lt;br&gt;0U]&lt;br&gt;初始化 SmCfg_cptst 指向&lt;br&gt;Gp_IoMcuAdc_cfgAdcSigMappi&lt;br&gt;ng_vcatst[0U]&lt;br&gt;初始化 CoreId_u32 为 0U&lt;br&gt;初始化 ChlIdx_u8 为 0U"}}
+    INIT --&gt; GET_CORE[["Gp_IoMcuAdc_CalloutGetCore&lt;br&gt;Id 获取核心ID"]]
+    GET_CORE --&gt; ASSIGN_CORE["CoreId_u32 =&lt;br&gt;Gp_IoMcuAdc_CalloutGetCore&lt;br&gt;Id()"]
+    ASSIGN_CORE --&gt; ASSIGN_CFG["Cfg_cptst =&lt;br&gt;&amp;Gp_IoMcuAdc_cfgCont_vcats&lt;br&gt;t[CoreId_u32]"]
+    ASSIGN_CFG --&gt; ASSIGN_RT["Rt_cptst =&lt;br&gt;&amp;Gp_IoMcuAdc_rtCont_lcatst&lt;br&gt;[CoreId_u32]"]
+    
+    subgraph SG1[" "]
+        SG1_NOTE["注：仅在&lt;br&gt;GP_IOMCUADC_DEV_ERROR_DETE&lt;br&gt;CT 等于 STD_ON 时参与编译"]
+        SG1_NOTE ~~~ CHECK_INIT
+        CHECK_INIT[["Gp_IoMcuAdc_CheckInitStu&lt;br&gt;检查初始化状态"]]
+        CHECK_INIT --&gt; ASSIGN_ERR1["ErrFlag1_b =&lt;br&gt;Gp_IoMcuAdc_CheckInitStu(.&lt;br&gt;..)"]
+        ASSIGN_ERR1 --&gt; CHECK_ARG[["Gp_IoMcuAdc_CheckArgIn&lt;br&gt;检查输入参数"]]
+        CHECK_ARG --&gt; ASSIGN_ERR2["ErrFlag2_b =&lt;br&gt;Gp_IoMcuAdc_CheckArgIn(...&lt;br&gt;)"]
+        ASSIGN_ERR2 --&gt; OR_ERR["ErrFlag1_b = ErrFlag1_b |&lt;br&gt;ErrFlag2_b"]
+        OR_ERR --&gt; IF_ERR{"ErrFlag1_b == FALSE ?"}
+    end
+    style SG1 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+    classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700
+    class SG1_NOTE condNote
 
-    START --&gt; INIT
-    INIT --&gt; CALL_CORE
-    CALL_CORE --&gt; READ_CFG
-    READ_CFG --&gt; READ_RT
-    READ_RT --&gt; CALL_CHECK1
-    CALL_CHECK1 --&gt; CALL_CHECK2
-    CALL_CHECK2 --&gt; OR_FLAGS
-    OR_FLAGS --&gt; CHECK_ERR
-    CHECK_ERR -- 是 --&gt; READ_MAP
-    READ_MAP --&gt; CHECK_DIRECT
-    CHECK_DIRECT -- 是 --&gt; CALL_DIAG
-    CALL_DIAG --&gt; WRITE_DIAG
-    WRITE_DIAG --&gt; SET_OK
-    CHECK_DIRECT -- 否 --&gt; WRITE_DIAG
-    CHECK_ERR -- 否 --&gt; SET_NOT_OK
-    SET_OK --&gt; END
-    SET_NOT_OK --&gt; END</div>
+    ASSIGN_RT --&gt; IF_ERR
+    IF_ERR -- 否 --&gt; SET_RET_ERR["Ret_t = E_NOT_OK"]
+    IF_ERR -- 是 --&gt; GET_CHL["ChlIdx_u8 =&lt;br&gt;SmCfg_cptst[Id_u16].Mappin&lt;br&gt;gChlIdx_u8"]
+    
+    GET_CHL --&gt; IF_DIRECT{"Cfg_cptst-&gt;AdcSigLocalCfg_&lt;br&gt;cptst[ChlIdx_u8].DirectlyR&lt;br&gt;ead_b == TRUE ?"}
+    
+    IF_DIRECT -- 是 --&gt; GET_DIAG[["Gp_IoMcuAdc_GetDiag&lt;br&gt;获取诊断数据"]]
+    GET_DIAG --&gt; WRITE_DIAG1["*Diag_pu32 =&lt;br&gt;Rt_cptst-&gt;AdcSig_ptst[ChlI&lt;br&gt;dx_u8].Diag_u32"]
+    
+    IF_DIRECT -- 否 --&gt; WRITE_DIAG2["*Diag_pu32 =&lt;br&gt;Rt_cptst-&gt;AdcSig_ptst[ChlI&lt;br&gt;dx_u8].Diag_u32"]
+    
+    WRITE_DIAG1 --&gt; SET_RET_OK["Ret_t = E_OK"]
+    WRITE_DIAG2 --&gt; SET_RET_OK
+    
+    SET_RET_OK --&gt; END(["结束"])
+    SET_RET_ERR --&gt; END</div>
 <details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">flowchart TD
-    START(["开始"])
-    INIT{{"初始化局部变量&lt;br&gt;Ret_t = E_NOT_OK&lt;br&gt;CoreId_u32 = 0U&lt;br&gt;ChlIdx_u8 = 0U&lt;br&gt;ErrFlag1_b = FALSE&lt;br&gt;ErrFlag2_b = FALSE"}}
-    CALL_CORE[["Gp_IoMcuAdc_CalloutGetCoreId&lt;br&gt;获取核心ID"]]
-    READ_CFG[/"读取配置指针&lt;br&gt;Cfg_cptst = &amp;Gp_IoMcuAdc_cfgCont_vcatst[CoreId_u32]"/]
-    READ_RT[/"读取运行时指针&lt;br&gt;Rt_cptst = &amp;Gp_IoMcuAdc_rtCont_lcatst[CoreId_u32]"/]
-    CALL_CHECK1[["Gp_IoMcuAdc_CheckInitStu&lt;br&gt;检查初始化状态"]]
-    CALL_CHECK2[["Gp_IoMcuAdc_CheckArgIn&lt;br&gt;检查输入参数"]]
-    OR_FLAGS["合并错误标志&lt;br&gt;ErrFlag1_b = ErrFlag1_b | ErrFlag2_b"]
-    CHECK_ERR{"ErrFlag1_b == FALSE ?"}
-    READ_MAP[/"读取通道索引&lt;br&gt;ChlIdx_u8 = SmCfg_cptst[Id_u16].MappingChlIdx_u8"/]
-    CHECK_DIRECT{"Cfg_cptst-&gt;AdcSigLocalCfg_cptst[ChlIdx_u8].DirectlyRead_b == TRUE ?"}
-    CALL_DIAG[["Gp_IoMcuAdc_GetDiag&lt;br&gt;获取诊断数据"]]
-    WRITE_DIAG[/"写入诊断数据&lt;br&gt;*Diag_pu32 = Rt_cptst-&gt;AdcSig_ptst[ChlIdx_u8].Diag_u32"/]
-    SET_OK["设置返回状态&lt;br&gt;Ret_t = E_OK"]
-    SET_NOT_OK["设置返回状态&lt;br&gt;Ret_t = E_NOT_OK"]
-    END(["结束"])
+    START(["开始"]) --&gt; INIT
+    INIT{{"初始化 Ret_t 为 E_NOT_OK&lt;br&gt;初始化 Cfg_cptst 指向 Gp_IoMcuAdc_cfgCont_vcatst[0U]&lt;br&gt;初始化 Rt_cptst 指向 Gp_IoMcuAdc_rtCont_lcatst[0U]&lt;br&gt;初始化 SmCfg_cptst 指向 Gp_IoMcuAdc_cfgAdcSigMapping_vcatst[0U]&lt;br&gt;初始化 CoreId_u32 为 0U&lt;br&gt;初始化 ChlIdx_u8 为 0U"}}
+    INIT --&gt; GET_CORE[["Gp_IoMcuAdc_CalloutGetCoreId 获取核心ID"]]
+    GET_CORE --&gt; ASSIGN_CORE["CoreId_u32 = Gp_IoMcuAdc_CalloutGetCoreId()"]
+    ASSIGN_CORE --&gt; ASSIGN_CFG["Cfg_cptst = &amp;Gp_IoMcuAdc_cfgCont_vcatst[CoreId_u32]"]
+    ASSIGN_CFG --&gt; ASSIGN_RT["Rt_cptst = &amp;Gp_IoMcuAdc_rtCont_lcatst[CoreId_u32]"]
+    
+    subgraph SG1[" "]
+        SG1_NOTE["注：仅在 GP_IOMCUADC_DEV_ERROR_DETECT 等于 STD_ON 时参与编译"]
+        SG1_NOTE ~~~ CHECK_INIT
+        CHECK_INIT[["Gp_IoMcuAdc_CheckInitStu 检查初始化状态"]]
+        CHECK_INIT --&gt; ASSIGN_ERR1["ErrFlag1_b = Gp_IoMcuAdc_CheckInitStu(...)"]
+        ASSIGN_ERR1 --&gt; CHECK_ARG[["Gp_IoMcuAdc_CheckArgIn 检查输入参数"]]
+        CHECK_ARG --&gt; ASSIGN_ERR2["ErrFlag2_b = Gp_IoMcuAdc_CheckArgIn(...)"]
+        ASSIGN_ERR2 --&gt; OR_ERR["ErrFlag1_b = ErrFlag1_b | ErrFlag2_b"]
+        OR_ERR --&gt; IF_ERR{"ErrFlag1_b == FALSE ?"}
+    end
+    style SG1 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+    classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700
+    class SG1_NOTE condNote
 
-    START --&gt; INIT
-    INIT --&gt; CALL_CORE
-    CALL_CORE --&gt; READ_CFG
-    READ_CFG --&gt; READ_RT
-    READ_RT --&gt; CALL_CHECK1
-    CALL_CHECK1 --&gt; CALL_CHECK2
-    CALL_CHECK2 --&gt; OR_FLAGS
-    OR_FLAGS --&gt; CHECK_ERR
-    CHECK_ERR -- 是 --&gt; READ_MAP
-    READ_MAP --&gt; CHECK_DIRECT
-    CHECK_DIRECT -- 是 --&gt; CALL_DIAG
-    CALL_DIAG --&gt; WRITE_DIAG
-    WRITE_DIAG --&gt; SET_OK
-    CHECK_DIRECT -- 否 --&gt; WRITE_DIAG
-    CHECK_ERR -- 否 --&gt; SET_NOT_OK
-    SET_OK --&gt; END
-    SET_NOT_OK --&gt; END</pre></details></td></tr>
+    ASSIGN_RT --&gt; IF_ERR
+    IF_ERR -- 否 --&gt; SET_RET_ERR["Ret_t = E_NOT_OK"]
+    IF_ERR -- 是 --&gt; GET_CHL["ChlIdx_u8 = SmCfg_cptst[Id_u16].MappingChlIdx_u8"]
+    
+    GET_CHL --&gt; IF_DIRECT{"Cfg_cptst-&gt;AdcSigLocalCfg_cptst[ChlIdx_u8].DirectlyRead_b == TRUE ?"}
+    
+    IF_DIRECT -- 是 --&gt; GET_DIAG[["Gp_IoMcuAdc_GetDiag 获取诊断数据"]]
+    GET_DIAG --&gt; WRITE_DIAG1["*Diag_pu32 = Rt_cptst-&gt;AdcSig_ptst[ChlIdx_u8].Diag_u32"]
+    
+    IF_DIRECT -- 否 --&gt; WRITE_DIAG2["*Diag_pu32 = Rt_cptst-&gt;AdcSig_ptst[ChlIdx_u8].Diag_u32"]
+    
+    WRITE_DIAG1 --&gt; SET_RET_OK["Ret_t = E_OK"]
+    WRITE_DIAG2 --&gt; SET_RET_OK
+    
+    SET_RET_OK --&gt; END(["结束"])
+    SET_RET_ERR --&gt; END</pre></details></td></tr>
     <tr><td class="label">调用</td><td class="muted small">Gp_IoMcuAdc_CalloutGetCoreId<br>Gp_IoMcuAdc_CheckInitStu<br>Gp_IoMcuAdc_CheckArgIn<br>Gp_IoMcuAdc_GetDiag</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_IoMcuAdc_rtCont_lcatst</td></tr>
   </table>
   <div class="wi-footer">
@@ -793,90 +743,70 @@ flowchart LR
     <tr><td class="label">Return value</td><td>Std_ReturnType - E_OK/E_NOT_OK</td></tr>
     <tr><td class="label">Description</td><td class="desc">该函数作为 Gp_IoMcuAdc 模块的对外接口，用于根据指定的信号 ID 获取 ADC 原始值，并通过输出参数 AdcRaw_pu16 返回结果。在调用内部函数 Gp_IoMcuAdc_GetAdcRaw 获取数据前，函数首先通过 Gp_IoMcuAdc_CalloutGetCoreId 获取当前核心 ID，并调用 Gp_IoMcuAdc_CheckInitStu 和 Gp_IoMcuAdc_CheckArgIn 验证初始化状态及输入参数的有效性。该函数必须在 Gp_IoMcuAdc_Init 完成且 Gp_IoMcuAdc_MainFunction 已读取除直接读取通道外所有信号值后，在已启用的核心中调用。若当前 ID 对应的通道配置为直接读取通道，则直接读取 ADC 原始值；否则从由 Gp_IoMcuAdc_MainFunction 写入的本地缓冲区中读取数据。函数执行过程中会访问模块全局变量 Gp_IoMcuAdc_rtCont_lcatst 以支持内部逻辑处理。</td></tr>
     <tr><td class="label">流程图</td><td><div class="mermaid">flowchart TD
-    START(["开始"])
-    INIT["初始化 Ret_t 为 E_NOT_OK&lt;br&gt;初始化 Cfg_cptst 指向&lt;br&gt;Gp_IoMcuAdc_cfgCont_vcatst&lt;br&gt;[0U]&lt;br&gt;初始化 Rt_cptst 指向&lt;br&gt;Gp_IoMcuAdc_rtCont_lcatst[&lt;br&gt;0U]&lt;br&gt;初始化 SmCfg_cptst 指向&lt;br&gt;Gp_IoMcuAdc_cfgAdcSigMappi&lt;br&gt;ng_vcatst[0U]&lt;br&gt;初始化 CoreId_u32 为 0U&lt;br&gt;初始化 ChlIdx_u8 为 0U&lt;br&gt;初始化 ErrFlag1_b 为 FALSE&lt;br&gt;初始化 ErrFlag2_b 为 FALSE"]
-    CALL_CORE[["Gp_IoMcuAdc_CalloutGetCore&lt;br&gt;Id 获取核心ID"]]
-    ASSIGN_CORE["CoreId_u32 赋值&lt;br&gt;Gp_IoMcuAdc_CalloutGetCore&lt;br&gt;Id 返回值"]
-    ASSIGN_CFG["Cfg_cptst 赋值&lt;br&gt;Gp_IoMcuAdc_cfgCont_vcatst&lt;br&gt;[CoreId_u32] 地址"]
-    ASSIGN_RT["Rt_cptst 赋值&lt;br&gt;Gp_IoMcuAdc_rtCont_lcatst[&lt;br&gt;CoreId_u32] 地址"]
-    CALL_INIT[["Gp_IoMcuAdc_CheckInitStu&lt;br&gt;检查初始化状态"]]
-    ASSIGN_ERR1["ErrFlag1_b 赋值&lt;br&gt;Gp_IoMcuAdc_CheckInitStu&lt;br&gt;返回值"]
-    CALL_ARG[["Gp_IoMcuAdc_CheckArgIn&lt;br&gt;检查输入参数"]]
-    ASSIGN_ERR2["ErrFlag2_b 赋值&lt;br&gt;Gp_IoMcuAdc_CheckArgIn&lt;br&gt;返回值"]
-    OR_ERR["ErrFlag1_b 执行或运算&lt;br&gt;ErrFlag1_b | ErrFlag2_b"]
-    CHECK_ERR{"ErrFlag1_b == FALSE ?"}
-    READ_CHL["ChlIdx_u8 赋值&lt;br&gt;SmCfg_cptst[Id_u16].Mappin&lt;br&gt;gChlIdx_u8"]
-    CHECK_DIRECT{"Cfg_cptst-&gt;AdcSigLocalCfg_&lt;br&gt;cptst[ChlIdx_u8].DirectlyR&lt;br&gt;ead_b == TRUE ?"}
-    CALL_RAW[["Gp_IoMcuAdc_GetAdcRaw&lt;br&gt;获取ADC原始值"]]
-    WRITE_RAW1["*AdcRaw_pu16 赋值&lt;br&gt;Rt_cptst-&gt;AdcSig_ptst[ChlI&lt;br&gt;dx_u8].AdcRaw_u16"]
-    WRITE_RAW2["*AdcRaw_pu16 赋值&lt;br&gt;Rt_cptst-&gt;AdcSig_ptst[ChlI&lt;br&gt;dx_u8].AdcRaw_u16"]
-    SET_OK["Ret_t 赋值 E_OK"]
-    SET_NOT_OK["Ret_t 赋值 E_NOT_OK"]
-    END(["结束"])
+    START(["开始"]) --&gt; INIT
+    INIT{{"初始化局部变量&lt;br&gt;Ret_t = E_NOT_OK&lt;br&gt;Cfg_cptst =&lt;br&gt;&amp;Gp_IoMcuAdc_cfgCont_vcats&lt;br&gt;t[0U]&lt;br&gt;Rt_cptst =&lt;br&gt;&amp;Gp_IoMcuAdc_rtCont_lcatst&lt;br&gt;[0U]&lt;br&gt;SmCfg_cptst =&lt;br&gt;&amp;Gp_IoMcuAdc_cfgAdcSigMapp&lt;br&gt;ing_vcatst[0U]&lt;br&gt;CoreId_u32 = 0U&lt;br&gt;ChlIdx_u8 = 0U"}}
+    INIT --&gt; GET_CORE[["Gp_IoMcuAdc_CalloutGetCore&lt;br&gt;Id 获取核心ID"]]
+    GET_CORE --&gt; ASSIGN_CORE["CoreId_u32 =&lt;br&gt;Gp_IoMcuAdc_CalloutGetCore&lt;br&gt;Id()"]
+    ASSIGN_CORE --&gt; ASSIGN_CFG["Cfg_cptst =&lt;br&gt;&amp;Gp_IoMcuAdc_cfgCont_vcats&lt;br&gt;t[CoreId_u32]"]
+    ASSIGN_CFG --&gt; ASSIGN_RT["Rt_cptst =&lt;br&gt;&amp;Gp_IoMcuAdc_rtCont_lcatst&lt;br&gt;[CoreId_u32]"]
+    
+    subgraph SG1[" "]
+        SG1_NOTE["注：仅在&lt;br&gt;GP_IOMCUADC_DEV_ERROR_DETE&lt;br&gt;CT 等于 STD_ON 时参与编译"]
+        SG1_NOTE ~~~ CHECK_INIT
+        CHECK_INIT[["Gp_IoMcuAdc_CheckInitStu&lt;br&gt;检查初始化状态"]]
+        CHECK_INIT --&gt; ASSIGN_ERR1["ErrFlag1_b =&lt;br&gt;Gp_IoMcuAdc_CheckInitStu(.&lt;br&gt;..)"]
+        ASSIGN_ERR1 --&gt; CHECK_ARG[["Gp_IoMcuAdc_CheckArgIn&lt;br&gt;检查输入参数"]]
+        CHECK_ARG --&gt; ASSIGN_ERR2["ErrFlag2_b =&lt;br&gt;Gp_IoMcuAdc_CheckArgIn(...&lt;br&gt;)"]
+        ASSIGN_ERR2 --&gt; OR_ERR["ErrFlag1_b = ErrFlag1_b |&lt;br&gt;ErrFlag2_b"]
+        OR_ERR --&gt; IF_ERR{"ErrFlag1_b == FALSE ?"}
+    end
+    style SG1 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+    classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700
+    class SG1_NOTE condNote
 
-    START --&gt; INIT
-    INIT --&gt; CALL_CORE
-    CALL_CORE --&gt; ASSIGN_CORE
-    ASSIGN_CORE --&gt; ASSIGN_CFG
-    ASSIGN_CFG --&gt; ASSIGN_RT
-    ASSIGN_RT --&gt; CALL_INIT
-    CALL_INIT --&gt; ASSIGN_ERR1
-    ASSIGN_ERR1 --&gt; CALL_ARG
-    CALL_ARG --&gt; ASSIGN_ERR2
-    ASSIGN_ERR2 --&gt; OR_ERR
-    OR_ERR --&gt; CHECK_ERR
-    CHECK_ERR -- 是 --&gt; READ_CHL
-    READ_CHL --&gt; CHECK_DIRECT
-    CHECK_DIRECT -- 是 --&gt; CALL_RAW
-    CALL_RAW --&gt; WRITE_RAW1
-    WRITE_RAW1 --&gt; SET_OK
-    CHECK_DIRECT -- 否 --&gt; WRITE_RAW2
-    WRITE_RAW2 --&gt; SET_OK
-    CHECK_ERR -- 否 --&gt; SET_NOT_OK
-    SET_OK --&gt; END
+    ASSIGN_RT --&gt; IF_ERR
+    IF_ERR -- 否 --&gt; SET_NOT_OK["Ret_t = E_NOT_OK"]
+    IF_ERR -- 是 --&gt; GET_CHL["ChlIdx_u8 =&lt;br&gt;SmCfg_cptst[Id_u16].Mappin&lt;br&gt;gChlIdx_u8"]
+    GET_CHL --&gt; IF_DIRECT{"Cfg_cptst-&gt;AdcSigLocalCfg_&lt;br&gt;cptst[ChlIdx_u8].DirectlyR&lt;br&gt;ead_b == TRUE ?"}
+    IF_DIRECT -- 是 --&gt; CALL_GET_RAW[["Gp_IoMcuAdc_GetAdcRaw&lt;br&gt;直接读取ADC原始值"]]
+    CALL_GET_RAW --&gt; READ_RAW1["*AdcRaw_pu16 =&lt;br&gt;Rt_cptst-&gt;AdcSig_ptst[ChlI&lt;br&gt;dx_u8].AdcRaw_u16"]
+    IF_DIRECT -- 否 --&gt; READ_RAW2["*AdcRaw_pu16 =&lt;br&gt;Rt_cptst-&gt;AdcSig_ptst[ChlI&lt;br&gt;dx_u8].AdcRaw_u16"]
+    READ_RAW1 --&gt; SET_OK["Ret_t = E_OK"]
+    READ_RAW2 --&gt; SET_OK
+    SET_OK --&gt; END(["结束"])
     SET_NOT_OK --&gt; END</div>
 <details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">flowchart TD
-    START(["开始"])
-    INIT["初始化 Ret_t 为 E_NOT_OK&lt;br&gt;初始化 Cfg_cptst 指向 Gp_IoMcuAdc_cfgCont_vcatst[0U]&lt;br&gt;初始化 Rt_cptst 指向 Gp_IoMcuAdc_rtCont_lcatst[0U]&lt;br&gt;初始化 SmCfg_cptst 指向 Gp_IoMcuAdc_cfgAdcSigMapping_vcatst[0U]&lt;br&gt;初始化 CoreId_u32 为 0U&lt;br&gt;初始化 ChlIdx_u8 为 0U&lt;br&gt;初始化 ErrFlag1_b 为 FALSE&lt;br&gt;初始化 ErrFlag2_b 为 FALSE"]
-    CALL_CORE[["Gp_IoMcuAdc_CalloutGetCoreId 获取核心ID"]]
-    ASSIGN_CORE["CoreId_u32 赋值 Gp_IoMcuAdc_CalloutGetCoreId 返回值"]
-    ASSIGN_CFG["Cfg_cptst 赋值 Gp_IoMcuAdc_cfgCont_vcatst[CoreId_u32] 地址"]
-    ASSIGN_RT["Rt_cptst 赋值 Gp_IoMcuAdc_rtCont_lcatst[CoreId_u32] 地址"]
-    CALL_INIT[["Gp_IoMcuAdc_CheckInitStu 检查初始化状态"]]
-    ASSIGN_ERR1["ErrFlag1_b 赋值 Gp_IoMcuAdc_CheckInitStu 返回值"]
-    CALL_ARG[["Gp_IoMcuAdc_CheckArgIn 检查输入参数"]]
-    ASSIGN_ERR2["ErrFlag2_b 赋值 Gp_IoMcuAdc_CheckArgIn 返回值"]
-    OR_ERR["ErrFlag1_b 执行或运算 ErrFlag1_b | ErrFlag2_b"]
-    CHECK_ERR{"ErrFlag1_b == FALSE ?"}
-    READ_CHL["ChlIdx_u8 赋值 SmCfg_cptst[Id_u16].MappingChlIdx_u8"]
-    CHECK_DIRECT{"Cfg_cptst-&gt;AdcSigLocalCfg_cptst[ChlIdx_u8].DirectlyRead_b == TRUE ?"}
-    CALL_RAW[["Gp_IoMcuAdc_GetAdcRaw 获取ADC原始值"]]
-    WRITE_RAW1["*AdcRaw_pu16 赋值 Rt_cptst-&gt;AdcSig_ptst[ChlIdx_u8].AdcRaw_u16"]
-    WRITE_RAW2["*AdcRaw_pu16 赋值 Rt_cptst-&gt;AdcSig_ptst[ChlIdx_u8].AdcRaw_u16"]
-    SET_OK["Ret_t 赋值 E_OK"]
-    SET_NOT_OK["Ret_t 赋值 E_NOT_OK"]
-    END(["结束"])
+    START(["开始"]) --&gt; INIT
+    INIT{{"初始化局部变量&lt;br&gt;Ret_t = E_NOT_OK&lt;br&gt;Cfg_cptst = &amp;Gp_IoMcuAdc_cfgCont_vcatst[0U]&lt;br&gt;Rt_cptst = &amp;Gp_IoMcuAdc_rtCont_lcatst[0U]&lt;br&gt;SmCfg_cptst = &amp;Gp_IoMcuAdc_cfgAdcSigMapping_vcatst[0U]&lt;br&gt;CoreId_u32 = 0U&lt;br&gt;ChlIdx_u8 = 0U"}}
+    INIT --&gt; GET_CORE[["Gp_IoMcuAdc_CalloutGetCoreId 获取核心ID"]]
+    GET_CORE --&gt; ASSIGN_CORE["CoreId_u32 = Gp_IoMcuAdc_CalloutGetCoreId()"]
+    ASSIGN_CORE --&gt; ASSIGN_CFG["Cfg_cptst = &amp;Gp_IoMcuAdc_cfgCont_vcatst[CoreId_u32]"]
+    ASSIGN_CFG --&gt; ASSIGN_RT["Rt_cptst = &amp;Gp_IoMcuAdc_rtCont_lcatst[CoreId_u32]"]
+    
+    subgraph SG1[" "]
+        SG1_NOTE["注：仅在 GP_IOMCUADC_DEV_ERROR_DETECT 等于 STD_ON 时参与编译"]
+        SG1_NOTE ~~~ CHECK_INIT
+        CHECK_INIT[["Gp_IoMcuAdc_CheckInitStu 检查初始化状态"]]
+        CHECK_INIT --&gt; ASSIGN_ERR1["ErrFlag1_b = Gp_IoMcuAdc_CheckInitStu(...)"]
+        ASSIGN_ERR1 --&gt; CHECK_ARG[["Gp_IoMcuAdc_CheckArgIn 检查输入参数"]]
+        CHECK_ARG --&gt; ASSIGN_ERR2["ErrFlag2_b = Gp_IoMcuAdc_CheckArgIn(...)"]
+        ASSIGN_ERR2 --&gt; OR_ERR["ErrFlag1_b = ErrFlag1_b | ErrFlag2_b"]
+        OR_ERR --&gt; IF_ERR{"ErrFlag1_b == FALSE ?"}
+    end
+    style SG1 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+    classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700
+    class SG1_NOTE condNote
 
-    START --&gt; INIT
-    INIT --&gt; CALL_CORE
-    CALL_CORE --&gt; ASSIGN_CORE
-    ASSIGN_CORE --&gt; ASSIGN_CFG
-    ASSIGN_CFG --&gt; ASSIGN_RT
-    ASSIGN_RT --&gt; CALL_INIT
-    CALL_INIT --&gt; ASSIGN_ERR1
-    ASSIGN_ERR1 --&gt; CALL_ARG
-    CALL_ARG --&gt; ASSIGN_ERR2
-    ASSIGN_ERR2 --&gt; OR_ERR
-    OR_ERR --&gt; CHECK_ERR
-    CHECK_ERR -- 是 --&gt; READ_CHL
-    READ_CHL --&gt; CHECK_DIRECT
-    CHECK_DIRECT -- 是 --&gt; CALL_RAW
-    CALL_RAW --&gt; WRITE_RAW1
-    WRITE_RAW1 --&gt; SET_OK
-    CHECK_DIRECT -- 否 --&gt; WRITE_RAW2
-    WRITE_RAW2 --&gt; SET_OK
-    CHECK_ERR -- 否 --&gt; SET_NOT_OK
-    SET_OK --&gt; END
+    ASSIGN_RT --&gt; IF_ERR
+    IF_ERR -- 否 --&gt; SET_NOT_OK["Ret_t = E_NOT_OK"]
+    IF_ERR -- 是 --&gt; GET_CHL["ChlIdx_u8 = SmCfg_cptst[Id_u16].MappingChlIdx_u8"]
+    GET_CHL --&gt; IF_DIRECT{"Cfg_cptst-&gt;AdcSigLocalCfg_cptst[ChlIdx_u8].DirectlyRead_b == TRUE ?"}
+    IF_DIRECT -- 是 --&gt; CALL_GET_RAW[["Gp_IoMcuAdc_GetAdcRaw 直接读取ADC原始值"]]
+    CALL_GET_RAW --&gt; READ_RAW1["*AdcRaw_pu16 = Rt_cptst-&gt;AdcSig_ptst[ChlIdx_u8].AdcRaw_u16"]
+    IF_DIRECT -- 否 --&gt; READ_RAW2["*AdcRaw_pu16 = Rt_cptst-&gt;AdcSig_ptst[ChlIdx_u8].AdcRaw_u16"]
+    READ_RAW1 --&gt; SET_OK["Ret_t = E_OK"]
+    READ_RAW2 --&gt; SET_OK
+    SET_OK --&gt; END(["结束"])
     SET_NOT_OK --&gt; END</pre></details></td></tr>
     <tr><td class="label">调用</td><td class="muted small">Gp_IoMcuAdc_CalloutGetCoreId<br>Gp_IoMcuAdc_CheckInitStu<br>Gp_IoMcuAdc_CheckArgIn<br>Gp_IoMcuAdc_GetAdcRaw</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_IoMcuAdc_rtCont_lcatst</td></tr>
   </table>
@@ -919,14 +849,19 @@ flowchart LR
         INIT["初始化 ErrFlag_b 为 FALSE&lt;br&gt;获取 Det_ptst 指针"]
         CHECK{"Det_ptst-&gt;InitStu_t ==&lt;br&gt;GP_IOMCUADC_INITSTU_INITED&lt;br&gt;?"}
         SET_FALSE["设置 ErrFlag_b 为 FALSE"]
-        SET_TRUE["设置 ErrFlag_b 为 TRUE&lt;br&gt;记录 IfId_t 和 ErrStu_t&lt;br&gt;为UNINITED"]
+        SET_TRUE["设置 ErrFlag_b 为 TRUE"]
+        RECORD["记录未初始化错误&lt;br&gt;设置 Det_ptst-&gt;IfId_t 为&lt;br&gt;IfId_t&lt;br&gt;设置 Det_ptst-&gt;ErrStu_t&lt;br&gt;为GP_IOMCUADC_ERRSTU_UNINI&lt;br&gt;TED"]
+        RETURN["返回 ErrFlag_b"]
         END(["结束"])
+        
         START --&gt; INIT
         INIT --&gt; CHECK
         CHECK -- 是 --&gt; SET_FALSE
         CHECK -- 否 --&gt; SET_TRUE
-        SET_FALSE --&gt; END
-        SET_TRUE --&gt; END
+        SET_FALSE --&gt; RETURN
+        SET_TRUE --&gt; RECORD
+        RECORD --&gt; RETURN
+        RETURN --&gt; END
     end
     style SG1 fill:transparent,stroke:#888888,stroke-dasharray:6 4
     classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700
@@ -939,14 +874,19 @@ flowchart LR
         INIT["初始化 ErrFlag_b 为 FALSE&lt;br&gt;获取 Det_ptst 指针"]
         CHECK{"Det_ptst-&gt;InitStu_t == GP_IOMCUADC_INITSTU_INITED ?"}
         SET_FALSE["设置 ErrFlag_b 为 FALSE"]
-        SET_TRUE["设置 ErrFlag_b 为 TRUE&lt;br&gt;记录 IfId_t 和 ErrStu_t 为 UNINITED"]
+        SET_TRUE["设置 ErrFlag_b 为 TRUE"]
+        RECORD["记录未初始化错误&lt;br&gt;设置 Det_ptst-&gt;IfId_t 为 IfId_t&lt;br&gt;设置 Det_ptst-&gt;ErrStu_t 为 GP_IOMCUADC_ERRSTU_UNINITED"]
+        RETURN["返回 ErrFlag_b"]
         END(["结束"])
+        
         START --&gt; INIT
         INIT --&gt; CHECK
         CHECK -- 是 --&gt; SET_FALSE
         CHECK -- 否 --&gt; SET_TRUE
-        SET_FALSE --&gt; END
-        SET_TRUE --&gt; END
+        SET_FALSE --&gt; RETURN
+        SET_TRUE --&gt; RECORD
+        RECORD --&gt; RETURN
+        RETURN --&gt; END
     end
     style SG1 fill:transparent,stroke:#888888,stroke-dasharray:6 4
     classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700
@@ -986,20 +926,24 @@ flowchart LR
         INIT["初始化 ErrFlag_b 为 FALSE&lt;br&gt;获取 Det_ptst 指针"]
         CHECK_ARG{"ChkId_u16 &lt;&lt;br&gt;GP_IOMCUADC_SIG_NUM&lt;br&gt;且 ChkArgIn_pu8 !=&lt;br&gt;GP_IOMCUADC_NULL_PTR"}
         CHECK_CORE{"SmCfg_cptst[ChkId_u16].Map&lt;br&gt;pingCoreId_u32 ==&lt;br&gt;ChkCoreId_u32"}
-        SET_OK["设置 ErrFlag_b 为 FALSE"]
-        SET_ERR_MAP["设置 ErrFlag_b 为 TRUE&lt;br&gt;记录 IfId_t&lt;br&gt;记录 ErrStu_t 为&lt;br&gt;GP_IOMCUADC_ERRSTU_SIG_MAP&lt;br&gt;_INCONSISTENT"]
-        SET_ERR_ARG["设置 ErrFlag_b 为 TRUE&lt;br&gt;记录 IfId_t&lt;br&gt;记录 ErrStu_t 为&lt;br&gt;GP_IOMCUADC_ERRSTU_INVALID&lt;br&gt;_ARG"]
+        SET_ERR_FALSE["设置 ErrFlag_b 为 FALSE"]
+        SET_ERR_TRUE_1["设置 ErrFlag_b 为 TRUE"]
+        DET_ERR_1["记录信号映射不一致错误&lt;br&gt;设置 Det_ptst-&gt;IfId_t 为&lt;br&gt;IfId_t&lt;br&gt;设置 Det_ptst-&gt;ErrStu_t&lt;br&gt;为GP_IOMCUADC_ERRSTU_SIG_M&lt;br&gt;AP_INCONSISTENT"]
+        SET_ERR_TRUE_2["设置 ErrFlag_b 为 TRUE"]
+        DET_ERR_2["记录无效参数错误&lt;br&gt;设置 Det_ptst-&gt;IfId_t 为&lt;br&gt;IfId_t&lt;br&gt;设置 Det_ptst-&gt;ErrStu_t&lt;br&gt;为GP_IOMCUADC_ERRSTU_INVAL&lt;br&gt;ID_ARG"]
         END(["结束"])
         
         START --&gt; INIT
         INIT --&gt; CHECK_ARG
         CHECK_ARG -- 是 --&gt; CHECK_CORE
-        CHECK_CORE -- 是 --&gt; SET_OK
-        CHECK_CORE -- 否 --&gt; SET_ERR_MAP
-        CHECK_ARG -- 否 --&gt; SET_ERR_ARG
-        SET_OK --&gt; END
-        SET_ERR_MAP --&gt; END
-        SET_ERR_ARG --&gt; END
+        CHECK_CORE -- 是 --&gt; SET_ERR_FALSE
+        CHECK_CORE -- 否 --&gt; SET_ERR_TRUE_1
+        SET_ERR_TRUE_1 --&gt; DET_ERR_1
+        CHECK_ARG -- 否 --&gt; SET_ERR_TRUE_2
+        SET_ERR_TRUE_2 --&gt; DET_ERR_2
+        SET_ERR_FALSE --&gt; END
+        DET_ERR_1 --&gt; END
+        DET_ERR_2 --&gt; END
     end
     style SG1 fill:transparent,stroke:#888888,stroke-dasharray:6 4
     classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700
@@ -1012,20 +956,24 @@ flowchart LR
         INIT["初始化 ErrFlag_b 为 FALSE&lt;br&gt;获取 Det_ptst 指针"]
         CHECK_ARG{"ChkId_u16 &lt; GP_IOMCUADC_SIG_NUM&lt;br&gt;且 ChkArgIn_pu8 != GP_IOMCUADC_NULL_PTR"}
         CHECK_CORE{"SmCfg_cptst[ChkId_u16].MappingCoreId_u32 == ChkCoreId_u32"}
-        SET_OK["设置 ErrFlag_b 为 FALSE"]
-        SET_ERR_MAP["设置 ErrFlag_b 为 TRUE&lt;br&gt;记录 IfId_t&lt;br&gt;记录 ErrStu_t 为 GP_IOMCUADC_ERRSTU_SIG_MAP_INCONSISTENT"]
-        SET_ERR_ARG["设置 ErrFlag_b 为 TRUE&lt;br&gt;记录 IfId_t&lt;br&gt;记录 ErrStu_t 为 GP_IOMCUADC_ERRSTU_INVALID_ARG"]
+        SET_ERR_FALSE["设置 ErrFlag_b 为 FALSE"]
+        SET_ERR_TRUE_1["设置 ErrFlag_b 为 TRUE"]
+        DET_ERR_1["记录信号映射不一致错误&lt;br&gt;设置 Det_ptst-&gt;IfId_t 为 IfId_t&lt;br&gt;设置 Det_ptst-&gt;ErrStu_t 为 GP_IOMCUADC_ERRSTU_SIG_MAP_INCONSISTENT"]
+        SET_ERR_TRUE_2["设置 ErrFlag_b 为 TRUE"]
+        DET_ERR_2["记录无效参数错误&lt;br&gt;设置 Det_ptst-&gt;IfId_t 为 IfId_t&lt;br&gt;设置 Det_ptst-&gt;ErrStu_t 为 GP_IOMCUADC_ERRSTU_INVALID_ARG"]
         END(["结束"])
         
         START --&gt; INIT
         INIT --&gt; CHECK_ARG
         CHECK_ARG -- 是 --&gt; CHECK_CORE
-        CHECK_CORE -- 是 --&gt; SET_OK
-        CHECK_CORE -- 否 --&gt; SET_ERR_MAP
-        CHECK_ARG -- 否 --&gt; SET_ERR_ARG
-        SET_OK --&gt; END
-        SET_ERR_MAP --&gt; END
-        SET_ERR_ARG --&gt; END
+        CHECK_CORE -- 是 --&gt; SET_ERR_FALSE
+        CHECK_CORE -- 否 --&gt; SET_ERR_TRUE_1
+        SET_ERR_TRUE_1 --&gt; DET_ERR_1
+        CHECK_ARG -- 否 --&gt; SET_ERR_TRUE_2
+        SET_ERR_TRUE_2 --&gt; DET_ERR_2
+        SET_ERR_FALSE --&gt; END
+        DET_ERR_1 --&gt; END
+        DET_ERR_2 --&gt; END
     end
     style SG1 fill:transparent,stroke:#888888,stroke-dasharray:6 4
     classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700
@@ -1060,43 +1008,29 @@ flowchart LR
     <tr><td class="label">流程图</td><td><div class="mermaid">flowchart TD
     START(["开始"])
     INIT{{"初始化 FuncCompl_b 为 TRUE&lt;br&gt;初始化 Diag_u32 为 0U"}}
-    J1{"Cfg_cptst-&gt;AdcSigLocalCfg_&lt;br&gt;cptst[ChlIdx_u8].DiagCallo&lt;br&gt;utFunc_b == TRUE ?"}
-    CALL[["Gp_IoMcuAdc_CalloutGetDiag&lt;br&gt;获取诊断数据"]]
-    J2{"FuncCompl_b == FALSE ?"}
-    ERR[/"记录错误标志&lt;br&gt;Rt_cptst-&gt;AdcSigLocalImpl_&lt;br&gt;ptst[ChlIdx_u8].AdcSigErr_&lt;br&gt;t |=&lt;br&gt;GP_IOMCUADC_ADCSIGERRSTU_C&lt;br&gt;ALLOUT_GET_DIAG_FAILED"/]
-    SAVE[/"保存诊断数据&lt;br&gt;Rt_cptst-&gt;AdcSig_ptst[ChlI&lt;br&gt;dx_u8].Diag_u32 = Diag_u32"/]
-    DEF[/"设置默认诊断数据&lt;br&gt;Rt_cptst-&gt;AdcSig_ptst[ChlI&lt;br&gt;dx_u8].Diag_u32 = 0U"/]
-    END(["结束"])
-
     START --&gt; INIT
+    J1{"Cfg_cptst-&gt;AdcSigLocalCfg_&lt;br&gt;cptst[ChlIdx_u8].DiagCallo&lt;br&gt;utFunc_b == TRUE ?"}
     INIT --&gt; J1
-    J1 -- 是 --&gt; CALL
-    CALL --&gt; J2
-    J2 -- 是 --&gt; ERR
-    J2 -- 否 --&gt; SAVE
-    J1 -- 否 --&gt; DEF
-    ERR --&gt; END
+    J1 -- 是 --&gt; CALL[["Gp_IoMcuAdc_CalloutGetDiag&lt;br&gt;获取诊断数据"]]
+    CALL --&gt; J2{"FuncCompl_b == FALSE ?"}
+    J2 -- 是 --&gt; ERR[/"记录错误标志&lt;br&gt;Rt_cptst-&gt;AdcSigLocalImpl_&lt;br&gt;ptst[ChlIdx_u8].AdcSigErr_&lt;br&gt;t |=&lt;br&gt;GP_IOMCUADC_ADCSIGERRSTU_C&lt;br&gt;ALLOUT_GET_DIAG_FAILED"/]
+    J2 -- 否 --&gt; SAVE[/"保存诊断数据&lt;br&gt;Rt_cptst-&gt;AdcSig_ptst[ChlI&lt;br&gt;dx_u8].Diag_u32 = Diag_u32"/]
+    J1 -- 否 --&gt; DEF[/"设置默认诊断数据&lt;br&gt;Rt_cptst-&gt;AdcSig_ptst[ChlI&lt;br&gt;dx_u8].Diag_u32 = 0U"/]
+    ERR --&gt; END(["结束"])
     SAVE --&gt; END
     DEF --&gt; END</div>
 <details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">flowchart TD
     START(["开始"])
     INIT{{"初始化 FuncCompl_b 为 TRUE&lt;br&gt;初始化 Diag_u32 为 0U"}}
-    J1{"Cfg_cptst-&gt;AdcSigLocalCfg_cptst[ChlIdx_u8].DiagCalloutFunc_b == TRUE ?"}
-    CALL[["Gp_IoMcuAdc_CalloutGetDiag&lt;br&gt;获取诊断数据"]]
-    J2{"FuncCompl_b == FALSE ?"}
-    ERR[/"记录错误标志&lt;br&gt;Rt_cptst-&gt;AdcSigLocalImpl_ptst[ChlIdx_u8].AdcSigErr_t |= GP_IOMCUADC_ADCSIGERRSTU_CALLOUT_GET_DIAG_FAILED"/]
-    SAVE[/"保存诊断数据&lt;br&gt;Rt_cptst-&gt;AdcSig_ptst[ChlIdx_u8].Diag_u32 = Diag_u32"/]
-    DEF[/"设置默认诊断数据&lt;br&gt;Rt_cptst-&gt;AdcSig_ptst[ChlIdx_u8].Diag_u32 = 0U"/]
-    END(["结束"])
-
     START --&gt; INIT
+    J1{"Cfg_cptst-&gt;AdcSigLocalCfg_cptst[ChlIdx_u8].DiagCalloutFunc_b == TRUE ?"}
     INIT --&gt; J1
-    J1 -- 是 --&gt; CALL
-    CALL --&gt; J2
-    J2 -- 是 --&gt; ERR
-    J2 -- 否 --&gt; SAVE
-    J1 -- 否 --&gt; DEF
-    ERR --&gt; END
+    J1 -- 是 --&gt; CALL[["Gp_IoMcuAdc_CalloutGetDiag&lt;br&gt;获取诊断数据"]]
+    CALL --&gt; J2{"FuncCompl_b == FALSE ?"}
+    J2 -- 是 --&gt; ERR[/"记录错误标志&lt;br&gt;Rt_cptst-&gt;AdcSigLocalImpl_ptst[ChlIdx_u8].AdcSigErr_t |= GP_IOMCUADC_ADCSIGERRSTU_CALLOUT_GET_DIAG_FAILED"/]
+    J2 -- 否 --&gt; SAVE[/"保存诊断数据&lt;br&gt;Rt_cptst-&gt;AdcSig_ptst[ChlIdx_u8].Diag_u32 = Diag_u32"/]
+    J1 -- 否 --&gt; DEF[/"设置默认诊断数据&lt;br&gt;Rt_cptst-&gt;AdcSig_ptst[ChlIdx_u8].Diag_u32 = 0U"/]
+    ERR --&gt; END(["结束"])
     SAVE --&gt; END
     DEF --&gt; END</pre></details></td></tr>
     <tr><td class="label">调用</td><td class="muted small">Gp_IoMcuAdc_CalloutGetDiag</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_IoMcuAdc_MainFunction, Gp_IoMcuAdc_GetAdcSigDiag</td></tr>
@@ -1127,51 +1061,93 @@ flowchart LR
     <tr><td class="label">Return value</td><td>void</td></tr>
     <tr><td class="label">Description</td><td class="desc">该函数用于获取指定通道和核心ID下的ADC原始值，支持通过配置项选择调用回调函数或直接读取结果地址两种获取方式。作为模块内部函数，它被 `Gp_IoMcuAdc_MainFunction` 和 `Gp_IoMcuAdc_GetAdcSigAdcRaw` 调用，并依赖 `Gp_IoMcuAdc_CalloutGetAdcRaw` 执行回调获取或 `Gp_IoMcuAdc_CheckAdcRawValidity` 执行有效性检查。若配置了有效性检查且检查结果为无效，函数将返回无效值；若用户希望直接获取原始值而不受无效值影响，需将对应信号的有效性检查配置项设为 FALSE。对于有特殊需求的场景，用户应配置为回调方式并在 `Gp_IoMcuAdc_CalloutGetAdcRaw` 中实现具体的获取逻辑。</td></tr>
     <tr><td class="label">流程图</td><td><div class="mermaid">flowchart TD
-    START(["开始"]) --&gt; INIT{{"初始化 FuncCompl_b 为 TRUE&lt;br&gt;AdcRaw_u16 为 0U&lt;br&gt;AdcRes_u32 为 0U&lt;br&gt;Validity_b 为 FALSE"}}
-    INIT --&gt; CHECK_CALLOUT{"Cfg_cptst-&gt;AdcSigLocalCfg_&lt;br&gt;cptst[ChlIdx_u8].AdcRawCal&lt;br&gt;loutFunc_b == TRUE ?"}
-    
-    CHECK_CALLOUT -- 是 --&gt; CALL_CALLOUT[["Gp_IoMcuAdc_CalloutGetAdcR&lt;br&gt;aw&lt;br&gt;获取 ADC 原始值"]]
-    CALL_CALLOUT --&gt; CHECK_FUNC_COMPL{"FuncCompl_b == FALSE ?"}
-    CHECK_FUNC_COMPL -- 是 --&gt; SET_ERR[/"设置错误标志&lt;br&gt;Rt_cptst-&gt;AdcSigLocalImpl_&lt;br&gt;ptst[ChlIdx_u8].AdcSigErr_&lt;br&gt;t |=&lt;br&gt;GP_IOMCUADC_ADCSIGERRSTU_C&lt;br&gt;ALLOUT_GET_ADCRAW_FAILED"/]
-    CHECK_FUNC_COMPL -- 否 --&gt; SAVE_RAW[/"保存 ADC 原始值&lt;br&gt;Rt_cptst-&gt;AdcSig_ptst[ChlI&lt;br&gt;dx_u8].AdcRaw_u16 =&lt;br&gt;AdcRaw_u16"/]
-    SET_ERR --&gt; END(["结束"])
-    SAVE_RAW --&gt; END
-    
-    CHECK_CALLOUT -- 否 --&gt; READ_REG[/"读取 ADC 结果寄存器&lt;br&gt;AdcRes_u32 =&lt;br&gt;*Cfg_cptst-&gt;AdcSigLocalCfg&lt;br&gt;_cptst[ChlIdx_u8].ResRegOr&lt;br&gt;Buf_pu32"/]
-    READ_REG --&gt; CHECK_VALIDITY{"Cfg_cptst-&gt;AdcSigLocalCfg_&lt;br&gt;cptst[ChlIdx_u8].AdcRawChe&lt;br&gt;ckValidity_b == TRUE ?"}
-    
-    CHECK_VALIDITY -- 是 --&gt; CHECK_VALID_FUNC[["Gp_IoMcuAdc_CheckAdcRawVal&lt;br&gt;idity&lt;br&gt;检查 ADC 原始值有效性"]]
-    CHECK_VALID_FUNC --&gt; CHECK_VALID_RESULT{"Validity_b == TRUE ?"}
-    CHECK_VALID_RESULT -- 是 --&gt; WRITE_VALID[/"写入有效 ADC 原始值&lt;br&gt;Rt_cptst-&gt;AdcSig_ptst[ChlI&lt;br&gt;dx_u8].AdcRaw_u16 =&lt;br&gt;(uint16)(AdcRes_u32 &amp;&lt;br&gt;0x0000FFFFU)"/]
-    CHECK_VALID_RESULT -- 否 --&gt; WRITE_INVALID[/"写入无效 ADC 原始值&lt;br&gt;Rt_cptst-&gt;AdcSig_ptst[ChlI&lt;br&gt;dx_u8].AdcRaw_u16 =&lt;br&gt;GP_IOMCUADC_ADCRAW_INVALID"/]
-    WRITE_VALID --&gt; END
-    WRITE_INVALID --&gt; END
-    
-    CHECK_VALIDITY -- 否 --&gt; WRITE_DIRECT[/"直接写入 ADC 原始值&lt;br&gt;Rt_cptst-&gt;AdcSig_ptst[ChlI&lt;br&gt;dx_u8].AdcRaw_u16 =&lt;br&gt;(uint16)(AdcRes_u32 &amp;&lt;br&gt;0x0000FFFFU)"/]
-    WRITE_DIRECT --&gt; END</div>
+    START(["开始"])
+    INIT{{"初始化 FuncCompl_b = TRUE&lt;br&gt;AdcRaw_u16 = 0U&lt;br&gt;AdcRes_u32 = 0U&lt;br&gt;Validity_b = FALSE"}}
+    START --&gt; INIT
+    J1{"Cfg_cptst-&gt;AdcSigLocalCfg_&lt;br&gt;cptst[ChlIdx_u8].AdcRawCal&lt;br&gt;loutFunc_b == TRUE ?"}
+    INIT --&gt; J1
+
+    subgraph LANE_CALL[" "]
+        direction TB
+        CALL[["Gp_IoMcuAdc_CalloutGetAdcR&lt;br&gt;aw&lt;br&gt;获取ADC原始值"]]
+        J2{"FuncCompl_b == FALSE ?"}
+        CALL --&gt; J2
+        ERR1[/"记录错误标志&lt;br&gt;Rt_cptst-&gt;AdcSigLocalImpl_&lt;br&gt;ptst[ChlIdx_u8].AdcSigErr_&lt;br&gt;t |=&lt;br&gt;GP_IOMCUADC_ADCSIGERRSTU_C&lt;br&gt;ALLOUT_GET_ADCRAW_FAILED"/]
+        J2 -- 是 --&gt; ERR1
+        SAVE1[/"保存ADC原始值&lt;br&gt;Rt_cptst-&gt;AdcSig_ptst[ChlI&lt;br&gt;dx_u8].AdcRaw_u16 =&lt;br&gt;AdcRaw_u16"/]
+        J2 -- 否 --&gt; SAVE1
+    end
+    style LANE_CALL fill:transparent,stroke:transparent
+
+    subgraph LANE_REG[" "]
+        direction TB
+        READ1[/"读取ADC结果寄存器&lt;br&gt;AdcRes_u32 =&lt;br&gt;*Cfg_cptst-&gt;AdcSigLocalCfg&lt;br&gt;_cptst[ChlIdx_u8].ResRegOr&lt;br&gt;Buf_pu32"/]
+        J3{"Cfg_cptst-&gt;AdcSigLocalCfg_&lt;br&gt;cptst[ChlIdx_u8].AdcRawChe&lt;br&gt;ckValidity_b == TRUE ?"}
+        READ1 --&gt; J3
+        CHECK[["Gp_IoMcuAdc_CheckAdcRawVal&lt;br&gt;idity&lt;br&gt;检查ADC原始值有效性"]]
+        J3 -- 是 --&gt; CHECK
+        J4{"Validity_b == TRUE ?"}
+        CHECK --&gt; J4
+        SAVE2[/"保存有效ADC原始值&lt;br&gt;Rt_cptst-&gt;AdcSig_ptst[ChlI&lt;br&gt;dx_u8].AdcRaw_u16 =&lt;br&gt;(uint16)(AdcRes_u32 &amp;&lt;br&gt;0x0000FFFFU)"/]
+        J4 -- 是 --&gt; SAVE2
+        SAVE3[/"保存无效ADC原始值&lt;br&gt;Rt_cptst-&gt;AdcSig_ptst[ChlI&lt;br&gt;dx_u8].AdcRaw_u16 =&lt;br&gt;GP_IOMCUADC_ADCRAW_INVALID"/]
+        J4 -- 否 --&gt; SAVE3
+        SAVE4[/"保存ADC原始值&lt;br&gt;Rt_cptst-&gt;AdcSig_ptst[ChlI&lt;br&gt;dx_u8].AdcRaw_u16 =&lt;br&gt;(uint16)(AdcRes_u32 &amp;&lt;br&gt;0x0000FFFFU)"/]
+        J3 -- 否 --&gt; SAVE4
+    end
+    style LANE_REG fill:transparent,stroke:transparent
+
+    J1 -- 是 --&gt; CALL
+    J1 -- 否 --&gt; READ1
+    ERR1 --&gt; END(["结束"])
+    SAVE1 --&gt; END
+    SAVE2 --&gt; END
+    SAVE3 --&gt; END
+    SAVE4 --&gt; END</div>
 <details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">flowchart TD
-    START(["开始"]) --&gt; INIT{{"初始化 FuncCompl_b 为 TRUE&lt;br&gt;AdcRaw_u16 为 0U&lt;br&gt;AdcRes_u32 为 0U&lt;br&gt;Validity_b 为 FALSE"}}
-    INIT --&gt; CHECK_CALLOUT{"Cfg_cptst-&gt;AdcSigLocalCfg_cptst[ChlIdx_u8].AdcRawCalloutFunc_b == TRUE ?"}
-    
-    CHECK_CALLOUT -- 是 --&gt; CALL_CALLOUT[["Gp_IoMcuAdc_CalloutGetAdcRaw&lt;br&gt;获取 ADC 原始值"]]
-    CALL_CALLOUT --&gt; CHECK_FUNC_COMPL{"FuncCompl_b == FALSE ?"}
-    CHECK_FUNC_COMPL -- 是 --&gt; SET_ERR[/"设置错误标志&lt;br&gt;Rt_cptst-&gt;AdcSigLocalImpl_ptst[ChlIdx_u8].AdcSigErr_t |= GP_IOMCUADC_ADCSIGERRSTU_CALLOUT_GET_ADCRAW_FAILED"/]
-    CHECK_FUNC_COMPL -- 否 --&gt; SAVE_RAW[/"保存 ADC 原始值&lt;br&gt;Rt_cptst-&gt;AdcSig_ptst[ChlIdx_u8].AdcRaw_u16 = AdcRaw_u16"/]
-    SET_ERR --&gt; END(["结束"])
-    SAVE_RAW --&gt; END
-    
-    CHECK_CALLOUT -- 否 --&gt; READ_REG[/"读取 ADC 结果寄存器&lt;br&gt;AdcRes_u32 = *Cfg_cptst-&gt;AdcSigLocalCfg_cptst[ChlIdx_u8].ResRegOrBuf_pu32"/]
-    READ_REG --&gt; CHECK_VALIDITY{"Cfg_cptst-&gt;AdcSigLocalCfg_cptst[ChlIdx_u8].AdcRawCheckValidity_b == TRUE ?"}
-    
-    CHECK_VALIDITY -- 是 --&gt; CHECK_VALID_FUNC[["Gp_IoMcuAdc_CheckAdcRawValidity&lt;br&gt;检查 ADC 原始值有效性"]]
-    CHECK_VALID_FUNC --&gt; CHECK_VALID_RESULT{"Validity_b == TRUE ?"}
-    CHECK_VALID_RESULT -- 是 --&gt; WRITE_VALID[/"写入有效 ADC 原始值&lt;br&gt;Rt_cptst-&gt;AdcSig_ptst[ChlIdx_u8].AdcRaw_u16 = (uint16)(AdcRes_u32 &amp; 0x0000FFFFU)"/]
-    CHECK_VALID_RESULT -- 否 --&gt; WRITE_INVALID[/"写入无效 ADC 原始值&lt;br&gt;Rt_cptst-&gt;AdcSig_ptst[ChlIdx_u8].AdcRaw_u16 = GP_IOMCUADC_ADCRAW_INVALID"/]
-    WRITE_VALID --&gt; END
-    WRITE_INVALID --&gt; END
-    
-    CHECK_VALIDITY -- 否 --&gt; WRITE_DIRECT[/"直接写入 ADC 原始值&lt;br&gt;Rt_cptst-&gt;AdcSig_ptst[ChlIdx_u8].AdcRaw_u16 = (uint16)(AdcRes_u32 &amp; 0x0000FFFFU)"/]
-    WRITE_DIRECT --&gt; END</pre></details></td></tr>
+    START(["开始"])
+    INIT{{"初始化 FuncCompl_b = TRUE&lt;br&gt;AdcRaw_u16 = 0U&lt;br&gt;AdcRes_u32 = 0U&lt;br&gt;Validity_b = FALSE"}}
+    START --&gt; INIT
+    J1{"Cfg_cptst-&gt;AdcSigLocalCfg_cptst[ChlIdx_u8].AdcRawCalloutFunc_b == TRUE ?"}
+    INIT --&gt; J1
+
+    subgraph LANE_CALL[" "]
+        direction TB
+        CALL[["Gp_IoMcuAdc_CalloutGetAdcRaw&lt;br&gt;获取ADC原始值"]]
+        J2{"FuncCompl_b == FALSE ?"}
+        CALL --&gt; J2
+        ERR1[/"记录错误标志&lt;br&gt;Rt_cptst-&gt;AdcSigLocalImpl_ptst[ChlIdx_u8].AdcSigErr_t |=&lt;br&gt;GP_IOMCUADC_ADCSIGERRSTU_CALLOUT_GET_ADCRAW_FAILED"/]
+        J2 -- 是 --&gt; ERR1
+        SAVE1[/"保存ADC原始值&lt;br&gt;Rt_cptst-&gt;AdcSig_ptst[ChlIdx_u8].AdcRaw_u16 = AdcRaw_u16"/]
+        J2 -- 否 --&gt; SAVE1
+    end
+    style LANE_CALL fill:transparent,stroke:transparent
+
+    subgraph LANE_REG[" "]
+        direction TB
+        READ1[/"读取ADC结果寄存器&lt;br&gt;AdcRes_u32 = *Cfg_cptst-&gt;AdcSigLocalCfg_cptst[ChlIdx_u8].ResRegOrBuf_pu32"/]
+        J3{"Cfg_cptst-&gt;AdcSigLocalCfg_cptst[ChlIdx_u8].AdcRawCheckValidity_b == TRUE ?"}
+        READ1 --&gt; J3
+        CHECK[["Gp_IoMcuAdc_CheckAdcRawValidity&lt;br&gt;检查ADC原始值有效性"]]
+        J3 -- 是 --&gt; CHECK
+        J4{"Validity_b == TRUE ?"}
+        CHECK --&gt; J4
+        SAVE2[/"保存有效ADC原始值&lt;br&gt;Rt_cptst-&gt;AdcSig_ptst[ChlIdx_u8].AdcRaw_u16 =&lt;br&gt;(uint16)(AdcRes_u32 &amp; 0x0000FFFFU)"/]
+        J4 -- 是 --&gt; SAVE2
+        SAVE3[/"保存无效ADC原始值&lt;br&gt;Rt_cptst-&gt;AdcSig_ptst[ChlIdx_u8].AdcRaw_u16 =&lt;br&gt;GP_IOMCUADC_ADCRAW_INVALID"/]
+        J4 -- 否 --&gt; SAVE3
+        SAVE4[/"保存ADC原始值&lt;br&gt;Rt_cptst-&gt;AdcSig_ptst[ChlIdx_u8].AdcRaw_u16 =&lt;br&gt;(uint16)(AdcRes_u32 &amp; 0x0000FFFFU)"/]
+        J3 -- 否 --&gt; SAVE4
+    end
+    style LANE_REG fill:transparent,stroke:transparent
+
+    J1 -- 是 --&gt; CALL
+    J1 -- 否 --&gt; READ1
+    ERR1 --&gt; END(["结束"])
+    SAVE1 --&gt; END
+    SAVE2 --&gt; END
+    SAVE3 --&gt; END
+    SAVE4 --&gt; END</pre></details></td></tr>
     <tr><td class="label">调用</td><td class="muted small">Gp_IoMcuAdc_CalloutGetAdcRaw<br>Gp_IoMcuAdc_CheckAdcRawValidity</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_IoMcuAdc_MainFunction, Gp_IoMcuAdc_GetAdcSigAdcRaw</td></tr>
   </table>
   <div class="wi-footer">
@@ -1200,34 +1176,122 @@ flowchart LR
     <tr><td class="label">Return value</td><td>boolean - TRUE/FALSE</td></tr>
     <tr><td class="label">Description</td><td class="desc">该函数用于检查ADC原始数据的有效性，具体通过验证ADC结果中的新数据位（New Data Bit）来判断转换是否已完成。作为模块内部静态函数，它被 `Gp_IoMcuAdc_GetAdcRaw` 调用，以确保在获取ADC原始值之前数据处于有效状态。若检测到转换已完成且数据有效，函数返回 TRUE；否则返回 FALSE。该函数的具体实现逻辑依赖于所配置微控制器的硬件特性。</td></tr>
     <tr><td class="label">流程图</td><td><div class="mermaid">flowchart TD
-    START(["开始"]) --&gt; INIT["初始化 Validity_b 为 FALSE"]
-    INIT --&gt; MASK1["AdcRes_u32 与&lt;br&gt;GP_IOMCUADC_ADCRAW_NEW_DAT&lt;br&gt;A_FLAG_POSI_AURIX2G_TRAVEO&lt;br&gt;2G 进行按位与操作"]
-    MASK1 --&gt; CHECK1{"AdcRes_u32 是否等于&lt;br&gt;GP_IOMCUADC_ADCRAW_NEW_DAT&lt;br&gt;A_FLAG_POSI_AURIX2G_TRAVEO&lt;br&gt;2G"}
-    CHECK1 -- 是 --&gt; SET_TRUE1["设置 Validity_b 为 TRUE"]
-    CHECK1 -- 否 --&gt; SET_FALSE1["设置 Validity_b 为 FALSE"]
-    SET_TRUE1 --&gt; MASK2["AdcRes_u32 与&lt;br&gt;GP_IOMCUADC_ADCRAW_NEW_DAT&lt;br&gt;A_FLAG_POSI_STELLARPX&lt;br&gt;进行按位与操作"]
-    SET_FALSE1 --&gt; MASK2
-    MASK2 --&gt; CHECK2{"AdcRes_u32 是否等于&lt;br&gt;GP_IOMCUADC_ADCRAW_NEW_DAT&lt;br&gt;A_FLAG_POSI_STELLARPX"}
-    CHECK2 -- 是 --&gt; SET_TRUE2["设置 Validity_b 为 TRUE"]
-    CHECK2 -- 否 --&gt; SET_FALSE2["设置 Validity_b 为 FALSE"]
-    SET_TRUE2 --&gt; FORCE_TRUE["强制设置 Validity_b 为&lt;br&gt;TRUE"]
-    SET_FALSE2 --&gt; FORCE_TRUE
-    FORCE_TRUE --&gt; RETURN["返回 Validity_b"]
+    START(["开始"]) --&gt; INIT{{"初始化 Validity_b 为 FALSE"}}
+    INIT --&gt; SG1_NOTE["注：仅在&lt;br&gt;GP_IOMCUADC_SPEC_DEP_IF&lt;br&gt;等于&lt;br&gt;GP_IOMCUADC_SPEC_DEP_IF_AU&lt;br&gt;RIX2G_MCAL 或&lt;br&gt;GP_IOMCUADC_SPEC_DEP_IF_TR&lt;br&gt;AVEO2G_MCAL 时参与编译"]
+    SG1_NOTE ~~~ MASK1
+    subgraph SG1[" "]
+        direction TB
+        MASK1[/"AdcRes_u32 与&lt;br&gt;GP_IOMCUADC_ADCRAW_NEW_DAT&lt;br&gt;A_FLAG_POSI_AURIX2G_TRAVEO&lt;br&gt;2G 进行按位与运算"/]
+        MASK1 --&gt; CHECK1{"AdcRes_u32 是否等于&lt;br&gt;GP_IOMCUADC_ADCRAW_NEW_DAT&lt;br&gt;A_FLAG_POSI_AURIX2G_TRAVEO&lt;br&gt;2G"}
+        CHECK1 -- 是 --&gt; SET_TRUE1["Validity_b 置为 TRUE"]
+        CHECK1 -- 否 --&gt; SET_FALSE1["Validity_b 置为 FALSE"]
+        SET_TRUE1 --&gt; MERGE1
+        SET_FALSE1 --&gt; MERGE1
+    end
+    style SG1 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+    classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700
+    class SG1_NOTE condNote
+
+    INIT --&gt; SG2_NOTE["注：仅在&lt;br&gt;GP_IOMCUADC_SPEC_DEP_IF&lt;br&gt;等于&lt;br&gt;GP_IOMCUADC_SPEC_DEP_IF_ST&lt;br&gt;ELLARPX_MCAL 时参与编译"]
+    SG2_NOTE ~~~ MASK2
+    subgraph SG2[" "]
+        direction TB
+        MASK2[/"AdcRes_u32 与&lt;br&gt;GP_IOMCUADC_ADCRAW_NEW_DAT&lt;br&gt;A_FLAG_POSI_STELLARPX&lt;br&gt;进行按位与运算"/]
+        MASK2 --&gt; CHECK2{"AdcRes_u32 是否等于&lt;br&gt;GP_IOMCUADC_ADCRAW_NEW_DAT&lt;br&gt;A_FLAG_POSI_STELLARPX"}
+        CHECK2 -- 是 --&gt; SET_TRUE2["Validity_b 置为 TRUE"]
+        CHECK2 -- 否 --&gt; SET_FALSE2["Validity_b 置为 FALSE"]
+        SET_TRUE2 --&gt; MERGE2
+        SET_FALSE2 --&gt; MERGE2
+    end
+    style SG2 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+    class SG2_NOTE condNote
+
+    INIT --&gt; SG3_NOTE["注：仅在&lt;br&gt;GP_IOMCUADC_SPEC_DEP_IF&lt;br&gt;等于&lt;br&gt;GP_IOMCUADC_SPEC_DEP_IF_AU&lt;br&gt;RIX3G_MCAL 时参与编译"]
+    SG3_NOTE ~~~ SET_TRUE3
+    subgraph SG3[" "]
+        direction TB
+        SET_TRUE3["Validity_b 置为 TRUE"]
+        SET_TRUE3 --&gt; MERGE3
+    end
+    style SG3 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+    class SG3_NOTE condNote
+
+    INIT --&gt; MERGE4
+    subgraph SG4[" "]
+        direction TB
+        MERGE4[" "]
+    end
+    style SG4 fill:transparent,stroke:transparent
+
+    MERGE1[" "]
+    MERGE2[" "]
+    MERGE3[" "]
+    style MERGE1 fill:transparent,stroke:transparent
+    style MERGE2 fill:transparent,stroke:transparent
+    style MERGE3 fill:transparent,stroke:transparent
+    MERGE1 --&gt; RETURN["返回 Validity_b"]
+    MERGE2 --&gt; RETURN
+    MERGE3 --&gt; RETURN
+    MERGE4 --&gt; RETURN
     RETURN --&gt; END(["结束"])</div>
 <details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">flowchart TD
-    START(["开始"]) --&gt; INIT["初始化 Validity_b 为 FALSE"]
-    INIT --&gt; MASK1["AdcRes_u32 与 GP_IOMCUADC_ADCRAW_NEW_DATA_FLAG_POSI_AURIX2G_TRAVEO2G 进行按位与操作"]
-    MASK1 --&gt; CHECK1{"AdcRes_u32 是否等于 GP_IOMCUADC_ADCRAW_NEW_DATA_FLAG_POSI_AURIX2G_TRAVEO2G"}
-    CHECK1 -- 是 --&gt; SET_TRUE1["设置 Validity_b 为 TRUE"]
-    CHECK1 -- 否 --&gt; SET_FALSE1["设置 Validity_b 为 FALSE"]
-    SET_TRUE1 --&gt; MASK2["AdcRes_u32 与 GP_IOMCUADC_ADCRAW_NEW_DATA_FLAG_POSI_STELLARPX 进行按位与操作"]
-    SET_FALSE1 --&gt; MASK2
-    MASK2 --&gt; CHECK2{"AdcRes_u32 是否等于 GP_IOMCUADC_ADCRAW_NEW_DATA_FLAG_POSI_STELLARPX"}
-    CHECK2 -- 是 --&gt; SET_TRUE2["设置 Validity_b 为 TRUE"]
-    CHECK2 -- 否 --&gt; SET_FALSE2["设置 Validity_b 为 FALSE"]
-    SET_TRUE2 --&gt; FORCE_TRUE["强制设置 Validity_b 为 TRUE"]
-    SET_FALSE2 --&gt; FORCE_TRUE
-    FORCE_TRUE --&gt; RETURN["返回 Validity_b"]
+    START(["开始"]) --&gt; INIT{{"初始化 Validity_b 为 FALSE"}}
+    INIT --&gt; SG1_NOTE["注：仅在 GP_IOMCUADC_SPEC_DEP_IF 等于 GP_IOMCUADC_SPEC_DEP_IF_AURIX2G_MCAL 或 GP_IOMCUADC_SPEC_DEP_IF_TRAVEO2G_MCAL 时参与编译"]
+    SG1_NOTE ~~~ MASK1
+    subgraph SG1[" "]
+        direction TB
+        MASK1[/"AdcRes_u32 与 GP_IOMCUADC_ADCRAW_NEW_DATA_FLAG_POSI_AURIX2G_TRAVEO2G 进行按位与运算"/]
+        MASK1 --&gt; CHECK1{"AdcRes_u32 是否等于 GP_IOMCUADC_ADCRAW_NEW_DATA_FLAG_POSI_AURIX2G_TRAVEO2G"}
+        CHECK1 -- 是 --&gt; SET_TRUE1["Validity_b 置为 TRUE"]
+        CHECK1 -- 否 --&gt; SET_FALSE1["Validity_b 置为 FALSE"]
+        SET_TRUE1 --&gt; MERGE1
+        SET_FALSE1 --&gt; MERGE1
+    end
+    style SG1 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+    classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700
+    class SG1_NOTE condNote
+
+    INIT --&gt; SG2_NOTE["注：仅在 GP_IOMCUADC_SPEC_DEP_IF 等于 GP_IOMCUADC_SPEC_DEP_IF_STELLARPX_MCAL 时参与编译"]
+    SG2_NOTE ~~~ MASK2
+    subgraph SG2[" "]
+        direction TB
+        MASK2[/"AdcRes_u32 与 GP_IOMCUADC_ADCRAW_NEW_DATA_FLAG_POSI_STELLARPX 进行按位与运算"/]
+        MASK2 --&gt; CHECK2{"AdcRes_u32 是否等于 GP_IOMCUADC_ADCRAW_NEW_DATA_FLAG_POSI_STELLARPX"}
+        CHECK2 -- 是 --&gt; SET_TRUE2["Validity_b 置为 TRUE"]
+        CHECK2 -- 否 --&gt; SET_FALSE2["Validity_b 置为 FALSE"]
+        SET_TRUE2 --&gt; MERGE2
+        SET_FALSE2 --&gt; MERGE2
+    end
+    style SG2 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+    class SG2_NOTE condNote
+
+    INIT --&gt; SG3_NOTE["注：仅在 GP_IOMCUADC_SPEC_DEP_IF 等于 GP_IOMCUADC_SPEC_DEP_IF_AURIX3G_MCAL 时参与编译"]
+    SG3_NOTE ~~~ SET_TRUE3
+    subgraph SG3[" "]
+        direction TB
+        SET_TRUE3["Validity_b 置为 TRUE"]
+        SET_TRUE3 --&gt; MERGE3
+    end
+    style SG3 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+    class SG3_NOTE condNote
+
+    INIT --&gt; MERGE4
+    subgraph SG4[" "]
+        direction TB
+        MERGE4[" "]
+    end
+    style SG4 fill:transparent,stroke:transparent
+
+    MERGE1[" "]
+    MERGE2[" "]
+    MERGE3[" "]
+    style MERGE1 fill:transparent,stroke:transparent
+    style MERGE2 fill:transparent,stroke:transparent
+    style MERGE3 fill:transparent,stroke:transparent
+    MERGE1 --&gt; RETURN["返回 Validity_b"]
+    MERGE2 --&gt; RETURN
+    MERGE3 --&gt; RETURN
+    MERGE4 --&gt; RETURN
     RETURN --&gt; END(["结束"])</pre></details></td></tr>
     <tr><td class="label">被调用</td><td class="muted small">Gp_IoMcuAdc_GetAdcRaw</td></tr>
   </table>
@@ -1263,7 +1327,7 @@ flowchart LR
 <table class="simple"><tr><th>从</th><th>到</th><th>触发条件</th><th>说明</th></tr>
 </table>
 
-<h3>5.3.2 序列图：Initialization <span class="badge">工作项 · 5.3.2</span></h3>
+<h3>5.3.2 序列图：Initialization（主核 Core0） <span class="badge">工作项 · 5.3.2</span></h3>
 <p class="muted">Gp_IoMcuAdc initialization function.</p>
 <div class="mermaid">sequenceDiagram
     participant EcuM as EcuM
@@ -1273,9 +1337,14 @@ flowchart LR
 
     EcuM-&gt;&gt;Gp_IoMcuAdc: Gp_IoMcuAdc_Init
     Gp_IoMcuAdc-&gt;&gt;Callout: Gp_IoMcuAdc_CalloutGetCoreId
+    Callout--&gt;&gt;Gp_IoMcuAdc: CoreId
     Gp_IoMcuAdc-&gt;&gt;Adc: Adc_SetupResultBuffer
+    Adc--&gt;&gt;Gp_IoMcuAdc: Result
     Gp_IoMcuAdc-&gt;&gt;Adc: Adc_EnableHardwareTrigger
-    Gp_IoMcuAdc-&gt;&gt;Callout: Gp_IoMcuAdc_CalloutInit</div>
+    Adc--&gt;&gt;Gp_IoMcuAdc: Result
+    Gp_IoMcuAdc-&gt;&gt;Callout: Gp_IoMcuAdc_CalloutInit
+    Callout--&gt;&gt;Gp_IoMcuAdc: Result
+    Gp_IoMcuAdc--&gt;&gt;EcuM: Return</div>
 <details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">sequenceDiagram
     participant EcuM as EcuM
     participant Gp_IoMcuAdc as Gp_IoMcuAdc
@@ -1284,34 +1353,90 @@ flowchart LR
 
     EcuM-&gt;&gt;Gp_IoMcuAdc: Gp_IoMcuAdc_Init
     Gp_IoMcuAdc-&gt;&gt;Callout: Gp_IoMcuAdc_CalloutGetCoreId
+    Callout--&gt;&gt;Gp_IoMcuAdc: CoreId
     Gp_IoMcuAdc-&gt;&gt;Adc: Adc_SetupResultBuffer
+    Adc--&gt;&gt;Gp_IoMcuAdc: Result
     Gp_IoMcuAdc-&gt;&gt;Adc: Adc_EnableHardwareTrigger
-    Gp_IoMcuAdc-&gt;&gt;Callout: Gp_IoMcuAdc_CalloutInit</pre></details>
+    Adc--&gt;&gt;Gp_IoMcuAdc: Result
+    Gp_IoMcuAdc-&gt;&gt;Callout: Gp_IoMcuAdc_CalloutInit
+    Callout--&gt;&gt;Gp_IoMcuAdc: Result
+    Gp_IoMcuAdc--&gt;&gt;EcuM: Return</pre></details>
 
-<h3>5.3.2 序列图：Runtime <span class="badge">工作项 · 5.3.2</span></h3>
+<h3>5.3.2 序列图：Runtime（主核 Core0） <span class="badge">工作项 · 5.3.2</span></h3>
 <p class="muted">Gp_IoMcuAdc period function.</p>
 <div class="mermaid">sequenceDiagram
-    participant OS as OS
-    participant Gp_IoMcuAdc as Gp_IoMcuAdc
-    participant Callout as Callout
+participant OS as OS
+participant Gp as Gp_IoMcuAdc
+participant CO as Callout
+participant HW as Hardware
 
-    OS-&gt;&gt;Gp_IoMcuAdc: Gp_IoMcuAdc_MainFunction
-    Gp_IoMcuAdc-&gt;&gt;Callout: Gp_IoMcuAdc_CalloutGetCoreId
-    Callout--&gt;&gt;Gp_IoMcuAdc: CoreId
-    Gp_IoMcuAdc-&gt;&gt;Gp_IoMcuAdc: Gp_IoMcuAdc_CheckInitStu
-    Gp_IoMcuAdc-&gt;&gt;Gp_IoMcuAdc: Gp_IoMcuAdc_GetAdcRaw
-    Gp_IoMcuAdc-&gt;&gt;Gp_IoMcuAdc: Gp_IoMcuAdc_GetDiag</div>
+OS-&gt;&gt;Gp: Gp_IoMcuAdc_MainFunction
+Gp-&gt;&gt;CO: Gp_IoMcuAdc_CalloutGetCoreId
+CO--&gt;&gt;Gp: CoreId
+Gp-&gt;&gt;Gp: Gp_IoMcuAdc_CheckInitStu
+alt [Init Status OK]
+    loop [For each channel]
+        Gp-&gt;&gt;Gp: Increment polling count
+        alt [Polling count reaches max]
+            Gp-&gt;&gt;Gp: Clear polling count
+            Gp-&gt;&gt;HW: Gp_IoMcuAdc_GetAdcRaw
+            HW--&gt;&gt;Gp: Raw Data
+            Gp-&gt;&gt;HW: Gp_IoMcuAdc_GetDiag
+            HW--&gt;&gt;Gp: Diag Data
+            Gp-&gt;&gt;Gp: Save to Gp_IoMcuAdc_rtCont_lcatst
+        end
+    end
+end</div>
 <details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">sequenceDiagram
-    participant OS as OS
-    participant Gp_IoMcuAdc as Gp_IoMcuAdc
-    participant Callout as Callout
+participant OS as OS
+participant Gp as Gp_IoMcuAdc
+participant CO as Callout
+participant HW as Hardware
 
-    OS-&gt;&gt;Gp_IoMcuAdc: Gp_IoMcuAdc_MainFunction
-    Gp_IoMcuAdc-&gt;&gt;Callout: Gp_IoMcuAdc_CalloutGetCoreId
-    Callout--&gt;&gt;Gp_IoMcuAdc: CoreId
-    Gp_IoMcuAdc-&gt;&gt;Gp_IoMcuAdc: Gp_IoMcuAdc_CheckInitStu
-    Gp_IoMcuAdc-&gt;&gt;Gp_IoMcuAdc: Gp_IoMcuAdc_GetAdcRaw
-    Gp_IoMcuAdc-&gt;&gt;Gp_IoMcuAdc: Gp_IoMcuAdc_GetDiag</pre></details>
+OS-&gt;&gt;Gp: Gp_IoMcuAdc_MainFunction
+Gp-&gt;&gt;CO: Gp_IoMcuAdc_CalloutGetCoreId
+CO--&gt;&gt;Gp: CoreId
+Gp-&gt;&gt;Gp: Gp_IoMcuAdc_CheckInitStu
+alt [Init Status OK]
+    loop [For each channel]
+        Gp-&gt;&gt;Gp: Increment polling count
+        alt [Polling count reaches max]
+            Gp-&gt;&gt;Gp: Clear polling count
+            Gp-&gt;&gt;HW: Gp_IoMcuAdc_GetAdcRaw
+            HW--&gt;&gt;Gp: Raw Data
+            Gp-&gt;&gt;HW: Gp_IoMcuAdc_GetDiag
+            HW--&gt;&gt;Gp: Diag Data
+            Gp-&gt;&gt;Gp: Save to Gp_IoMcuAdc_rtCont_lcatst
+        end
+    end
+end</pre></details>
+
+<h3>5.3.2 序列图：Runtime（从核 satellite） <span class="badge">工作项 · 5.3.2</span></h3>
+<p class="muted">Gp_IoMcuAdc period function.</p>
+<div class="mermaid">sequenceDiagram
+participant OS as OS
+participant Gp as Gp_IoMcuAdc
+participant CO as Callout
+
+OS-&gt;&gt;Gp: Gp_IoMcuAdc_MainFunction
+Gp-&gt;&gt;CO: Gp_IoMcuAdc_CalloutGetCoreId
+CO--&gt;&gt;Gp: CoreId
+Gp-&gt;&gt;Gp: Gp_IoMcuAdc_CheckInitStu
+alt [Init Status OK]
+    Note right of Gp: No ADC read operations on satellite core
+end</div>
+<details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">sequenceDiagram
+participant OS as OS
+participant Gp as Gp_IoMcuAdc
+participant CO as Callout
+
+OS-&gt;&gt;Gp: Gp_IoMcuAdc_MainFunction
+Gp-&gt;&gt;CO: Gp_IoMcuAdc_CalloutGetCoreId
+CO--&gt;&gt;Gp: CoreId
+Gp-&gt;&gt;Gp: Gp_IoMcuAdc_CheckInitStu
+alt [Init Status OK]
+    Note right of Gp: No ADC read operations on satellite core
+end</pre></details>
 
 <h2 id="s6">6 配置说明</h2>
 <h3>6.1 通用配置说明</h3>
@@ -1637,7 +1762,7 @@ flowchart LR
 
 
 <h2 id="s7">7 详细设计规范评估</h2>
-<table class="simple"><tr><th>维度</th><th>序号</th><th>评估内容</th><th>是否评估</th><th>分析结果（事实依据自动生成，结论人工确认）</th></tr><tr><td rowspan="4"><b>互操作性/交互</b></td><td>1</td><td>对软件单元的接口一致性进行分析</td><td>是</td><td>本模块提供 4 个接口函数（5.2.3.2），调用外部接口 6 个（Callout、External），签名与调用点均已由静态分析提取；与软件架构接口的一致性需对照架构文档确认。<span class="todo">结论待人工确认</span></td></tr><tr><td>2</td><td>软件单元对全局变量引用的正确性</td><td>是</td><td>模块内静态全局变量 19 个（5.2.4.1），外部链接全局变量 0 个（5.2.3.1）；各函数的全局变量访问已在函数卡片逐条列出。<span class="todo">结论待人工确认</span></td></tr><tr><td>3</td><td>对涉及通讯协议的软件单元分析协议的一致性</td><td>是</td><td>静态分析未探测到通讯协议相关接口（Spi/Can/Lin/Eth/Com/PduR 等）调用，本模块不涉及通讯协议。<span class="muted">（自动判定，如有遗漏请人工更正）</span></td></tr><tr><td>4</td><td>分析软件单元是否能够体现动态行为和交互</td><td>是</td><td>5.3 已生成状态机「Gp_IoMcuAdc 状态机」（3 状态 / 0 迁移）与 2 张序列图；5.1 功能接口总图与各函数调用图体现交互关系。<span class="todo">结论待人工确认</span></td></tr><tr><td rowspan="2"><b>关键性</b></td><td>5</td><td>分析与其他单元/组件的依赖关系</td><td>是</td><td>外部依赖模块：External（接口明细见 5.2.2）；Callout 函数 4 个由集成方在配置代码中实现（见 6.2）。<span class="todo">结论待人工确认</span></td></tr><tr><td>6</td><td>其他关键性的分析维度(如任务、算法等)</td><td>是</td><td>条件编译配置项 12 个（<code>GP_IOMCUADC_CORE0_ENABLE</code>、<code>GP_IOMCUADC_CORE1_ENABLE</code>、<code>GP_IOMCUADC_CORE2_ENABLE</code>、<code>GP_IOMCUADC_CORE3_ENABLE</code>、<code>GP_IOMCUADC_CORE4_ENABLE</code>、<code>GP_IOMCUADC_CORE5_ENABLE</code>、<code>GP_IOMCUADC_DEV_ERROR_DETECT</code>、<code>GP_IOMCUADC_SPEC_DEP_IF_UNDEFINED</code>、<code>GP_IOMCUADC_SPEC_DEP_IF_AURIX2G_MCAL</code>、<code>GP_IOMCUADC_SPEC_DEP_IF_AURIX3G_MCAL</code>、<code>GP_IOMCUADC_SPEC_DEP_IF_STELLARPX_MCAL</code>、<code>GP_IOMCUADC_SPEC_DEP_IF</code>）直接裁剪参与编译的函数/变量（影响范围见第 6 章）。<span class="todo">结论待人工确认</span></td></tr><tr><td rowspan="1"><b>技术复杂性</b></td><td>7</td><td>分析详细设计单元的复杂度（模型复杂度、圈复杂度）</td><td>是</td><td>已静态计算全部 9 个函数的圈复杂度（明细见下表）：最大 5，无超过 10 的函数。<span class="todo">结论待人工确认</span></td></tr><tr><td rowspan="1"><b>可实现性</b></td><td>8</td><td>从时间周期、实现条件（人员、设备等）下分析相应功能的实现能力，分析出风险、并制定处理措施</td><td>是</td><td>（项目管理层面的评估，无代码事实可自动提取）<span class="todo">结论待人工确认</span></td></tr><tr><td rowspan="2"><b>可测试性</b></td><td>9</td><td>分析软件单元的可控性（是否存在死循环、复杂度过高的情况）</td><td>是</td><td>死循环（while(1)/for(;;)）探测：未发现；圈复杂度最大 5。<span class="todo">结论待人工确认</span></td></tr><tr><td>10</td><td>分析单元输入、输出的可观测性</td><td>是</td><td>全部 9 个函数的输入/输出参数与返回值已在 5.2.3.2 / 5.2.4.2 函数卡片中逐项列出（含取值范围说明）。<span class="todo">结论待人工确认</span></td></tr><tr><td rowspan="1"><b>可复用性</b></td><td>11</td><td>分析详细设计单元是否能够被本系统或其他系统使用的可能性</td><td>是</td><td>本模块含 4 个 Callout 项目适配点与 26 个配置宏，平台化/复用策略需人工评估。<span class="todo">结论待人工确认</span></td></tr><tr><td rowspan="3"><b>安全性</b></td><td>12</td><td>分析软件设计单元是否是功能安全输出</td><td>是</td><td>未探测到安全相关标识符。<span class="todo">结论待人工确认</span></td></tr><tr><td>13</td><td>分析违反功能安全目标的风险可控性</td><td>是</td><td>（需结合系统级安全分析人工评估）<span class="todo">结论待人工确认</span></td></tr><tr><td>14</td><td>分析是否违背功能安全</td><td>是</td><td>（需结合系统级安全分析人工评估）<span class="todo">结论待人工确认</span></td></tr></table>
+<table class="simple"><tr><th>维度</th><th>序号</th><th>评估内容</th><th>是否评估</th><th>分析结果（事实依据自动生成，结论人工确认）</th></tr><tr><td rowspan="4"><b>互操作性/交互</b></td><td>1</td><td>对软件单元的接口一致性进行分析</td><td>是</td><td>本模块提供 4 个接口函数（5.2.3.2），调用外部接口 6 个（Callout、External），签名与调用点均已由静态分析提取；与软件架构接口的一致性需对照架构文档确认。<span class="todo">结论待人工确认</span></td></tr><tr><td>2</td><td>软件单元对全局变量引用的正确性</td><td>是</td><td>模块内静态全局变量 19 个（5.2.4.1），外部链接全局变量 0 个（5.2.3.1）；各函数的全局变量访问已在函数卡片逐条列出。<span class="todo">结论待人工确认</span></td></tr><tr><td>3</td><td>对涉及通讯协议的软件单元分析协议的一致性</td><td>是</td><td>静态分析未探测到通讯协议相关接口（Spi/Can/Lin/Eth/Com/PduR 等）调用，本模块不涉及通讯协议。<span class="muted">（自动判定，如有遗漏请人工更正）</span></td></tr><tr><td>4</td><td>分析软件单元是否能够体现动态行为和交互</td><td>是</td><td>5.3 已生成状态机「Gp_IoMcuAdc 状态机」（3 状态 / 0 迁移）与 3 张序列图；5.1 功能接口总图与各函数调用图体现交互关系。<span class="todo">结论待人工确认</span></td></tr><tr><td rowspan="2"><b>关键性</b></td><td>5</td><td>分析与其他单元/组件的依赖关系</td><td>是</td><td>外部依赖模块：External（接口明细见 5.2.2）；Callout 函数 4 个由集成方在配置代码中实现（见 6.2）。<span class="todo">结论待人工确认</span></td></tr><tr><td>6</td><td>其他关键性的分析维度(如任务、算法等)</td><td>是</td><td>条件编译配置项 12 个（<code>GP_IOMCUADC_CORE0_ENABLE</code>、<code>GP_IOMCUADC_CORE1_ENABLE</code>、<code>GP_IOMCUADC_CORE2_ENABLE</code>、<code>GP_IOMCUADC_CORE3_ENABLE</code>、<code>GP_IOMCUADC_CORE4_ENABLE</code>、<code>GP_IOMCUADC_CORE5_ENABLE</code>、<code>GP_IOMCUADC_DEV_ERROR_DETECT</code>、<code>GP_IOMCUADC_SPEC_DEP_IF_UNDEFINED</code>、<code>GP_IOMCUADC_SPEC_DEP_IF_AURIX2G_MCAL</code>、<code>GP_IOMCUADC_SPEC_DEP_IF_AURIX3G_MCAL</code>、<code>GP_IOMCUADC_SPEC_DEP_IF_STELLARPX_MCAL</code>、<code>GP_IOMCUADC_SPEC_DEP_IF</code>）直接裁剪参与编译的函数/变量（影响范围见第 6 章）。<span class="todo">结论待人工确认</span></td></tr><tr><td rowspan="1"><b>技术复杂性</b></td><td>7</td><td>分析详细设计单元的复杂度（模型复杂度、圈复杂度）</td><td>是</td><td>已静态计算全部 9 个函数的圈复杂度（明细见下表）：最大 5，无超过 10 的函数。<span class="todo">结论待人工确认</span></td></tr><tr><td rowspan="1"><b>可实现性</b></td><td>8</td><td>从时间周期、实现条件（人员、设备等）下分析相应功能的实现能力，分析出风险、并制定处理措施</td><td>是</td><td>（项目管理层面的评估，无代码事实可自动提取）<span class="todo">结论待人工确认</span></td></tr><tr><td rowspan="2"><b>可测试性</b></td><td>9</td><td>分析软件单元的可控性（是否存在死循环、复杂度过高的情况）</td><td>是</td><td>死循环（while(1)/for(;;)）探测：未发现；圈复杂度最大 5。<span class="todo">结论待人工确认</span></td></tr><tr><td>10</td><td>分析单元输入、输出的可观测性</td><td>是</td><td>全部 9 个函数的输入/输出参数与返回值已在 5.2.3.2 / 5.2.4.2 函数卡片中逐项列出（含取值范围说明）。<span class="todo">结论待人工确认</span></td></tr><tr><td rowspan="1"><b>可复用性</b></td><td>11</td><td>分析详细设计单元是否能够被本系统或其他系统使用的可能性</td><td>是</td><td>本模块含 4 个 Callout 项目适配点与 26 个配置宏，平台化/复用策略需人工评估。<span class="todo">结论待人工确认</span></td></tr><tr><td rowspan="3"><b>安全性</b></td><td>12</td><td>分析软件设计单元是否是功能安全输出</td><td>是</td><td>未探测到安全相关标识符。<span class="todo">结论待人工确认</span></td></tr><tr><td>13</td><td>分析违反功能安全目标的风险可控性</td><td>是</td><td>（需结合系统级安全分析人工评估）<span class="todo">结论待人工确认</span></td></tr><tr><td>14</td><td>分析是否违背功能安全</td><td>是</td><td>（需结合系统级安全分析人工评估）<span class="todo">结论待人工确认</span></td></tr></table>
 <h3>圈复杂度明细（序号 7 事实依据，静态计算）</h3>
 <p class="muted">判定节点计数法：1 + if / for / while / case / &amp;&amp; / || / ?: 数量。阈值 10 为常见评审参考值，最终以项目规范为准。</p>
 <table class="simple"><tr><th>函数</th><th>圈复杂度</th><th>死循环</th><th>参考评估</th></tr><tr><td><code>Gp_IoMcuAdc_Init</code></td><td>5</td><td></td><td><span class="muted">≤10</span></td></tr><tr><td><code>Gp_IoMcuAdc_MainFunction</code></td><td>5</td><td></td><td><span class="muted">≤10</span></td></tr><tr><td><code>Gp_IoMcuAdc_GetAdcRaw</code></td><td>5</td><td></td><td><span class="muted">≤10</span></td></tr><tr><td><code>Gp_IoMcuAdc_CheckArgIn</code></td><td>4</td><td></td><td><span class="muted">≤10</span></td></tr><tr><td><code>Gp_IoMcuAdc_GetAdcSigDiag</code></td><td>3</td><td></td><td><span class="muted">≤10</span></td></tr><tr><td><code>Gp_IoMcuAdc_GetAdcSigAdcRaw</code></td><td>3</td><td></td><td><span class="muted">≤10</span></td></tr><tr><td><code>Gp_IoMcuAdc_GetDiag</code></td><td>3</td><td></td><td><span class="muted">≤10</span></td></tr><tr><td><code>Gp_IoMcuAdc_CheckAdcRawValidity</code></td><td>3</td><td></td><td><span class="muted">≤10</span></td></tr><tr><td><code>Gp_IoMcuAdc_CheckInitStu</code></td><td>2</td><td></td><td><span class="muted">≤10</span></td></tr></table>
@@ -4018,6 +4143,33 @@ window.addEventListener('DOMContentLoaded', async () => {
     document.querySelectorAll('svg path.flowchart-link').forEach((p) => {
       if (p.getAttribute('d')) p.setAttribute('data-orig', p.getAttribute('d'));
     });
+  // 隐形汇合点坍缩（prompt 规则11约定：空标签 + fill/stroke 全透明的节点是分支汇合点）。
+  // mermaid 把它排成 ~24x12 的隐形矩形，各入边箭头散落在隐形框的不同边上，看起来像
+  // 「箭头指向空气」（EcuStp Mainfunction 的 MERGE1 三汇入、Startup 的 M2_NORMAL_FLOW
+  // 两汇入，用户两次截图反馈）。这里把汇合点 rect 清零——getBBox/离线审计看到的包围盒
+  // 随之坍缩成中心点，选路时入边端点直接取中心点——并在中心画一个小实心圆点
+  // （UML 汇流点画法），多支箭头汇聚于一点。检测靠内联样式（mermaid 把 style 语句
+  // 内联成 fill:transparent !important），空标签但无透明样式的节点不动（可见小空盒，
+  // 保持原行为）。圆点挂在节点 g 的父级（svg 坐标系），不进 g——保证 getBBox 仍为 0。
+  document.querySelectorAll('svg').forEach((svg) => {
+    svg.querySelectorAll('g.node[id^="flowchart-"]').forEach((g) => {
+      const m = g.getAttribute('id').match(/^flowchart-(.+)-\d+$/);
+      if (!m || g.textContent.trim() !== '') return;
+      const shape = g.querySelector('rect,polygon,circle,ellipse,path');
+      const st = (shape && shape.getAttribute('style')) || '';
+      if (!/fill:\s*transparent/.test(st) || !/stroke:\s*transparent/.test(st)) return;
+      const t = (g.getAttribute('transform') || '').match(/translate\(\s*(-?[\d.]+)[ ,]\s*(-?[\d.]+)\s*\)/);
+      if (!t) return;
+      shape.setAttribute('x', '0'); shape.setAttribute('y', '0');
+      shape.setAttribute('width', '0'); shape.setAttribute('height', '0');
+      const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      dot.setAttribute('cx', t[1]); dot.setAttribute('cy', t[2]);
+      dot.setAttribute('r', '3.2'); dot.setAttribute('fill', '#333');
+      dot.setAttribute('class', 'junction-dot');
+      dot.setAttribute('data-junction', m[1]);
+      g.parentNode.appendChild(dot);
+    });
+  });
   const median = (vals) => { const v = [...vals].sort((a, b) => a - b); return v[v.length >> 1]; };
   const round2 = (n) => Math.round(n * 100) / 100;
   const distToSeg = (p, a, b) => {
@@ -4347,6 +4499,9 @@ window.addEventListener('DOMContentLoaded', async () => {
       const wcx = wBox.x + wBox.w / 2;
       const dxc = wcx - (jBox.x + jBox.w / 2);
       if (jt) g.setAttribute('transform', 'translate(' + (+jt[1] + dxc) + ', ' + jt[2] + ')');
+      // 汇合点圆点是节点 g 的同级元素（保 getBBox 为零），g 平移时圆点要同步
+      const jDot = g.parentNode && g.parentNode.querySelector('circle.junction-dot[data-junction="' + jId + '"]');
+      if (jDot) jDot.setAttribute('cx', String(+jDot.getAttribute('cx') + dxc));
       jBox.x += dxc;
       const jcx = jBox.x + jBox.w / 2, jcy = jBox.y + jBox.h / 2;
       // J-->W：竖直 ▼ 进顶角（直线，主循环早退原样保留；菱形不做端点贴形）
@@ -4402,6 +4557,10 @@ window.addEventListener('DOMContentLoaded', async () => {
         // 矩形族目标才做穿透检查（polygon 目标斜边端点本在包围盒内，恒误判）
         const rectFamDst = dstG && !dstG.querySelector('polygon');
         ctx = { boxes, srcId, dstId, edgeHit: xEdge, pen: rectFamDst ? penInto(tBox) : null, dstBox: tBox };
+        // 隐形汇合点目标（包围盒已坍缩为零尺寸）：入边端点改为中心点，多方向入边汇聚
+        // 到同一点。零尺寸盒使四边等距、下方 endDir 两分支自然不命中（无方向约束），
+        // 端点贴形对端点即中心的边是恒等操作（x/y 都被钳到中心），均无需特判。
+        if (tBox.w === 0 && tBox.h === 0) endPts = [...pts.slice(0, -1), [round2(tBox.x), round2(tBox.y)]];
         const S0 = pts[0], E0 = pts[pts.length - 1];
         ds = [
           ['T', distToSeg(E0, [tBox.x, tBox.y], [tBox.x + tBox.w, tBox.y])],
@@ -4441,6 +4600,11 @@ window.addEventListener('DOMContentLoaded', async () => {
           } else endDir = 'V';
         }
       }
+    }
+    // 源是隐形汇合点（零尺寸包围盒）：出边起点同样改为中心点，与入边汇于同一点
+    if (srcId) {
+      const sb = boxesOf(svg)[srcId];
+      if (sb && sb.w === 0 && sb.h === 0) endPts = [[round2(sb.x), round2(sb.y)], ...endPts.slice(1)];
     }
     let sp = sp0 || ortho(endPts, endDir, ctx);
     // 躺平进顶/底边救援：端点贴目标顶/底边（≤2.5px）、方向合规要求竖进，但所有竖进候选
@@ -4527,6 +4691,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         for (const id in ctx.boxes) {
           if (id === ctx.srcId || id === ctx.dstId) continue;
           const bx = ctx.boxes[id];
+          if (bx.w === 0 && bx.h === 0) continue;  // 零尺寸=隐形汇合点，无盒缘可贴
           if (x2 < bx.x + 1 || x1 > bx.x + bx.w - 1) continue;
           if (Math.abs(a[1] - bx.y) < 2.5) { yTry = round2(bx.y - 8); up = true; hugId = id; break; }
           if (Math.abs(a[1] - (bx.y + bx.h)) < 2.5) { yTry = round2(bx.y + bx.h + 8); up = false; hugId = id; break; }
@@ -4573,6 +4738,7 @@ window.addEventListener('DOMContentLoaded', async () => {
             for (const id2 in ctx.boxes) {
               if (id2 === ctx.srcId || id2 === ctx.dstId) continue;
               const b2 = ctx.boxes[id2];
+              if (b2.w === 0 && b2.h === 0) continue;  // 汇合点不算盒缘
               if (hx2 < b2.x + 1 || hx1 > b2.x + b2.w - 1) continue;
               if (Math.abs(hSeg[0][1] - b2.y) < 2.5 || Math.abs(hSeg[0][1] - (b2.y + b2.h)) < 2.5) { rehug = true; break; }
             }

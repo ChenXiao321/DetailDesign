@@ -117,6 +117,17 @@ export function buildFlowchartPrompt(
   lines.push(`9. 空循环体的自旋等待（while 条件空转），不要画 W -- 否 --> W 自回边；画成回边并入顶端流线的经典回环：`);
   lines.push(`   PRE --> J / J --> W / W -- 否 --- J（回边用无箭头连线 ---，呈 T 形并入），其中 J 是标签为一个空格的隐形节点`);
   lines.push(`   （配 style J fill:transparent,stroke:transparent），J 位于菱形上方流线上，回边从上方回到判断之前`);
+  lines.push(`10. 分支完整性：判断菱形的 是/否 两支必须指向不同节点；源码里某一分支为空（do nothing）时，`);
+  lines.push(`    该分支连线直接到后续汇合点或结束节点，不得与另一支指向同一节点，也不得悬空不画`);
+  lines.push(`11. 连通性自检（输出前逐项核对，违反即判不合格）：`);
+  lines.push(`    - 开始节点必须连线到流程第一个节点（如 START --> INIT），不得只声明不连线`);
+  lines.push(`    - 除结束/返回节点外，每个节点都必须有出边；流程不得在任何处理/判断节点中断`);
+  lines.push(`    - 声明过的节点都必须接入流程（至少有入边或出边），不得出现孤立节点`);
+  lines.push(`    - 连线的每一端都必须是已做形状声明的节点 id：引用从未声明的 id 会渲染成以 id 为文字的裸盒；`);
+  lines.push(`      同一批节点只用一个命名方案，不要先按一种 id 声明、连线时又换另一套 id（这是裸盒的最常见成因）`);
+  lines.push(`    - 多条分支汇合时如需汇合点，用标签为一个空格的隐形节点 J[" "]（配 style J fill:transparent,stroke:transparent）`);
+  lines.push(`12. 以下写法一律禁止：X = Y 形式的别名行（flowchart 没有别名语法）；连线目标写 subgraph 的 id；`);
+  lines.push(`    行尾只有 --> 没有目标的连线`);
   return { system: SYSTEM_DESIGNER, user: lines.join('\n') };
 }
 

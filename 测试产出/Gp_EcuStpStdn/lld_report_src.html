@@ -80,10 +80,10 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
 <p>本文档适用于 Gp_EcuStpShdn 软件单元的开发、评审与维护。</p>
 <h2 id="s3">3 定义和缩写</h2>
 <h3>3.1 缩写</h3>
-<table class="simple"><tr><th>缩写</th><th>描述</th></tr><tr><td><code>Callout</code></td><td>Callout 函数：由集成方在配置代码中实现，模块通过调用 Callout 适配项目策略</td></tr><tr><td><code>EcuM</code></td><td>ECU State Manager ECU 状态管理模块</td></tr><tr><td><code>MCU</code></td><td>Microcontroller Unit 微控制器</td></tr><tr><td><code>OS</code></td><td>Operating System 操作系统</td></tr><tr><td><code>SBC</code></td><td>System Basis Chip 系统基础芯片</td></tr></table>
+<table class="simple"><tr><th>缩写</th><th>描述</th></tr><tr><td><code>ASW</code></td><td>Application Software 应用软件</td></tr><tr><td><code>ECU</code></td><td>Electronic Control Unit 电子控制单元</td></tr><tr><td><code>EcuM</code></td><td>ECU State Manager ECU 状态管理模块</td></tr><tr><td><code>MCAL</code></td><td>Microcontroller Abstraction Layer 微控制器抽象层</td></tr><tr><td><code>MCU</code></td><td>Microcontroller Unit 微控制器</td></tr><tr><td><code>OS</code></td><td>Operating System 操作系统</td></tr><tr><td><code>SBC</code></td><td>System Basis Chip 系统基础芯片</td></tr></table>
 <p class="muted">注：仅列出本模块文档/代码中实际出现的缩写，可按项目需要补充。</p>
 <h3>3.2 定义</h3>
-<table class="simple"><tr><th>名称</th><th>描述</th></tr><tr><td>可重入性</td><td>函数在同时多次调用，例如操作系统在进程调度过程中，或者单片机、处理器等中断的时候会发生重入的现象。（可重入函数可以在任意时刻被打断，稍后再继续运行，不会丢失数据；不可重入函数不能由超过一个任务共享，除非能确保函数的互斥）</td></tr><tr><td>静态全局变量</td><td>static 声明的文件作用域变量（内部链接），仅本模块内可见，外部模块不可直接访问；本报告 5.2.4.1 节列出。</td></tr></table>
+<table class="simple"><tr><th>名称</th><th>描述</th></tr><tr><td>Callout</td><td>Callout 函数：由集成方在配置代码中实现，模块通过调用 Callout 适配项目策略</td></tr><tr><td>可重入性</td><td>函数在同时多次调用，例如操作系统在进程调度过程中，或者单片机、处理器等中断的时候会发生重入的现象。（可重入函数可以在任意时刻被打断，稍后再继续运行，不会丢失数据；不可重入函数不能由超过一个任务共享，除非能确保函数的互斥）</td></tr><tr><td>静态全局变量</td><td>static 声明的文件作用域变量（内部链接），仅本模块内可见，外部模块不可直接访问；本报告 5.2.4.1 节列出。</td></tr></table>
 
 <h2 id="s4">4 程序系统结构</h2>
 <h3>4.1 文件说明</h3>
@@ -139,7 +139,9 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
     class Gp_EcuStpShdn_Callout_c,Gp_EcuStpShdn_Cfg_c,Gp_EcuStpShdn_c source</pre></details>
 
 <h2 id="s51">5.1 功能描述</h2>
-<p>Gp_EcuStpShdn 模块负责多核 ECU 启动阶段的时序协调与安全监控，主要功能包括：<br>- 多核启动时序控制：按 STAGE_ONE / STAGE_TWO / STAGE_THREE 三个阶段协调主核（Core0）与从核的初始化<br>- 自检管理：触发并检查 MCU 预运行测试、运行时测试与 SBC 自检结果，失败时按配置执行安全动作<br>- 安全状态管理：提供进入与查询安全状态的接口（SetSafeState / GetSafeState）<br>- 故障恢复：提供 Trap 恢复与 OS 错误恢复接口，具体恢复策略转发至 Callout 函数实现<br>- 断电管理：处理启动阶段（TryPwrShdn 标志）与关闭阶段（PwrShdnInShdnPhase）的断电请求<br>- 时间戳记录：记录启动关键节点时间戳，主核统计最后完成初始化的从核时间<br>模块在 EcuM 的 DriverInitOne 阶段经 Gp_EcuStpShdn_Startup 被调用，是 ECU 启动的关键路径；运行时由 Gp_EcuStpShdn_Mainfunction 周期执行运行时测试。</p>
+<p>Gp_EcuStpShdn 模块负责多核 ECU 启动阶段的时序协调与安全监控，主要功能包括：</p>
+<ul><li>多核启动时序控制：按 STAGE_ONE / STAGE_TWO / STAGE_THREE 三个阶段协调主核（Core0）与从核的初始化</li><li>自检管理：触发并检查 MCU 预运行测试、运行时测试与 SBC 自检结果，失败时按配置执行安全动作</li><li>安全状态管理：提供进入与查询安全状态的接口（SetSafeState / GetSafeState）</li><li>故障恢复：提供 Trap 恢复与 OS 错误恢复接口，具体恢复策略转发至 Callout 函数实现</li><li>断电管理：处理启动阶段（TryPwrShdn 标志）与关闭阶段（PwrShdnInShdnPhase）的断电请求</li><li>时间戳记录：记录启动关键节点时间戳，主核统计最后完成初始化的从核时间</li></ul>
+<p>模块在 EcuM 的 DriverInitOne 阶段经 Gp_EcuStpShdn_Startup 被调用，是 ECU 启动的关键路径；运行时由 Gp_EcuStpShdn_Mainfunction 周期执行运行时测试。</p>
 
 <h3>功能接口总图 <span class="badge">工作项 · 5.1</span></h3>
 <p class="muted">本模块对外提供 8 个接口函数（左侧为调用方），并调用 8 个外部接口（右侧按来源模块归组）；箭头方向为调用方向。Callout 函数属本模块配置点，不在本图展示，其调用关系见下方内部函数调用图与 6.2；各接口的模块内调用者见内部函数调用图与 5.2.2 表。</p>
@@ -4464,12 +4466,42 @@ globalThis.mermaid = globalThis.__esbuild_esm_mermaid.default;
 // ⑤ 标签重挂：边标签投影到原路径取弧长占比，平移到新路径同占比处——否则路由大改后
 //    标签留在旧干线旁（D1--否-->END 的「否」字离新线 87px）。
 window.addEventListener('DOMContentLoaded', async () => {
-  await mermaid.run({ querySelector: '.mermaid' });
+  // 单图语法错误时 mermaid.run 会 reject（其余图已照常渲染成 error 占位 svg），
+  // 不 catch 的话后面 ORTHO 直角化整段不执行，全报告退化为 dagre 斜线（Qwen 批次实测踩中，
+  // 且 unhandled rejection 不触发 window.onerror，调试页 __errs 抓不到）。
+  try { await mermaid.run({ querySelector: '.mermaid' }); } catch (e) { /* 继续直角化已渲染的图 */ }
   // 调试钩子：file URL 带 #debug-orig 时把 dagre 原始路径存到 data-orig，供离线比对直角化改动
   if (location.hash === '#debug-orig')
     document.querySelectorAll('svg path.flowchart-link').forEach((p) => {
       if (p.getAttribute('d')) p.setAttribute('data-orig', p.getAttribute('d'));
     });
+  // 隐形汇合点坍缩（prompt 规则11约定：空标签 + fill/stroke 全透明的节点是分支汇合点）。
+  // mermaid 把它排成 ~24x12 的隐形矩形，各入边箭头散落在隐形框的不同边上，看起来像
+  // 「箭头指向空气」（EcuStp Mainfunction 的 MERGE1 三汇入、Startup 的 M2_NORMAL_FLOW
+  // 两汇入，用户两次截图反馈）。这里把汇合点 rect 清零——getBBox/离线审计看到的包围盒
+  // 随之坍缩成中心点，选路时入边端点直接取中心点——并在中心画一个小实心圆点
+  // （UML 汇流点画法），多支箭头汇聚于一点。检测靠内联样式（mermaid 把 style 语句
+  // 内联成 fill:transparent !important），空标签但无透明样式的节点不动（可见小空盒，
+  // 保持原行为）。圆点挂在节点 g 的父级（svg 坐标系），不进 g——保证 getBBox 仍为 0。
+  document.querySelectorAll('svg').forEach((svg) => {
+    svg.querySelectorAll('g.node[id^="flowchart-"]').forEach((g) => {
+      const m = g.getAttribute('id').match(/^flowchart-(.+)-\d+$/);
+      if (!m || g.textContent.trim() !== '') return;
+      const shape = g.querySelector('rect,polygon,circle,ellipse,path');
+      const st = (shape && shape.getAttribute('style')) || '';
+      if (!/fill:\s*transparent/.test(st) || !/stroke:\s*transparent/.test(st)) return;
+      const t = (g.getAttribute('transform') || '').match(/translate\(\s*(-?[\d.]+)[ ,]\s*(-?[\d.]+)\s*\)/);
+      if (!t) return;
+      shape.setAttribute('x', '0'); shape.setAttribute('y', '0');
+      shape.setAttribute('width', '0'); shape.setAttribute('height', '0');
+      const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      dot.setAttribute('cx', t[1]); dot.setAttribute('cy', t[2]);
+      dot.setAttribute('r', '3.2'); dot.setAttribute('fill', '#333');
+      dot.setAttribute('class', 'junction-dot');
+      dot.setAttribute('data-junction', m[1]);
+      g.parentNode.appendChild(dot);
+    });
+  });
   const median = (vals) => { const v = [...vals].sort((a, b) => a - b); return v[v.length >> 1]; };
   const round2 = (n) => Math.round(n * 100) / 100;
   const distToSeg = (p, a, b) => {
@@ -4799,6 +4831,9 @@ window.addEventListener('DOMContentLoaded', async () => {
       const wcx = wBox.x + wBox.w / 2;
       const dxc = wcx - (jBox.x + jBox.w / 2);
       if (jt) g.setAttribute('transform', 'translate(' + (+jt[1] + dxc) + ', ' + jt[2] + ')');
+      // 汇合点圆点是节点 g 的同级元素（保 getBBox 为零），g 平移时圆点要同步
+      const jDot = g.parentNode && g.parentNode.querySelector('circle.junction-dot[data-junction="' + jId + '"]');
+      if (jDot) jDot.setAttribute('cx', String(+jDot.getAttribute('cx') + dxc));
       jBox.x += dxc;
       const jcx = jBox.x + jBox.w / 2, jcy = jBox.y + jBox.h / 2;
       // J-->W：竖直 ▼ 进顶角（直线，主循环早退原样保留；菱形不做端点贴形）
@@ -4854,6 +4889,10 @@ window.addEventListener('DOMContentLoaded', async () => {
         // 矩形族目标才做穿透检查（polygon 目标斜边端点本在包围盒内，恒误判）
         const rectFamDst = dstG && !dstG.querySelector('polygon');
         ctx = { boxes, srcId, dstId, edgeHit: xEdge, pen: rectFamDst ? penInto(tBox) : null, dstBox: tBox };
+        // 隐形汇合点目标（包围盒已坍缩为零尺寸）：入边端点改为中心点，多方向入边汇聚
+        // 到同一点。零尺寸盒使四边等距、下方 endDir 两分支自然不命中（无方向约束），
+        // 端点贴形对端点即中心的边是恒等操作（x/y 都被钳到中心），均无需特判。
+        if (tBox.w === 0 && tBox.h === 0) endPts = [...pts.slice(0, -1), [round2(tBox.x), round2(tBox.y)]];
         const S0 = pts[0], E0 = pts[pts.length - 1];
         ds = [
           ['T', distToSeg(E0, [tBox.x, tBox.y], [tBox.x + tBox.w, tBox.y])],
@@ -4893,6 +4932,11 @@ window.addEventListener('DOMContentLoaded', async () => {
           } else endDir = 'V';
         }
       }
+    }
+    // 源是隐形汇合点（零尺寸包围盒）：出边起点同样改为中心点，与入边汇于同一点
+    if (srcId) {
+      const sb = boxesOf(svg)[srcId];
+      if (sb && sb.w === 0 && sb.h === 0) endPts = [[round2(sb.x), round2(sb.y)], ...endPts.slice(1)];
     }
     let sp = sp0 || ortho(endPts, endDir, ctx);
     // 躺平进顶/底边救援：端点贴目标顶/底边（≤2.5px）、方向合规要求竖进，但所有竖进候选
@@ -4979,6 +5023,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         for (const id in ctx.boxes) {
           if (id === ctx.srcId || id === ctx.dstId) continue;
           const bx = ctx.boxes[id];
+          if (bx.w === 0 && bx.h === 0) continue;  // 零尺寸=隐形汇合点，无盒缘可贴
           if (x2 < bx.x + 1 || x1 > bx.x + bx.w - 1) continue;
           if (Math.abs(a[1] - bx.y) < 2.5) { yTry = round2(bx.y - 8); up = true; hugId = id; break; }
           if (Math.abs(a[1] - (bx.y + bx.h)) < 2.5) { yTry = round2(bx.y + bx.h + 8); up = false; hugId = id; break; }
@@ -5025,6 +5070,7 @@ window.addEventListener('DOMContentLoaded', async () => {
             for (const id2 in ctx.boxes) {
               if (id2 === ctx.srcId || id2 === ctx.dstId) continue;
               const b2 = ctx.boxes[id2];
+              if (b2.w === 0 && b2.h === 0) continue;  // 汇合点不算盒缘
               if (hx2 < b2.x + 1 || hx1 > b2.x + b2.w - 1) continue;
               if (Math.abs(hSeg[0][1] - b2.y) < 2.5 || Math.abs(hSeg[0][1] - (b2.y + b2.h)) < 2.5) { rehug = true; break; }
             }

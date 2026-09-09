@@ -80,10 +80,10 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
 <p>本文档适用于 Gp_EcuStpShdn 软件单元的开发、评审与维护。</p>
 <h2 id="s3">3 定义和缩写</h2>
 <h3>3.1 缩写</h3>
-<table class="simple"><tr><th>缩写</th><th>描述</th></tr><tr><td><code>Callout</code></td><td>Callout 函数：由集成方在配置代码中实现，模块通过调用 Callout 适配项目策略</td></tr></table>
+<table class="simple"><tr><th>缩写</th><th>描述</th></tr><tr><td><code>ECU</code></td><td>Electronic Control Unit 电子控制单元</td></tr><tr><td><code>MCAL</code></td><td>Microcontroller Abstraction Layer 微控制器抽象层</td></tr><tr><td><code>MCU</code></td><td>Microcontroller Unit 微控制器</td></tr><tr><td><code>OS</code></td><td>Operating System 操作系统</td></tr><tr><td><code>SBC</code></td><td>System Basis Chip 系统基础芯片</td></tr></table>
 <p class="muted">注：仅列出本模块文档/代码中实际出现的缩写，可按项目需要补充。</p>
 <h3>3.2 定义</h3>
-<table class="simple"><tr><th>名称</th><th>描述</th></tr><tr><td>可重入性</td><td>函数在同时多次调用，例如操作系统在进程调度过程中，或者单片机、处理器等中断的时候会发生重入的现象。（可重入函数可以在任意时刻被打断，稍后再继续运行，不会丢失数据；不可重入函数不能由超过一个任务共享，除非能确保函数的互斥）</td></tr><tr><td>静态全局变量</td><td>static 声明的文件作用域变量（内部链接），仅本模块内可见，外部模块不可直接访问；本报告 5.2.4.1 节列出。</td></tr></table>
+<table class="simple"><tr><th>名称</th><th>描述</th></tr><tr><td>Callout</td><td>Callout 函数：由集成方在配置代码中实现，模块通过调用 Callout 适配项目策略</td></tr><tr><td>可重入性</td><td>函数在同时多次调用，例如操作系统在进程调度过程中，或者单片机、处理器等中断的时候会发生重入的现象。（可重入函数可以在任意时刻被打断，稍后再继续运行，不会丢失数据；不可重入函数不能由超过一个任务共享，除非能确保函数的互斥）</td></tr><tr><td>静态全局变量</td><td>static 声明的文件作用域变量（内部链接），仅本模块内可见，外部模块不可直接访问；本报告 5.2.4.1 节列出。</td></tr></table>
 
 <h2 id="s4">4 程序系统结构</h2>
 <h3>4.1 文件说明</h3>
@@ -515,11 +515,17 @@ flowchart LR
     <tr><td class="label">Return value</td><td>void</td></tr>
     <tr><td class="label">Description</td><td class="desc">该函数作为 Gp_EcuStpShdn 模块的对外接口，用于触发尝试电源关闭（try power shutdown）的操作。其核心功能是执行模块内部定义的电源关闭尝试逻辑，以响应上层或外部系统的控制请求。在模块架构中，该函数由外部调用者发起，旨在改变模块的电源管理状态。函数执行过程中会访问并操作模块全局变量 Gp_EcuStpShdn_bufMstLocalImpl_ltst，以更新或记录相关的本地实现状态。</td></tr>
     <tr><td class="label">流程图</td><td><div class="mermaid">flowchart TD
-    START(["开始"]) --&gt; SET["设置&lt;br&gt;Gp_EcuStpShdn_bufMstLocalI&lt;br&gt;mpl_ltst.TryPwrShdn_b 为&lt;br&gt;TRUE"]
-    SET --&gt; END(["结束"])</div>
+    START(["开始"])
+    A["Gp_EcuStpShdn_bufMstLocalI&lt;br&gt;mpl_ltst.TryPwrShdn_b =&lt;br&gt;TRUE"]
+    END(["结束"])
+    START --&gt; A
+    A --&gt; END</div>
 <details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">flowchart TD
-    START(["开始"]) --&gt; SET["设置 Gp_EcuStpShdn_bufMstLocalImpl_ltst.TryPwrShdn_b 为 TRUE"]
-    SET --&gt; END(["结束"])</pre></details></td></tr>
+    START(["开始"])
+    A["Gp_EcuStpShdn_bufMstLocalImpl_ltst.TryPwrShdn_b = TRUE"]
+    END(["结束"])
+    START --&gt; A
+    A --&gt; END</pre></details></td></tr>
     <tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_EcuStpShdn_bufMstLocalImpl_ltst</td></tr>
   </table>
   <div class="wi-footer">
@@ -548,13 +554,21 @@ flowchart LR
     <tr><td class="label">Return value</td><td>boolean - TRUE/FASLE</td></tr>
     <tr><td class="label">Description</td><td class="desc">该函数作为 Gp_EcuStpShdn 模块的对外接口，用于获取当前系统的安全状态。其核心功能是读取模块内部的全局变量 Gp_EcuStpShdn_bufMstLocalImpl_ltst，以反映最新的本地实现状态。该函数不修改任何全局变量，仅执行只读访问操作。调用者可通过此接口查询模块当前的安全状态标志，以便进行后续的逻辑判断或状态同步。</td></tr>
     <tr><td class="label">流程图</td><td><div class="mermaid">flowchart TD
-    A(["开始"]) --&gt; B[/"读取&lt;br&gt;Gp_EcuStpShdn_bufMstLocalI&lt;br&gt;mpl_ltst.SafeState_b"/]
-    B --&gt; C["将 SafeState_b&lt;br&gt;赋值给局部变量 SafeState_b"]
-    C --&gt; D(["结束"])</div>
+    START(["开始"])
+    INIT{{"初始化 SafeState_b 为&lt;br&gt;FALSE"}}
+    READ[/"读取&lt;br&gt;Gp_EcuStpShdn_bufMstLocalI&lt;br&gt;mpl_ltst.SafeState_b&lt;br&gt;赋值给 SafeState_b"/]
+    RETURN(["返回 SafeState_b"])
+    START --&gt; INIT
+    INIT --&gt; READ
+    READ --&gt; RETURN</div>
 <details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">flowchart TD
-    A(["开始"]) --&gt; B[/"读取 Gp_EcuStpShdn_bufMstLocalImpl_ltst.SafeState_b"/]
-    B --&gt; C["将 SafeState_b 赋值给局部变量 SafeState_b"]
-    C --&gt; D(["结束"])</pre></details></td></tr>
+    START(["开始"])
+    INIT{{"初始化 SafeState_b 为 FALSE"}}
+    READ[/"读取 Gp_EcuStpShdn_bufMstLocalImpl_ltst.SafeState_b 赋值给 SafeState_b"/]
+    RETURN(["返回 SafeState_b"])
+    START --&gt; INIT
+    INIT --&gt; READ
+    READ --&gt; RETURN</pre></details></td></tr>
     <tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_EcuStpShdn_bufMstLocalImpl_ltst</td></tr>
   </table>
   <div class="wi-footer">
@@ -616,10 +630,10 @@ flowchart LR
     <tr><td class="label">Return value</td><td>void</td></tr>
     <tr><td class="label">Description</td><td class="desc">Gp_EcuStpShdn_OsErrRecov 是 Gp_EcuStpShdn 模块的对外接口函数，用于执行操作系统错误恢复处理。该函数接收一个 uint8 类型的 OsStatus_u8 参数，代表当前的操作系统状态。在内部逻辑中，它直接调用 Gp_EcuStpShdn_CalloutOsErrRecov 函数以执行具体的错误恢复操作。作为模块的入口点，它负责将外部传入的 OS 状态信息传递给内部回调机制，从而完成错误恢复流程。</td></tr>
     <tr><td class="label">流程图</td><td><div class="mermaid">flowchart TD
-    START(["开始"]) --&gt; CALL[["Gp_EcuStpShdn_CalloutOsErr&lt;br&gt;Recov 调用 OS 错误恢复回调"]]
+    START(["开始"]) --&gt; CALL[["Gp_EcuStpShdn_CalloutOsErr&lt;br&gt;Recov 调用OS错误恢复回调"]]
     CALL --&gt; END(["结束"])</div>
 <details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">flowchart TD
-    START(["开始"]) --&gt; CALL[["Gp_EcuStpShdn_CalloutOsErrRecov 调用 OS 错误恢复回调"]]
+    START(["开始"]) --&gt; CALL[["Gp_EcuStpShdn_CalloutOsErrRecov 调用OS错误恢复回调"]]
     CALL --&gt; END(["结束"])</pre></details></td></tr>
     <tr><td class="label">调用</td><td class="muted small">Gp_EcuStpShdn_CalloutOsErrRecov</td></tr>
   </table>
@@ -649,10 +663,10 @@ flowchart LR
     <tr><td class="label">Return value</td><td>void</td></tr>
     <tr><td class="label">Description</td><td class="desc">Gp_EcuStpShdn_PwrShdnInShdnPhase 是 Gp_EcuStpShdn 模块的对外接口函数，用于在系统关闭阶段执行电源关闭操作。该函数作为模块入口，负责调用内部函数 Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase 以触发具体的关闭回调逻辑。根据设计约束，此函数仅允许由 core0 调用，以确保在多核环境下操作的唯一性和安全性。</td></tr>
     <tr><td class="label">流程图</td><td><div class="mermaid">flowchart TD
-    START(["开始"]) --&gt; CALL[["Gp_EcuStpShdn_CalloutPwrSh&lt;br&gt;dnInShdnPhase&lt;br&gt;执行关机阶段回调"]]
+    START(["开始"]) --&gt; CALL[["Gp_EcuStpShdn_CalloutPwrSh&lt;br&gt;dnInShdnPhase&lt;br&gt;调用电源关闭回调"]]
     CALL --&gt; END(["结束"])</div>
 <details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">flowchart TD
-    START(["开始"]) --&gt; CALL[["Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase 执行关机阶段回调"]]
+    START(["开始"]) --&gt; CALL[["Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase 调用电源关闭回调"]]
     CALL --&gt; END(["结束"])</pre></details></td></tr>
     <tr><td class="label">调用</td><td class="muted small">Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase</td></tr>
   </table>
@@ -684,257 +698,463 @@ flowchart LR
     <tr><td class="label">流程图</td><td><div class="mermaid">flowchart TD
     START(["开始"]) --&gt; INIT_VARS["初始化局部变量&lt;br&gt;CoreId_u32, Cnt_u32,&lt;br&gt;SbcInfo_u32,&lt;br&gt;RstTypePlt_u8,&lt;br&gt;RstTypeMcal_u8, RstId_u8,&lt;br&gt;RstCoreId_u8"]
     INIT_VARS --&gt; GET_CORE_ID[["Gp_EcuStpShdn_CalloutGetCo&lt;br&gt;reId 获取核心ID"]]
-    GET_CORE_ID --&gt; SET_RT_ADDR["设置 Rt_cptst&lt;br&gt;指向当前核心运行时缓冲区"]
-    SET_RT_ADDR --&gt; SET_SAT_IMPL["设置 SatImpl_ptst&lt;br&gt;指向当前核心本地实现"]
+    GET_CORE_ID --&gt; SET_RT_ADDR["设置 Rt_cptst&lt;br&gt;指向当前核心运行时缓冲区&lt;br&gt;设置 SatImpl_ptst&lt;br&gt;指向当前核心本地实现"]
     
-    SET_SAT_IMPL --&gt; CHECK_CORE0_STAGE1{"CoreId_u32 ==&lt;br&gt;GP_ECUSTPSHDN_CORE0_ID ?"}
+    SET_RT_ADDR --&gt; STAGE1_CHECK{"CoreId_u32 ==&lt;br&gt;GP_ECUSTPSHDN_CORE0_ID ?"}
     
-    CHECK_CORE0_STAGE1 -- 是 --&gt; MASTER_STAGE1_INIT
-    CHECK_CORE0_STAGE1 -- 否 --&gt; SAT_STAGE1_INIT
+    STAGE1_CHECK -- 是 --&gt; LANE_CORE0_START
+    STAGE1_CHECK -- 否 --&gt; LANE_SAT_START
     
-    subgraph LANE_MASTER_STAGE1[" "]
+    subgraph LANE_CORE0[" "]
         direction TB
-        MASTER_STAGE1_INIT["Master Stage 1&lt;br&gt;Initialization"]
-        MASTER_STAGE1_INIT --&gt; INIT_SAT_RSLT["SatImpl_ptst-&gt;InitRsltAllB&lt;br&gt;its_u32 = 0U"]
-        INIT_SAT_RSLT --&gt; LOOP_INIT_RSLT_PRE{{"Cnt_u32 = 0U"}}
-        LOOP_INIT_RSLT_PRE --&gt; LOOP_INIT_RSLT_COND{"Cnt_u32 &lt;&lt;br&gt;GP_ECUSTPSHDN_INIT_RSLT_RE&lt;br&gt;C_NUM ?"}
-        LOOP_INIT_RSLT_COND -- 是 --&gt; LOOP_INIT_RSLT_BODY["SatImpl_ptst-&gt;InitCheckRsl&lt;br&gt;t_t[Cnt_u32] = E_OK"]
-        LOOP_INIT_RSLT_BODY --&gt; LOOP_INIT_RSLT_INC["Cnt_u32++"]
-        LOOP_INIT_RSLT_INC --&gt; LOOP_INIT_RSLT_COND
-        LOOP_INIT_RSLT_COND -- 否 --&gt; INIT_MST_TIME_PRE{{"Cnt_u32 = 0U"}}
-        INIT_MST_TIME_PRE --&gt; INIT_MST_TIME_COND{"Cnt_u32 &lt;&lt;br&gt;GP_ECUSTPSHDN_MST_TIME_STA&lt;br&gt;MP_NUM ?"}
-        INIT_MST_TIME_COND -- 是 --&gt; INIT_MST_TIME_BODY["MstImpl_ptst-&gt;TimeStamp_u3&lt;br&gt;2[Cnt_u32] = 0U"]
-        INIT_MST_TIME_BODY --&gt; INIT_MST_TIME_INC["Cnt_u32++"]
-        INIT_MST_TIME_INC --&gt; INIT_MST_TIME_COND
-        INIT_MST_TIME_COND -- 否 --&gt; SET_MST_DEFAULTS["设置 MstImpl_ptst 默认值&lt;br&gt;McuPreTestRslt,&lt;br&gt;McuRunTestRslt, SbcInfo,&lt;br&gt;StpStage, SelfTest,&lt;br&gt;RstType, RstId,&lt;br&gt;RstCoreId,SafeState,&lt;br&gt;TryPwrShdn"]
-        SET_MST_DEFAULTS --&gt; SET_SAT_TIME["SatImpl_ptst-&gt;TimeStamp_u3&lt;br&gt;2 = 0U"]
-        SET_SAT_TIME --&gt; CALL_INIT_STAGE1[["Gp_EcuStpShdn_CalloutInitS&lt;br&gt;tageOneCore0&lt;br&gt;调用核心0初始化回调"]]
-        CALL_INIT_STAGE1 --&gt; CALL_RSTM_INIT1[["Gp_RstM_InitOne&lt;br&gt;调用复位管理初始化1"]]
+        LANE_CORE0_START["设置&lt;br&gt;SatImpl_ptst-&gt;InitRsltAllB&lt;br&gt;its_u32 = 0U"]
+        LANE_CORE0_START --&gt; LOOP1_PRE{{"Cnt_u32 = 0U"}}
+        LOOP1_PRE --&gt; LOOP1_COND{"Cnt_u32 &lt;&lt;br&gt;GP_ECUSTPSHDN_INIT_RSLT_RE&lt;br&gt;C_NUM ?"}
+        LOOP1_COND -- 是 --&gt; LOOP1_BODY["SatImpl_ptst-&gt;InitCheckRsl&lt;br&gt;t_t[Cnt_u32] = E_OK&lt;br&gt;Cnt_u32++"]
+        LOOP1_BODY --&gt; LOOP1_COND
+        LOOP1_COND -- 否 --&gt; LOOP2_PRE{{"Cnt_u32 = 0U"}}
+        LOOP2_PRE --&gt; LOOP2_COND{"Cnt_u32 &lt;&lt;br&gt;GP_ECUSTPSHDN_MST_TIME_STA&lt;br&gt;MP_NUM ?"}
+        LOOP2_COND -- 是 --&gt; LOOP2_BODY["MstImpl_ptst-&gt;TimeStamp_u3&lt;br&gt;2[Cnt_u32] = 0U&lt;br&gt;Cnt_u32++"]
+        LOOP2_BODY --&gt; LOOP2_COND
+        LOOP2_COND -- 否 --&gt; INIT_MST["初始化 MstImpl_ptst 字段&lt;br&gt;TimeStamp,&lt;br&gt;McuPreTestRslt,McuRunTestR&lt;br&gt;slt, SbcInfo&lt;br&gt;StpStage_t = STPSTAGE_ONE&lt;br&gt;McuSelfTest_t,&lt;br&gt;SbcSelfTest_t = UNDEF&lt;br&gt;RstTypePlt, RstTypeMcal,&lt;br&gt;RstId, RstCoreId = 0&lt;br&gt;SafeState_b = FALSE,&lt;br&gt;TryPwrShdn_b = FALSE&lt;br&gt;SatImpl_ptst-&gt;TimeStamp_u3&lt;br&gt;2 = 0U"]
+        INIT_MST --&gt; CALL_STAGE1_CORE0[["Gp_EcuStpShdn_CalloutInitS&lt;br&gt;tageOneCore0&lt;br&gt;调用核心0初始化回调"]]
+        
+        subgraph SG1[" "]
+            SG1_NOTE["注：仅在&lt;br&gt;GP_RSTM_PROJ_TYPE_SEL&lt;br&gt;等于GP_RSTM_PROJ_TYPE_APP_&lt;br&gt;NO_BOOT 时参与编译"]
+            SG1_NOTE ~~~ CALL_RSTM_INIT1
+            CALL_RSTM_INIT1[["Gp_RstM_InitOne&lt;br&gt;调用复位管理器初始化1"]]
+        end
+        style SG1 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+        classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700
+        class SG1_NOTE condNote
+        
+        CALL_STAGE1_CORE0 --&gt; CALL_RSTM_INIT1
         CALL_RSTM_INIT1 --&gt; SET_STAGE2["MstImpl_ptst-&gt;StpStage_t&lt;br&gt;=GP_ECUSTPSHDN_STPSTAGE_TW&lt;br&gt;O"]
     end
-    style LANE_MASTER_STAGE1 fill:transparent,stroke:transparent
+    style LANE_CORE0 fill:transparent,stroke:transparent
     
-    subgraph LANE_SAT_STAGE1[" "]
+    subgraph LANE_SAT[" "]
         direction TB
-        SAT_STAGE1_INIT["Satellite Stage 1&lt;br&gt;Initialization"]
-        SAT_STAGE1_INIT --&gt; INIT_SAT_RSLT_SAT["SatImpl_ptst-&gt;InitRsltAllB&lt;br&gt;its_u32 = 0U"]
-        INIT_SAT_RSLT_SAT --&gt; LOOP_SAT_RSLT_PRE{{"Cnt_u32 = 0U"}}
-        LOOP_SAT_RSLT_PRE --&gt; LOOP_SAT_RSLT_COND{"Cnt_u32 &lt;&lt;br&gt;GP_ECUSTPSHDN_INIT_RSLT_RE&lt;br&gt;C_NUM ?"}
-        LOOP_SAT_RSLT_COND -- 是 --&gt; LOOP_SAT_RSLT_BODY["SatImpl_ptst-&gt;InitCheckRsl&lt;br&gt;t_t[Cnt_u32] = E_OK"]
-        LOOP_SAT_RSLT_BODY --&gt; LOOP_SAT_RSLT_INC["Cnt_u32++"]
-        LOOP_SAT_RSLT_INC --&gt; LOOP_SAT_RSLT_COND
-        LOOP_SAT_RSLT_COND -- 否 --&gt; SET_SAT_TIME_SAT["SatImpl_ptst-&gt;TimeStamp_u3&lt;br&gt;2 = 0U"]
-        SET_SAT_TIME_SAT --&gt; WAIT_STAGE2_PRE{{"等待 Stage 2"}}
+        LANE_SAT_START["设置&lt;br&gt;SatImpl_ptst-&gt;InitRsltAllB&lt;br&gt;its_u32 = 0U"]
+        LANE_SAT_START --&gt; LOOP3_PRE{{"Cnt_u32 = 0U"}}
+        LOOP3_PRE --&gt; LOOP3_COND{"Cnt_u32 &lt;&lt;br&gt;GP_ECUSTPSHDN_INIT_RSLT_RE&lt;br&gt;C_NUM ?"}
+        LOOP3_COND -- 是 --&gt; LOOP3_BODY["SatImpl_ptst-&gt;InitCheckRsl&lt;br&gt;t_t[Cnt_u32] = E_OK&lt;br&gt;Cnt_u32++"]
+        LOOP3_BODY --&gt; LOOP3_COND
+        LOOP3_COND -- 否 --&gt; INIT_SAT["SatImpl_ptst-&gt;TimeStamp_u3&lt;br&gt;2 = 0U"]
+        INIT_SAT --&gt; WAIT_STAGE2_PRE["等待阶段2"]
         WAIT_STAGE2_PRE --&gt; WAIT_STAGE2_J{" "}
-        WAIT_STAGE2_J --&gt; WAIT_STAGE2_COND{"MstImpl_ptst-&gt;StpStage_t&lt;br&gt;!=&lt;br&gt;GP_ECUSTPSHDN_STPSTAGE_TWO&lt;br&gt;?"}
-        WAIT_STAGE2_COND -- 是 --&gt; WAIT_STAGE2_NOP[["GP_ECUSTPSHDN_NOP 空操作"]]
+        WAIT_STAGE2_J --&gt; WAIT_STAGE2_W{"MstImpl_ptst-&gt;StpStage_t&lt;br&gt;!=&lt;br&gt;GP_ECUSTPSHDN_STPSTAGE_TWO&lt;br&gt;?"}
+        WAIT_STAGE2_W -- 是 --&gt; WAIT_STAGE2_NOP["GP_ECUSTPSHDN_NOP"]
         WAIT_STAGE2_NOP --- WAIT_STAGE2_J
-        WAIT_STAGE2_COND -- 否 --&gt; EXIT_SAT_STAGE1["退出 Stage 1 等待"]
     end
-    style LANE_SAT_STAGE1 fill:transparent,stroke:transparent
+    style LANE_SAT fill:transparent,stroke:transparent
     style WAIT_STAGE2_J fill:transparent,stroke:transparent
+    style STAGE2_COMMON_START fill:transparent,stroke:transparent
     
-    SET_STAGE2 --&gt; MERGE_STAGE2
-    EXIT_SAT_STAGE1 --&gt; MERGE_STAGE2
     
-    MERGE_STAGE2["进入 Stage 2"] --&gt; CALL_PRERUN_INIT[["Gp_TstApp_PreRunInit&lt;br&gt;预运行初始化"]]
-    CALL_PRERUN_INIT --&gt; CALL_PRERUN_PHASE[["Gp_TstApp_PreRunPhase&lt;br&gt;预运行阶段测试"]]
-    CALL_PRERUN_PHASE --&gt; RECORD_PRERUN_TIME["记录 PreRun 完成时间戳&lt;br&gt;MstImpl_ptst-&gt;TimeStamp_u3&lt;br&gt;2[PRERUN] =&lt;br&gt;Gp_EcuStpShdn_CalloutGetSy&lt;br&gt;sTimeMs()"]
+    STAGE2_COMMON_START[" "]
+    SET_STAGE2 --&gt; STAGE2_COMMON_START
+    WAIT_STAGE2_W -- 否 --&gt; STAGE2_COMMON_START
     
-    RECORD_PRERUN_TIME --&gt; CHECK_CORE0_STAGE2{"CoreId_u32 ==&lt;br&gt;GP_ECUSTPSHDN_CORE0_ID ?"}
-    
-    CHECK_CORE0_STAGE2 -- 是 --&gt; MASTER_STAGE2_INIT
-    CHECK_CORE0_STAGE2 -- 否 --&gt; SAT_STAGE2_WAIT
-    
-    subgraph LANE_MASTER_STAGE2[" "]
-        direction TB
-        MASTER_STAGE2_INIT["Master Stage 2&lt;br&gt;Initialization"]
-        MASTER_STAGE2_INIT --&gt; CALL_RSTM_INIT2[["Gp_RstM_InitTwo&lt;br&gt;调用复位管理初始化2"]]
-        CALL_RSTM_INIT2 --&gt; CALL_RSTM_INIT[["Gp_RstM_Init&lt;br&gt;调用复位管理初始化"]]
-        CALL_RSTM_INIT --&gt; CALL_GET_RST_INFO[["Gp_RstM_GetLastRstTypeInfo&lt;br&gt;获取上次复位类型信息"]]
-        CALL_GET_RST_INFO --&gt; SET_RST_INFO["设置 MstImpl_ptst 复位信息&lt;br&gt;RstTypePlt, RstTypeMcal,&lt;br&gt;RstId, RstCoreId"]
-        SET_RST_INFO --&gt; CHECK_PWR_SHDN{"MstImpl_ptst-&gt;TryPwrShdn_b&lt;br&gt;== TRUE ?"}
-        CHECK_PWR_SHDN -- 是 --&gt; CALL_PWR_SHDN[["Gp_EcuStpShdn_CalloutPwrSh&lt;br&gt;dnInStpPhase&lt;br&gt;调用电源关闭回调"]]
-        CALL_PWR_SHDN --&gt; END_FUNC(["结束"])
-        CHECK_PWR_SHDN -- 否 --&gt; CHECK_SAFE_STATE{"MstImpl_ptst-&gt;SafeState_b&lt;br&gt;== TRUE ?"}
-        CHECK_SAFE_STATE -- 是 --&gt; CALL_STAGE2_PF_SAFE[["Rt_cptst-&gt;StpStageTwo_pf&lt;br&gt;调用 Stage 2 处理函数"]]
-        CALL_STAGE2_PF_SAFE --&gt; CALL_SBC_INIT_SAFE[["Gp_EcuStpShdn_CalloutSbcIn&lt;br&gt;itInSafeState&lt;br&gt;调用安全状态SBC 初始化"]]
-        CALL_SBC_INIT_SAFE --&gt; SET_SBC_INFO_SAFE["MstImpl_ptst-&gt;SbcInfo_u32&lt;br&gt;= SbcInfo_u32"]
-        SET_SBC_INFO_SAFE --&gt; CALL_SAFE_STATE[["Gp_EcuStpShdn_CalloutSafeS&lt;br&gt;tate 调用安全状态回调"]]
-        CALL_SAFE_STATE --&gt; SET_STAGE3["MstImpl_ptst-&gt;StpStage_t&lt;br&gt;=GP_ECUSTPSHDN_STPSTAGE_TH&lt;br&gt;REE"]
-        CHECK_SAFE_STATE -- 否 --&gt; CALL_MST_PRE_RUN_TEST[["Gp_EcuStpShdn_MstProcMcuPr&lt;br&gt;eRunTest 处理 MCU&lt;br&gt;预运行测试"]]
-        CALL_MST_PRE_RUN_TEST --&gt; CALL_STAGE2_PF_NORMAL[["Rt_cptst-&gt;StpStageTwo_pf&lt;br&gt;调用 Stage 2 处理函数"]]
-        CALL_STAGE2_PF_NORMAL --&gt; RECORD_MST_INIT_TIME["记录 Master&lt;br&gt;初始化完成时间戳&lt;br&gt;MstImpl_ptst-&gt;TimeStamp_u3&lt;br&gt;2[MST_INIT] =&lt;br&gt;Gp_EcuStpShdn_CalloutGetSy&lt;br&gt;sTimeMs()"]
-        RECORD_MST_INIT_TIME --&gt; CALL_MST_POST_INIT[["Gp_EcuStpShdn_MstPostInit&lt;br&gt;调用 Master 后初始化"]]
-        CALL_MST_POST_INIT --&gt; CALL_SBC_INIT[["Gp_EcuStpShdn_CalloutSbcIn&lt;br&gt;it 调用 SBC 初始化"]]
-        CALL_SBC_INIT --&gt; SET_SBC_INFO_NORMAL["MstImpl_ptst-&gt;SbcInfo_u32&lt;br&gt;= SbcInfo_u32"]
-        SET_SBC_INFO_NORMAL --&gt; RECORD_MST_POST_TIME["记录 Master&lt;br&gt;后初始化完成时间戳&lt;br&gt;MstImpl_ptst-&gt;TimeStamp_u3&lt;br&gt;2[MST_POST_INIT] =&lt;br&gt;Gp_EcuStpShdn_CalloutGetSy&lt;br&gt;sTimeMs()"]
-        RECORD_MST_POST_TIME --&gt; SET_STAGE3
+    subgraph SG2[" "]
+        SG2_NOTE["注：仅在&lt;br&gt;GP_ECUSTPSHDN_SAFETY_ENABL&lt;br&gt;E 等于 STD_ON 时参与编译"]
+        SG2_NOTE ~~~ CALL_PRERUN_INIT
+        CALL_PRERUN_INIT[["Gp_TstApp_PreRunInit&lt;br&gt;调用预运行初始化"]]
+        CALL_PRERUN_INIT --&gt; CALL_PRERUN_PHASE[["Gp_TstApp_PreRunPhase&lt;br&gt;调用预运行阶段测试"]]
     end
-    style LANE_MASTER_STAGE2 fill:transparent,stroke:transparent
+    style SG2 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+    class SG2_NOTE condNote
+    
+    STAGE2_COMMON_START --&gt; CALL_PRERUN_INIT
+    CALL_PRERUN_PHASE --&gt; RECORD_PRERUN_TS["记录预运行完成时间戳&lt;br&gt;MstImpl_ptst-&gt;TimeStamp_u3&lt;br&gt;2[PRERUN] =&lt;br&gt;Gp_EcuStpShdn_CalloutGetSy&lt;br&gt;sTimeMs()"]
+    
+    RECORD_PRERUN_TS --&gt; STAGE2_CHECK{"CoreId_u32 ==&lt;br&gt;GP_ECUSTPSHDN_CORE0_ID ?"}
+    
+    STAGE2_CHECK -- 是 --&gt; LANE_CORE0_STAGE2_START
+    STAGE2_CHECK -- 否 --&gt; LANE_SAT_STAGE2_START
+    
+    subgraph LANE_CORE0_STAGE2[" "]
+        direction TB
+        LANE_CORE0_STAGE2_START["核心0阶段2处理"]
+        
+        subgraph SG3[" "]
+            SG3_NOTE["注：仅在&lt;br&gt;GP_RSTM_PROJ_TYPE_SEL&lt;br&gt;等于GP_RSTM_PROJ_TYPE_APP_&lt;br&gt;NO_BOOT 时参与编译"]
+            SG3_NOTE ~~~ CALL_RSTM_INIT2
+            CALL_RSTM_INIT2[["Gp_RstM_InitTwo&lt;br&gt;调用复位管理器初始化2"]]
+        end
+        style SG3 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+        class SG3_NOTE condNote
+        
+        subgraph SG4[" "]
+            SG4_NOTE["注：仅在&lt;br&gt;GP_RSTM_PROJ_TYPE_SEL&lt;br&gt;不等于&lt;br&gt;GP_RSTM_PROJ_TYPE_APP_NO_B&lt;br&gt;OOT 时参与编译"]
+            SG4_NOTE ~~~ CALL_RSTM_INIT
+            CALL_RSTM_INIT[["Gp_RstM_Init&lt;br&gt;调用复位管理器初始化"]]
+        end
+        style SG4 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+        class SG4_NOTE condNote
+        
+        LANE_CORE0_STAGE2_START --&gt; CALL_RSTM_INIT2
+        CALL_RSTM_INIT2 --&gt; CALL_RSTM_INIT
+        CALL_RSTM_INIT --&gt; GET_RST_INFO[["Gp_RstM_GetLastRstTypeInfo&lt;br&gt;获取上次复位类型信息"]]
+        GET_RST_INFO --&gt; STORE_RST_INFO["存储复位信息到&lt;br&gt;MstImpl_ptst&lt;br&gt;RstTypePlt_u8,&lt;br&gt;RstTypeMcal_u8, RstId_u8,&lt;br&gt;RstCoreId_u8"]
+        
+        subgraph SG5[" "]
+            SG5_NOTE["注：仅在&lt;br&gt;GP_ECUSTPSHDN_SAFETY_ENABL&lt;br&gt;E 等于 STD_ON 时参与编译"]
+            SG5_NOTE ~~~ CHECK_SAFETY_ENABLE
+            CHECK_SAFETY_ENABLE{"GP_ECUSTPSHDN_SAFETY_ENABL&lt;br&gt;E == STD_ON ?"}
+            
+            subgraph SG6[" "]
+                SG6_NOTE["注：仅在&lt;br&gt;GP_ECUSTPSHDN_SAFETY_ACTIO&lt;br&gt;N_ENABLE 等于 STD_ON&lt;br&gt;时参与编译"]
+                SG6_NOTE ~~~ CHECK_TRY_PWR_SHDN
+                CHECK_TRY_PWR_SHDN{"MstImpl_ptst-&gt;TryPwrShdn_b&lt;br&gt;== TRUE ?"}
+                
+                CHECK_TRY_PWR_SHDN -- 是 --&gt; CALL_PWR_SHDN[["Gp_EcuStpShdn_CalloutPwrSh&lt;br&gt;dnInStpPhase&lt;br&gt;调用电源关闭回调"]]
+                CALL_PWR_SHDN --&gt; LANE_CORE0_STAGE2_END
+                CHECK_TRY_PWR_SHDN -- 否 --&gt; CHECK_SAFE_STATE{"MstImpl_ptst-&gt;SafeState_b&lt;br&gt;== TRUE ?"}
+                
+                CHECK_SAFE_STATE -- 是 --&gt; CALL_STAGE2_SAFE[["Rt_cptst-&gt;StpStageTwo_pf&lt;br&gt;调用阶段2初始化回调"]]
+                CALL_STAGE2_SAFE --&gt; CALL_SBC_INIT_SAFE[["Gp_EcuStpShdn_CalloutSbcIn&lt;br&gt;itInSafeState&lt;br&gt;调用安全状态SBC初始化"]]
+                CALL_SBC_INIT_SAFE --&gt; STORE_SBC_SAFE["MstImpl_ptst-&gt;SbcInfo_u32&lt;br&gt;= SbcInfo_u32"]
+                STORE_SBC_SAFE --&gt; CALL_SAFE_STATE[["Gp_EcuStpShdn_CalloutSafeS&lt;br&gt;tate 调用安全状态回调"]]
+                CALL_SAFE_STATE --&gt; LANE_CORE0_STAGE2_END
+                
+                CHECK_SAFE_STATE -- 否 --&gt; LANE_CORE0_STAGE2_END
+            end
+            style SG6 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+            class SG6_NOTE condNote
+            
+            CHECK_SAFETY_ENABLE -- 是 --&gt; CHECK_TRY_PWR_SHDN
+            CHECK_SAFETY_ENABLE -- 否 --&gt; LANE_CORE0_STAGE2_END
+        end
+        style SG5 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+        class SG5_NOTE condNote
+        
+        STORE_RST_INFO --&gt; CHECK_SAFETY_ENABLE
+        
+        subgraph SG7[" "]
+            SG7_NOTE["注：仅在&lt;br&gt;GP_ECUSTPSHDN_SAFETY_ENABL&lt;br&gt;E 等于 STD_ON 时参与编译"]
+            SG7_NOTE ~~~ CALL_MST_PRE_RUN_TEST
+            CALL_MST_PRE_RUN_TEST[["Gp_EcuStpShdn_MstProcMcuPr&lt;br&gt;eRunTest 处理MCU预运行测试"]]
+        end
+        style SG7 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+        class SG7_NOTE condNote
+        
+        LANE_CORE0_STAGE2_END["正常流程继续"]
+        LANE_CORE0_STAGE2_END --&gt; CALL_MST_PRE_RUN_TEST
+        CALL_MST_PRE_RUN_TEST --&gt; CALL_STAGE2_NORMAL[["Rt_cptst-&gt;StpStageTwo_pf&lt;br&gt;调用阶段2初始化回调"]]
+        CALL_STAGE2_NORMAL --&gt; RECORD_MST_INIT_TS["记录主核初始化完成时间戳&lt;br&gt;MstImpl_ptst-&gt;TimeStamp_u3&lt;br&gt;2[MST_INIT] =&lt;br&gt;Gp_EcuStpShdn_CalloutGetSy&lt;br&gt;sTimeMs()"]
+        
+        subgraph SG8[" "]
+            SG8_NOTE["注：仅在&lt;br&gt;GP_ECUSTPSHDN_SAFETY_ENABL&lt;br&gt;E 等于 STD_ON 时参与编译"]
+            SG8_NOTE ~~~ CALL_MST_POST_INIT
+            CALL_MST_POST_INIT[["Gp_EcuStpShdn_MstPostInit&lt;br&gt;调用主核后初始化"]]
+        end
+        style SG8 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+        class SG8_NOTE condNote
+        
+        RECORD_MST_INIT_TS --&gt; CALL_MST_POST_INIT
+        CALL_MST_POST_INIT --&gt; CALL_SBC_INIT[["Gp_EcuStpShdn_CalloutSbcIn&lt;br&gt;it 调用SBC初始化"]]
+        CALL_SBC_INIT --&gt; STORE_SBC["MstImpl_ptst-&gt;SbcInfo_u32&lt;br&gt;= SbcInfo_u32"]
+        STORE_SBC --&gt; RECORD_MST_POST_INIT_TS["记录主核后初始化完成时间戳&lt;br&gt;MstImpl_ptst-&gt;TimeStamp_u3&lt;br&gt;2[MST_POST_INIT] =&lt;br&gt;Gp_EcuStpShdn_CalloutGetSy&lt;br&gt;sTimeMs()"]
+        RECORD_MST_POST_INIT_TS --&gt; SET_STAGE3["MstImpl_ptst-&gt;StpStage_t&lt;br&gt;=GP_ECUSTPSHDN_STPSTAGE_TH&lt;br&gt;REE"]
+    end
+    style LANE_CORE0_STAGE2 fill:transparent,stroke:transparent
     
     subgraph LANE_SAT_STAGE2[" "]
         direction TB
-        SAT_STAGE2_WAIT["Satellite Stage 2 Wait"]
-        SAT_STAGE2_WAIT --&gt; WAIT_STAGE3_PRE{{"等待 Stage 3"}}
+        LANE_SAT_STAGE2_START["卫星核阶段2处理"]
+        LANE_SAT_STAGE2_START --&gt; WAIT_STAGE3_PRE["等待阶段3"]
         WAIT_STAGE3_PRE --&gt; WAIT_STAGE3_J{" "}
-        WAIT_STAGE3_J --&gt; WAIT_STAGE3_COND{"MstImpl_ptst-&gt;StpStage_t&lt;br&gt;!=&lt;br&gt;GP_ECUSTPSHDN_STPSTAGE_THR&lt;br&gt;EE ?"}
-        WAIT_STAGE3_COND -- 是 --&gt; WAIT_STAGE3_NOP[["GP_ECUSTPSHDN_NOP 空操作"]]
+        WAIT_STAGE3_J --&gt; WAIT_STAGE3_W{"MstImpl_ptst-&gt;StpStage_t&lt;br&gt;!=&lt;br&gt;GP_ECUSTPSHDN_STPSTAGE_THR&lt;br&gt;EE ?"}
+        WAIT_STAGE3_W -- 是 --&gt; WAIT_STAGE3_NOP["GP_ECUSTPSHDN_NOP"]
         WAIT_STAGE3_NOP --- WAIT_STAGE3_J
-        WAIT_STAGE3_COND -- 否 --&gt; EXIT_SAT_STAGE2["退出 Stage 2 等待"]
     end
     style LANE_SAT_STAGE2 fill:transparent,stroke:transparent
     style WAIT_STAGE3_J fill:transparent,stroke:transparent
     
-    SET_STAGE3 --&gt; MERGE_STAGE3
-    EXIT_SAT_STAGE2 --&gt; MERGE_STAGE3
+    SET_STAGE3 --&gt; STAGE3_CHECK
+    WAIT_STAGE3_W -- 否 --&gt; STAGE3_CHECK
     
-    MERGE_STAGE3["进入 Stage 3"] --&gt; CHECK_CORE0_STAGE3{"CoreId_u32 ==&lt;br&gt;GP_ECUSTPSHDN_CORE0_ID ?"}
+    STAGE3_CHECK{"CoreId_u32 ==&lt;br&gt;GP_ECUSTPSHDN_CORE0_ID ?"}
     
-    CHECK_CORE0_STAGE3 -- 是 --&gt; END_FUNC
-    CHECK_CORE0_STAGE3 -- 否 --&gt; SAT_STAGE3_INIT
+    STAGE3_CHECK -- 是 --&gt; LANE_CORE0_STAGE3_START
+    STAGE3_CHECK -- 否 --&gt; LANE_SAT_STAGE3_START
+    
+    subgraph LANE_CORE0_STAGE3[" "]
+        direction TB
+        LANE_CORE0_STAGE3_START["核心0阶段3处理"]
+        LANE_CORE0_STAGE3_START --&gt; LANE_CORE0_STAGE3_END["无操作"]
+    end
+    style LANE_CORE0_STAGE3 fill:transparent,stroke:transparent
     
     subgraph LANE_SAT_STAGE3[" "]
         direction TB
-        SAT_STAGE3_INIT["Satellite Stage 3&lt;br&gt;Initialization"]
-        SAT_STAGE3_INIT --&gt; CALL_STAGE2_PF_SAT[["Rt_cptst-&gt;StpStageTwo_pf&lt;br&gt;调用 Stage 2 处理函数"]]
-        CALL_STAGE2_PF_SAT --&gt; RECORD_SAT_TIME["记录 Satellite&lt;br&gt;初始化完成时间戳&lt;br&gt;SatImpl_ptst-&gt;TimeStamp_u3&lt;br&gt;2 =&lt;br&gt;Gp_EcuStpShdn_CalloutGetSy&lt;br&gt;sTimeMs()"]
-        RECORD_SAT_TIME --&gt; CHECK_SAFE_STATE_SAT{"MstImpl_ptst-&gt;SafeState_b&lt;br&gt;== FALSE ?"}
-        CHECK_SAFE_STATE_SAT -- 是 --&gt; CALL_CHECK_INIT_RSLT[["Gp_EcuStpShdn_CheckInitRsl&lt;br&gt;t 检查初始化结果"]]
-        CALL_CHECK_INIT_RSLT --&gt; CHECK_INIT_RSLT_BITS{"SatImpl_ptst-&gt;InitRsltAllB&lt;br&gt;its_u32 != 0U ?"}
-        CHECK_INIT_RSLT_BITS -- 是 --&gt; CALL_INIT_FAILED[["Gp_EcuStpShdn_CalloutInitF&lt;br&gt;ailedHnd 调用初始化失败处理"]]
-        CALL_INIT_FAILED --&gt; END_FUNC
-        CHECK_INIT_RSLT_BITS -- 否 --&gt; END_FUNC
-        CHECK_SAFE_STATE_SAT -- 否 --&gt; END_FUNC
+        LANE_SAT_STAGE3_START["卫星核阶段3处理"]
+        LANE_SAT_STAGE3_START --&gt; CALL_STAGE2_SAT[["Rt_cptst-&gt;StpStageTwo_pf&lt;br&gt;调用阶段2初始化回调"]]
+        CALL_STAGE2_SAT --&gt; RECORD_SAT_INIT_TS["记录卫星核初始化完成时间戳&lt;br&gt;SatImpl_ptst-&gt;TimeStamp_u3&lt;br&gt;2 =&lt;br&gt;Gp_EcuStpShdn_CalloutGetSy&lt;br&gt;sTimeMs()"]
+        
+        subgraph SG9[" "]
+            SG9_NOTE["注：仅在&lt;br&gt;GP_ECUSTPSHDN_SAFETY_ENABL&lt;br&gt;E 等于 STD_ON 时参与编译"]
+            SG9_NOTE ~~~ CHECK_SAFE_STATE_SAT
+            CHECK_SAFE_STATE_SAT{"MstImpl_ptst-&gt;SafeState_b&lt;br&gt;== FALSE ?"}
+            
+            CHECK_SAFE_STATE_SAT -- 是 --&gt; CHECK_INIT_RSLT[["Gp_EcuStpShdn_CheckInitRsl&lt;br&gt;t 检查初始化结果"]]
+            CHECK_INIT_RSLT --&gt; CHECK_INIT_RSLT_VAL{"SatImpl_ptst-&gt;InitRsltAllB&lt;br&gt;its_u32 != 0U ?"}
+            
+            CHECK_INIT_RSLT_VAL -- 是 --&gt; CALL_INIT_FAILED_HND
+            subgraph SG10[" "]
+                SG10_NOTE["注：仅在&lt;br&gt;GP_ECUSTPSHDN_SAFETY_ACTIO&lt;br&gt;N_ENABLE 等于 STD_ON&lt;br&gt;时参与编译"]
+                SG10_NOTE ~~~ CALL_INIT_FAILED_HND
+                CALL_INIT_FAILED_HND[["Gp_EcuStpShdn_CalloutInitF&lt;br&gt;ailedHnd 调用初始化失败处理"]]
+            end
+            style SG10 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+            class SG10_NOTE condNote
+            
+            CALL_INIT_FAILED_HND --&gt; LANE_SAT_STAGE3_END
+            CHECK_INIT_RSLT_VAL -- 否 --&gt; LANE_SAT_STAGE3_END
+            
+            CHECK_SAFE_STATE_SAT -- 否 --&gt; LANE_SAT_STAGE3_END
+        end
+        style SG9 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+        class SG9_NOTE condNote
+        
+        RECORD_SAT_INIT_TS --&gt; CHECK_SAFE_STATE_SAT
+        LANE_SAT_STAGE3_END["结束"]
     end
-    style LANE_SAT_STAGE3 fill:transparent,stroke:transparent</div>
+    style LANE_SAT_STAGE3 fill:transparent,stroke:transparent
+    
+    LANE_CORE0_STAGE3_END --&gt; END(["结束"])
+    LANE_SAT_STAGE3_END --&gt; END</div>
 <details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">flowchart TD
     START(["开始"]) --&gt; INIT_VARS["初始化局部变量&lt;br&gt;CoreId_u32, Cnt_u32, SbcInfo_u32, RstTypePlt_u8, RstTypeMcal_u8, RstId_u8, RstCoreId_u8"]
     INIT_VARS --&gt; GET_CORE_ID[["Gp_EcuStpShdn_CalloutGetCoreId 获取核心ID"]]
-    GET_CORE_ID --&gt; SET_RT_ADDR["设置 Rt_cptst 指向当前核心运行时缓冲区"]
-    SET_RT_ADDR --&gt; SET_SAT_IMPL["设置 SatImpl_ptst 指向当前核心本地实现"]
+    GET_CORE_ID --&gt; SET_RT_ADDR["设置 Rt_cptst 指向当前核心运行时缓冲区&lt;br&gt;设置 SatImpl_ptst 指向当前核心本地实现"]
     
-    SET_SAT_IMPL --&gt; CHECK_CORE0_STAGE1{"CoreId_u32 == GP_ECUSTPSHDN_CORE0_ID ?"}
+    SET_RT_ADDR --&gt; STAGE1_CHECK{"CoreId_u32 == GP_ECUSTPSHDN_CORE0_ID ?"}
     
-    CHECK_CORE0_STAGE1 -- 是 --&gt; MASTER_STAGE1_INIT
-    CHECK_CORE0_STAGE1 -- 否 --&gt; SAT_STAGE1_INIT
+    STAGE1_CHECK -- 是 --&gt; LANE_CORE0_START
+    STAGE1_CHECK -- 否 --&gt; LANE_SAT_START
     
-    subgraph LANE_MASTER_STAGE1[" "]
+    subgraph LANE_CORE0[" "]
         direction TB
-        MASTER_STAGE1_INIT["Master Stage 1 Initialization"]
-        MASTER_STAGE1_INIT --&gt; INIT_SAT_RSLT["SatImpl_ptst-&gt;InitRsltAllBits_u32 = 0U"]
-        INIT_SAT_RSLT --&gt; LOOP_INIT_RSLT_PRE{{"Cnt_u32 = 0U"}}
-        LOOP_INIT_RSLT_PRE --&gt; LOOP_INIT_RSLT_COND{"Cnt_u32 &lt; GP_ECUSTPSHDN_INIT_RSLT_REC_NUM ?"}
-        LOOP_INIT_RSLT_COND -- 是 --&gt; LOOP_INIT_RSLT_BODY["SatImpl_ptst-&gt;InitCheckRslt_t[Cnt_u32] = E_OK"]
-        LOOP_INIT_RSLT_BODY --&gt; LOOP_INIT_RSLT_INC["Cnt_u32++"]
-        LOOP_INIT_RSLT_INC --&gt; LOOP_INIT_RSLT_COND
-        LOOP_INIT_RSLT_COND -- 否 --&gt; INIT_MST_TIME_PRE{{"Cnt_u32 = 0U"}}
-        INIT_MST_TIME_PRE --&gt; INIT_MST_TIME_COND{"Cnt_u32 &lt; GP_ECUSTPSHDN_MST_TIME_STAMP_NUM ?"}
-        INIT_MST_TIME_COND -- 是 --&gt; INIT_MST_TIME_BODY["MstImpl_ptst-&gt;TimeStamp_u32[Cnt_u32] = 0U"]
-        INIT_MST_TIME_BODY --&gt; INIT_MST_TIME_INC["Cnt_u32++"]
-        INIT_MST_TIME_INC --&gt; INIT_MST_TIME_COND
-        INIT_MST_TIME_COND -- 否 --&gt; SET_MST_DEFAULTS["设置 MstImpl_ptst 默认值&lt;br&gt;McuPreTestRslt, McuRunTestRslt, SbcInfo, StpStage, SelfTest, RstType, RstId, RstCoreId, SafeState, TryPwrShdn"]
-        SET_MST_DEFAULTS --&gt; SET_SAT_TIME["SatImpl_ptst-&gt;TimeStamp_u32 = 0U"]
-        SET_SAT_TIME --&gt; CALL_INIT_STAGE1[["Gp_EcuStpShdn_CalloutInitStageOneCore0 调用核心0初始化回调"]]
-        CALL_INIT_STAGE1 --&gt; CALL_RSTM_INIT1[["Gp_RstM_InitOne 调用复位管理初始化1"]]
+        LANE_CORE0_START["设置 SatImpl_ptst-&gt;InitRsltAllBits_u32 = 0U"]
+        LANE_CORE0_START --&gt; LOOP1_PRE{{"Cnt_u32 = 0U"}}
+        LOOP1_PRE --&gt; LOOP1_COND{"Cnt_u32 &lt; GP_ECUSTPSHDN_INIT_RSLT_REC_NUM ?"}
+        LOOP1_COND -- 是 --&gt; LOOP1_BODY["SatImpl_ptst-&gt;InitCheckRslt_t[Cnt_u32] = E_OK&lt;br&gt;Cnt_u32++"]
+        LOOP1_BODY --&gt; LOOP1_COND
+        LOOP1_COND -- 否 --&gt; LOOP2_PRE{{"Cnt_u32 = 0U"}}
+        LOOP2_PRE --&gt; LOOP2_COND{"Cnt_u32 &lt; GP_ECUSTPSHDN_MST_TIME_STAMP_NUM ?"}
+        LOOP2_COND -- 是 --&gt; LOOP2_BODY["MstImpl_ptst-&gt;TimeStamp_u32[Cnt_u32] = 0U&lt;br&gt;Cnt_u32++"]
+        LOOP2_BODY --&gt; LOOP2_COND
+        LOOP2_COND -- 否 --&gt; INIT_MST["初始化 MstImpl_ptst 字段&lt;br&gt;TimeStamp, McuPreTestRslt, McuRunTestRslt, SbcInfo&lt;br&gt;StpStage_t = STPSTAGE_ONE&lt;br&gt;McuSelfTest_t, SbcSelfTest_t = UNDEF&lt;br&gt;RstTypePlt, RstTypeMcal, RstId, RstCoreId = 0&lt;br&gt;SafeState_b = FALSE, TryPwrShdn_b = FALSE&lt;br&gt;SatImpl_ptst-&gt;TimeStamp_u32 = 0U"]
+        INIT_MST --&gt; CALL_STAGE1_CORE0[["Gp_EcuStpShdn_CalloutInitStageOneCore0 调用核心0初始化回调"]]
+        
+        subgraph SG1[" "]
+            SG1_NOTE["注：仅在 GP_RSTM_PROJ_TYPE_SEL 等于 GP_RSTM_PROJ_TYPE_APP_NO_BOOT 时参与编译"]
+            SG1_NOTE ~~~ CALL_RSTM_INIT1
+            CALL_RSTM_INIT1[["Gp_RstM_InitOne 调用复位管理器初始化1"]]
+        end
+        style SG1 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+        classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700
+        class SG1_NOTE condNote
+        
+        CALL_STAGE1_CORE0 --&gt; CALL_RSTM_INIT1
         CALL_RSTM_INIT1 --&gt; SET_STAGE2["MstImpl_ptst-&gt;StpStage_t = GP_ECUSTPSHDN_STPSTAGE_TWO"]
     end
-    style LANE_MASTER_STAGE1 fill:transparent,stroke:transparent
+    style LANE_CORE0 fill:transparent,stroke:transparent
     
-    subgraph LANE_SAT_STAGE1[" "]
+    subgraph LANE_SAT[" "]
         direction TB
-        SAT_STAGE1_INIT["Satellite Stage 1 Initialization"]
-        SAT_STAGE1_INIT --&gt; INIT_SAT_RSLT_SAT["SatImpl_ptst-&gt;InitRsltAllBits_u32 = 0U"]
-        INIT_SAT_RSLT_SAT --&gt; LOOP_SAT_RSLT_PRE{{"Cnt_u32 = 0U"}}
-        LOOP_SAT_RSLT_PRE --&gt; LOOP_SAT_RSLT_COND{"Cnt_u32 &lt; GP_ECUSTPSHDN_INIT_RSLT_REC_NUM ?"}
-        LOOP_SAT_RSLT_COND -- 是 --&gt; LOOP_SAT_RSLT_BODY["SatImpl_ptst-&gt;InitCheckRslt_t[Cnt_u32] = E_OK"]
-        LOOP_SAT_RSLT_BODY --&gt; LOOP_SAT_RSLT_INC["Cnt_u32++"]
-        LOOP_SAT_RSLT_INC --&gt; LOOP_SAT_RSLT_COND
-        LOOP_SAT_RSLT_COND -- 否 --&gt; SET_SAT_TIME_SAT["SatImpl_ptst-&gt;TimeStamp_u32 = 0U"]
-        SET_SAT_TIME_SAT --&gt; WAIT_STAGE2_PRE{{"等待 Stage 2"}}
+        LANE_SAT_START["设置 SatImpl_ptst-&gt;InitRsltAllBits_u32 = 0U"]
+        LANE_SAT_START --&gt; LOOP3_PRE{{"Cnt_u32 = 0U"}}
+        LOOP3_PRE --&gt; LOOP3_COND{"Cnt_u32 &lt; GP_ECUSTPSHDN_INIT_RSLT_REC_NUM ?"}
+        LOOP3_COND -- 是 --&gt; LOOP3_BODY["SatImpl_ptst-&gt;InitCheckRslt_t[Cnt_u32] = E_OK&lt;br&gt;Cnt_u32++"]
+        LOOP3_BODY --&gt; LOOP3_COND
+        LOOP3_COND -- 否 --&gt; INIT_SAT["SatImpl_ptst-&gt;TimeStamp_u32 = 0U"]
+        INIT_SAT --&gt; WAIT_STAGE2_PRE["等待阶段2"]
         WAIT_STAGE2_PRE --&gt; WAIT_STAGE2_J{" "}
-        WAIT_STAGE2_J --&gt; WAIT_STAGE2_COND{"MstImpl_ptst-&gt;StpStage_t != GP_ECUSTPSHDN_STPSTAGE_TWO ?"}
-        WAIT_STAGE2_COND -- 是 --&gt; WAIT_STAGE2_NOP[["GP_ECUSTPSHDN_NOP 空操作"]]
+        WAIT_STAGE2_J --&gt; WAIT_STAGE2_W{"MstImpl_ptst-&gt;StpStage_t != GP_ECUSTPSHDN_STPSTAGE_TWO ?"}
+        WAIT_STAGE2_W -- 是 --&gt; WAIT_STAGE2_NOP["GP_ECUSTPSHDN_NOP"]
         WAIT_STAGE2_NOP --- WAIT_STAGE2_J
-        WAIT_STAGE2_COND -- 否 --&gt; EXIT_SAT_STAGE1["退出 Stage 1 等待"]
     end
-    style LANE_SAT_STAGE1 fill:transparent,stroke:transparent
+    style LANE_SAT fill:transparent,stroke:transparent
     style WAIT_STAGE2_J fill:transparent,stroke:transparent
+    style STAGE2_COMMON_START fill:transparent,stroke:transparent
     
-    SET_STAGE2 --&gt; MERGE_STAGE2
-    EXIT_SAT_STAGE1 --&gt; MERGE_STAGE2
     
-    MERGE_STAGE2["进入 Stage 2"] --&gt; CALL_PRERUN_INIT[["Gp_TstApp_PreRunInit 预运行初始化"]]
-    CALL_PRERUN_INIT --&gt; CALL_PRERUN_PHASE[["Gp_TstApp_PreRunPhase 预运行阶段测试"]]
-    CALL_PRERUN_PHASE --&gt; RECORD_PRERUN_TIME["记录 PreRun 完成时间戳&lt;br&gt;MstImpl_ptst-&gt;TimeStamp_u32[PRERUN] = Gp_EcuStpShdn_CalloutGetSysTimeMs()"]
+    STAGE2_COMMON_START[" "]
+    SET_STAGE2 --&gt; STAGE2_COMMON_START
+    WAIT_STAGE2_W -- 否 --&gt; STAGE2_COMMON_START
     
-    RECORD_PRERUN_TIME --&gt; CHECK_CORE0_STAGE2{"CoreId_u32 == GP_ECUSTPSHDN_CORE0_ID ?"}
-    
-    CHECK_CORE0_STAGE2 -- 是 --&gt; MASTER_STAGE2_INIT
-    CHECK_CORE0_STAGE2 -- 否 --&gt; SAT_STAGE2_WAIT
-    
-    subgraph LANE_MASTER_STAGE2[" "]
-        direction TB
-        MASTER_STAGE2_INIT["Master Stage 2 Initialization"]
-        MASTER_STAGE2_INIT --&gt; CALL_RSTM_INIT2[["Gp_RstM_InitTwo 调用复位管理初始化2"]]
-        CALL_RSTM_INIT2 --&gt; CALL_RSTM_INIT[["Gp_RstM_Init 调用复位管理初始化"]]
-        CALL_RSTM_INIT --&gt; CALL_GET_RST_INFO[["Gp_RstM_GetLastRstTypeInfo 获取上次复位类型信息"]]
-        CALL_GET_RST_INFO --&gt; SET_RST_INFO["设置 MstImpl_ptst 复位信息&lt;br&gt;RstTypePlt, RstTypeMcal, RstId, RstCoreId"]
-        SET_RST_INFO --&gt; CHECK_PWR_SHDN{"MstImpl_ptst-&gt;TryPwrShdn_b == TRUE ?"}
-        CHECK_PWR_SHDN -- 是 --&gt; CALL_PWR_SHDN[["Gp_EcuStpShdn_CalloutPwrShdnInStpPhase 调用电源关闭回调"]]
-        CALL_PWR_SHDN --&gt; END_FUNC(["结束"])
-        CHECK_PWR_SHDN -- 否 --&gt; CHECK_SAFE_STATE{"MstImpl_ptst-&gt;SafeState_b == TRUE ?"}
-        CHECK_SAFE_STATE -- 是 --&gt; CALL_STAGE2_PF_SAFE[["Rt_cptst-&gt;StpStageTwo_pf 调用 Stage 2 处理函数"]]
-        CALL_STAGE2_PF_SAFE --&gt; CALL_SBC_INIT_SAFE[["Gp_EcuStpShdn_CalloutSbcInitInSafeState 调用安全状态 SBC 初始化"]]
-        CALL_SBC_INIT_SAFE --&gt; SET_SBC_INFO_SAFE["MstImpl_ptst-&gt;SbcInfo_u32 = SbcInfo_u32"]
-        SET_SBC_INFO_SAFE --&gt; CALL_SAFE_STATE[["Gp_EcuStpShdn_CalloutSafeState 调用安全状态回调"]]
-        CALL_SAFE_STATE --&gt; SET_STAGE3["MstImpl_ptst-&gt;StpStage_t = GP_ECUSTPSHDN_STPSTAGE_THREE"]
-        CHECK_SAFE_STATE -- 否 --&gt; CALL_MST_PRE_RUN_TEST[["Gp_EcuStpShdn_MstProcMcuPreRunTest 处理 MCU 预运行测试"]]
-        CALL_MST_PRE_RUN_TEST --&gt; CALL_STAGE2_PF_NORMAL[["Rt_cptst-&gt;StpStageTwo_pf 调用 Stage 2 处理函数"]]
-        CALL_STAGE2_PF_NORMAL --&gt; RECORD_MST_INIT_TIME["记录 Master 初始化完成时间戳&lt;br&gt;MstImpl_ptst-&gt;TimeStamp_u32[MST_INIT] = Gp_EcuStpShdn_CalloutGetSysTimeMs()"]
-        RECORD_MST_INIT_TIME --&gt; CALL_MST_POST_INIT[["Gp_EcuStpShdn_MstPostInit 调用 Master 后初始化"]]
-        CALL_MST_POST_INIT --&gt; CALL_SBC_INIT[["Gp_EcuStpShdn_CalloutSbcInit 调用 SBC 初始化"]]
-        CALL_SBC_INIT --&gt; SET_SBC_INFO_NORMAL["MstImpl_ptst-&gt;SbcInfo_u32 = SbcInfo_u32"]
-        SET_SBC_INFO_NORMAL --&gt; RECORD_MST_POST_TIME["记录 Master 后初始化完成时间戳&lt;br&gt;MstImpl_ptst-&gt;TimeStamp_u32[MST_POST_INIT] = Gp_EcuStpShdn_CalloutGetSysTimeMs()"]
-        RECORD_MST_POST_TIME --&gt; SET_STAGE3
+    subgraph SG2[" "]
+        SG2_NOTE["注：仅在 GP_ECUSTPSHDN_SAFETY_ENABLE 等于 STD_ON 时参与编译"]
+        SG2_NOTE ~~~ CALL_PRERUN_INIT
+        CALL_PRERUN_INIT[["Gp_TstApp_PreRunInit 调用预运行初始化"]]
+        CALL_PRERUN_INIT --&gt; CALL_PRERUN_PHASE[["Gp_TstApp_PreRunPhase 调用预运行阶段测试"]]
     end
-    style LANE_MASTER_STAGE2 fill:transparent,stroke:transparent
+    style SG2 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+    class SG2_NOTE condNote
+    
+    STAGE2_COMMON_START --&gt; CALL_PRERUN_INIT
+    CALL_PRERUN_PHASE --&gt; RECORD_PRERUN_TS["记录预运行完成时间戳&lt;br&gt;MstImpl_ptst-&gt;TimeStamp_u32[PRERUN] = Gp_EcuStpShdn_CalloutGetSysTimeMs()"]
+    
+    RECORD_PRERUN_TS --&gt; STAGE2_CHECK{"CoreId_u32 == GP_ECUSTPSHDN_CORE0_ID ?"}
+    
+    STAGE2_CHECK -- 是 --&gt; LANE_CORE0_STAGE2_START
+    STAGE2_CHECK -- 否 --&gt; LANE_SAT_STAGE2_START
+    
+    subgraph LANE_CORE0_STAGE2[" "]
+        direction TB
+        LANE_CORE0_STAGE2_START["核心0阶段2处理"]
+        
+        subgraph SG3[" "]
+            SG3_NOTE["注：仅在 GP_RSTM_PROJ_TYPE_SEL 等于 GP_RSTM_PROJ_TYPE_APP_NO_BOOT 时参与编译"]
+            SG3_NOTE ~~~ CALL_RSTM_INIT2
+            CALL_RSTM_INIT2[["Gp_RstM_InitTwo 调用复位管理器初始化2"]]
+        end
+        style SG3 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+        class SG3_NOTE condNote
+        
+        subgraph SG4[" "]
+            SG4_NOTE["注：仅在 GP_RSTM_PROJ_TYPE_SEL 不等于 GP_RSTM_PROJ_TYPE_APP_NO_BOOT 时参与编译"]
+            SG4_NOTE ~~~ CALL_RSTM_INIT
+            CALL_RSTM_INIT[["Gp_RstM_Init 调用复位管理器初始化"]]
+        end
+        style SG4 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+        class SG4_NOTE condNote
+        
+        LANE_CORE0_STAGE2_START --&gt; CALL_RSTM_INIT2
+        CALL_RSTM_INIT2 --&gt; CALL_RSTM_INIT
+        CALL_RSTM_INIT --&gt; GET_RST_INFO[["Gp_RstM_GetLastRstTypeInfo 获取上次复位类型信息"]]
+        GET_RST_INFO --&gt; STORE_RST_INFO["存储复位信息到 MstImpl_ptst&lt;br&gt;RstTypePlt_u8, RstTypeMcal_u8, RstId_u8, RstCoreId_u8"]
+        
+        subgraph SG5[" "]
+            SG5_NOTE["注：仅在 GP_ECUSTPSHDN_SAFETY_ENABLE 等于 STD_ON 时参与编译"]
+            SG5_NOTE ~~~ CHECK_SAFETY_ENABLE
+            CHECK_SAFETY_ENABLE{"GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON ?"}
+            
+            subgraph SG6[" "]
+                SG6_NOTE["注：仅在 GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE 等于 STD_ON 时参与编译"]
+                SG6_NOTE ~~~ CHECK_TRY_PWR_SHDN
+                CHECK_TRY_PWR_SHDN{"MstImpl_ptst-&gt;TryPwrShdn_b == TRUE ?"}
+                
+                CHECK_TRY_PWR_SHDN -- 是 --&gt; CALL_PWR_SHDN[["Gp_EcuStpShdn_CalloutPwrShdnInStpPhase 调用电源关闭回调"]]
+                CALL_PWR_SHDN --&gt; LANE_CORE0_STAGE2_END
+                CHECK_TRY_PWR_SHDN -- 否 --&gt; CHECK_SAFE_STATE{"MstImpl_ptst-&gt;SafeState_b == TRUE ?"}
+                
+                CHECK_SAFE_STATE -- 是 --&gt; CALL_STAGE2_SAFE[["Rt_cptst-&gt;StpStageTwo_pf 调用阶段2初始化回调"]]
+                CALL_STAGE2_SAFE --&gt; CALL_SBC_INIT_SAFE[["Gp_EcuStpShdn_CalloutSbcInitInSafeState 调用安全状态SBC初始化"]]
+                CALL_SBC_INIT_SAFE --&gt; STORE_SBC_SAFE["MstImpl_ptst-&gt;SbcInfo_u32 = SbcInfo_u32"]
+                STORE_SBC_SAFE --&gt; CALL_SAFE_STATE[["Gp_EcuStpShdn_CalloutSafeState 调用安全状态回调"]]
+                CALL_SAFE_STATE --&gt; LANE_CORE0_STAGE2_END
+                
+                CHECK_SAFE_STATE -- 否 --&gt; LANE_CORE0_STAGE2_END
+            end
+            style SG6 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+            class SG6_NOTE condNote
+            
+            CHECK_SAFETY_ENABLE -- 是 --&gt; CHECK_TRY_PWR_SHDN
+            CHECK_SAFETY_ENABLE -- 否 --&gt; LANE_CORE0_STAGE2_END
+        end
+        style SG5 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+        class SG5_NOTE condNote
+        
+        STORE_RST_INFO --&gt; CHECK_SAFETY_ENABLE
+        
+        subgraph SG7[" "]
+            SG7_NOTE["注：仅在 GP_ECUSTPSHDN_SAFETY_ENABLE 等于 STD_ON 时参与编译"]
+            SG7_NOTE ~~~ CALL_MST_PRE_RUN_TEST
+            CALL_MST_PRE_RUN_TEST[["Gp_EcuStpShdn_MstProcMcuPreRunTest 处理MCU预运行测试"]]
+        end
+        style SG7 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+        class SG7_NOTE condNote
+        
+        LANE_CORE0_STAGE2_END["正常流程继续"]
+        LANE_CORE0_STAGE2_END --&gt; CALL_MST_PRE_RUN_TEST
+        CALL_MST_PRE_RUN_TEST --&gt; CALL_STAGE2_NORMAL[["Rt_cptst-&gt;StpStageTwo_pf 调用阶段2初始化回调"]]
+        CALL_STAGE2_NORMAL --&gt; RECORD_MST_INIT_TS["记录主核初始化完成时间戳&lt;br&gt;MstImpl_ptst-&gt;TimeStamp_u32[MST_INIT] = Gp_EcuStpShdn_CalloutGetSysTimeMs()"]
+        
+        subgraph SG8[" "]
+            SG8_NOTE["注：仅在 GP_ECUSTPSHDN_SAFETY_ENABLE 等于 STD_ON 时参与编译"]
+            SG8_NOTE ~~~ CALL_MST_POST_INIT
+            CALL_MST_POST_INIT[["Gp_EcuStpShdn_MstPostInit 调用主核后初始化"]]
+        end
+        style SG8 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+        class SG8_NOTE condNote
+        
+        RECORD_MST_INIT_TS --&gt; CALL_MST_POST_INIT
+        CALL_MST_POST_INIT --&gt; CALL_SBC_INIT[["Gp_EcuStpShdn_CalloutSbcInit 调用SBC初始化"]]
+        CALL_SBC_INIT --&gt; STORE_SBC["MstImpl_ptst-&gt;SbcInfo_u32 = SbcInfo_u32"]
+        STORE_SBC --&gt; RECORD_MST_POST_INIT_TS["记录主核后初始化完成时间戳&lt;br&gt;MstImpl_ptst-&gt;TimeStamp_u32[MST_POST_INIT] = Gp_EcuStpShdn_CalloutGetSysTimeMs()"]
+        RECORD_MST_POST_INIT_TS --&gt; SET_STAGE3["MstImpl_ptst-&gt;StpStage_t = GP_ECUSTPSHDN_STPSTAGE_THREE"]
+    end
+    style LANE_CORE0_STAGE2 fill:transparent,stroke:transparent
     
     subgraph LANE_SAT_STAGE2[" "]
         direction TB
-        SAT_STAGE2_WAIT["Satellite Stage 2 Wait"]
-        SAT_STAGE2_WAIT --&gt; WAIT_STAGE3_PRE{{"等待 Stage 3"}}
+        LANE_SAT_STAGE2_START["卫星核阶段2处理"]
+        LANE_SAT_STAGE2_START --&gt; WAIT_STAGE3_PRE["等待阶段3"]
         WAIT_STAGE3_PRE --&gt; WAIT_STAGE3_J{" "}
-        WAIT_STAGE3_J --&gt; WAIT_STAGE3_COND{"MstImpl_ptst-&gt;StpStage_t != GP_ECUSTPSHDN_STPSTAGE_THREE ?"}
-        WAIT_STAGE3_COND -- 是 --&gt; WAIT_STAGE3_NOP[["GP_ECUSTPSHDN_NOP 空操作"]]
+        WAIT_STAGE3_J --&gt; WAIT_STAGE3_W{"MstImpl_ptst-&gt;StpStage_t != GP_ECUSTPSHDN_STPSTAGE_THREE ?"}
+        WAIT_STAGE3_W -- 是 --&gt; WAIT_STAGE3_NOP["GP_ECUSTPSHDN_NOP"]
         WAIT_STAGE3_NOP --- WAIT_STAGE3_J
-        WAIT_STAGE3_COND -- 否 --&gt; EXIT_SAT_STAGE2["退出 Stage 2 等待"]
     end
     style LANE_SAT_STAGE2 fill:transparent,stroke:transparent
     style WAIT_STAGE3_J fill:transparent,stroke:transparent
     
-    SET_STAGE3 --&gt; MERGE_STAGE3
-    EXIT_SAT_STAGE2 --&gt; MERGE_STAGE3
+    SET_STAGE3 --&gt; STAGE3_CHECK
+    WAIT_STAGE3_W -- 否 --&gt; STAGE3_CHECK
     
-    MERGE_STAGE3["进入 Stage 3"] --&gt; CHECK_CORE0_STAGE3{"CoreId_u32 == GP_ECUSTPSHDN_CORE0_ID ?"}
+    STAGE3_CHECK{"CoreId_u32 == GP_ECUSTPSHDN_CORE0_ID ?"}
     
-    CHECK_CORE0_STAGE3 -- 是 --&gt; END_FUNC
-    CHECK_CORE0_STAGE3 -- 否 --&gt; SAT_STAGE3_INIT
+    STAGE3_CHECK -- 是 --&gt; LANE_CORE0_STAGE3_START
+    STAGE3_CHECK -- 否 --&gt; LANE_SAT_STAGE3_START
+    
+    subgraph LANE_CORE0_STAGE3[" "]
+        direction TB
+        LANE_CORE0_STAGE3_START["核心0阶段3处理"]
+        LANE_CORE0_STAGE3_START --&gt; LANE_CORE0_STAGE3_END["无操作"]
+    end
+    style LANE_CORE0_STAGE3 fill:transparent,stroke:transparent
     
     subgraph LANE_SAT_STAGE3[" "]
         direction TB
-        SAT_STAGE3_INIT["Satellite Stage 3 Initialization"]
-        SAT_STAGE3_INIT --&gt; CALL_STAGE2_PF_SAT[["Rt_cptst-&gt;StpStageTwo_pf 调用 Stage 2 处理函数"]]
-        CALL_STAGE2_PF_SAT --&gt; RECORD_SAT_TIME["记录 Satellite 初始化完成时间戳&lt;br&gt;SatImpl_ptst-&gt;TimeStamp_u32 = Gp_EcuStpShdn_CalloutGetSysTimeMs()"]
-        RECORD_SAT_TIME --&gt; CHECK_SAFE_STATE_SAT{"MstImpl_ptst-&gt;SafeState_b == FALSE ?"}
-        CHECK_SAFE_STATE_SAT -- 是 --&gt; CALL_CHECK_INIT_RSLT[["Gp_EcuStpShdn_CheckInitRslt 检查初始化结果"]]
-        CALL_CHECK_INIT_RSLT --&gt; CHECK_INIT_RSLT_BITS{"SatImpl_ptst-&gt;InitRsltAllBits_u32 != 0U ?"}
-        CHECK_INIT_RSLT_BITS -- 是 --&gt; CALL_INIT_FAILED[["Gp_EcuStpShdn_CalloutInitFailedHnd 调用初始化失败处理"]]
-        CALL_INIT_FAILED --&gt; END_FUNC
-        CHECK_INIT_RSLT_BITS -- 否 --&gt; END_FUNC
-        CHECK_SAFE_STATE_SAT -- 否 --&gt; END_FUNC
+        LANE_SAT_STAGE3_START["卫星核阶段3处理"]
+        LANE_SAT_STAGE3_START --&gt; CALL_STAGE2_SAT[["Rt_cptst-&gt;StpStageTwo_pf 调用阶段2初始化回调"]]
+        CALL_STAGE2_SAT --&gt; RECORD_SAT_INIT_TS["记录卫星核初始化完成时间戳&lt;br&gt;SatImpl_ptst-&gt;TimeStamp_u32 = Gp_EcuStpShdn_CalloutGetSysTimeMs()"]
+        
+        subgraph SG9[" "]
+            SG9_NOTE["注：仅在 GP_ECUSTPSHDN_SAFETY_ENABLE 等于 STD_ON 时参与编译"]
+            SG9_NOTE ~~~ CHECK_SAFE_STATE_SAT
+            CHECK_SAFE_STATE_SAT{"MstImpl_ptst-&gt;SafeState_b == FALSE ?"}
+            
+            CHECK_SAFE_STATE_SAT -- 是 --&gt; CHECK_INIT_RSLT[["Gp_EcuStpShdn_CheckInitRslt 检查初始化结果"]]
+            CHECK_INIT_RSLT --&gt; CHECK_INIT_RSLT_VAL{"SatImpl_ptst-&gt;InitRsltAllBits_u32 != 0U ?"}
+            
+            CHECK_INIT_RSLT_VAL -- 是 --&gt; CALL_INIT_FAILED_HND
+            subgraph SG10[" "]
+                SG10_NOTE["注：仅在 GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE 等于 STD_ON 时参与编译"]
+                SG10_NOTE ~~~ CALL_INIT_FAILED_HND
+                CALL_INIT_FAILED_HND[["Gp_EcuStpShdn_CalloutInitFailedHnd 调用初始化失败处理"]]
+            end
+            style SG10 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+            class SG10_NOTE condNote
+            
+            CALL_INIT_FAILED_HND --&gt; LANE_SAT_STAGE3_END
+            CHECK_INIT_RSLT_VAL -- 否 --&gt; LANE_SAT_STAGE3_END
+            
+            CHECK_SAFE_STATE_SAT -- 否 --&gt; LANE_SAT_STAGE3_END
+        end
+        style SG9 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+        class SG9_NOTE condNote
+        
+        RECORD_SAT_INIT_TS --&gt; CHECK_SAFE_STATE_SAT
+        LANE_SAT_STAGE3_END["结束"]
     end
-    style LANE_SAT_STAGE3 fill:transparent,stroke:transparent</pre></details></td></tr>
+    style LANE_SAT_STAGE3 fill:transparent,stroke:transparent
+    
+    LANE_CORE0_STAGE3_END --&gt; END(["结束"])
+    LANE_SAT_STAGE3_END --&gt; END</pre></details></td></tr>
     <tr><td class="label">调用</td><td class="muted small">Gp_EcuStpShdn_CalloutGetCoreId<br>Gp_EcuStpShdn_CalloutInitStageOneCore0<br>Gp_RstM_InitOne<br>GP_ECUSTPSHDN_NOP<br>Gp_TstApp_PreRunInit<br>Gp_TstApp_PreRunPhase<br>Gp_EcuStpShdn_CalloutGetSysTimeMs<br>Gp_RstM_InitTwo<br>Gp_RstM_Init<br>Gp_RstM_GetLastRstTypeInfo<br>Gp_EcuStpShdn_CalloutPwrShdnInStpPhase<br>(*)-&gt;StpStageTwo_pf<br>Gp_EcuStpShdn_CalloutSbcInitInSafeState<br>Gp_EcuStpShdn_CalloutSafeState<br>Gp_EcuStpShdn_MstProcMcuPreRunTest<br>Gp_EcuStpShdn_MstPostInit<br>Gp_EcuStpShdn_CalloutSbcInit<br>Gp_EcuStpShdn_CheckInitRslt<br>Gp_EcuStpShdn_CalloutInitFailedHnd</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_EcuStpShdn_rtSatCont_lcatst, Gp_EcuStpShdn_bufMstLocalImpl_ltst, Gp_EcuStpShdn_bufSatLocalImplCore0_ltst</td></tr>
   </table>
   <div class="wi-footer">
@@ -964,128 +1184,134 @@ flowchart LR
     <tr><td class="label">Description</td><td class="desc">Gp_EcuStpShdn_Mainfunction 是 Gp_EcuStpShdn 模块的对外接口函数，旨在执行 MCU 运行时测试并处理测试失败或系统未处于安全状态/尝试断电状态下的异常情况。该函数由需要执行 MCU 运行时测试的核心调用，首先通过 Gp_EcuStpShdn_CalloutGetCoreId 获取核心 ID，并调用 Gp_EcuStpShdn_GetLastSatTimeStamp 计算由主核心生成的最后卫星时间戳。随后，函数调用 Gp_TstApp_RunTimePhase 执行运行时测试阶段，并通过 Gp_EcuStpShdn_CalloutChkMcuRunTimeTest 检查测试结果。若测试失败，则触发 Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd 进行故障处理。该函数在运行过程中访问模块全局变量 Gp_EcuStpShdn_bufMstLocalImpl_ltst 以支持时间戳相关操作。</td></tr>
     <tr><td class="label">流程图</td><td><div class="mermaid">flowchart TD
     START(["开始"])
-    INIT["初始化 MstImpl_ptst 指向&lt;br&gt;Gp_EcuStpShdn_bufMstLocalI&lt;br&gt;mpl_ltst&lt;br&gt;初始化 CoreId_u32 为 0U"]
-    GET_CORE[["Gp_EcuStpShdn_CalloutGetCo&lt;br&gt;reId 获取核心ID"]]
-    CHECK_CORE{"CoreId_u32 ==&lt;br&gt;GP_ECUSTPSHDN_CORE0_ID ?"}
+    INIT{{"初始化 MstImpl_ptst 与&lt;br&gt;CoreId_u32"}}
+    CALL_CORE[["Gp_EcuStpShdn_CalloutGetCo&lt;br&gt;reId 获取核心ID"]]
+    J_CORE{"CoreId_u32 ==&lt;br&gt;GP_ECUSTPSHDN_CORE0_ID ?"}
     
     subgraph LANE_CORE0[" "]
         direction TB
-        CHECK_TS{"MstImpl_ptst-&gt;TimeStamp_u3&lt;br&gt;2[GP_ECUSTPSHDN_MST_TIME_S&lt;br&gt;TAMP_LAST_SAT_INIT] == 0U&lt;br&gt;?"}
-        GET_TS[["Gp_EcuStpShdn_GetLastSatTi&lt;br&gt;meStamp&lt;br&gt;获取最后卫星初始化时间戳"]]
-        SET_TS["MstImpl_ptst-&gt;TimeStamp_u3&lt;br&gt;2[GP_ECUSTPSHDN_MST_TIME_S&lt;br&gt;TAMP_LAST_SAT_INIT] =&lt;br&gt;获取的时间戳"]
-        NOOP_CORE0["无操作"]
+        J_TS{"MstImpl_ptst-&gt;TimeStamp_u3&lt;br&gt;2[...LAST_SAT_INIT] == 0U&lt;br&gt;?"}
+        CALL_TS[["Gp_EcuStpShdn_GetLastSatTi&lt;br&gt;meStamp 获取时间戳"]]
+        WRITE_TS[/"写入&lt;br&gt;MstImpl_ptst-&gt;TimeStamp_u3&lt;br&gt;2[...LAST_SAT_INIT]"/]
+        J_CORE -- 是 --&gt; J_TS
+        J_TS -- 是 --&gt; CALL_TS
+        CALL_TS --&gt; WRITE_TS
+        J_TS -- 否 --&gt; WRITE_TS
     end
     style LANE_CORE0 fill:transparent,stroke:transparent
-    
-    NOOP_CORE_OTHER["无操作"]
-    
-    CHECK_STATE{"(MstImpl_ptst-&gt;TryPwrShdn_&lt;br&gt;b == FALSE) &amp;&amp;&lt;br&gt;(MstImpl_ptst-&gt;SafeState_b&lt;br&gt;== FALSE) ?"}
-    
-    RUN_TEST[["Gp_TstApp_RunTimePhase&lt;br&gt;执行MCU运行时测试"]]
-    
-    subgraph LANE_RUNTIME_CORE0[" "]
+
+    J_CORE -- 否 --&gt; J_SAFETY
+
+    subgraph SG1[" "]
         direction TB
-        CHECK_TEST_CORE0{"CoreId_u32 ==&lt;br&gt;GP_ECUSTPSHDN_CORE0_ID ?"}
-        CHECK_TEST_RESULT{"Gp_EcuStpShdn_CalloutChkMc&lt;br&gt;uRunTimeTest() == FALSE ?"}
-        HANDLE_FAIL[["Gp_EcuStpShdn_CalloutMcuRu&lt;br&gt;nTimeTestFailedHnd&lt;br&gt;处理MCU运行时测试失败"]]
-        NOOP_TEST_PASS["无操作"]
+        SG1_NOTE["注：仅在&lt;br&gt;GP_ECUSTPSHDN_SAFETY_ENABL&lt;br&gt;E 等于 STD_ON 时参与编译"]
+        J_SAFETY{"(TryPwrShdn_b == FALSE)&lt;br&gt;&amp;&amp;(SafeState_b == FALSE) ?"}
+        CALL_RT[["Gp_TstApp_RunTimePhase&lt;br&gt;执行运行时测试"]]
+        J_CORE2{"CoreId_u32 ==&lt;br&gt;GP_ECUSTPSHDN_CORE0_ID ?"}
+        
+        subgraph LANE_CORE0_RT[" "]
+            direction TB
+            J_CHK{"Gp_EcuStpShdn_CalloutChkMc&lt;br&gt;uRunTimeTest() == FALSE ?"}
+            
+            subgraph SG2[" "]
+                direction TB
+                SG2_NOTE["注：仅在&lt;br&gt;GP_ECUSTPSHDN_SAFETY_ACTIO&lt;br&gt;N_ENABLE 等于 STD_ON&lt;br&gt;时参与编译"]
+                CALL_HND[["Gp_EcuStpShdn_CalloutMcuRu&lt;br&gt;nTimeTestFailedHnd&lt;br&gt;处理失败"]]
+                SG2_NOTE ~~~ CALL_HND
+            end
+            style SG2 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+            classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700
+            class SG2_NOTE condNote
+
+            J_CHK -- 是 --&gt; CALL_HND
+        end
+        style LANE_CORE0_RT fill:transparent,stroke:transparent
+
+        J_CORE2 -- 是 --&gt; J_CHK
+        
+        SG1_NOTE ~~~ J_SAFETY
+        J_SAFETY -- 是 --&gt; CALL_RT
+        CALL_RT --&gt; J_CORE2
     end
-    style LANE_RUNTIME_CORE0 fill:transparent,stroke:transparent
-    
-    NOOP_RUNTIME_OTHER["无操作"]
-    NOOP_STATE["无操作"]
+    style SG1 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+    classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700
+    class SG1_NOTE condNote
+
     END(["结束"])
 
     START --&gt; INIT
-    INIT --&gt; GET_CORE
-    GET_CORE --&gt; CHECK_CORE
-    
-    CHECK_CORE -- 是 --&gt; CHECK_TS
-    CHECK_TS -- 是 --&gt; GET_TS
-    GET_TS --&gt; SET_TS
-    SET_TS --&gt; CHECK_STATE
-    CHECK_TS -- 否 --&gt; NOOP_CORE0
-    NOOP_CORE0 --&gt; CHECK_STATE
-    
-    CHECK_CORE -- 否 --&gt; NOOP_CORE_OTHER
-    NOOP_CORE_OTHER --&gt; CHECK_STATE
-    
-    CHECK_STATE -- 是 --&gt; RUN_TEST
-    RUN_TEST --&gt; CHECK_TEST_CORE0
-    
-    CHECK_TEST_CORE0 -- 是 --&gt; CHECK_TEST_RESULT
-    CHECK_TEST_RESULT -- 是 --&gt; HANDLE_FAIL
-    HANDLE_FAIL --&gt; END
-    CHECK_TEST_RESULT -- 否 --&gt; NOOP_TEST_PASS
-    NOOP_TEST_PASS --&gt; END
-    
-    CHECK_TEST_CORE0 -- 否 --&gt; NOOP_RUNTIME_OTHER
-    NOOP_RUNTIME_OTHER --&gt; END
-    
-    CHECK_STATE -- 否 --&gt; NOOP_STATE
-    NOOP_STATE --&gt; END</div>
+    INIT --&gt; CALL_CORE
+    CALL_CORE --&gt; J_CORE
+    WRITE_TS --&gt; J_SAFETY
+    CALL_HND --&gt; END
+    J_CHK -- 否 --&gt; END
+    J_CORE2 -- 否 --&gt; END
+    J_SAFETY -- 否 --&gt; END</div>
 <details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">flowchart TD
     START(["开始"])
-    INIT["初始化 MstImpl_ptst 指向 Gp_EcuStpShdn_bufMstLocalImpl_ltst&lt;br&gt;初始化 CoreId_u32 为 0U"]
-    GET_CORE[["Gp_EcuStpShdn_CalloutGetCoreId 获取核心ID"]]
-    CHECK_CORE{"CoreId_u32 == GP_ECUSTPSHDN_CORE0_ID ?"}
+    INIT{{"初始化 MstImpl_ptst 与 CoreId_u32"}}
+    CALL_CORE[["Gp_EcuStpShdn_CalloutGetCoreId 获取核心ID"]]
+    J_CORE{"CoreId_u32 == GP_ECUSTPSHDN_CORE0_ID ?"}
     
     subgraph LANE_CORE0[" "]
         direction TB
-        CHECK_TS{"MstImpl_ptst-&gt;TimeStamp_u32[GP_ECUSTPSHDN_MST_TIME_STAMP_LAST_SAT_INIT] == 0U ?"}
-        GET_TS[["Gp_EcuStpShdn_GetLastSatTimeStamp 获取最后卫星初始化时间戳"]]
-        SET_TS["MstImpl_ptst-&gt;TimeStamp_u32[GP_ECUSTPSHDN_MST_TIME_STAMP_LAST_SAT_INIT] = 获取的时间戳"]
-        NOOP_CORE0["无操作"]
+        J_TS{"MstImpl_ptst-&gt;TimeStamp_u32[...LAST_SAT_INIT] == 0U ?"}
+        CALL_TS[["Gp_EcuStpShdn_GetLastSatTimeStamp 获取时间戳"]]
+        WRITE_TS[/"写入 MstImpl_ptst-&gt;TimeStamp_u32[...LAST_SAT_INIT]"/]
+        J_CORE -- 是 --&gt; J_TS
+        J_TS -- 是 --&gt; CALL_TS
+        CALL_TS --&gt; WRITE_TS
+        J_TS -- 否 --&gt; WRITE_TS
     end
     style LANE_CORE0 fill:transparent,stroke:transparent
-    
-    NOOP_CORE_OTHER["无操作"]
-    
-    CHECK_STATE{"(MstImpl_ptst-&gt;TryPwrShdn_b == FALSE) &amp;&amp; (MstImpl_ptst-&gt;SafeState_b == FALSE) ?"}
-    
-    RUN_TEST[["Gp_TstApp_RunTimePhase 执行MCU运行时测试"]]
-    
-    subgraph LANE_RUNTIME_CORE0[" "]
+
+    J_CORE -- 否 --&gt; J_SAFETY
+
+    subgraph SG1[" "]
         direction TB
-        CHECK_TEST_CORE0{"CoreId_u32 == GP_ECUSTPSHDN_CORE0_ID ?"}
-        CHECK_TEST_RESULT{"Gp_EcuStpShdn_CalloutChkMcuRunTimeTest() == FALSE ?"}
-        HANDLE_FAIL[["Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd 处理MCU运行时测试失败"]]
-        NOOP_TEST_PASS["无操作"]
+        SG1_NOTE["注：仅在 GP_ECUSTPSHDN_SAFETY_ENABLE 等于 STD_ON 时参与编译"]
+        J_SAFETY{"(TryPwrShdn_b == FALSE) &amp;&amp; (SafeState_b == FALSE) ?"}
+        CALL_RT[["Gp_TstApp_RunTimePhase 执行运行时测试"]]
+        J_CORE2{"CoreId_u32 == GP_ECUSTPSHDN_CORE0_ID ?"}
+        
+        subgraph LANE_CORE0_RT[" "]
+            direction TB
+            J_CHK{"Gp_EcuStpShdn_CalloutChkMcuRunTimeTest() == FALSE ?"}
+            
+            subgraph SG2[" "]
+                direction TB
+                SG2_NOTE["注：仅在 GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE 等于 STD_ON 时参与编译"]
+                CALL_HND[["Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd 处理失败"]]
+                SG2_NOTE ~~~ CALL_HND
+            end
+            style SG2 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+            classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700
+            class SG2_NOTE condNote
+
+            J_CHK -- 是 --&gt; CALL_HND
+        end
+        style LANE_CORE0_RT fill:transparent,stroke:transparent
+
+        J_CORE2 -- 是 --&gt; J_CHK
+        
+        SG1_NOTE ~~~ J_SAFETY
+        J_SAFETY -- 是 --&gt; CALL_RT
+        CALL_RT --&gt; J_CORE2
     end
-    style LANE_RUNTIME_CORE0 fill:transparent,stroke:transparent
-    
-    NOOP_RUNTIME_OTHER["无操作"]
-    NOOP_STATE["无操作"]
+    style SG1 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+    classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700
+    class SG1_NOTE condNote
+
     END(["结束"])
 
     START --&gt; INIT
-    INIT --&gt; GET_CORE
-    GET_CORE --&gt; CHECK_CORE
-    
-    CHECK_CORE -- 是 --&gt; CHECK_TS
-    CHECK_TS -- 是 --&gt; GET_TS
-    GET_TS --&gt; SET_TS
-    SET_TS --&gt; CHECK_STATE
-    CHECK_TS -- 否 --&gt; NOOP_CORE0
-    NOOP_CORE0 --&gt; CHECK_STATE
-    
-    CHECK_CORE -- 否 --&gt; NOOP_CORE_OTHER
-    NOOP_CORE_OTHER --&gt; CHECK_STATE
-    
-    CHECK_STATE -- 是 --&gt; RUN_TEST
-    RUN_TEST --&gt; CHECK_TEST_CORE0
-    
-    CHECK_TEST_CORE0 -- 是 --&gt; CHECK_TEST_RESULT
-    CHECK_TEST_RESULT -- 是 --&gt; HANDLE_FAIL
-    HANDLE_FAIL --&gt; END
-    CHECK_TEST_RESULT -- 否 --&gt; NOOP_TEST_PASS
-    NOOP_TEST_PASS --&gt; END
-    
-    CHECK_TEST_CORE0 -- 否 --&gt; NOOP_RUNTIME_OTHER
-    NOOP_RUNTIME_OTHER --&gt; END
-    
-    CHECK_STATE -- 否 --&gt; NOOP_STATE
-    NOOP_STATE --&gt; END</pre></details></td></tr>
+    INIT --&gt; CALL_CORE
+    CALL_CORE --&gt; J_CORE
+    WRITE_TS --&gt; J_SAFETY
+    CALL_HND --&gt; END
+    J_CHK -- 否 --&gt; END
+    J_CORE2 -- 否 --&gt; END
+    J_SAFETY -- 否 --&gt; END</pre></details></td></tr>
     <tr><td class="label">调用</td><td class="muted small">Gp_EcuStpShdn_CalloutGetCoreId<br>Gp_EcuStpShdn_GetLastSatTimeStamp<br>Gp_TstApp_RunTimePhase<br>Gp_EcuStpShdn_CalloutChkMcuRunTimeTest<br>Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_EcuStpShdn_bufMstLocalImpl_ltst</td></tr>
   </table>
   <div class="wi-footer">
@@ -1125,28 +1351,28 @@ flowchart LR
         SG1_NOTE ~~~ START
         START(["开始"])
         INIT{{"Cnt_u32 = 0U"}}
-        LOOP_COND{"Cnt_u32 &lt;&lt;br&gt;GP_ECUSTPSHDN_INIT_RSLT_RE&lt;br&gt;C_NUM"}
+        COND{"Cnt_u32 &lt;&lt;br&gt;GP_ECUSTPSHDN_INIT_RSLT_RE&lt;br&gt;C_NUM"}
         READ[/"读取&lt;br&gt;Impl_ptst-&gt;InitCheckRslt_t&lt;br&gt;[Cnt_u32]"/]
         CHECK{"Impl_ptst-&gt;InitCheckRslt_t&lt;br&gt;[Cnt_u32] == E_NOT_OK"}
         SET_BIT["Impl_ptst-&gt;InitRsltAllBits&lt;br&gt;_u32 |= (1U &lt;&lt; Cnt_u32)"]
-        DO_NOTHING["do nothing"]
+        NOOP["do nothing"]
         INCR["Cnt_u32++"]
         END(["结束"])
     READ ~~~ END
     CHECK ~~~ END
     SET_BIT ~~~ END
     INCR ~~~ END
-    DO_NOTHING ~~~ END
+    NOOP ~~~ END
         START --&gt; INIT
-        INIT --&gt; LOOP_COND
-        LOOP_COND -- 是 --&gt; READ
+        INIT --&gt; COND
+        COND -- 是 --&gt; READ
         READ --&gt; CHECK
         CHECK -- 是 --&gt; SET_BIT
-        CHECK -- 否 --&gt; DO_NOTHING
+        CHECK -- 否 --&gt; NOOP
         SET_BIT --&gt; INCR
-        DO_NOTHING --&gt; INCR
-        INCR --&gt; LOOP_COND
-        LOOP_COND -- 否 --&gt; END
+        NOOP --&gt; INCR
+        INCR --&gt; COND
+        COND -- 否 --&gt; END
     end
     style SG1 fill:transparent,stroke:#888888,stroke-dasharray:6 4
     classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700
@@ -1157,23 +1383,23 @@ flowchart LR
         SG1_NOTE ~~~ START
         START(["开始"])
         INIT{{"Cnt_u32 = 0U"}}
-        LOOP_COND{"Cnt_u32 &lt; GP_ECUSTPSHDN_INIT_RSLT_REC_NUM"}
+        COND{"Cnt_u32 &lt; GP_ECUSTPSHDN_INIT_RSLT_REC_NUM"}
         READ[/"读取 Impl_ptst-&gt;InitCheckRslt_t[Cnt_u32]"/]
         CHECK{"Impl_ptst-&gt;InitCheckRslt_t[Cnt_u32] == E_NOT_OK"}
         SET_BIT["Impl_ptst-&gt;InitRsltAllBits_u32 |= (1U &lt;&lt; Cnt_u32)"]
-        DO_NOTHING["do nothing"]
+        NOOP["do nothing"]
         INCR["Cnt_u32++"]
         END(["结束"])
         START --&gt; INIT
-        INIT --&gt; LOOP_COND
-        LOOP_COND -- 是 --&gt; READ
+        INIT --&gt; COND
+        COND -- 是 --&gt; READ
         READ --&gt; CHECK
         CHECK -- 是 --&gt; SET_BIT
-        CHECK -- 否 --&gt; DO_NOTHING
+        CHECK -- 否 --&gt; NOOP
         SET_BIT --&gt; INCR
-        DO_NOTHING --&gt; INCR
-        INCR --&gt; LOOP_COND
-        LOOP_COND -- 否 --&gt; END
+        NOOP --&gt; INCR
+        INCR --&gt; COND
+        COND -- 否 --&gt; END
     end
     style SG1 fill:transparent,stroke:#888888,stroke-dasharray:6 4
     classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700
@@ -1206,53 +1432,55 @@ flowchart LR
     <tr><td class="label">Return value</td><td>void</td></tr>
     <tr><td class="label">Description</td><td class="desc">Gp_EcuStpShdn_MstProcMcuPreRunTest 函数用于执行 MCU 预运行测试的主控处理逻辑。该函数由模块启动函数 Gp_EcuStpShdn_Startup 调用，作为系统初始化阶段的关键步骤。在执行过程中，函数首先调用 Gp_EcuStpShdn_CalloutChkMcuPreRunTest 进行预运行测试检查。若测试未通过，函数将调用 Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd 处理测试失败异常。该函数仅在 GP_ECUSTPSHDN_SAFETY_ENABLE 条件编译宏生效时参与编译，并访问模块全局变量 Gp_EcuStpShdn_bufMstLocalImpl_ltst 以维护本地实现状态。</td></tr>
     <tr><td class="label">流程图</td><td><div class="mermaid">flowchart TD
+    START(["开始"])
+    INIT{{"初始化 MstImpl_ptst 指向&lt;br&gt;Gp_EcuStpShdn_bufMstLocalI&lt;br&gt;mpl_ltst"}}
+    CALL_CHK[["Gp_EcuStpShdn_CalloutChkMc&lt;br&gt;uPreRunTest 检查 MCU&lt;br&gt;PreRunTest 结果"]]
+    DEC_CHK{"Gp_EcuStpShdn_CalloutChkMc&lt;br&gt;uPreRunTest 返回 FALSE ?"}
+    SET_FAIL["设置&lt;br&gt;MstImpl_ptst-&gt;McuSelfTest_&lt;br&gt;t 为&lt;br&gt;GP_ECUSTPSHDN_SELFTEST_FAI&lt;br&gt;L"]
     subgraph SG1[" "]
-        SG1_NOTE["注：仅在&lt;br&gt;GP_ECUSTPSHDN_SAFETY_ENABL&lt;br&gt;E 生效时参与编译"]
-        SG1_NOTE ~~~ START
-        START(["开始"])
-        INIT{{"初始化 MstImpl_ptst 指向&lt;br&gt;Gp_EcuStpShdn_bufMstLocalI&lt;br&gt;mpl_ltst"}}
-        CALL_CHK[["Gp_EcuStpShdn_CalloutChkMc&lt;br&gt;uPreRunTest 检查 MCU&lt;br&gt;PreRunTest 状态"]]
-        DEC_CHK{"Gp_EcuStpShdn_CalloutChkMc&lt;br&gt;uPreRunTest 返回 FALSE ?"}
-        SET_FAIL[/"设置&lt;br&gt;MstImpl_ptst-&gt;McuSelfTest_&lt;br&gt;t 为&lt;br&gt;GP_ECUSTPSHDN_SELFTEST_FAI&lt;br&gt;L"/]
-        CALL_FAIL[["Gp_EcuStpShdn_CalloutMcuPr&lt;br&gt;eRunTestFailedHnd&lt;br&gt;处理失败回调"]]
-        SET_PASS[/"设置&lt;br&gt;MstImpl_ptst-&gt;McuSelfTest_&lt;br&gt;t 为&lt;br&gt;GP_ECUSTPSHDN_SELFTEST_PAS&lt;br&gt;S"/]
-        END(["结束"])
-        START --&gt; INIT
-        INIT --&gt; CALL_CHK
-        CALL_CHK --&gt; DEC_CHK
-        DEC_CHK -- 是 --&gt; SET_FAIL
-        SET_FAIL --&gt; CALL_FAIL
-        CALL_FAIL --&gt; END
-        DEC_CHK -- 否 --&gt; SET_PASS
-        SET_PASS --&gt; END
+        SG1_NOTE["注：仅在&lt;br&gt;GP_ECUSTPSHDN_SAFETY_ACTIO&lt;br&gt;N_ENABLE 等于 STD_ON&lt;br&gt;时参与编译"]
+        SG1_NOTE ~~~ CALL_HND
+        CALL_HND[["Gp_EcuStpShdn_CalloutMcuPr&lt;br&gt;eRunTestFailedHnd&lt;br&gt;处理失败回调"]]
     end
     style SG1 fill:transparent,stroke:#888888,stroke-dasharray:6 4
     classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700
-    class SG1_NOTE condNote</div>
+    class SG1_NOTE condNote
+    SET_PASS["设置&lt;br&gt;MstImpl_ptst-&gt;McuSelfTest_&lt;br&gt;t 为&lt;br&gt;GP_ECUSTPSHDN_SELFTEST_PAS&lt;br&gt;S"]
+    END(["结束"])
+
+    START --&gt; INIT
+    INIT --&gt; CALL_CHK
+    CALL_CHK --&gt; DEC_CHK
+    DEC_CHK -- 是 --&gt; SET_FAIL
+    SET_FAIL --&gt; CALL_HND
+    CALL_HND --&gt; END
+    DEC_CHK -- 否 --&gt; SET_PASS
+    SET_PASS --&gt; END</div>
 <details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">flowchart TD
+    START(["开始"])
+    INIT{{"初始化 MstImpl_ptst 指向 Gp_EcuStpShdn_bufMstLocalImpl_ltst"}}
+    CALL_CHK[["Gp_EcuStpShdn_CalloutChkMcuPreRunTest 检查 MCU PreRunTest 结果"]]
+    DEC_CHK{"Gp_EcuStpShdn_CalloutChkMcuPreRunTest 返回 FALSE ?"}
+    SET_FAIL["设置 MstImpl_ptst-&gt;McuSelfTest_t 为 GP_ECUSTPSHDN_SELFTEST_FAIL"]
     subgraph SG1[" "]
-        SG1_NOTE["注：仅在 GP_ECUSTPSHDN_SAFETY_ENABLE 生效时参与编译"]
-        SG1_NOTE ~~~ START
-        START(["开始"])
-        INIT{{"初始化 MstImpl_ptst 指向 Gp_EcuStpShdn_bufMstLocalImpl_ltst"}}
-        CALL_CHK[["Gp_EcuStpShdn_CalloutChkMcuPreRunTest 检查 MCU PreRunTest 状态"]]
-        DEC_CHK{"Gp_EcuStpShdn_CalloutChkMcuPreRunTest 返回 FALSE ?"}
-        SET_FAIL[/"设置 MstImpl_ptst-&gt;McuSelfTest_t 为 GP_ECUSTPSHDN_SELFTEST_FAIL"/]
-        CALL_FAIL[["Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd 处理失败回调"]]
-        SET_PASS[/"设置 MstImpl_ptst-&gt;McuSelfTest_t 为 GP_ECUSTPSHDN_SELFTEST_PASS"/]
-        END(["结束"])
-        START --&gt; INIT
-        INIT --&gt; CALL_CHK
-        CALL_CHK --&gt; DEC_CHK
-        DEC_CHK -- 是 --&gt; SET_FAIL
-        SET_FAIL --&gt; CALL_FAIL
-        CALL_FAIL --&gt; END
-        DEC_CHK -- 否 --&gt; SET_PASS
-        SET_PASS --&gt; END
+        SG1_NOTE["注：仅在 GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE 等于 STD_ON 时参与编译"]
+        SG1_NOTE ~~~ CALL_HND
+        CALL_HND[["Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd 处理失败回调"]]
     end
     style SG1 fill:transparent,stroke:#888888,stroke-dasharray:6 4
     classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700
-    class SG1_NOTE condNote</pre></details></td></tr>
+    class SG1_NOTE condNote
+    SET_PASS["设置 MstImpl_ptst-&gt;McuSelfTest_t 为 GP_ECUSTPSHDN_SELFTEST_PASS"]
+    END(["结束"])
+
+    START --&gt; INIT
+    INIT --&gt; CALL_CHK
+    CALL_CHK --&gt; DEC_CHK
+    DEC_CHK -- 是 --&gt; SET_FAIL
+    SET_FAIL --&gt; CALL_HND
+    CALL_HND --&gt; END
+    DEC_CHK -- 否 --&gt; SET_PASS
+    SET_PASS --&gt; END</pre></details></td></tr>
     <tr><td class="label">条件编译</td><td><code>GP_ECUSTPSHDN_SAFETY_ENABLE</code> 生效时参与编译</td></tr><tr><td class="label">调用</td><td class="muted small">Gp_EcuStpShdn_CalloutChkMcuPreRunTest<br>Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_EcuStpShdn_Startup</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_EcuStpShdn_bufMstLocalImpl_ltst</td></tr>
   </table>
   <div class="wi-footer">
@@ -1281,61 +1509,125 @@ flowchart LR
     <tr><td class="label">Return value</td><td>void</td></tr>
     <tr><td class="label">Description</td><td class="desc">Gp_EcuStpShdn_MstPostInit 执行 Gp_EcuStpShdn 模块的主节点后初始化逻辑，仅在 GP_ECUSTPSHDN_SAFETY_ENABLE 条件编译生效时参与编译。该函数由 Gp_EcuStpShdn_Startup 调用，负责在启动流程中完成主节点的后续配置与状态检查。函数首先调用 Gp_EcuStpShdn_CheckInitRslt 验证初始化结果，若失败则触发 Gp_EcuStpShdn_CalloutInitFailedHnd 进行错误处理。随后，函数调用 Gp_TstApp_SwtchToRunPhase 尝试切换至运行阶段，并通过 Gp_EcuStpShdn_CalloutChkSwtToRun 检查切换状态，若切换失败则执行 Gp_EcuStpShdn_CalloutSwtToRunFailedHnd。最后，函数调用 Gp_EcuStpShdn_CalloutChkSbcTest 执行 SBC 测试检查，若测试失败则调用 Gp_EcuStpShdn_CalloutSbcTestFailedHnd 处理异常。该过程涉及对全局变量 Gp_EcuStpShdn_bufMstLocalImpl_ltst 和 Gp_EcuStpShdn_bufSatLocalImplCore0_ltst 的访问，以确保主节点与从节点核心0的本地实现状态同步。</td></tr>
     <tr><td class="label">流程图</td><td><div class="mermaid">flowchart TD
+    START(["开始"])
+    INIT["初始化 MstImpl_ptst 和&lt;br&gt;SatImpl_ptst 指针"]
+    CALL_CHECK_INIT[["Gp_EcuStpShdn_CheckInitRsl&lt;br&gt;t 检查初始化结果"]]
+    J1{"SatImpl_ptst-&gt;InitRsltAllB&lt;br&gt;its_u32 != 0U"}
+    
     subgraph SG1[" "]
-        SG1_NOTE["注：仅在&lt;br&gt;GP_ECUSTPSHDN_SAFETY_ENABL&lt;br&gt;E 生效时参与编译"]
-        SG1_NOTE ~~~ START
-        START(["开始"])
-        INIT["初始化 MstImpl_ptst 和&lt;br&gt;SatImpl_ptst 指针"]
-        CALL_CHECK_INIT[["Gp_EcuStpShdn_CheckInitRsl&lt;br&gt;t 检查初始化结果"]]
-        INIT --&gt; CALL_CHECK_INIT
-        CALL_CHECK_INIT --&gt; CHECK_INIT_RSLT{"SatImpl_ptst-&gt;InitRsltAllB&lt;br&gt;its_u32 != 0U"}
-        CHECK_INIT_RSLT -- 是 --&gt; CALL_INIT_FAILED[["Gp_EcuStpShdn_CalloutInitF&lt;br&gt;ailedHnd 处理初始化失败"]]
-        CHECK_INIT_RSLT -- 否 --&gt; SWITCH_RUN
-        CALL_INIT_FAILED --&gt; SWITCH_RUN
-        SWITCH_RUN[["Gp_TstApp_SwitchToRunPhase&lt;br&gt;切换到运行阶段"]]
-        SWITCH_RUN --&gt; CHECK_SWT_RUN{"Gp_EcuStpShdn_CalloutChkSw&lt;br&gt;tToRun() == FALSE"}
-        CHECK_SWT_RUN -- 是 --&gt; CALL_SWT_RUN_FAILED[["Gp_EcuStpShdn_CalloutSwtTo&lt;br&gt;RunFailedHnd 处理切换失败"]]
-        CHECK_SWT_RUN -- 否 --&gt; CHECK_SBC
-        CALL_SWT_RUN_FAILED --&gt; CHECK_SBC
-        CHECK_SBC{"Gp_EcuStpShdn_CalloutChkSb&lt;br&gt;cTest() == FALSE"}
-        CHECK_SBC -- 是 --&gt; SET_SBC_FAIL["MstImpl_ptst-&gt;SbcSelfTest_&lt;br&gt;t =&lt;br&gt;GP_ECUSTPSHDN_SELFTEST_FAI&lt;br&gt;L"]
-        CHECK_SBC -- 否 --&gt; SET_SBC_PASS["MstImpl_ptst-&gt;SbcSelfTest_&lt;br&gt;t =&lt;br&gt;GP_ECUSTPSHDN_SELFTEST_PAS&lt;br&gt;S"]
-        SET_SBC_FAIL --&gt; CALL_SBC_FAILED[["Gp_EcuStpShdn_CalloutSbcTe&lt;br&gt;stFailedHnd&lt;br&gt;处理SBC测试失败"]]
-        CALL_SBC_FAILED --&gt; END
-        SET_SBC_PASS --&gt; END
-        END(["结束"])
+        SG1_NOTE["注：仅在&lt;br&gt;GP_ECUSTPSHDN_SAFETY_ACTIO&lt;br&gt;N_ENABLE 等于 STD_ON&lt;br&gt;时参与编译"]
+        SG1_NOTE ~~~ CALL_INIT_FAILED
+        CALL_INIT_FAILED[["Gp_EcuStpShdn_CalloutInitF&lt;br&gt;ailedHnd 处理初始化失败"]]
     end
     style SG1 fill:transparent,stroke:#888888,stroke-dasharray:6 4
     classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700
-    class SG1_NOTE condNote</div>
+    class SG1_NOTE condNote
+
+    CALL_SWITCH_RUN[["Gp_TstApp_SwitchToRunPhase&lt;br&gt;切换到运行阶段"]]
+    CALL_CHK_RUN[["Gp_EcuStpShdn_CalloutChkSw&lt;br&gt;tToRun 检查切换运行阶段结果"]]
+    J2{"Gp_EcuStpShdn_CalloutChkSw&lt;br&gt;tToRun == FALSE"}
+    
+    subgraph SG2[" "]
+        SG2_NOTE["注：仅在&lt;br&gt;GP_ECUSTPSHDN_SAFETY_ACTIO&lt;br&gt;N_ENABLE 等于 STD_ON&lt;br&gt;时参与编译"]
+        SG2_NOTE ~~~ CALL_RUN_FAILED
+        CALL_RUN_FAILED[["Gp_EcuStpShdn_CalloutSwtTo&lt;br&gt;RunFailedHnd&lt;br&gt;处理切换运行阶段失败"]]
+    end
+    style SG2 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+    class SG2_NOTE condNote
+
+    CALL_CHK_SBC[["Gp_EcuStpShdn_CalloutChkSb&lt;br&gt;cTest 检查 SBC 自测结果"]]
+    J3{"Gp_EcuStpShdn_CalloutChkSb&lt;br&gt;cTest == FALSE"}
+    
+    SET_SBC_FAIL["MstImpl_ptst-&gt;SbcSelfTest_&lt;br&gt;t =&lt;br&gt;GP_ECUSTPSHDN_SELFTEST_FAI&lt;br&gt;L"]
+    
+    subgraph SG3[" "]
+        SG3_NOTE["注：仅在&lt;br&gt;GP_ECUSTPSHDN_SAFETY_ACTIO&lt;br&gt;N_ENABLE 等于 STD_ON&lt;br&gt;时参与编译"]
+        SG3_NOTE ~~~ CALL_SBC_FAILED
+        CALL_SBC_FAILED[["Gp_EcuStpShdn_CalloutSbcTe&lt;br&gt;stFailedHnd 处理 SBC&lt;br&gt;自测失败"]]
+    end
+    style SG3 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+    class SG3_NOTE condNote
+
+    SET_SBC_PASS["MstImpl_ptst-&gt;SbcSelfTest_&lt;br&gt;t =&lt;br&gt;GP_ECUSTPSHDN_SELFTEST_PAS&lt;br&gt;S"]
+    END(["结束"])
+
+    START --&gt; INIT
+    INIT --&gt; CALL_CHECK_INIT
+    CALL_CHECK_INIT --&gt; J1
+    J1 -- 是 --&gt; CALL_INIT_FAILED
+    J1 -- 否 --&gt; CALL_SWITCH_RUN
+    CALL_INIT_FAILED --&gt; CALL_SWITCH_RUN
+    CALL_SWITCH_RUN --&gt; CALL_CHK_RUN
+    CALL_CHK_RUN --&gt; J2
+    J2 -- 是 --&gt; CALL_RUN_FAILED
+    J2 -- 否 --&gt; CALL_CHK_SBC
+    CALL_RUN_FAILED --&gt; CALL_CHK_SBC
+    CALL_CHK_SBC --&gt; J3
+    J3 -- 是 --&gt; SET_SBC_FAIL
+    J3 -- 否 --&gt; SET_SBC_PASS
+    SET_SBC_FAIL --&gt; CALL_SBC_FAILED
+    SET_SBC_PASS --&gt; END
+    CALL_SBC_FAILED --&gt; END</div>
 <details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">flowchart TD
+    START(["开始"])
+    INIT["初始化 MstImpl_ptst 和 SatImpl_ptst 指针"]
+    CALL_CHECK_INIT[["Gp_EcuStpShdn_CheckInitRslt 检查初始化结果"]]
+    J1{"SatImpl_ptst-&gt;InitRsltAllBits_u32 != 0U"}
+    
     subgraph SG1[" "]
-        SG1_NOTE["注：仅在 GP_ECUSTPSHDN_SAFETY_ENABLE 生效时参与编译"]
-        SG1_NOTE ~~~ START
-        START(["开始"])
-        INIT["初始化 MstImpl_ptst 和 SatImpl_ptst 指针"]
-        CALL_CHECK_INIT[["Gp_EcuStpShdn_CheckInitRslt 检查初始化结果"]]
-        INIT --&gt; CALL_CHECK_INIT
-        CALL_CHECK_INIT --&gt; CHECK_INIT_RSLT{"SatImpl_ptst-&gt;InitRsltAllBits_u32 != 0U"}
-        CHECK_INIT_RSLT -- 是 --&gt; CALL_INIT_FAILED[["Gp_EcuStpShdn_CalloutInitFailedHnd 处理初始化失败"]]
-        CHECK_INIT_RSLT -- 否 --&gt; SWITCH_RUN
-        CALL_INIT_FAILED --&gt; SWITCH_RUN
-        SWITCH_RUN[["Gp_TstApp_SwitchToRunPhase 切换到运行阶段"]]
-        SWITCH_RUN --&gt; CHECK_SWT_RUN{"Gp_EcuStpShdn_CalloutChkSwtToRun() == FALSE"}
-        CHECK_SWT_RUN -- 是 --&gt; CALL_SWT_RUN_FAILED[["Gp_EcuStpShdn_CalloutSwtToRunFailedHnd 处理切换失败"]]
-        CHECK_SWT_RUN -- 否 --&gt; CHECK_SBC
-        CALL_SWT_RUN_FAILED --&gt; CHECK_SBC
-        CHECK_SBC{"Gp_EcuStpShdn_CalloutChkSbcTest() == FALSE"}
-        CHECK_SBC -- 是 --&gt; SET_SBC_FAIL["MstImpl_ptst-&gt;SbcSelfTest_t = GP_ECUSTPSHDN_SELFTEST_FAIL"]
-        CHECK_SBC -- 否 --&gt; SET_SBC_PASS["MstImpl_ptst-&gt;SbcSelfTest_t = GP_ECUSTPSHDN_SELFTEST_PASS"]
-        SET_SBC_FAIL --&gt; CALL_SBC_FAILED[["Gp_EcuStpShdn_CalloutSbcTestFailedHnd 处理SBC测试失败"]]
-        CALL_SBC_FAILED --&gt; END
-        SET_SBC_PASS --&gt; END
-        END(["结束"])
+        SG1_NOTE["注：仅在 GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE 等于 STD_ON 时参与编译"]
+        SG1_NOTE ~~~ CALL_INIT_FAILED
+        CALL_INIT_FAILED[["Gp_EcuStpShdn_CalloutInitFailedHnd 处理初始化失败"]]
     end
     style SG1 fill:transparent,stroke:#888888,stroke-dasharray:6 4
     classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700
-    class SG1_NOTE condNote</pre></details></td></tr>
+    class SG1_NOTE condNote
+
+    CALL_SWITCH_RUN[["Gp_TstApp_SwitchToRunPhase 切换到运行阶段"]]
+    CALL_CHK_RUN[["Gp_EcuStpShdn_CalloutChkSwtToRun 检查切换运行阶段结果"]]
+    J2{"Gp_EcuStpShdn_CalloutChkSwtToRun == FALSE"}
+    
+    subgraph SG2[" "]
+        SG2_NOTE["注：仅在 GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE 等于 STD_ON 时参与编译"]
+        SG2_NOTE ~~~ CALL_RUN_FAILED
+        CALL_RUN_FAILED[["Gp_EcuStpShdn_CalloutSwtToRunFailedHnd 处理切换运行阶段失败"]]
+    end
+    style SG2 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+    class SG2_NOTE condNote
+
+    CALL_CHK_SBC[["Gp_EcuStpShdn_CalloutChkSbcTest 检查 SBC 自测结果"]]
+    J3{"Gp_EcuStpShdn_CalloutChkSbcTest == FALSE"}
+    
+    SET_SBC_FAIL["MstImpl_ptst-&gt;SbcSelfTest_t = GP_ECUSTPSHDN_SELFTEST_FAIL"]
+    
+    subgraph SG3[" "]
+        SG3_NOTE["注：仅在 GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE 等于 STD_ON 时参与编译"]
+        SG3_NOTE ~~~ CALL_SBC_FAILED
+        CALL_SBC_FAILED[["Gp_EcuStpShdn_CalloutSbcTestFailedHnd 处理 SBC 自测失败"]]
+    end
+    style SG3 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+    class SG3_NOTE condNote
+
+    SET_SBC_PASS["MstImpl_ptst-&gt;SbcSelfTest_t = GP_ECUSTPSHDN_SELFTEST_PASS"]
+    END(["结束"])
+
+    START --&gt; INIT
+    INIT --&gt; CALL_CHECK_INIT
+    CALL_CHECK_INIT --&gt; J1
+    J1 -- 是 --&gt; CALL_INIT_FAILED
+    J1 -- 否 --&gt; CALL_SWITCH_RUN
+    CALL_INIT_FAILED --&gt; CALL_SWITCH_RUN
+    CALL_SWITCH_RUN --&gt; CALL_CHK_RUN
+    CALL_CHK_RUN --&gt; J2
+    J2 -- 是 --&gt; CALL_RUN_FAILED
+    J2 -- 否 --&gt; CALL_CHK_SBC
+    CALL_RUN_FAILED --&gt; CALL_CHK_SBC
+    CALL_CHK_SBC --&gt; J3
+    J3 -- 是 --&gt; SET_SBC_FAIL
+    J3 -- 否 --&gt; SET_SBC_PASS
+    SET_SBC_FAIL --&gt; CALL_SBC_FAILED
+    SET_SBC_PASS --&gt; END
+    CALL_SBC_FAILED --&gt; END</pre></details></td></tr>
     <tr><td class="label">条件编译</td><td><code>GP_ECUSTPSHDN_SAFETY_ENABLE</code> 生效时参与编译</td></tr><tr><td class="label">调用</td><td class="muted small">Gp_EcuStpShdn_CheckInitRslt<br>Gp_EcuStpShdn_CalloutInitFailedHnd<br>Gp_TstApp_SwitchToRunPhase<br>Gp_EcuStpShdn_CalloutChkSwtToRun<br>Gp_EcuStpShdn_CalloutSwtToRunFailedHnd<br>Gp_EcuStpShdn_CalloutChkSbcTest<br>Gp_EcuStpShdn_CalloutSbcTestFailedHnd</td></tr><tr><td class="label">被调用</td><td class="muted small">Gp_EcuStpShdn_Startup</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_EcuStpShdn_bufMstLocalImpl_ltst, Gp_EcuStpShdn_bufSatLocalImplCore0_ltst</td></tr>
   </table>
   <div class="wi-footer">
@@ -1364,35 +1656,146 @@ flowchart LR
     <tr><td class="label">Return value</td><td>uint32 - maximum time stamp</td></tr>
     <tr><td class="label">Description</td><td class="desc">该函数用于获取并返回最后一次卫星时间戳。作为模块内部静态函数，它被 `Gp_EcuStpShdn_Mainfunction` 调用，以支持主功能对时间同步状态的查询。函数通过访问 `Gp_EcuStpShdn_bufSatLocalImplCore1_ltst` 至 `Gp_EcuStpShdn_bufSatLocalImplCore5_ltst` 这五个全局变量来读取各核心对应的最后卫星时间戳数据。</td></tr>
     <tr><td class="label">流程图</td><td><div class="mermaid">flowchart TD
-    Start(["开始"]) --&gt; Init1["初始化 TimeStamp_u32 数组&lt;br&gt;TimeStamp_u32[0] = 0&lt;br&gt;TimeStamp_u32[1] =&lt;br&gt;Gp_EcuStpShdn_bufSatLocalI&lt;br&gt;mplCore1_ltst.TimeStamp_u3&lt;br&gt;2&lt;br&gt;TimeStamp_u32[2] =&lt;br&gt;Gp_EcuStpShdn_bufSatLocalI&lt;br&gt;mplCore2_ltst.TimeStamp_u3&lt;br&gt;2&lt;br&gt;TimeStamp_u32[3] =&lt;br&gt;Gp_EcuStpShdn_bufSatLocalI&lt;br&gt;mplCore3_ltst.TimeStamp_u3&lt;br&gt;2&lt;br&gt;TimeStamp_u32[4] =&lt;br&gt;Gp_EcuStpShdn_bufSatLocalI&lt;br&gt;mplCore4_ltst.TimeStamp_u3&lt;br&gt;2&lt;br&gt;TimeStamp_u32[5] =&lt;br&gt;Gp_EcuStpShdn_bufSatLocalI&lt;br&gt;mplCore5_ltst.TimeStamp_u3&lt;br&gt;2"]
-    Init1 --&gt; Init2{{"初始化 Cnt_u32 = 0&lt;br&gt;初始化 MaxTimeStamp_u32 =&lt;br&gt;0"}}
-    Init2 --&gt; LoopCond{"Cnt_u32 &lt;&lt;br&gt;GP_ECUSTPSHDN_ACTIVE_CORE_&lt;br&gt;NUM ?"}
-    LoopCond -- 是 --&gt; ReadTS[/"读取&lt;br&gt;TimeStamp_u32[Cnt_u32]"/]
-    ReadTS --&gt; Compare{"MaxTimeStamp_u32 &lt;&lt;br&gt;TimeStamp_u32[Cnt_u32] ?"}
-    Compare -- 是 --&gt; UpdateMax["MaxTimeStamp_u32 =&lt;br&gt;TimeStamp_u32[Cnt_u32]"]
-    Compare -- 否 --&gt; DoNothing["do nothing"]
-    UpdateMax --&gt; IncCnt["Cnt_u32++"]
-    DoNothing --&gt; IncCnt
-    IncCnt --&gt; LoopCond
-    LoopCond -- 否 --&gt; ReturnVal["return MaxTimeStamp_u32"]
-    ReturnVal --&gt; End(["结束"])
+    Start(["开始"]) --&gt; Init["初始化 TimeStamp_u32 数组&lt;br&gt;Cnt_u32 = 0U&lt;br&gt;MaxTimeStamp_u32 = 0U"]
+    Init --&gt; Set0["TimeStamp_u32[0U] = 0U"]
+    
+    subgraph SG1[" "]
+        SG1_NOTE["注：仅在&lt;br&gt;GP_ECUSTPSHDN_ACTIVE_CORE_&lt;br&gt;NUM 大于 1U 时参与编译"]
+        SG1_NOTE ~~~ Set1
+        Set1["TimeStamp_u32[1U] =&lt;br&gt;Gp_EcuStpShdn_bufSatLocalI&lt;br&gt;mplCore1_ltst.TimeStamp_u3&lt;br&gt;2"]
+    end
+    style SG1 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+    classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700
+    class SG1_NOTE condNote
+    
+    Set0 --&gt; Set1
+    
+    subgraph SG2[" "]
+        SG2_NOTE["注：仅在&lt;br&gt;GP_ECUSTPSHDN_ACTIVE_CORE_&lt;br&gt;NUM 大于 2U 时参与编译"]
+        SG2_NOTE ~~~ Set2
+        Set2["TimeStamp_u32[2U] =&lt;br&gt;Gp_EcuStpShdn_bufSatLocalI&lt;br&gt;mplCore2_ltst.TimeStamp_u3&lt;br&gt;2"]
+    end
+    style SG2 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+    class SG2_NOTE condNote
+    
+    Set1 --&gt; Set2
+    
+    subgraph SG3[" "]
+        SG3_NOTE["注：仅在&lt;br&gt;GP_ECUSTPSHDN_ACTIVE_CORE_&lt;br&gt;NUM 大于 3U 时参与编译"]
+        SG3_NOTE ~~~ Set3
+        Set3["TimeStamp_u32[3U] =&lt;br&gt;Gp_EcuStpShdn_bufSatLocalI&lt;br&gt;mplCore3_ltst.TimeStamp_u3&lt;br&gt;2"]
+    end
+    style SG3 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+    class SG3_NOTE condNote
+    
+    Set2 --&gt; Set3
+    
+    subgraph SG4[" "]
+        SG4_NOTE["注：仅在&lt;br&gt;GP_ECUSTPSHDN_ACTIVE_CORE_&lt;br&gt;NUM 大于 4U 时参与编译"]
+        SG4_NOTE ~~~ Set4
+        Set4["TimeStamp_u32[4U] =&lt;br&gt;Gp_EcuStpShdn_bufSatLocalI&lt;br&gt;mplCore4_ltst.TimeStamp_u3&lt;br&gt;2"]
+    end
+    style SG4 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+    class SG4_NOTE condNote
+    
+    Set3 --&gt; Set4
+    
+    subgraph SG5[" "]
+        SG5_NOTE["注：仅在&lt;br&gt;GP_ECUSTPSHDN_ACTIVE_CORE_&lt;br&gt;NUM 大于 5U 时参与编译"]
+        SG5_NOTE ~~~ Set5
+        Set5["TimeStamp_u32[5U] =&lt;br&gt;Gp_EcuStpShdn_bufSatLocalI&lt;br&gt;mplCore5_ltst.TimeStamp_u3&lt;br&gt;2"]
+    end
+    style SG5 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+    class SG5_NOTE condNote
+    
+    Set4 --&gt; Set5
+    
+    Set5 --&gt; LoopInit{{"Cnt_u32 = 0U"}}
+    LoopInit --&gt; LoopCond{"Cnt_u32 &lt;&lt;br&gt;GP_ECUSTPSHDN_ACTIVE_CORE_&lt;br&gt;NUM"}
+    
+    LoopCond -- 否 --&gt; Return["return MaxTimeStamp_u32"]
+    Return --&gt; End(["结束"])
     Compare ~~~ End
     UpdateMax ~~~ End
     IncCnt ~~~ End
-    DoNothing ~~~ End</div>
+    
+    LoopCond -- 是 --&gt; ReadTS[/"读取&lt;br&gt;TimeStamp_u32[Cnt_u32]"/]
+    ReadTS --&gt; Compare{"MaxTimeStamp_u32 &lt;&lt;br&gt;TimeStamp_u32[Cnt_u32]"}
+    
+    Compare -- 是 --&gt; UpdateMax["MaxTimeStamp_u32 =&lt;br&gt;TimeStamp_u32[Cnt_u32]"]
+    Compare -- 否 --&gt; IncCnt["Cnt_u32++"]
+    
+    UpdateMax --&gt; IncCnt
+    IncCnt --&gt; LoopCond</div>
 <details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">flowchart TD
-    Start(["开始"]) --&gt; Init1["初始化 TimeStamp_u32 数组&lt;br&gt;TimeStamp_u32[0] = 0&lt;br&gt;TimeStamp_u32[1] = Gp_EcuStpShdn_bufSatLocalImplCore1_ltst.TimeStamp_u32&lt;br&gt;TimeStamp_u32[2] = Gp_EcuStpShdn_bufSatLocalImplCore2_ltst.TimeStamp_u32&lt;br&gt;TimeStamp_u32[3] = Gp_EcuStpShdn_bufSatLocalImplCore3_ltst.TimeStamp_u32&lt;br&gt;TimeStamp_u32[4] = Gp_EcuStpShdn_bufSatLocalImplCore4_ltst.TimeStamp_u32&lt;br&gt;TimeStamp_u32[5] = Gp_EcuStpShdn_bufSatLocalImplCore5_ltst.TimeStamp_u32"]
-    Init1 --&gt; Init2{{"初始化 Cnt_u32 = 0&lt;br&gt;初始化 MaxTimeStamp_u32 = 0"}}
-    Init2 --&gt; LoopCond{"Cnt_u32 &lt; GP_ECUSTPSHDN_ACTIVE_CORE_NUM ?"}
+    Start(["开始"]) --&gt; Init["初始化 TimeStamp_u32 数组&lt;br&gt;Cnt_u32 = 0U&lt;br&gt;MaxTimeStamp_u32 = 0U"]
+    Init --&gt; Set0["TimeStamp_u32[0U] = 0U"]
+    
+    subgraph SG1[" "]
+        SG1_NOTE["注：仅在 GP_ECUSTPSHDN_ACTIVE_CORE_NUM 大于 1U 时参与编译"]
+        SG1_NOTE ~~~ Set1
+        Set1["TimeStamp_u32[1U] = Gp_EcuStpShdn_bufSatLocalImplCore1_ltst.TimeStamp_u32"]
+    end
+    style SG1 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+    classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700
+    class SG1_NOTE condNote
+    
+    Set0 --&gt; Set1
+    
+    subgraph SG2[" "]
+        SG2_NOTE["注：仅在 GP_ECUSTPSHDN_ACTIVE_CORE_NUM 大于 2U 时参与编译"]
+        SG2_NOTE ~~~ Set2
+        Set2["TimeStamp_u32[2U] = Gp_EcuStpShdn_bufSatLocalImplCore2_ltst.TimeStamp_u32"]
+    end
+    style SG2 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+    class SG2_NOTE condNote
+    
+    Set1 --&gt; Set2
+    
+    subgraph SG3[" "]
+        SG3_NOTE["注：仅在 GP_ECUSTPSHDN_ACTIVE_CORE_NUM 大于 3U 时参与编译"]
+        SG3_NOTE ~~~ Set3
+        Set3["TimeStamp_u32[3U] = Gp_EcuStpShdn_bufSatLocalImplCore3_ltst.TimeStamp_u32"]
+    end
+    style SG3 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+    class SG3_NOTE condNote
+    
+    Set2 --&gt; Set3
+    
+    subgraph SG4[" "]
+        SG4_NOTE["注：仅在 GP_ECUSTPSHDN_ACTIVE_CORE_NUM 大于 4U 时参与编译"]
+        SG4_NOTE ~~~ Set4
+        Set4["TimeStamp_u32[4U] = Gp_EcuStpShdn_bufSatLocalImplCore4_ltst.TimeStamp_u32"]
+    end
+    style SG4 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+    class SG4_NOTE condNote
+    
+    Set3 --&gt; Set4
+    
+    subgraph SG5[" "]
+        SG5_NOTE["注：仅在 GP_ECUSTPSHDN_ACTIVE_CORE_NUM 大于 5U 时参与编译"]
+        SG5_NOTE ~~~ Set5
+        Set5["TimeStamp_u32[5U] = Gp_EcuStpShdn_bufSatLocalImplCore5_ltst.TimeStamp_u32"]
+    end
+    style SG5 fill:transparent,stroke:#888888,stroke-dasharray:6 4
+    class SG5_NOTE condNote
+    
+    Set4 --&gt; Set5
+    
+    Set5 --&gt; LoopInit{{"Cnt_u32 = 0U"}}
+    LoopInit --&gt; LoopCond{"Cnt_u32 &lt; GP_ECUSTPSHDN_ACTIVE_CORE_NUM"}
+    
+    LoopCond -- 否 --&gt; Return["return MaxTimeStamp_u32"]
+    Return --&gt; End(["结束"])
+    
     LoopCond -- 是 --&gt; ReadTS[/"读取 TimeStamp_u32[Cnt_u32]"/]
-    ReadTS --&gt; Compare{"MaxTimeStamp_u32 &lt; TimeStamp_u32[Cnt_u32] ?"}
+    ReadTS --&gt; Compare{"MaxTimeStamp_u32 &lt; TimeStamp_u32[Cnt_u32]"}
+    
     Compare -- 是 --&gt; UpdateMax["MaxTimeStamp_u32 = TimeStamp_u32[Cnt_u32]"]
-    Compare -- 否 --&gt; DoNothing["do nothing"]
-    UpdateMax --&gt; IncCnt["Cnt_u32++"]
-    DoNothing --&gt; IncCnt
-    IncCnt --&gt; LoopCond
-    LoopCond -- 否 --&gt; ReturnVal["return MaxTimeStamp_u32"]
-    ReturnVal --&gt; End(["结束"])</pre></details></td></tr>
+    Compare -- 否 --&gt; IncCnt["Cnt_u32++"]
+    
+    UpdateMax --&gt; IncCnt
+    IncCnt --&gt; LoopCond</pre></details></td></tr>
     <tr><td class="label">被调用</td><td class="muted small">Gp_EcuStpShdn_Mainfunction</td></tr><tr><td class="label">访问的静态全局变量</td><td class="muted small">Gp_EcuStpShdn_bufSatLocalImplCore1_ltst, Gp_EcuStpShdn_bufSatLocalImplCore2_ltst, Gp_EcuStpShdn_bufSatLocalImplCore3_ltst, Gp_EcuStpShdn_bufSatLocalImplCore4_ltst, Gp_EcuStpShdn_bufSatLocalImplCore5_ltst</td></tr>
   </table>
   <div class="wi-footer">
@@ -4565,6 +4968,33 @@ window.addEventListener('DOMContentLoaded', async () => {
     document.querySelectorAll('svg path.flowchart-link').forEach((p) => {
       if (p.getAttribute('d')) p.setAttribute('data-orig', p.getAttribute('d'));
     });
+  // 隐形汇合点坍缩（prompt 规则11约定：空标签 + fill/stroke 全透明的节点是分支汇合点）。
+  // mermaid 把它排成 ~24x12 的隐形矩形，各入边箭头散落在隐形框的不同边上，看起来像
+  // 「箭头指向空气」（EcuStp Mainfunction 的 MERGE1 三汇入、Startup 的 M2_NORMAL_FLOW
+  // 两汇入，用户两次截图反馈）。这里把汇合点 rect 清零——getBBox/离线审计看到的包围盒
+  // 随之坍缩成中心点，选路时入边端点直接取中心点——并在中心画一个小实心圆点
+  // （UML 汇流点画法），多支箭头汇聚于一点。检测靠内联样式（mermaid 把 style 语句
+  // 内联成 fill:transparent !important），空标签但无透明样式的节点不动（可见小空盒，
+  // 保持原行为）。圆点挂在节点 g 的父级（svg 坐标系），不进 g——保证 getBBox 仍为 0。
+  document.querySelectorAll('svg').forEach((svg) => {
+    svg.querySelectorAll('g.node[id^="flowchart-"]').forEach((g) => {
+      const m = g.getAttribute('id').match(/^flowchart-(.+)-\d+$/);
+      if (!m || g.textContent.trim() !== '') return;
+      const shape = g.querySelector('rect,polygon,circle,ellipse,path');
+      const st = (shape && shape.getAttribute('style')) || '';
+      if (!/fill:\s*transparent/.test(st) || !/stroke:\s*transparent/.test(st)) return;
+      const t = (g.getAttribute('transform') || '').match(/translate\(\s*(-?[\d.]+)[ ,]\s*(-?[\d.]+)\s*\)/);
+      if (!t) return;
+      shape.setAttribute('x', '0'); shape.setAttribute('y', '0');
+      shape.setAttribute('width', '0'); shape.setAttribute('height', '0');
+      const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      dot.setAttribute('cx', t[1]); dot.setAttribute('cy', t[2]);
+      dot.setAttribute('r', '3.2'); dot.setAttribute('fill', '#333');
+      dot.setAttribute('class', 'junction-dot');
+      dot.setAttribute('data-junction', m[1]);
+      g.parentNode.appendChild(dot);
+    });
+  });
   const median = (vals) => { const v = [...vals].sort((a, b) => a - b); return v[v.length >> 1]; };
   const round2 = (n) => Math.round(n * 100) / 100;
   const distToSeg = (p, a, b) => {
@@ -4894,6 +5324,9 @@ window.addEventListener('DOMContentLoaded', async () => {
       const wcx = wBox.x + wBox.w / 2;
       const dxc = wcx - (jBox.x + jBox.w / 2);
       if (jt) g.setAttribute('transform', 'translate(' + (+jt[1] + dxc) + ', ' + jt[2] + ')');
+      // 汇合点圆点是节点 g 的同级元素（保 getBBox 为零），g 平移时圆点要同步
+      const jDot = g.parentNode && g.parentNode.querySelector('circle.junction-dot[data-junction="' + jId + '"]');
+      if (jDot) jDot.setAttribute('cx', String(+jDot.getAttribute('cx') + dxc));
       jBox.x += dxc;
       const jcx = jBox.x + jBox.w / 2, jcy = jBox.y + jBox.h / 2;
       // J-->W：竖直 ▼ 进顶角（直线，主循环早退原样保留；菱形不做端点贴形）
@@ -4949,6 +5382,10 @@ window.addEventListener('DOMContentLoaded', async () => {
         // 矩形族目标才做穿透检查（polygon 目标斜边端点本在包围盒内，恒误判）
         const rectFamDst = dstG && !dstG.querySelector('polygon');
         ctx = { boxes, srcId, dstId, edgeHit: xEdge, pen: rectFamDst ? penInto(tBox) : null, dstBox: tBox };
+        // 隐形汇合点目标（包围盒已坍缩为零尺寸）：入边端点改为中心点，多方向入边汇聚
+        // 到同一点。零尺寸盒使四边等距、下方 endDir 两分支自然不命中（无方向约束），
+        // 端点贴形对端点即中心的边是恒等操作（x/y 都被钳到中心），均无需特判。
+        if (tBox.w === 0 && tBox.h === 0) endPts = [...pts.slice(0, -1), [round2(tBox.x), round2(tBox.y)]];
         const S0 = pts[0], E0 = pts[pts.length - 1];
         ds = [
           ['T', distToSeg(E0, [tBox.x, tBox.y], [tBox.x + tBox.w, tBox.y])],
@@ -4988,6 +5425,11 @@ window.addEventListener('DOMContentLoaded', async () => {
           } else endDir = 'V';
         }
       }
+    }
+    // 源是隐形汇合点（零尺寸包围盒）：出边起点同样改为中心点，与入边汇于同一点
+    if (srcId) {
+      const sb = boxesOf(svg)[srcId];
+      if (sb && sb.w === 0 && sb.h === 0) endPts = [[round2(sb.x), round2(sb.y)], ...endPts.slice(1)];
     }
     let sp = sp0 || ortho(endPts, endDir, ctx);
     // 躺平进顶/底边救援：端点贴目标顶/底边（≤2.5px）、方向合规要求竖进，但所有竖进候选
@@ -5074,6 +5516,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         for (const id in ctx.boxes) {
           if (id === ctx.srcId || id === ctx.dstId) continue;
           const bx = ctx.boxes[id];
+          if (bx.w === 0 && bx.h === 0) continue;  // 零尺寸=隐形汇合点，无盒缘可贴
           if (x2 < bx.x + 1 || x1 > bx.x + bx.w - 1) continue;
           if (Math.abs(a[1] - bx.y) < 2.5) { yTry = round2(bx.y - 8); up = true; hugId = id; break; }
           if (Math.abs(a[1] - (bx.y + bx.h)) < 2.5) { yTry = round2(bx.y + bx.h + 8); up = false; hugId = id; break; }
@@ -5120,6 +5563,7 @@ window.addEventListener('DOMContentLoaded', async () => {
             for (const id2 in ctx.boxes) {
               if (id2 === ctx.srcId || id2 === ctx.dstId) continue;
               const b2 = ctx.boxes[id2];
+              if (b2.w === 0 && b2.h === 0) continue;  // 汇合点不算盒缘
               if (hx2 < b2.x + 1 || hx1 > b2.x + b2.w - 1) continue;
               if (Math.abs(hSeg[0][1] - b2.y) < 2.5 || Math.abs(hSeg[0][1] - (b2.y + b2.h)) < 2.5) { rehug = true; break; }
             }

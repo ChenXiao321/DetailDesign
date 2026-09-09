@@ -48,6 +48,33 @@ window.addEventListener('DOMContentLoaded', async () => {
     document.querySelectorAll('svg path.flowchart-link').forEach((p) => {
       if (p.getAttribute('d')) p.setAttribute('data-orig', p.getAttribute('d'));
     });
+  // 隐形汇合点坍缩（prompt 规则11约定：空标签 + fill/stroke 全透明的节点是分支汇合点）。
+  // mermaid 把它排成 ~24x12 的隐形矩形，各入边箭头散落在隐形框的不同边上，看起来像
+  // 「箭头指向空气」（EcuStp Mainfunction 的 MERGE1 三汇入、Startup 的 M2_NORMAL_FLOW
+  // 两汇入，用户两次截图反馈）。这里把汇合点 rect 清零——getBBox/离线审计看到的包围盒
+  // 随之坍缩成中心点，选路时入边端点直接取中心点——并在中心画一个小实心圆点
+  // （UML 汇流点画法），多支箭头汇聚于一点。检测靠内联样式（mermaid 把 style 语句
+  // 内联成 fill:transparent !important），空标签但无透明样式的节点不动（可见小空盒，
+  // 保持原行为）。圆点挂在节点 g 的父级（svg 坐标系），不进 g——保证 getBBox 仍为 0。
+  document.querySelectorAll('svg').forEach((svg) => {
+    svg.querySelectorAll('g.node[id^="flowchart-"]').forEach((g) => {
+      const m = g.getAttribute('id').match(/^flowchart-(.+)-\\d+$/);
+      if (!m || g.textContent.trim() !== '') return;
+      const shape = g.querySelector('rect,polygon,circle,ellipse,path');
+      const st = (shape && shape.getAttribute('style')) || '';
+      if (!/fill:\\s*transparent/.test(st) || !/stroke:\\s*transparent/.test(st)) return;
+      const t = (g.getAttribute('transform') || '').match(/translate\\(\\s*(-?[\\d.]+)[ ,]\\s*(-?[\\d.]+)\\s*\\)/);
+      if (!t) return;
+      shape.setAttribute('x', '0'); shape.setAttribute('y', '0');
+      shape.setAttribute('width', '0'); shape.setAttribute('height', '0');
+      const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      dot.setAttribute('cx', t[1]); dot.setAttribute('cy', t[2]);
+      dot.setAttribute('r', '3.2'); dot.setAttribute('fill', '#333');
+      dot.setAttribute('class', 'junction-dot');
+      dot.setAttribute('data-junction', m[1]);
+      g.parentNode.appendChild(dot);
+    });
+  });
   const median = (vals) => { const v = [...vals].sort((a, b) => a - b); return v[v.length >> 1]; };
   const round2 = (n) => Math.round(n * 100) / 100;
   const distToSeg = (p, a, b) => {
@@ -377,6 +404,9 @@ window.addEventListener('DOMContentLoaded', async () => {
       const wcx = wBox.x + wBox.w / 2;
       const dxc = wcx - (jBox.x + jBox.w / 2);
       if (jt) g.setAttribute('transform', 'translate(' + (+jt[1] + dxc) + ', ' + jt[2] + ')');
+      // 汇合点圆点是节点 g 的同级元素（保 getBBox 为零），g 平移时圆点要同步
+      const jDot = g.parentNode && g.parentNode.querySelector('circle.junction-dot[data-junction="' + jId + '"]');
+      if (jDot) jDot.setAttribute('cx', String(+jDot.getAttribute('cx') + dxc));
       jBox.x += dxc;
       const jcx = jBox.x + jBox.w / 2, jcy = jBox.y + jBox.h / 2;
       // J-->W：竖直 ▼ 进顶角（直线，主循环早退原样保留；菱形不做端点贴形）
@@ -432,6 +462,10 @@ window.addEventListener('DOMContentLoaded', async () => {
         // 矩形族目标才做穿透检查（polygon 目标斜边端点本在包围盒内，恒误判）
         const rectFamDst = dstG && !dstG.querySelector('polygon');
         ctx = { boxes, srcId, dstId, edgeHit: xEdge, pen: rectFamDst ? penInto(tBox) : null, dstBox: tBox };
+        // 隐形汇合点目标（包围盒已坍缩为零尺寸）：入边端点改为中心点，多方向入边汇聚
+        // 到同一点。零尺寸盒使四边等距、下方 endDir 两分支自然不命中（无方向约束），
+        // 端点贴形对端点即中心的边是恒等操作（x/y 都被钳到中心），均无需特判。
+        if (tBox.w === 0 && tBox.h === 0) endPts = [...pts.slice(0, -1), [round2(tBox.x), round2(tBox.y)]];
         const S0 = pts[0], E0 = pts[pts.length - 1];
         ds = [
           ['T', distToSeg(E0, [tBox.x, tBox.y], [tBox.x + tBox.w, tBox.y])],
@@ -471,6 +505,11 @@ window.addEventListener('DOMContentLoaded', async () => {
           } else endDir = 'V';
         }
       }
+    }
+    // 源是隐形汇合点（零尺寸包围盒）：出边起点同样改为中心点，与入边汇于同一点
+    if (srcId) {
+      const sb = boxesOf(svg)[srcId];
+      if (sb && sb.w === 0 && sb.h === 0) endPts = [[round2(sb.x), round2(sb.y)], ...endPts.slice(1)];
     }
     let sp = sp0 || ortho(endPts, endDir, ctx);
     // 躺平进顶/底边救援：端点贴目标顶/底边（≤2.5px）、方向合规要求竖进，但所有竖进候选
@@ -557,6 +596,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         for (const id in ctx.boxes) {
           if (id === ctx.srcId || id === ctx.dstId) continue;
           const bx = ctx.boxes[id];
+          if (bx.w === 0 && bx.h === 0) continue;  // 零尺寸=隐形汇合点，无盒缘可贴
           if (x2 < bx.x + 1 || x1 > bx.x + bx.w - 1) continue;
           if (Math.abs(a[1] - bx.y) < 2.5) { yTry = round2(bx.y - 8); up = true; hugId = id; break; }
           if (Math.abs(a[1] - (bx.y + bx.h)) < 2.5) { yTry = round2(bx.y + bx.h + 8); up = false; hugId = id; break; }
@@ -603,6 +643,7 @@ window.addEventListener('DOMContentLoaded', async () => {
             for (const id2 in ctx.boxes) {
               if (id2 === ctx.srcId || id2 === ctx.dstId) continue;
               const b2 = ctx.boxes[id2];
+              if (b2.w === 0 && b2.h === 0) continue;  // 汇合点不算盒缘
               if (hx2 < b2.x + 1 || hx1 > b2.x + b2.w - 1) continue;
               if (Math.abs(hSeg[0][1] - b2.y) < 2.5 || Math.abs(hSeg[0][1] - (b2.y + b2.h)) < 2.5) { rehug = true; break; }
             }

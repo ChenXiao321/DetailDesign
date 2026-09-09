@@ -18,7 +18,9 @@ console.log('mermaid 错误标记 =', errCount);
 // 诊断②：ORTHO 是否执行——data-processed 标记或直接看边路径形态
 console.log('data-processed 数 =', (dump.match(/data-processed/g) || []).length);
 // 诊断③：抽查边 d 属性——直角化后只含 M/L 命令；dagre 原始含 C/L 混合或斜 L
-const ds = [...dump.matchAll(/<path[^>]*class="[^"]*flowchart-link[^"]*"[^>]*d="([^"]+)"/g)].map(m => m[1]);
+// 坑：flowchart 边属性顺序是 d 在前 class 在后，两种顺序都要匹配，否则只数到序列图边
+const ds = [...dump.matchAll(/<path[^>]*class="[^"]*flowchart-link[^"]*"[^>]*d="([^"]+)"/g)].map(m => m[1])
+  .concat([...dump.matchAll(/<path[^>]*d="([^"]+)"[^>]*class="[^"]*flowchart-link[^"]*"/g)].map(m => m[1]));
 let ortho = 0, diag = 0;
 for (const d of ds) {
   const segs = [...d.matchAll(/L(-?[\d.]+)[ ,](-?[\d.]+)/g)].map(m => [+m[1], +m[2]]);

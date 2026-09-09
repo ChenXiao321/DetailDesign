@@ -5065,6 +5065,14 @@ window.addEventListener('DOMContentLoaded', async () => {
     const a = c[c.length - 2], b = c[c.length - 1];
     return Math.abs(b[0] - a[0]) >= Math.abs(b[1] - a[1]) ? 'H' : 'V';
   };
+  // 折线含斜段判定：dagre 兜底返回的原始路径带斜线——角部平移/躺平救援的试探调用
+  // 原先不查这一点，斜线兜底会被当成「干净横进路由」误收（v1 Startup svg#14 的
+  // CHECK_SAFE_STATE-->END 斜线真凶：主调用本已找到直角路由，救援用斜线覆盖）
+  const hasDiag = (c) => {
+    for (let i = 0; i + 1 < c.length; i++)
+      if (Math.abs(c[i + 1][0] - c[i][0]) > 0.6 && Math.abs(c[i + 1][1] - c[i][1]) > 0.6) return true;
+    return false;
+  };
   // 候选路由穿盒检查：任一段与其他节点包围盒（2px 缩边 AABB）相交即算穿盒（源/目标自身除外）
   const crossBoxesOf = (boxes, srcId, dstId) => (cand) => {
     const hit = [];
@@ -5173,12 +5181,125 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
     return null;
   };
+  // 深搜兜底（仅在两拐候选全脏、即将退回 dagre 斜线时启用；ortho 第 4 参传入才生效）：
+  // 三拐模板 + 菱形出边归一顶角 + 目标盒换边进入。只接受零穿盒/零穿目标盒/零穿边且末段
+  // 方向合规的干净路由——找不到就维持原 dagre 兜底，对现有干净边零回归。
+  // 典型锁死：EcuStp Startup CHECK_SAFE_STATE--否-->END——兄弟否边的 L 形墙（竖干线+入顶边
+  // 横臂）与下方盒列把出口口袋四面封死，两拐数学上无解，三拐 H-V-H-V 改从顶边进才通。
+  const deepRoute = (pts, endDir0, ctx, dc) => {
+    const S = pts[0], E = pts[pts.length - 1];
+    const xBoxes = crossBoxesOf(ctx.boxes, ctx.srcId, ctx.dstId);
+    const edgeHit = ctx.edgeHit, pen = ctx.pen ? ctx.pen : () => false;
+    const tBox = ctx.dstBox, mids = pts.slice(1, -1);
+    const bb = bboxOf([S, E]), M = 260;
+    const xS = new Set(), yS = new Set();
+    xS.add(round2((S[0] + E[0]) / 2)); xS.add(round2(S[0])); xS.add(round2(E[0]));
+    yS.add(round2((S[1] + E[1]) / 2)); yS.add(round2(S[1])); yS.add(round2(E[1]));
+    if (mids.length) { xS.add(round2(median(mids.map((p) => p[0])))); yS.add(round2(median(mids.map((p) => p[1])))); }
+    // 干线通道池：路由包围盒 ±260 内的盒缘外 8px、其他边的横/竖段 ±8
+    for (const id in ctx.boxes) {
+      if (id === ctx.srcId || id === ctx.dstId) continue;
+      const b = ctx.boxes[id];
+      if (b.w === 0 && b.h === 0) continue;
+      if (b.x > bb.x2 + M || b.x + b.w < bb.x1 - M || b.y > bb.y2 + M || b.y + b.h < bb.y1 - M) continue;
+      xS.add(round2(b.x - 8)); xS.add(round2(b.x + b.w + 8));
+      yS.add(round2(b.y - 8)); yS.add(round2(b.y + b.h + 8));
+    }
+    for (const e of dc.edgeList) {
+      if (e === dc.selfE || e.invisible) continue;
+      if (e.bbox.x1 > bb.x2 + M || e.bbox.x2 < bb.x1 - M || e.bbox.y1 > bb.y2 + M || e.bbox.y2 < bb.y1 - M) continue;
+      for (let i = 0; i < e.pts.length - 1; i++) {
+        const a = e.pts[i], b = e.pts[i + 1];
+        if (Math.abs(a[0] - b[0]) < 0.6) { xS.add(round2(a[0] - 8)); xS.add(round2(a[0] + 8)); }
+        else if (Math.abs(a[1] - b[1]) < 0.6) { yS.add(round2(a[1] - 8)); yS.add(round2(a[1] + 8)); }
+      }
+    }
+    const inX = (x) => x > bb.x1 - M && x < bb.x2 + M && (!dc.vb || (x > dc.vb.x1 + 1 && x < dc.vb.x2 - 1));
+    const inY = (y) => y > bb.y1 - M && y < bb.y2 + M && (!dc.vb || (y > dc.vb.y1 + 1 && y < dc.vb.y2 - 1));
+    const xs = [...xS].filter(inX).slice(0, 20), ys = [...yS].filter(inY).slice(0, 20);
+    const clean = (c, axis) => {
+      if (axis && dirOf(c) !== axis) return false;
+      if (xBoxes(c).length) return false;
+      if (pen(c)) return false;
+      if (edgeHit && edgeHit(c)) return false;
+      if (dc.vb) { const cb = bboxOf(c); if (cb.x1 < dc.vb.x1 + 1 || cb.x2 > dc.vb.x2 - 1 || cb.y1 < dc.vb.y1 + 1 || cb.y2 > dc.vb.y2 - 1) return false; }
+      return true;
+    };
+    const seen = new Set();
+    let bestC = null, bestK = null;
+    const take = (c, sideChanged) => {
+      const key = c.map((q) => q[0] + ',' + q[1]).join(' ');
+      if (seen.has(key)) return;
+      seen.add(key);
+      const k = [sideChanged ? 1 : 0, fitScore(c, pts)];
+      if (!bestK || k[0] < bestK[0] || (k[0] === bestK[0] && k[1] < bestK[1] - 1e-6)) { bestK = k; bestC = c; }
+    };
+    // 源变体：原出边点 + 菱形四顶角（首段必须沿顶角外法线，防止线穿回菱形内部）
+    const srcVars = [{ p: S, n: null }];
+    if (dc.srcVerts) for (const v of dc.srcVerts) srcVars.push(v);
+    const firstOK = (c, n) => {
+      if (!n) return true;
+      const a = c[0], b = c[1];
+      if (Math.abs(b[0] - a[0]) < 0.6 && Math.abs(b[1] - a[1]) < 0.6) return true;
+      if (n[0] !== 0) return Math.abs(b[1] - a[1]) < 0.6 && (b[0] - a[0]) * n[0] > 0.6;
+      return Math.abs(b[0] - a[0]) < 0.6 && (b[1] - a[1]) * n[1] > 0.6;
+    };
+    // 目标边变体：原边（端点不动，只加三拐）+ 其余三边换边进入（端点沿边取池内通道，
+    // 与既有入边隔 ≥14px；池内无通道时取空档中点）。polygon 目标斜边与 bbox 不贴合，不换边。
+    const pad = dc.dstRx > 0 ? dc.dstRx : 4;
+    const sideAxis = { T: 'V', B: 'V', L: 'H', R: 'H' };
+    const dstVars = [{ axis: endDir0, E2: E, changed: false }];
+    if (tBox && !dc.dstPoly && !(tBox.w === 0 && tBox.h === 0)) {
+      const spans = {
+        T: [tBox.x + pad, tBox.x + tBox.w - pad, tBox.y, 'x'],
+        B: [tBox.x + pad, tBox.x + tBox.w - pad, tBox.y + tBox.h, 'x'],
+        L: [tBox.y + pad, tBox.y + tBox.h - pad, tBox.x, 'y'],
+        R: [tBox.y + pad, tBox.y + tBox.h - pad, tBox.x + tBox.w, 'y'],
+      };
+      for (const side of ['T', 'B', 'L', 'R']) {
+        if (side === dc.origSide) continue;
+        const sp3 = spans[side], lo = sp3[0], hi = sp3[1], fixed = sp3[2], dim = sp3[3];
+        if (hi - lo < 8) continue;
+        const pool = (dim === 'x' ? xs : ys).filter((v) => v > lo + 2 && v < hi - 2);
+        const occ = (dc.occ[side] || []).slice().sort((a, b) => a - b);
+        const cand = new Set();
+        for (const v of pool) if (!occ.some((o) => Math.abs(o - v) < 14)) cand.add(round2(v));
+        let prev = lo;
+        for (const o of occ) { if (o - 14 - prev >= 20) cand.add(round2((prev + o - 14) / 2)); prev = Math.max(prev, o + 14); }
+        if (hi - prev >= 20) cand.add(round2((prev + hi) / 2));
+        if (!occ.length) cand.add(round2((lo + hi) / 2));
+        for (const v of [...cand].slice(0, 5)) {
+          dstVars.push({ axis: sideAxis[side], E2: dim === 'x' ? [v, fixed] : [fixed, v], changed: true });
+        }
+      }
+    }
+    for (const sv of srcVars) {
+      for (const dv of dstVars) {
+        const S2 = sv.p, E2 = dv.E2, axis = dv.axis;
+        const cands = [
+          [S2, [S2[0], E2[1]], E2],
+          [S2, [E2[0], S2[1]], E2],
+        ];
+        for (const mx of xs) cands.push([S2, [mx, S2[1]], [mx, E2[1]], E2]);
+        for (const my of ys) cands.push([S2, [S2[0], my], [E2[0], my], E2]);
+        // 三拐：末段方向已定——竖进走 H-V-H-V（先横），横进走 V-H-V-H（先竖）；无约束两种都试
+        if (axis !== 'H') for (const a of xs) for (const b of ys) cands.push([S2, [a, S2[1]], [a, b], [E2[0], b], E2]);
+        if (axis !== 'V') for (const a of ys) for (const b of xs) cands.push([S2, [S2[0], a], [b, a], [b, E2[1]], E2]);
+        for (const c of cands) {
+          if (!firstOK(c, sv.n)) continue;
+          if (!clean(c, axis)) continue;
+          take(c, dv.changed);
+        }
+      }
+    }
+    return bestC;
+  };
   // 选路优先级（字典序）：不穿盒 > 末段方向合规 > 不穿其他边 > 拟合分。候选不够时两轮扩容：
   // ① 基础候选穿到哪些盒，就把竖/横干线挪到盒缘外 8px 再试（N5-->N6 需在 N3 右缘外穿行）；
   // ② 仍穿边就把干线挪到被穿越段的端点外 8px 再试一轮。
   // 扩容后仍不干净、且 dagre 原始路由干净（不穿盒/不穿边/方向合规）→ 保留原始斜线不直角化
   // （D2-->END 一类：dagre 本已左绕 B2，两点直线早退曾把它拉成竖穿 B2 盒）。
-  const ortho = (pts, endDir, ctx) => {
+  const ortho = (pts, endDir, ctx, deepCtx) => {
     const S = pts[0], E = pts[pts.length - 1];
     const xBoxes = ctx ? crossBoxesOf(ctx.boxes, ctx.srcId, ctx.dstId) : () => [];
     const edgeHit = ctx ? ctx.edgeHit : null;
@@ -5232,8 +5353,13 @@ window.addEventListener('DOMContentLoaded', async () => {
         consider(build(uniq([round2(ha[0] - 8), round2(ha[0] + 8), round2(hb2[0] - 8), round2(hb2[0] + 8)]), uniq([round2(ha[1] - 8), round2(ha[1] + 8), round2(hb2[1] - 8), round2(hb2[1] + 8)])));
       }
     }
-    // 仍不干净：dagre 原始路由干净（不穿盒/不穿目标盒内部/不穿边、方向合规）则保留原始斜线
+    // 仍不干净：先深搜（三拐+菱形顶角出边+目标盒换边进入，仅主调用传 deepCtx 时启用，
+    // 只接受零穿盒/零穿边/方向合规的干净路由）；仍无解且 dagre 原始路由干净则保留原始斜线
     if (bk && (bk[0] > 0 || bk[1] > 0)) {
+      if (deepCtx) {
+        const dr = deepRoute(pts, endDir, ctx, deepCtx);
+        if (dr) { dr._deep = 1; return dr; }
+      }
       const origBad = xBoxes(pts).length > 0 || pen(pts) || (endDir && dirOf(pts) !== endDir) || (edgeHit && edgeHit(pts));
       if (!origBad) return pts.slice();
     }
@@ -5357,11 +5483,12 @@ window.addEventListener('DOMContentLoaded', async () => {
   // 避让已定稿的），第二遍从 dagre 原始路径对所有边重选——消除处理顺序死锁（A 避让 B 的
   // dagre 原始斜线而选了交叉路由，B 随后改道，A 本有干净路由却无从得知：svg#51 D1-->R1
   // 的最优 my930.66 第一遍被 D0-->END 的原始干线否决，第二遍才轮到它）。
-  const routeEdge = (p, pts) => {
+  const routeEdge = (p, pts, useDeep) => {
     const svg = p.closest('svg');
     // 边 id L_<源>_<目标>_<n>：按下划线拆出源/目标节点（节点 id 本身含下划线，逐位试拆），取端点所在边的法线约束
     let endDir = null, endPts = pts, sp0 = null, ctx = null, xBoxes = null, xEdge = null;
     let srcId = null, dstId = null, tBox = null, dstG = null, ds = null;
+    let diagReject = 0;  // 角部平移/躺平救援拒收过 dagre 斜线兜底（= 旧管线此边会留斜线）
     const selfE = routesOf(svg).byEl.get(p) || null;
     const em = (p.getAttribute('id') || '').match(/^L_(.+)_\d+$/);
     if (em) {
@@ -5417,7 +5544,9 @@ window.addEventListener('DOMContentLoaded', async () => {
             const nx = sgn > 0 ? tBox.x + tBox.w : tBox.x;
             const shifted = [...pts.slice(0, -1), [nx, E0[1]]];
             const trySp = ortho(shifted, 'H', ctx);
-            if (trySp && dirOf(trySp) === 'H' && !xBoxes(trySp).length && !xEdge(trySp)) {
+            // 斜段不收：ortho 在两拐全脏时会退回 dagre 原始斜线，那不算「干净横进路由」
+            if (trySp && hasDiag(trySp)) diagReject = 1;
+            if (trySp && !hasDiag(trySp) && dirOf(trySp) === 'H' && !xBoxes(trySp).length && !xEdge(trySp)) {
               endPts = shifted;  // 平移到侧缘（y 不变，与兄弟边同高）
               endDir = 'H';
               sp0 = trySp;
@@ -5431,14 +5560,61 @@ window.addEventListener('DOMContentLoaded', async () => {
       const sb = boxesOf(svg)[srcId];
       if (sb && sb.w === 0 && sb.h === 0) endPts = [[round2(sb.x), round2(sb.y)], ...endPts.slice(1)];
     }
-    let sp = sp0 || ortho(endPts, endDir, ctx);
+    // 深搜兜底上下文（仅第三遍（useDeep）对前两遍仍落斜线兜底的边构建——干净边的选路
+    // 与旧管线逐像素一致，深搜 corridor 不会把干净邻居挤走；~~~ 隐形钉位边不传）
+    let deepCtx = null;
+    if (useDeep && ctx && tBox && !(selfE && selfE.invisible)) {
+      // 源为菱形（polygon 恰 4 顶点）时提供四顶角变体：顶角外法线取相对形心的主轴方向
+      let srcVerts = null;
+      const srcG = srcId ? svg.querySelector('g.node[id^="flowchart-' + srcId + '-"]') : null;
+      const spoly = srcG ? srcG.querySelector('polygon') : null;
+      if (spoly) {
+        const gm = (srcG.getAttribute('transform') || '').match(/translate\(\s*(-?[\d.]+)[ ,]\s*(-?[\d.]+)\s*\)/);
+        const tm = (spoly.getAttribute('transform') || '').match(/translate\(\s*(-?[\d.]+)[ ,]\s*(-?[\d.]+)\s*\)/);
+        const ox = (gm ? +gm[1] : 0) + (tm ? +tm[1] : 0), oy = (gm ? +gm[2] : 0) + (tm ? +tm[2] : 0);
+        const vp = (spoly.getAttribute('points') || '').trim().split(/\s+/).map((q) => { const w = q.split(','); return [round2(+w[0] + ox), round2(+w[1] + oy)]; });
+        if (vp.length === 4) {
+          const cx = (vp[0][0] + vp[1][0] + vp[2][0] + vp[3][0]) / 4, cy = (vp[0][1] + vp[1][1] + vp[2][1] + vp[3][1]) / 4;
+          srcVerts = vp.map((q) => {
+            const dx = q[0] - cx, dy = q[1] - cy;
+            return { p: q, n: Math.abs(dx) >= Math.abs(dy) ? [dx > 0 ? 1 : -1, 0] : [0, dy > 0 ? 1 : -1] };
+          });
+        }
+      }
+      // 目标盒四边已被兄弟边占用的入点（沿边坐标，供换边进入时间隔 ≥14px）
+      const occ = { T: [], B: [], L: [], R: [] };
+      const reg2 = routesOf(svg);
+      for (const e of reg2.list) {
+        if (e === selfE || e.invisible || e.dstId !== dstId) continue;
+        const P = e.pts[e.pts.length - 1];
+        const ds2 = [
+          ['T', distToSeg(P, [tBox.x, tBox.y], [tBox.x + tBox.w, tBox.y])],
+          ['B', distToSeg(P, [tBox.x, tBox.y + tBox.h], [tBox.x + tBox.w, tBox.y + tBox.h])],
+          ['L', distToSeg(P, [tBox.x, tBox.y], [tBox.x, tBox.y + tBox.h])],
+          ['R', distToSeg(P, [tBox.x + tBox.w, tBox.y], [tBox.x + tBox.w, tBox.y + tBox.h])],
+        ].sort((a, b) => a[1] - b[1]);
+        if (ds2[0][1] <= 12) occ[ds2[0][0]].push(round2(ds2[0][0] === 'T' || ds2[0][0] === 'B' ? P[0] : P[1]));
+      }
+      const rect2 = dstG ? dstG.querySelector('rect[rx]') : null;
+      const vb2 = svg.viewBox && svg.viewBox.baseVal;
+      deepCtx = {
+        srcVerts, occ,
+        dstRx: rect2 ? +(rect2.getAttribute('rx') || 0) : 0,
+        dstPoly: !!(dstG && dstG.querySelector('polygon')),
+        edgeList: reg2.list, selfE,
+        vb: vb2 ? { x1: vb2.x, y1: vb2.y, x2: vb2.x + vb2.width, y2: vb2.y + vb2.height } : null,
+        origSide: ds && ds[0][1] <= 12 ? ds[0][0] : null,
+      };
+    }
+    let sp = sp0 || ortho(endPts, endDir, ctx, deepCtx);
     // 躺平进顶/底边救援：端点贴目标顶/底边（≤2.5px）、方向合规要求竖进，但所有竖进候选
     // 都被穿盒/穿边否决时，正交化只能选出末段水平的躺平箭头（IoMcuAdc GetAdcRaw
     // D3--否-->W2：C2 盒封死 x≤652 走廊、兄弟边 D4→W3 的横干线封死 x>601 走廊，竖进
     // 数学上无解）。此时把端点平移到朝来路一侧的侧边中点横进（▶ 侧缘进，同侧向汇合
     // 画法）；polygon 目标（平行四边形）按斜边实际位置求该 y 的边 x——直接钉 bbox
     // 侧边会悬空（W2 bbox 左边 527 vs 斜边实际 538）。无干净横进路由则保留躺平原样。
-    if (sp && !sp0 && tBox && ds && endDir === 'V' && dirOf(sp) === 'H' &&
+    // 深搜路由（sp._deep）已自主选定入边与方向，不再做本救援（会把换边进入误当躺平再搬动）。
+    if (sp && !sp0 && !sp._deep && tBox && ds && endDir === 'V' && dirOf(sp) === 'H' &&
         (ds[0][0] === 'T' || ds[0][0] === 'B') && ds[0][1] <= 2.5 && sp.length >= 2) {
       const trunkX = sp[sp.length - 2][0];
       const sideCh = trunkX < tBox.x ? 'L' : trunkX > tBox.x + tBox.w ? 'R' : null;
@@ -5460,11 +5636,20 @@ window.addEventListener('DOMContentLoaded', async () => {
           if (xs.length >= 2) sideX = round2(sideCh === 'L' ? Math.min.apply(null, xs) : Math.max.apply(null, xs));
         }
         const shifted = [...endPts.slice(0, -1), [sideX, yMid]];
-        const trySp = ortho(shifted, 'H', ctx);
-        if (trySp && dirOf(trySp) === 'H' && !xBoxes(trySp).length && !(ctx.pen && ctx.pen(trySp)) && !xEdge(trySp)) {
+        // 带深搜：两拐全脏时深搜层（三拐+换边进入）仍可能找到干净横进路由；
+        // 找不到则 ortho 退回 dagre 原始斜线——斜段必须拒收，否则像 v1 Startup svg#14
+        // 那样把主调用已找到的直角路由覆盖成斜线
+        const trySp = ortho(shifted, 'H', ctx, deepCtx);
+        if (trySp && hasDiag(trySp)) diagReject = 1;
+        if (trySp && !hasDiag(trySp) && dirOf(trySp) === 'H' && !xBoxes(trySp).length && !(ctx.pen && ctx.pen(trySp)) && !xEdge(trySp)) {
           endPts = shifted;
           endDir = 'H';
           sp = trySp;
+        } else if (deepCtx) {
+          // 横进侧缘无解时，退回竖进顶/底边做三拐深搜（主调用只试过 ≤2 拐——
+          // v1 Startup svg#14：口袋被兄弟边 L 墙封死，三拐 H-V-H-V 绕柱进顶边才通）
+          const dv = deepRoute(endPts, 'V', ctx, deepCtx);
+          if (dv) { dv._deep = 1; sp = dv; }
         }
       }
     }
@@ -5598,6 +5783,9 @@ window.addEventListener('DOMContentLoaded', async () => {
         if (cand && dirOf(cand) === dirOf(sp) && clean(cand)) { sp = cand; break; }
       }
     }
+    // 标记需要第三遍深搜的边：结果仍带斜段（dagre 兜底被保留），或角部平移/躺平救援
+    // 拒收过斜线兜底（旧管线会收进斜线）。隐形钉位边/无目标盒边无深搜上下文，不标。
+    if (!useDeep && sp && ctx && !(selfE && selfE.invisible) && (hasDiag(sp) || diagReject)) sp._needDeep = 1;
     return sp;
   };
   // 两遍选路 + 统一落笔：entry.orig 存 dagre 原始路径（登记表按当前 d 惰性建立，此时即
@@ -5619,10 +5807,24 @@ window.addEventListener('DOMContentLoaded', async () => {
       const orig = pass === 0 ? parsePts(p.getAttribute('d') || '') : (e && e.orig);
       if (!orig || orig.length < 2) return;
       if (e && pass === 0) e.orig = orig;
-      const sp = routeEdge(p, orig);
-      if (e) { e.pts = sp.map((q) => [q[0], q[1]]); e.bbox = bboxOf(e.pts); }
+      const sp = routeEdge(p, orig, false);
+      if (e) {
+        if (sp && sp._needDeep) e.needDeep = 1;
+        e.pts = sp.map((q) => [q[0], q[1]]); e.bbox = bboxOf(e.pts);
+      }
     });
   }
+  // 第三遍：仅前两遍仍落斜线兜底（或旧管线会收 dagre 斜线）的边用深搜重选——其余边保持
+  // 前两遍结果逐像素不变，深搜 corridor 不会把干净邻居挤走（零回归约束：TLF 实测两遍全量
+  // 重选会让 14 条原本干净的路由被修好的边挤到画布边缘）
+  edgeEls.forEach((p) => {
+    const svg = p.closest('svg');
+    const e = routesOf(svg).byEl.get(p);
+    if (!e || !e.orig || !e.needDeep) return;
+    const sp = routeEdge(p, e.orig, true);
+    e.pts = sp.map((q) => [q[0], q[1]]);
+    e.bbox = bboxOf(e.pts);
+  });
   edgeEls.forEach((p) => {
     const svg = p.closest('svg');
     const e = routesOf(svg).byEl.get(p);

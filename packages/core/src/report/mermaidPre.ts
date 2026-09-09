@@ -99,6 +99,7 @@ export function lintFlowchartStructure(src: string): string[] {
   const outReal = new Map<string, { target: string; label: string }[]>();
   const inReal = new Set<string>();
   const touched = new Set<string>();           // 任意连线（含 ~~~）涉及
+  const outAny = new Set<string>();            // 有任何出边（含 ~~~ 钉位）
 
   const ID = /^\s*([A-Za-z_]\w*)/;
   const idOf = (seg: string): string | null => (seg.match(ID) ?? [])[1] ?? null;
@@ -137,6 +138,7 @@ export function lintFlowchartStructure(src: string): string[] {
         for (let i = 0; i + 1 < ids.length; i++) {
           const a = ids[i], b = ids[i + 1];
           touched.add(a); touched.add(b);
+          outAny.add(a);
           if (!isInvisible) {
             const lbl = (labeled.find(l => l.from === a) ?? { label: '' }).label;
             (outReal.get(a) ?? outReal.set(a, []).get(a)!).push({ target: b, label: lbl });
@@ -156,7 +158,8 @@ export function lintFlowchartStructure(src: string): string[] {
   const isTerminal = (label: string) => /结束|^end$|返回|return/i.test(label.replace(/<br\s*\/?>/gi, ''));
   const isPill = (id: string) => new RegExp(`\\b${id}\\s*\\(\\[`).test(src);  // 胶囊=端子，天然豁免出边检查
   const isStart = (label: string) => /^(开始|Start)$/i.test(label.replace(/<br\s*\/?>/gi, '').trim());
-  // 空标签节点（id[" "]）是隐形汇合点/泳道入口约定（配 transparent style + ~~~ 钉位），豁免出边检查
+  // 空标签节点（id[" "]）是隐形汇合点约定（配 transparent style）；出边可以是 --> 或 ~~~ 钉位，
+  // 但「有真实入边却零出边」就是断链死端（实测：Qwen 把 SG_ENTRY 入口点写完入边就忘了接子图内首节点）
   const isJunction = (label: string) => label.trim() === '';
 
   // ④ 菱形 是/否 同目标（在出边收集里按标签查）
@@ -213,6 +216,11 @@ export function lintFlowchartStructure(src: string): string[] {
     }
     if (!isTerminal(label) && !isPill(id) && !isJunction(label) && !(outReal.get(id)?.length)) {
       problems.push(`节点 ${id} 没有出边，流程在此中断：除结束/返回节点外每个节点都必须有出边，空分支（do nothing）也要连到汇合点或结束节点`);
+      continue;
+    }
+    // ⑨ 隐形汇合点死端：有真实入边但零出边（~~~ 钉位也算出边），流程在圆点处中断
+    if (isJunction(label) && inReal.has(id) && !outAny.has(id)) {
+      problems.push(`隐形汇合点 ${id}[" "] 有入边但没有任何出边，流程在汇合点处中断：请把它接到后续节点（如 ${id} --> <下一节点id>；若它本是子图入口，可直接删掉该汇合点、让入边连到子图内第一个节点）`);
     }
   }
   return problems;

@@ -126,6 +126,8 @@ export function buildFlowchartPrompt(
   lines.push(`    - 连线的每一端都必须是已做形状声明的节点 id：引用从未声明的 id 会渲染成以 id 为文字的裸盒；`);
   lines.push(`      同一批节点只用一个命名方案，不要先按一种 id 声明、连线时又换另一套 id（这是裸盒的最常见成因）`);
   lines.push(`    - 多条分支汇合时如需汇合点，用标签为一个空格的隐形节点 J[" "]（配 style J fill:transparent,stroke:transparent）`);
+  lines.push(`    - 隐形汇合点也必须有出边（J --> 下一节点）：汇合点不是终点，流程不得在圆点处中断；`);
+  lines.push(`      若只是想把线引进某个 subgraph，不要用入口汇合点，让入边直接连到 subgraph 内的第一个节点`);
   lines.push(`12. 以下写法一律禁止：X = Y 形式的别名行（flowchart 没有别名语法）；连线目标写 subgraph 的 id；`);
   lines.push(`    行尾只有 --> 没有目标的连线`);
   return { system: SYSTEM_DESIGNER, user: lines.join('\n') };

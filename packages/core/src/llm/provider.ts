@@ -116,14 +116,31 @@ export class MockProvider implements LLMProvider {
   async generate(system: string, user: string): Promise<string> {
     this.calls.push({ system, user });
     if (user.includes('flowchart')) {
-      return [
+      const lines = [
         'flowchart TD',
         '    A(["开始"]) --> B["处理步骤"]',
         '    B --> C{"判断条件"}',
         '    C -- 是 --> D["分支处理"]',
         '    C -- 否 --> E(["结束"])',
         '    D --> E',
-      ].join('\n');
+      ];
+      // 条件编译冒烟配合：prompt 注入的宏（"- 条件编译:" / "- 函数体内条件编译段:" 行）必须进图，
+      // 否则 validateFlowchart 的虚线框存在性硬校验会让 mock 冒烟在带宏模块上恒失败。
+      // 只从注入行取宏——规则 6 的示例文本（XXX_ENABLE/STD_ON）也含大写标识符，不能误捞。
+      const macros = new Set<string>();
+      for (const m of user.matchAll(/^\s*-\s*(?:函数体内)?条件编译[::][^\n]*/gm)) {
+        for (const mm of m[0].matchAll(/\b[A-Z][A-Z0-9_]{3,}\b/g)) macros.add(mm[0]);
+      }
+      if (macros.size > 0) {
+        lines.push(
+          '    subgraph SG1[" "]',
+          `        SG1_NOTE["注：仅在 ${[...macros].join(' 或 ')} 生效时参与编译"]`,
+          '        SG1_NOTE ~~~ B',
+          '    end',
+          '    style SG1 fill:transparent,stroke:#888888,stroke-dasharray:6 4',
+        );
+      }
+      return lines.join('\n');
     }
     if (user.includes('stateDiagram')) {
       return [
@@ -140,8 +157,12 @@ export class MockProvider implements LLMProvider {
         'sequenceDiagram',
         '    actor OS',
         '    OS->>Module: Startup()',
-        '    Module->>Callout: CalloutGetCoreId()',
-        '    Module->>Gp_RstM: Init()',
+        '    Module->>Module: CalloutGetCoreId()',
+        '    alt 主核',
+        '        Module->>Gp_RstM: Init()',
+        '    else 从核',
+        '        Module->>Module: 自旋等待主核屏障',
+        '    end',
       ].join('\n');
     }
     return `[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 ${user.length} 字符）。`;

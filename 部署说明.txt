@@ -37,6 +37,25 @@
   产物 lld_design.json 拷回开发机后即可离线出报告：
   node packages/cli/dist/index.js report 测试模块/Gp_EcuStpStdn --out 测试产出/Gp_EcuStpStdn_qwen
 
+  # 渲染质量验收（内网可直接跑，需机器装有 Edge 或 Chrome 之一）：
+  # 预渲染出 SVG 成品版 lld_report.html + 斜线计数/交叉穿盒/箭头朝向审计，打印中文量化报告
+  node packages/cli/dist/index.js audit 测试模块/Gp_EcuStpStdn --out 测试产出/Gp_EcuStpStdn_qwen
+  # 浏览器装在非默认路径时：set LLD_EDGE_PATH=<msedge.exe 或 chrome.exe 完整路径>
+
+■ 缩写表定制（可选，两种提供方式）
+  ① 外部人员提供 Word 缩写表：lld.config.json 加 "abbreviationsDoc": "项目缩写表.docx"
+     （docx 内为两列表格：缩写|定义，表头含「缩写」「定义/描述/含义」字样自动识别，
+     无表头按前两列取，多表自动合并；路径相对运行目录）。
+     配置后 3.1 整章以外部表为唯一定义来源（内建词典不兜底），report/audit 会打印
+     「正文出现但外部表未定义」的缺口名单——把名单反馈维护方补 docx 即可。
+  ② 模块特有/临时补充：lld.config.json 加
+     "abbreviations": {"WWD": "Window Watchdog 窗口看门狗", ...}。
+     两者同时在场：JSON 同名覆盖 docx 条目、新增补入；不配 docx 时 JSON 与内建
+     29 条词典合并（原行为），report/audit 均生效。
+     外部定义同时注入 gen：描述类生成（函数描述/配置说明/类型注释/外部接口说明/5.1）
+     的 prompt 按出现过滤附带术语表（Spi_Setup 这类标识符分段也算 SPI 出现），
+     术语口径与外部定义一致；流程图/序列图等结构生成不注入。
+
 ■ 常见问题
   - ping 报 401：apiKey 没改或不对。用 curl 独立验证 key：
       curl http://10.0.75.130:4000/v1/models -H "Authorization: Bearer 真实key"

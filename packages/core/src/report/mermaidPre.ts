@@ -227,6 +227,57 @@ export function lintFlowchartStructure(src: string): string[] {
 }
 
 /**
+ * 序列图结构校验（gen 期硬校验，问题回喂 LLM 重试；报告期可作警告）。
+ * 动机：TLF/IoMcuAdc 实测 Qwen 把分支/循环平铺成普通消息（全图零组合片段），
+ * prompt 规则 4 的软约束不生效。可客观判定的缺陷：
+ *   ① alt/opt/loop 等组合片段与 end 数量不配平（mermaid 词法报错前的中文定位）
+ *   ② else 出现在非 alt 片段内或片段栈为空（孤立 else 是语法错误）
+ *   ③ 消息/注释文本含分支或循环语义关键词，但全图没有任何组合片段（疑似平铺）
+ * 返回问题描述列表（面向模型的中文，含行号），空数组 = 未发现问题。
+ */
+export function lintSequenceStructure(src: string): string[] {
+  if (!/^\s*sequenceDiagram/.test(src)) return [];
+  const problems: string[] = [];
+  const stack: string[] = [];
+  let opened = 0, ended = 0;
+  const texts: string[] = [];
+  src.split('\n').forEach((raw, i) => {
+    const line = raw.trim();
+    if (!line || line.startsWith('%%') || line.startsWith('sequenceDiagram')) return;
+    const open = line.match(/^(alt|opt|loop|par|critical|break)\b/);
+    if (open) { stack.push(open[1]!); opened++; return; }
+    if (/^else\b/.test(line)) {
+      if (stack[stack.length - 1] !== 'alt') {
+        problems.push(`第${i + 1}行 else 没有对应的 alt：else 只能出现在 alt 片段内，请检查片段嵌套`);
+      }
+      return;
+    }
+    if (/^end\b/.test(line)) {
+      ended++;
+      if (stack.length === 0) problems.push(`第${i + 1}行 end 没有对应的组合片段开头（end 多于 alt/opt/loop）`);
+      else stack.pop();
+      return;
+    }
+    // 收集消息文本（A->>B: 文本）与 Note 文本，供平铺检测
+    const msg = line.match(/^[A-Za-z_]\w*\s*(?:->>|-->>|->|-->|->\)|--\))\s*[A-Za-z_]\w*\s*:\s*(.+)$/)
+      ?? line.match(/^Note\s+(?:over|right of|left of)\s+[A-Za-z_]\w*(?:\s*,\s*[A-Za-z_]\w*)?\s*:\s*(.+)$/);
+    if (msg) texts.push(msg[1]);
+  });
+  if (opened !== ended) {
+    problems.push(`组合片段开头（alt/opt/loop 共 ${opened} 个）与 end（${ended} 个）数量不配平：每个片段都必须以 end 结束，请逐一核对`);
+  }
+  if (opened === 0) {
+    // 分支/循环语义关键词（强信号词，避免「当…时」这类弱词误报）
+    const KW = /如果|否则|若|循环|遍历|每个|逐一|逐个|重复|直到|分频|重试/;
+    const hits = texts.filter(t => KW.test(t));
+    if (hits.length > 0) {
+      problems.push(`全图没有任何组合片段，但消息/注释文本含分支或循环语义（如「${hits[0]!.slice(0, 30)}」）：互斥分支用 alt [条件]/else、可选段用 opt [条件]、循环用 loop [循环条件]，禁止把分支/循环平铺成普通消息`);
+    }
+  }
+  return problems;
+}
+
+/**
  * 「结束」节点钉底：dagre 最长路径排名把结束放在其入边来源（多为循环条件菱形）的下一层，
  * 循环体更深时结束会悬在图中间（如 CheckInitRslt：D1 --否--> END 与循环体同层）。
  * 这里在 DAG（去回边）上从「开始」算最长路径深度，从所有不浅于结束的节点各引一条

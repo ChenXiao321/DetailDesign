@@ -2,7 +2,7 @@ import type {
   ModuleModel, ConfigMacro, ConfigUsage, ExternalInterface,
 } from '../model/types.js';
 import { esc, escRaw, functionCard, calloutCard } from './cards.js';
-import { wrapFlowchartLabels, pinEndNodeToBottom, lintMermaidSource, lintFlowchartStructure } from './mermaidPre.js';
+import { wrapFlowchartLabels, pinEndNodeToBottom, lintMermaidSource, lintFlowchartStructure, lintSequenceStructure } from './mermaidPre.js';
 import { mermaidRenderScript } from './renderScript.js';
 
 /** 文件用途说明（4.1 文件说明表）：按角色 + 分析数据生成中文描述 */
@@ -101,15 +101,24 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
 @page { size:A4; margin:12mm; }
 `;
 
-/** 生成完整 HTML 评审报告；传入 mermaidJs（mermaid.min.js 内容）则离线渲染图 */
-export function generateHtmlReport(model: ModuleModel, opts?: { mermaidJs?: string }): string {
+/** 生成完整 HTML 评审报告；传入 mermaidJs（mermaid.min.js 内容）则离线渲染图；
+ *  abbreviations 追加自定义缩写词条（同名覆盖内置词典，新模块族的新缩写经 lld.config.json 配置，免发包）；
+ *  abbreviationsReplace=true 时 3.1 整章以 abbreviations 为唯一定义来源（外部缩写表模式，内置词典不再兜底），
+ *  正文出现但表内未定义的缩写候选经 onAbbreviationGaps 回报名单（供用户反馈外部维护方补表） */
+export function generateHtmlReport(model: ModuleModel, opts?: {
+  mermaidJs?: string;
+  abbreviations?: [string, string][];
+  abbreviationsReplace?: boolean;
+  abbreviationSource?: string;
+  onAbbreviationGaps?: (missing: string[]) => void;
+}): string {
   const fnCount = model.providedFunctions.length + model.internalFunctions.length;
   const generatedCount = [...model.providedFunctions, ...model.internalFunctions].filter(f => f.generated).length;
 
   const diagramBlock = (src: string) => {
     // 生成期静态检查：定界符错误的图源会在浏览器端 mermaid 词法报错整图失败，提前点名；
     // 结构 lint（孤儿节点/幽灵节点/断链等）只警告不阻断，便于 report 阶段发现存量产物问题
-    for (const p of [...lintMermaidSource(src), ...lintFlowchartStructure(src)]) console.warn(`⚠ 图源检查: ${p}\n  图源开头: ${src.split('\n').slice(0, 2).join(' | ').slice(0, 100)}`);
+    for (const p of [...lintMermaidSource(src), ...lintFlowchartStructure(src), ...lintSequenceStructure(src)]) console.warn(`⚠ 图源检查: ${p}\n  图源开头: ${src.split('\n').slice(0, 2).join(' | ').slice(0, 100)}`);
     return opts?.mermaidJs
       ? `<div class="mermaid">${escRaw(wrapFlowchartLabels(pinEndNodeToBottom(src)))}</div>`
       : `<pre class="plantuml">${escRaw(src)}</pre>`;
@@ -318,11 +327,20 @@ ${dd.stateMachine.states.map(s => `<tr><td><code>${esc(s.name)}</code></td><td>$
 <table class="simple"><tr><th>从</th><th>到</th><th>触发条件</th><th>说明</th></tr>
 ${dd.stateMachine.transitions.map(t => `<tr><td><code>${esc(t.from)}</code></td><td><code>${esc(t.to)}</code></td><td>${esc(t.trigger)}</td><td>${esc(t.description)}</td></tr>`).join('')}</table>` : '';
 
-  const seqSection = (dd?.sequences ?? []).map(s => `
+  const seqSection = (dd?.sequences ?? []).map(s => {
+    // 平铺警告（存量产物补网）：入口函数源码含分支/循环而图全图无组合片段——gen 期硬校验拦不住旧产物
+    const scenarioFn = model.providedFunctions.find(f =>
+      s.name.startsWith('Initialization') ? /_(Startup|Init)$/i.test(f.name) : /_MainFunction$/i.test(f.name));
+    if (scenarioFn && /\b(if|for|while|switch)\s*\(/.test(scenarioFn.bodyTextWithPP ?? scenarioFn.bodyText)
+        && !/^\s*(alt|opt|loop|par|critical|break)\b/m.test(s.diagram)) {
+      console.warn(`⚠ 序列图检查: ${s.name} 全图无组合片段，但函数 ${scenarioFn.name} 源码含分支/循环，疑似平铺（需重生成 dynamic）`);
+    }
+    return `
 <h3>5.3.2 序列图：${esc(s.name)} <span class="badge">工作项 · 5.3.2</span></h3>
 <p class="muted">${esc(s.description)}</p>
 ${diagramBlock(s.diagram)}
-<details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">${escRaw(s.diagram)}</pre></details>`).join('\n');
+<details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">${escRaw(s.diagram)}</pre></details>`;
+  }).join('\n');
 
   // ---- 6 配置（6.1 通用 / 6.2 功能，每个配置项一个子章节） ----
   const USAGE_KIND_LABEL: Record<ConfigUsage['kind'], string> = {
@@ -505,10 +523,36 @@ ${callouts.map((e, i) => calloutCard(e, `${calloutSecNo}.${i + 1}`)).join('\n')}
     ['WDI', 'Watchdog Input 看门狗输入信号（TLF35584）'],
     ['WWD', 'Window Watchdog 窗口看门狗'],
   ];
-  const abbrRows = ABBR_CANDIDATES
+  // 用户配置词条优先（同名覆盖内置），其余内置词条照常参与出现过滤；
+  // 外部缩写表模式（abbreviationsReplace）则内置词典不兜底，3.1 以外部词条为唯一来源
+  const userAbbr = opts?.abbreviations ?? [];
+  const userKeys = new Set(userAbbr.map(([a]) => a.toUpperCase()));
+  const replaceMode = opts?.abbreviationsReplace === true;
+  const abbrDict = replaceMode
+    ? userAbbr
+    : [...userAbbr, ...ABBR_CANDIDATES.filter(([a]) => !userKeys.has(a.toUpperCase()))];
+  const abbrRows = abbrDict
     .filter(([abbr]) => new RegExp(`\\b${abbr}\\b`, 'i').test(allText))
     .map(([abbr, desc]) => `<tr><td><code>${esc(abbr)}</code></td><td>${esc(desc)}</td></tr>`)
     .join('');
+  // 外部表模式缺口检测：正文出现的全大写词（2+ 字符、非十六进制、非停用词）在外部表中无定义 → 报名单
+  if (replaceMode && opts?.onAbbreviationGaps) {
+    // 流程图节点/代码层常见非缩写词；名单是提示性的，宁多勿漏由用户甄别
+    const STOP = new Set(['STD', 'ON', 'OFF', 'OK', 'TRUE', 'FALSE', 'NULL', 'VOID',
+      'START', 'END', 'NOTE', 'TODO', 'NA', 'ID', 'IF', 'IN', 'OUT']);
+    const text = allText.replace(/0x[0-9A-Fa-f]+/g, ' ');
+    // 状态机的状态名（UNDEF/ONE/TWO…）是图内标识符不是缩写，不报缺口
+    const stateNames = new Set<string>();
+    for (const m of (model.dynamicDesign?.stateMachine?.diagram ?? '').matchAll(/\b([A-Z][A-Z0-9]{1,11})\b/g)) stateNames.add(m[1]!);
+    const gaps = new Map<string, number>();
+    for (const m of text.matchAll(/\b[A-Z][A-Z0-9]{1,11}\b/g)) {
+      const t = m[0];
+      if (STOP.has(t) || userKeys.has(t) || stateNames.has(t)) continue;
+      gaps.set(t, (gaps.get(t) ?? 0) + 1);
+    }
+    const list = [...gaps.entries()].sort((a, b) => b[1] - a[1]).map(([t]) => t).slice(0, 50);
+    if (list.length > 0) opts.onAbbreviationGaps(list);
+  }
   // 术语定义：Callout 是术语而非缩写，归 3.2；与缩写同样按文档实际出现过滤（无 Callout 的模块不列）
   const DEF_ROWS: [string, string][] = [
     ['可重入性', '函数在同时多次调用，例如操作系统在进程调度过程中，或者单片机、处理器等中断的时候会发生重入的现象。（可重入函数可以在任意时刻被打断，稍后再继续运行，不会丢失数据；不可重入函数不能由超过一个任务共享，除非能确保函数的互斥）'],
@@ -526,7 +570,9 @@ ${callouts.map((e, i) => calloutCard(e, `${calloutSecNo}.${i + 1}`)).join('\n')}
 <h2 id="s3">3 定义和缩写</h2>
 <h3>3.1 缩写</h3>
 <table class="simple"><tr><th>缩写</th><th>描述</th></tr>${abbrRows}</table>
-<p class="muted">注：仅列出本模块文档/代码中实际出现的缩写，可按项目需要补充。</p>
+${replaceMode
+  ? `<p class="muted">注：本表定义由外部缩写表（${esc(opts?.abbreviationSource ?? '外部文档')}）提供，仅列本模块实际出现的条目；新增/修订缩写请联系缩写表维护方，临时补充可写入 lld.config.json 的 abbreviations 节。</p>`
+  : '<p class="muted">注：仅列出本模块文档/代码中实际出现的缩写，可按项目需要补充。</p>'}
 <h3>3.2 定义</h3>
 <table class="simple"><tr><th>名称</th><th>描述</th></tr>${defRows}</table>`;
 

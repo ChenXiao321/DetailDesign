@@ -4,24 +4,13 @@ import * as path from 'node:path';
 import {
   analyzeModule, generateDesign, generateHtmlReport, resolveConfig, normalizeBaseUrl,
   OpenAICompatibleProvider, MockProvider, resolvePolarionConfig,
-  type InputFile, type ModuleModel, type LLMProvider, type LLMConfig, type PolarionConfig,
+  type InputFile, type ModuleModel, type LLMProvider,
 } from '@lld/core';
 import { cmdPolarionExport } from './polarion/exportCmd.js';
 import { cmdPolarionMapIds } from './polarion/mapIdsCmd.js';
 import { cmdPolarionPush } from './polarion/pushCmd.js';
-
-/** lld.config.json（可选，放当前工作目录）：{ "llm": {...}, "polarion": {...} }（已 gitignore，勿提交真实 token） */
-interface LldConfigFile { llm?: Partial<LLMConfig>; polarion?: Partial<PolarionConfig> }
-function loadConfigFile(): LldConfigFile {
-  const p = path.resolve('lld.config.json');
-  if (!fs.existsSync(p)) return {};
-  try {
-    return JSON.parse(fs.readFileSync(p, 'utf-8')) as LldConfigFile;
-  } catch (err) {
-    console.error(`警告: lld.config.json 解析失败，忽略该文件（${(err as Error).message}）`);
-    return {};
-  }
-}
+import { cmdAudit } from './audit.js';
+import { loadConfigFile, resolveAbbreviations, abbrGapLogger } from './config.js';
 
 function collectCFiles(dir: string, base: string, out: InputFile[]): void {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -136,10 +125,14 @@ async function cmdGen(dir: string, outDir: string, mock: boolean, only?: string[
     fs.writeFileSync(designPath, JSON.stringify(model, null, 2), 'utf-8');
   };
   const failures: string[] = [];
+  // 外部缩写定义（abbreviationsDoc/JSON 节）注入文本类生成，术语口径与外部一致
+  const abbr = resolveAbbreviations(loadConfigFile());
+  if (abbr) console.log(`术语表: ${abbr.entries.length} 条（${abbr.replace ? `外部表 ${abbr.source}` : 'JSON 配置'}），按 prompt 内出现过滤注入`);
   await generateDesign(model, provider, {
     only,
     skipExisting: resume,
     failures,
+    abbreviations: abbr?.entries,
     onProgress: msg => {
       save();
       console.error(`  ${msg}`);
@@ -178,7 +171,14 @@ async function cmdReport(outDir: string): Promise<void> {
   } catch {
     console.error('警告: 未找到 mermaid.min.js，图将以源码显示');
   }
-  const html = generateHtmlReport(model, { mermaidJs });
+  const abbr = resolveAbbreviations(loadConfigFile());
+  const html = generateHtmlReport(model, {
+    mermaidJs,
+    abbreviations: abbr?.entries,
+    abbreviationsReplace: abbr?.replace,
+    abbreviationSource: abbr?.source,
+    onAbbreviationGaps: abbrGapLogger,
+  });
   const output = path.join(outDir, 'lld_report.html');
   fs.writeFileSync(output, html, 'utf-8');
   console.log(`评审报告已生成: ${output}`);
@@ -227,6 +227,10 @@ async function main(): Promise<void> {
       if (!dir) break;
       await cmdReport(outDir);
       return;
+    case 'audit':
+      if (!dir) break;
+      await cmdAudit(outDir);
+      return;
     case 'polarion': {
       if (!dir) break;
       const sub = positional[1];
@@ -256,6 +260,8 @@ async function main(): Promise<void> {
                                         --only flowcharts 仅重刷各函数流程图（可叠加函数名缩小范围），保留描述
                                         --only types / externals / description 分别补类型描述 / 非Callout外部接口说明 / 5.1模块功能描述
   lld report <模块目录> [--out 产物目录]    生成 HTML 评审报告 lld_report.html
+  lld audit <模块目录> [--out 产物目录]     渲染质量验收：Edge 预渲染（lld_report.html 成品版）+
+                                        斜线计数/交叉穿盒/箭头朝向审计，打印中文量化报告（需 Edge）
   lld polarion <模块目录> [--out 产物目录] export
                                         生成 Polarion Word 导入文件（<out>/polarion/polarion_workitems.docx + manifest csv + figs/）
   lld polarion <模块目录> [--out 产物目录] map-ids --ids <Polarion导出csv> [--partial]

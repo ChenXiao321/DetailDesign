@@ -8,7 +8,7 @@ import {
   buildCalloutDescriptionPrompt, buildTypeDescriptionPrompt,
   buildExternalDescriptionPrompt, buildModuleDescriptionPrompt,
 } from '../llm/prompts.js';
-import { lintMermaidSource, lintFlowchartStructure } from '../report/mermaidPre.js';
+import { lintMermaidSource, lintFlowchartStructure, lintSequenceStructure } from '../report/mermaidPre.js';
 
 /** 从 LLM 输出中提取 Mermaid 源码（剥 ```mermaid 围栏）；非法则抛错 */
 function extractMermaid(expectedStart: RegExp, kindHint: string): (output: string) => string {
@@ -44,18 +44,49 @@ function extractMermaid(expectedStart: RegExp, kindHint: string): (output: strin
   };
 }
 
-/** 流程图输出校验：extractMermaid 提取 + 词法 lint + 结构 lint；问题拼成中文反馈随重试回喂 */
-function validateFlowchart(output: string): string {
-  const text = extractMermaid(/^(flowchart|graph)\s+(TD|TB|BT|LR|RL)/, 'flowchart TD')(output);
-  const problems = [...lintMermaidSource(text), ...lintFlowchartStructure(text)];
-  if (problems.length > 0) {
-    throw new Error(
-      `你的流程图存在以下 ${problems.length} 个问题：\n` +
-      problems.map((p, i) => `${i + 1}. ${p}`).join('\n') +
-      '\n请修正后重新输出完整的图代码（仍然只输出图代码本身）。',
-    );
-  }
-  return text;
+/** 流程图输出校验：extractMermaid 提取 + 词法 lint + 结构 lint + 条件编译虚线框存在性；问题拼成中文反馈随重试回喂 */
+function validateFlowchart(fn: FunctionUnit): (output: string) => string {
+  return (output: string) => {
+    const text = extractMermaid(/^(flowchart|graph)\s+(TD|TB|BT|LR|RL)/, 'flowchart TD')(output);
+    const problems = [...lintMermaidSource(text), ...lintFlowchartStructure(text)];
+    // 条件编译虚线框硬校验（v3 实测 Qwen 会整图漏画使能框，或把 #if 误画成运行时菱形）：
+    for (const macro of [...new Set([...fn.conditionalFlags, ...(fn.innerCondFlags ?? [])])]) {
+      const fcLines = text.split('\n');
+      // ① 框存在性：宏名必须出现在注释节点标签（["..."] 行，排除 style/classDef/class 样式行）。
+      //    只出现在菱形 {"..."} 里不算数——那是把编译期条件误画成运行时分支。
+      //    注释里也接受两段式前缀缩写（GP_ECUSTPSHDN_SAFETY_ENABLE→SAFETY_ENABLE，基线既有风格）；
+      //    缩写须仍含下划线（≥2 段），防 GP_X_ENABLE→ENABLE 这种单段缩写在任意注释里误命中。
+      const abbrev = macro.replace(/^GP_[A-Za-z0-9]+_/, '');
+      const names = abbrev.includes('_') ? [macro, abbrev] : [macro];
+      const inNote = fcLines.some(l => l.includes('["') && !/^\s*(style|classDef|class)\s/.test(l) && names.some(n => l.includes(n)));
+      if (!inNote) {
+        problems.push(
+          `缺少条件编译虚线框：宏 ${macro} 对应的代码段未圈出。按规则 6 把该段节点放进无标题 subgraph 并设虚线样式，框内顶部加注释节点写明「注：仅在 ${macro} 生效时参与编译」`,
+        );
+      }
+      // ② 编译期宏禁入菱形：宏在源码中仅出现于 #if/#elif、无运行时 if/for/while 使用时，
+      //    菱形标签出现该宏 = 把编译期条件误画成运行时分支（v2 Startup 实测：
+      //    #if(SAFETY_ACTION_ENABLE==STD_ON) 被画成菱形+是/否）。菱形只表达运行时分支。
+      //    运行时豁免依据 bodyTextWithPP（截断 8500，超长函数宏在截断外运行时使用会误报——
+      //    误报表现为多一次重试进 failures，人工可辨，可接受）。
+      const body = fn.bodyTextWithPP ?? fn.bodyText ?? '';
+      const runtimeUse = body.split('\n').some(l => l.includes(macro) && /^\s*(?:if|for|while)\s*\(/.test(l));
+      const inDiamond = fcLines.some(l => l.includes(macro) && l.includes('{"'));
+      if (inDiamond && !runtimeUse) {
+        problems.push(
+          `宏 ${macro} 是编译期条件（源码中仅出现在 #if/#elif），不得画成菱形判断分支——菱形只用于源码中运行时 if/循环条件。请删除该菱形及其是/否分支，把 #if 控制的代码段按规则 6 画成虚线框（#if/#elif 多路时画多个并列虚线框，每路一个注释节点）`,
+        );
+      }
+    }
+    if (problems.length > 0) {
+      throw new Error(
+        `你的流程图存在以下 ${problems.length} 个问题：\n` +
+        problems.map((p, i) => `${i + 1}. ${p}`).join('\n') +
+        '\n请修正后重新输出完整的图代码（仍然只输出图代码本身）。',
+      );
+    }
+    return text;
+  };
 }
 
 /** 带重试的生成（格式校验失败时把错误回喂） */
@@ -82,6 +113,30 @@ async function generateWithRetry<T>(
   throw new Error(`LLM 生成失败（重试 ${maxRetries} 次）: ${lastError}`);
 }
 
+/** 术语表注入：外部缩写定义（abbreviationsDoc/JSON 节）按「在该 prompt 中实际出现」过滤后附到 user 末尾，
+ *  让生成正文的术语口径与外部定义一致；不出现的条目不注入（防 prompt 膨胀稀释）。
+ *  出现判定除整词 \bABBR\b 外，还认标识符分段——Spi_Setup/gpSpiChannel 里的 Spi 段也算 SPI 出现
+ *  （嵌入式 C 的缩写多以标识符段形式存在；按段精确比对防 SPIN 误命中 SPI） */
+function abbrAppears(abbr: string, text: string): boolean {
+  const escA = abbr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  if (new RegExp(`\\b${escA}\\b`, 'i').test(text)) return true;
+  const target = abbr.toUpperCase();
+  for (const w of text.match(/[A-Za-z_][A-Za-z0-9_]*/g) ?? []) {
+    for (const seg of w.split(/_|(?<=[a-z])(?=[A-Z])/)) {
+      if (seg.length > 0 && seg.toUpperCase() === target) return true;
+    }
+  }
+  return false;
+}
+
+function withGlossary(user: string, abbr?: [string, string][]): string {
+  if (!abbr || abbr.length === 0) return user;
+  const hits = abbr.filter(([a]) => abbrAppears(a, user));
+  if (hits.length === 0) return user;
+  const lines = hits.map(([a, d]) => `- ${a} = ${d}`).join('\n');
+  return `${user}\n\n# 项目术语表（以下缩写的定义以此外部口径为准；描述中涉及这些缩写时按其含义理解，正文保持缩写原形、不要自行展开或改写定义）\n${lines}`;
+}
+
 /** 序列图输出校验：允许「### 角色名」分段的多张图（多核模块按角色分图），剥围栏/前言后整体返回 */
 function extractSequenceSet(output: string): string {
   let text = output.trim();
@@ -94,6 +149,50 @@ function extractSequenceSet(output: string): string {
     throw new Error(`你的输出不是有效的 Mermaid 图代码。要求：第一行必须是 sequenceDiagram（多角色分图时每张图前一行写 ### 角色名），只输出图代码本身，不要输出任何解释、描述或分析文字。请重新输出。`);
   }
   return text;
+}
+
+/** 序列图输出校验：extractSequenceSet 提取 + 逐角色图词法 lint + 组合片段结构 lint；问题拼成中文反馈随重试回喂 */
+function validateSequence(fn: FunctionUnit): (output: string) => string {
+  // 平铺判定的可靠信号在函数源码而非图文本（TLF 实测：平铺图的消息全是裸函数名，无关键词可抓）——
+  // 源码有分支/循环，图就该有组合片段；源码无控制流的函数不要求片段（防误报）
+  const fnHasControlFlow = /\b(if|for|while|switch)\s*\(/.test(fn.bodyTextWithPP ?? fn.bodyText);
+  return (output: string): string => {
+    const text = extractSequenceSet(output);
+    const problems: string[] = [];
+    let fragmentTotal = 0;
+    for (const part of splitSequenceRoles(text)) {
+      fragmentTotal += (part.diagram.match(/^\s*(alt|opt|loop|par|critical|break)\b/gm) ?? []).length;
+      for (const p of [...lintMermaidSource(part.diagram), ...lintSequenceStructure(part.diagram)]) {
+        problems.push(part.role ? `【${part.role}图】${p}` : p);
+      }
+      // Callout 不得建参与者：Callout 是本模块留给集成方的接口函数，属本模块，参与者只建模块粒度。
+      // 检测声明式（participant X as Callout / participant Callout）与隐式（消息端点恰为 Callout）两种；
+      // 消息文本里的 CalloutXxx 函数名不算（自调用 M->>M: CalloutXxx() 是正确画法）。
+      const dia = part.diagram;
+      const declared = dia.split('\n').some(l => /^\s*participant\s+(\w+\s+as\s+)?Callout\s*$/i.test(l));
+      const asEndpoint = dia.split('\n').some(l => {
+        const m = l.match(/^\s*(\w+)\s*-{1,2}>>\s*(\w+)\s*:/);
+        return !!m && (m[1] === 'Callout' || m[2] === 'Callout');
+      });
+      if (declared || asEndpoint) {
+        problems.push(
+          (part.role ? `【${part.role}图】` : '') +
+          '不得把 Callout 列为参与者：Callout 是本模块的接口函数不是独立模块，参与者只建模块粒度。删除 Callout 参与者，调用 Callout 函数画成自调用（本模块->>本模块: CalloutXxx()）',
+        );
+      }
+    }
+    if (fnHasControlFlow && fragmentTotal === 0) {
+      problems.push('函数源码含 if/for/while/switch 分支或循环，但序列图全图没有任何组合片段：对应的消息段必须用 alt [条件]/else、opt [条件]、loop [循环条件] 标注并以 end 结束，禁止把分支/循环平铺成普通消息');
+    }
+    if (problems.length > 0) {
+      throw new Error(
+        `你的序列图存在以下 ${problems.length} 个问题：\n` +
+        problems.map((p, i) => `${i + 1}. ${p}`).join('\n') +
+        '\n请修正后重新输出完整的图代码（仍然只输出图代码本身，多角色分图时保留 ### 角色名 行）。',
+      );
+    }
+    return text;
+  };
 }
 
 /** 把「### 角色名」分段的多张序列图拆成 {role, diagram} 列表；无分段则单图 role=null */
@@ -169,7 +268,7 @@ async function genFlowchart(
   if (!needsFlowchart(fn)) return;
   const fc = buildFlowchartPrompt(model, fn);
   // 流程图结构复杂、校验严格，给 3 次重试（其余生成维持默认 2 次）
-  const diagram = await generateWithRetry(provider, fc.system, fc.user, validateFlowchart, 3);
+  const diagram = await generateWithRetry(provider, fc.system, fc.user, validateFlowchart(fn), 3);
   fn.generated = fn.generated ?? {
     detailedDescription: '', llmModel: provider.name, generatedAt: new Date().toISOString(),
   };
@@ -182,9 +281,10 @@ async function enrichFunction(
   model: ModuleModel,
   fn: FunctionUnit,
   provider: LLMProvider,
+  abbr?: [string, string][],
 ): Promise<void> {
   const { system, user } = buildFunctionDescriptionPrompt(model, fn);
-  const text = await generateWithRetry(provider, system, user, (o) => {
+  const text = await generateWithRetry(provider, system, withGlossary(user, abbr), (o) => {
     const cleaned = o.trim();
     if (cleaned.length < 20) throw new Error('描述过短（<20字符）');
     return cleaned;
@@ -232,7 +332,7 @@ async function generateDynamicDesign(
     const fn = model.providedFunctions.find(f => pattern.test(f.name));
     if (!fn) continue;
     const { system, user } = buildSequencePrompt(model, fn, scenario);
-    const text = await generateWithRetry(provider, system, user, extractSequenceSet);
+    const text = await generateWithRetry(provider, system, user, validateSequence(fn), 3);
     // 多核模块按角色分图：### 主核 Core0 / ### 从核 satellite 各成一张工作项
     for (const part of splitSequenceRoles(text)) {
       const name = part.role ? `${scenario}（${part.role}）` : scenario;
@@ -262,6 +362,9 @@ export interface GenerateOptions {
   onProgress?: (msg: string) => void;
   /** 失败收集：单条目失败不中断整批，失败原因 push 进该数组由调用方汇总 */
   failures?: string[];
+  /** 外部缩写定义（lld.config.json 的 abbreviationsDoc/abbreviations 解析结果）——按 prompt 内实际出现
+   *  过滤后注入文本类生成（描述/配置说明/类型注释/外部接口说明/5.1），术语口径与外部定义一致 */
+  abbreviations?: [string, string][];
 }
 
 /** 生成入口：就地增强 model（函数 generated 字段 + dynamicDesign） */
@@ -302,7 +405,7 @@ export async function generateDesign(
     }
     log(`生成描述: ${fn.name}`);
     try {
-      await enrichFunction(model, fn, provider);
+      await enrichFunction(model, fn, provider, opts?.abbreviations);
     } catch (err) {
       log(`  ⚠ 失败（已跳过，可 --resume 重试）: ${fn.name} — ${(err as Error).message.replace(/\n/g, '\n      ')}`);
       opts?.failures?.push(`${fn.name}: ${(err as Error).message.replace(/\n/g, '\n      ')}`);
@@ -343,7 +446,7 @@ export async function generateDesign(
       log(`生成配置说明: ${macro.name}`);
       const { system, user } = buildConfigValueEffectPrompt(model, macro);
       try {
-        const text = await generateWithRetry(provider, system, user, (o) => {
+        const text = await generateWithRetry(provider, system, withGlossary(user, opts?.abbreviations), (o) => {
           const cleaned = o.trim();
           if (cleaned.length < 10) throw new Error('说明过短（<10字符）');
           return cleaned;
@@ -369,7 +472,7 @@ export async function generateDesign(
       log(`生成 Callout 描述: ${ext.name}`);
       const { system, user } = buildCalloutDescriptionPrompt(model, ext);
       try {
-        const text = await generateWithRetry(provider, system, user, (o) => {
+        const text = await generateWithRetry(provider, system, withGlossary(user, opts?.abbreviations), (o) => {
           const cleaned = o.trim();
           if (cleaned.length < 10) throw new Error('描述过短（<10字符）');
           return cleaned;
@@ -395,7 +498,7 @@ export async function generateDesign(
       log(`生成类型描述: ${t.name}`);
       const { system, user } = buildTypeDescriptionPrompt(model, t);
       try {
-        const parsed = await generateWithRetry(provider, system, user, validateTypeDescription(t));
+        const parsed = await generateWithRetry(provider, system, withGlossary(user, opts?.abbreviations), validateTypeDescription(t));
         t.generated = {
           ...parsed,
           llmModel: provider.name,
@@ -417,7 +520,7 @@ export async function generateDesign(
       log(`生成外部接口说明: ${ext.name}`);
       const { system, user } = buildExternalDescriptionPrompt(model, ext);
       try {
-        const text = await generateWithRetry(provider, system, user, (o) => {
+        const text = await generateWithRetry(provider, system, withGlossary(user, opts?.abbreviations), (o) => {
           const cleaned = o.trim();
           if (cleaned.length < 10) throw new Error('说明过短（<10字符）');
           return cleaned;
@@ -441,7 +544,7 @@ export async function generateDesign(
       log('生成模块功能描述（5.1）');
       const { system, user } = buildModuleDescriptionPrompt(model);
       try {
-        const text = await generateWithRetry(provider, system, user, (o) => {
+        const text = await generateWithRetry(provider, system, withGlossary(user, opts?.abbreviations), (o) => {
           const cleaned = o.trim();
           if (cleaned.length < 20) throw new Error('描述过短（<20字符）');
           return cleaned;

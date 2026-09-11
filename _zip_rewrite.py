@@ -20,9 +20,11 @@ if missing:
     for m in missing: print('  ', m)
     sys.exit(1)
 
-# 扫描应同步目录里的新文件
+# 扫描应同步目录里的新文件（node_modules/@lld/* 是 junction，os.walk 不自动跟随，须显式列根）
 extra = []
-for root in ['packages/core/src', 'packages/core/dist', 'packages/cli/src', 'packages/cli/dist', 'packages/cli/assets', '测试模块']:
+for root in ['packages/core/src', 'packages/core/dist', 'packages/cli/src', 'packages/cli/dist', 'packages/cli/assets',
+             'node_modules/@lld/core/src', 'node_modules/@lld/core/dist', 'node_modules/@lld/cli/src', 'node_modules/@lld/cli/dist',
+             '测试模块']:
     for dirpath, _dirs, files in os.walk(root):
         for f in files:
             p = os.path.join(dirpath, f).replace(os.sep, '/')

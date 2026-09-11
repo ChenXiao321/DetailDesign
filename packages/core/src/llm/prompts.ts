@@ -105,6 +105,8 @@ export function buildFlowchartPrompt(
   lines.push(`       class SG1_NOTE condNote`);
   lines.push(`   整个函数都在条件编译内时，虚线框包住从开始到结束的全部节点；不要在节点文字里写（条件编译）`);
   lines.push(`   注意 subgraph 标题必须留空（[" "]），注释一律用框内注释节点，不要用 subgraph 标题写注释`);
+  lines.push(`   严禁把 #if/#elif 条件画成菱形判断分支：#if 是编译期条件，不是运行时分支，菱形只用于源码中的运行时 if/循环条件；`);
+  lines.push(`   #if/#elif/#else 多路时画多个并列虚线框（每路一个框加注释节点），不得画菱形加是/否分支`);
   lines.push(`7. 流向自上而下；分支线用 A -- 是 --> B / A -- 否 --> C 标注条件`);
   lines.push(`8. 存在两条以上较长的并行分支时（如主核/卫星核两条路径），每条分支包一层无标题泳道 subgraph，`);
   lines.push(`   分支内部写 direction TB，出入口连线写在 subgraph 外，泳道样式设透明，避免跨分支连线交叉`);
@@ -130,6 +132,13 @@ export function buildFlowchartPrompt(
   lines.push(`      若只是想把线引进某个 subgraph，不要用入口汇合点，让入边直接连到 subgraph 内的第一个节点`);
   lines.push(`12. 以下写法一律禁止：X = Y 形式的别名行（flowchart 没有别名语法）；连线目标写 subgraph 的 id；`);
   lines.push(`    行尾只有 --> 没有目标的连线`);
+  lines.push(`13. 声明顺序即布局顺序（布局器按声明先后排位，按以下次序组织连线可显著减少交叉与穿盒）：`);
+  lines.push(`    - 主链（正常路径）按执行顺序连续声明，一条到底，不要与分支的声明交错穿插`);
+  lines.push(`    - 结束节点要在中途的早退边里提前引用（如 超时判断 -- 是 --> END），不要把它的首次引用留到全文最后，`);
+  lines.push(`      否则它会被钉到全图最底，所有指向它的回边被迫纵穿全图`);
+  lines.push(`    - 各错误/异常分支按逆深度序声明（嵌套最深的分支先写），它们的回边集中放在全文最后统一声明`);
+  lines.push(`    - 循环跳出不要加「跳出循环」中转节点，循环体内相关节点的连线直挂跳出后的目标节点`);
+  lines.push(`    - 分支走向拥挤时允许翻转判断极性（如把 == 条件改写成 != 并交换 是/否 两支指向），换取更顺的走向`);
   return { system: SYSTEM_DESIGNER, user: lines.join('\n') };
 }
 
@@ -419,7 +428,8 @@ export function buildSequencePrompt(
   lines.push(``);
   lines.push(`# 输出要求`);
   lines.push(`1. 第一行必须是 sequenceDiagram，只输出图代码本身，不要用 \`\`\` 包裹，不要输出任何解释`);
-  lines.push(`2. 参与者用 participant 声明并起短别名: participant CO as Callout；调用者用 actor（如 OS/EcuM）`);
+  lines.push(`2. 参与者只建「模块」粒度：调用者用 actor（如 OS/EcuM），本模块与每个交互的外部模块（如 Gp_RstM、SBC）各一个 participant，声明时起短别名: participant RM as Gp_RstM`);
+  lines.push(`   本模块的 Callout 函数属于本模块（是模块留给集成方的接口），不得为 Callout 建参与者——调用 Callout 画成自调用: 本模块->>本模块: CalloutXxx()`);
   lines.push(`3. 消息格式: A->>B: 消息名，按调用顺序排列`);
   lines.push(`4. 控制流必须用组合片段标注，禁止把分支/循环体平铺成普通消息：互斥分支用 alt [条件] / else [条件]；仅在某条件下执行的可选段用 opt [条件]；循环（如遍历每个通道、计数分频）用 loop [循环条件]；各片段以 end 结束。自调用用 A->>A: 说明，注释用 Note over/right of`);
   lines.push(`5. 消息文本中不要出现冒号、分号、# 号`);

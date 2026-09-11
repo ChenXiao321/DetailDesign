@@ -146,10 +146,22 @@ node packages/cli/dist/index.js gen 测试模块/Gp_EcuStpStdn --out 测试产�
 
 # 5. 出报告（离线，可在本机做——把 lld_design.json 拷回即可）
 node packages/cli/dist/index.js report 测试模块/Gp_EcuStpStdn --out 测试产出/Gp_EcuStpStdn_qwen
+
+# 6. 渲染质量验收（需 Edge 或 Chrome：预渲染 SVG 成品版 lld_report.html + 斜线/交叉/穿盒/箭头审计，打印中文量化报告）
+node packages/cli/dist/index.js audit 测试模块/Gp_EcuStpStdn --out 测试产出/Gp_EcuStpStdn_qwen
 ```
 
 产物目录用 `_qwen` 后缀与 samples 基准（`测试产出/Gp_EcuStpStdn/`）区分，方便对照评审。
 评审重点：描述质量 vs samples、流程图 Mermaid 语法正确率、格式校验重试次数（stderr 日志）。
+
+缩写表定制（两种提供方式）：①外部人员提供的 Word 缩写表——在 lld.config.json 加
+`"abbreviationsDoc": "项目缩写表.docx"`（两列表格：缩写|定义，多表自动合并），3.1 整章以外部表为唯一定义来源
+（内建词典不兜底）；正文出现但表内未定义的缩写，report/audit 会打印缺口名单，反馈维护方补表即可。
+②模块特有/临时补充——`"abbreviations": {"WWD": "Window Watchdog 窗口看门狗"}`，
+两种同时在场时 JSON 同名覆盖 docx、新增补入；不配 docx 时 JSON 与内建 29 条词典合并（原行为）。
+外部定义同时注入 gen：函数描述/配置说明/类型注释/外部接口说明/5.1 功能描述的 prompt 会附带
+「项目术语表」块（按 prompt 内实际出现过滤——`Spi_Setup` 这类标识符分段也算 SPI 出现），
+生成正文的术语口径与外部定义一致；流程图/序列图等结构生成不注入。
 
 ## 当前状态
 

@@ -18,5 +18,10 @@
       "table": "Table"
     },
     "maxImageWidthPx": 700
+  },
+  "abbreviationsDoc": "项目缩写表.docx",
+  "abbreviations": {
+    "WWD": "Window Watchdog 窗口看门狗",
+    "FSP": "Failsafe Output 故障安全输出信号（按实际模块语境改写）"
   }
 }

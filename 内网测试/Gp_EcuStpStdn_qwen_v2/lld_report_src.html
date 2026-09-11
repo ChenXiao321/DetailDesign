@@ -4962,7 +4962,10 @@ window.addEventListener('DOMContentLoaded', async () => {
       if (pts.length < 2) return;
       const id = p.getAttribute('id') || '';
       let srcId = null, dstId = null;
-      const em = id.match(/^L_(.+)_d+$/);
+      // 坑：模板字面量内正则反斜杠须写 \d（单反斜杠被模板吞成字面 d，id 永不匹配，
+      // srcId/dstId 全 null——该 bug 曾使登记表 srcId/dstId 静默失效，mkEdgeHit 的
+      // 「同源同目标平行边不参与避让」豁免随之失效，扇出交换修复依赖此字段才暴露）
+      const em = id.match(/^L_(.+)_\d+$/);
       if (em) {
         const core = em[1];
         for (let i = 1; i < core.length - 1; i++) {
@@ -5624,6 +5627,50 @@ window.addEventListener('DOMContentLoaded', async () => {
       }
     });
   }
+  // 扇出/汇合端口倒挂修复（两遍后、深搜前）：同源（或同目标）两条边的出（入）口横序与对端
+  // 横序倒挂时，两者的横（竖）段会同线对向重叠——v3 Startup 实测：是-->NOP 从菱形左下口出、
+  // 否-->STAGE2_ENTRY 从右下口出，横段同 y=1643.8 对向重叠 78px（用户截图反馈"是和否的路线
+  // 交叉了"；xcheck 严格交叉只查一横一竖，共线对向是漏网形态）。修复：交换两条边的 dagre
+  // 出口（入口）点重路由，恢复端口单调序。只碰检测到对向重叠的边对（已接受态六模块扫描
+  // 对向重叠为 0，对它们逐像素零改动）；交换后仍对向重叠或落斜线兜底则整组回滚。
+  const oppOv = (A, B) => {
+    for (let i = 0; i + 1 < A.length; i++) for (let j = 0; j + 1 < B.length; j++) {
+      const a = A[i], b = A[i + 1], c = B[j], d = B[j + 1];
+      if (Math.abs(a[1] - b[1]) < 0.6 && Math.abs(c[1] - d[1]) < 0.6 && Math.abs(a[1] - c[1]) < 0.6) {
+        const ov = Math.min(Math.max(a[0], b[0]), Math.max(c[0], d[0])) - Math.max(Math.min(a[0], b[0]), Math.min(c[0], d[0]));
+        if (ov > 1 && Math.sign(b[0] - a[0]) !== Math.sign(d[0] - c[0])) return true;
+      }
+      if (Math.abs(a[0] - b[0]) < 0.6 && Math.abs(c[0] - d[0]) < 0.6 && Math.abs(a[0] - c[0]) < 0.6) {
+        const ov = Math.min(Math.max(a[1], b[1]), Math.max(c[1], d[1])) - Math.max(Math.min(a[1], b[1]), Math.min(c[1], d[1]));
+        if (ov > 1 && Math.sign(b[1] - a[1]) !== Math.sign(d[1] - c[1])) return true;
+      }
+    }
+    return false;
+  };
+  const swapSvgSet = new Set();
+  edgeEls.forEach((p) => swapSvgSet.add(p.closest('svg')));
+  swapSvgSet.forEach((svg) => {
+    const es = routesOf(svg).list.filter((e) => e.orig && e.pts && !e.invisible);
+    for (let a = 0; a < es.length; a++) for (let b = a + 1; b < es.length; b++) {
+      const A = es[a], B = es[b];
+      const shareSrc = A.srcId && A.srcId === B.srcId, shareDst = A.dstId && A.dstId === B.dstId;
+      if ((!shareSrc && !shareDst) || !oppOv(A.pts, B.pts)) continue;
+      // 同源换出口（首点）、同目标换入口（末点）；都满足时先试出口
+      for (const which of (shareSrc ? [0, 1] : [1])) {
+        const ia = which ? A.orig.length - 1 : 0, ib = which ? B.orig.length - 1 : 0;
+        const ao = A.orig.map((q) => [q[0], q[1]]), bo = B.orig.map((q) => [q[0], q[1]]);
+        ao[ia] = [B.orig[ib][0], B.orig[ib][1]]; bo[ib] = [A.orig[ia][0], A.orig[ia][1]];
+        const sa = routeEdge(A.p, ao, false), sb = routeEdge(B.p, bo, false);
+        if (!sa || !sb || hasDiag(sa) || hasDiag(sb) || oppOv(sa, sb)) continue;
+        A.orig = ao; B.orig = bo;
+        A.pts = sa.map((q) => [q[0], q[1]]); A.bbox = bboxOf(A.pts);
+        B.pts = sb.map((q) => [q[0], q[1]]); B.bbox = bboxOf(B.pts);
+        if (sa._needDeep) A.needDeep = 1;
+        if (sb._needDeep) B.needDeep = 1;
+        break;
+      }
+    }
+  });
   // 第三遍：仅前两遍仍落斜线兜底（或旧管线会收 dagre 斜线）的边用深搜重选——其余边保持
   // 前两遍结果逐像素不变，深搜 corridor 不会把干净邻居挤走（零回归约束：TLF 实测两遍全量
   // 重选会让 14 条原本干净的路由被修好的边挤到画布边缘）

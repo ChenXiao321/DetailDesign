@@ -331,6 +331,7 @@ export async function cmdAudit(outDir: string): Promise<void> {
     abbreviations: abbr?.entries,
     abbreviationsReplace: abbr?.replace,
     abbreviationSource: abbr?.source,
+    definitions: abbr?.definitions,
     onAbbreviationGaps: abbrGapLogger,
   });
   const srcPath = path.join(outDir, 'lld_report_src.html');

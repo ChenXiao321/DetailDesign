@@ -61,11 +61,22 @@ function cellText(tc: string): string {
   return decodeXmlEntities(out).replace(/\u00A0/g, ' ').trim();
 }
 
-/** 解析 docx 全部表格 → [缩写, 定义][]（同名后者不覆盖前者；定义为空/整行空白跳过） */
-export function parseAbbreviationsDocx(buf: Buffer): [string, string][] {
+/** docx 解析结果：缩写表条目 + 定义表条目（对应外部文档的「缩写」「定义」两节） */
+export interface AbbreviationsDoc {
+  abbreviations: [string, string][];
+  definitions: [string, string][];
+}
+
+/** 解析 docx 全部表格 → 缩写/定义两类条目（同名后者不覆盖前者；名或定义为空、整行空白跳过）。
+ *  表格分类按表头：含「缩写/abbrev」列 → 缩写表；含整格「名称/定义/术语/name/term」→ 定义表；
+ *  只有「定义/描述/含义」列而无缩写列 → 仍按缩写表取首两列（兼容无标准表头的补充表）；
+ *  完全无表头 → 第 1 列=缩写、第 2 列=定义。 */
+export function parseAbbreviationsDocx(buf: Buffer): AbbreviationsDoc {
   const xml = readDocxEntry(buf, 'word/document.xml').toString('utf-8');
-  const out: [string, string][] = [];
-  const seen = new Set<string>();
+  const abbreviations: [string, string][] = [];
+  const definitions: [string, string][] = [];
+  const seenAbbr = new Set<string>();
+  const seenDef = new Set<string>();
   for (const tbl of xml.matchAll(/<w:tbl>[\s\S]*?<\/w:tbl>/g)) {
     const rows: string[][] = [];
     for (const tr of tbl[0].matchAll(/<w:tr(?:\s[^>]*)?>[\s\S]*?<\/w:tr>/g)) {
@@ -74,26 +85,43 @@ export function parseAbbreviationsDocx(buf: Buffer): [string, string][] {
       if (cells.some(c => c !== '')) rows.push(cells);
     }
     if (rows.length === 0) continue;
-    // 列定位：表头行含「缩写」「定义/描述/含义」字样的列优先（只命中其一也认表头，另一列取剩余首列）；否则默认第 1/2 列
-    let abbrCol = 0, defCol = 1, startRow = 0;
     const head = rows[0]!;
     const hi = head.findIndex(c => /缩写|abbrev/i.test(c));
-    const di = head.findIndex(c => /定义|描述|含义|definition|meaning|description/i.test(c));
-    if ((hi >= 0 || di >= 0) && hi !== di) {
-      abbrCol = hi >= 0 ? hi : (di === 0 ? 1 : 0);
-      defCol = di >= 0 ? di : (hi === 0 ? 1 : 0);
+    const di = head.findIndex(c => /定义|描述|含义|说明|definition|meaning|description/i.test(c));
+    // 整格匹配防误伤：「定义」列出现在缩写表表头时是定义列，单独出现（名称|描述 / 定义|描述）才是定义表
+    const ni = head.findIndex(c => /^(名称|定义|术语|name|term)$/i.test(c.trim()));
+    let target: [string, string][], seen: Set<string>, keyCol: number, valCol: number, startRow: number;
+    if (hi >= 0) {
+      // 缩写表：缩写列定位，定义列取「定义/描述/含义」列或剩余首列
+      target = abbreviations; seen = seenAbbr; keyCol = hi;
+      valCol = di >= 0 && di !== hi ? di : (hi === 0 ? 1 : 0);
       startRow = 1;
+    } else if (ni >= 0) {
+      // 定义表：名称/定义列 + 描述列（修复旧版把「定义|描述」表列序取反的缺陷）
+      target = definitions; seen = seenDef; keyCol = ni;
+      valCol = di >= 0 && di !== ni ? di : (ni === 0 ? 1 : 0);
+      startRow = 1;
+    } else if (di >= 0) {
+      // 无缩写列但有定义类列（如「补充表|含义」）→ 兼容形态，按缩写表取值
+      target = abbreviations; seen = seenAbbr; keyCol = di === 0 ? 1 : 0; valCol = di;
+      startRow = 1;
+    } else {
+      // 无表头：第 1 列=缩写、第 2 列=定义
+      target = abbreviations; seen = seenAbbr; keyCol = 0; valCol = 1;
+      startRow = 0;
     }
     for (let r = startRow; r < rows.length; r++) {
-      const abbr = (rows[r]![abbrCol] ?? '').trim();
-      const def = (rows[r]![defCol] ?? '').trim();
-      if (!abbr || !def) continue;
-      const key = abbr.toUpperCase();
-      if (seen.has(key)) continue;
-      seen.add(key);
-      out.push([abbr, def]);
+      const key = (rows[r]![keyCol] ?? '').trim();
+      const val = (rows[r]![valCol] ?? '').trim();
+      if (!key || !val) continue;
+      const dedup = key.toUpperCase();
+      if (seen.has(dedup)) continue;
+      seen.add(dedup);
+      target.push([key, val]);
     }
   }
-  if (out.length === 0) throw new Error('docx 中未解析到任何缩写条目（需为两列表格：缩写 | 定义）');
-  return out;
+  if (abbreviations.length === 0 && definitions.length === 0) {
+    throw new Error('docx 中未解析到任何缩写/定义条目（需为两列表格：缩写 | 描述）');
+  }
+  return { abbreviations, definitions };
 }

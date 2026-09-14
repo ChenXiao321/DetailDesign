@@ -177,6 +177,7 @@ async function cmdReport(outDir: string): Promise<void> {
     abbreviations: abbr?.entries,
     abbreviationsReplace: abbr?.replace,
     abbreviationSource: abbr?.source,
+    definitions: abbr?.definitions,
     onAbbreviationGaps: abbrGapLogger,
   });
   const output = path.join(outDir, 'lld_report.html');

@@ -3,7 +3,7 @@ export { parseHeaderComment } from './parser/commentParser.js';
 export { parseCFile, preprocessSource, walkTopLevel, nodeText } from './parser/cParser.js';
 export { generateDesign, type GenerateOptions } from './generator/designGenerator.js';
 export { generateHtmlReport } from './report/htmlReport.js';
-export { parseAbbreviationsDocx } from './report/abbrDocx.js';
+export { parseAbbreviationsDocx, type AbbreviationsDoc } from './report/abbrDocx.js';
 export { functionCard, calloutCard, esc, escRaw, paramRows } from './report/cards.js';
 export { wrapFlowchartLabels, pinEndNodeToBottom } from './report/mermaidPre.js';
 export { mermaidRenderScript } from './report/renderScript.js';

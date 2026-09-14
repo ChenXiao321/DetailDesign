@@ -9,7 +9,8 @@ export interface LldConfigFile {
   /** 3.1 缩写表追加词条：{ "SPI": "Serial Peripheral Interface 串行外设接口" }（同名覆盖内置词典；
    *  外部缩写表模式下仍生效：同名覆盖 docx 条目、新增条目补入——临时补表走这里，正式补充走 docx 维护方） */
   abbreviations?: Record<string, string>;
-  /** 外部缩写表 .docx 路径（相对 cwd）：提供后 3.1 整章以该表为唯一定义来源（内置词典不兜底），
+  /** 外部缩写表 .docx 路径（相对 cwd）：提供后 3.1/3.2 以该表为唯一来源（内置词典不兜底）、全量收录
+   *  （不再按模块出现过滤）；docx 中「缩写」表进 3.1、「定义」表（表头 名称/定义|描述）进 3.2；
    *  正文出现但表内未定义的缩写会在 report/audit 输出缺口名单 */
   abbreviationsDoc?: string;
 }
@@ -27,7 +28,9 @@ export function loadConfigFile(): LldConfigFile {
 
 export interface AbbrResolved {
   entries: [string, string][];
-  /** true = 外部缩写表模式：3.1 整章以 entries 为唯一来源（内置词典不兜底） */
+  /** 外部 docx「定义」表条目（3.2 节全量收录；仅外部表模式有，JSON 节无此通道） */
+  definitions: [string, string][];
+  /** true = 外部缩写表模式：3.1/3.2 整章以 entries/definitions 为唯一来源（内置词典不兜底） */
   replace: boolean;
   /** 外部表来源文件名（报告 3.1 注释行展示） */
   source?: string;
@@ -40,19 +43,19 @@ export function resolveAbbreviations(cfg: LldConfigFile): AbbrResolved | undefin
   if (cfg.abbreviationsDoc) {
     const p = path.resolve(cfg.abbreviationsDoc);
     try {
-      const docEntries = parseAbbreviationsDocx(fs.readFileSync(p));
-      const docKeys = new Set(docEntries.map(([a]) => a.toUpperCase()));
+      const doc = parseAbbreviationsDocx(fs.readFileSync(p));
+      const docKeys = new Set(doc.abbreviations.map(([a]) => a.toUpperCase()));
       const jsonMap = new Map(jsonEntries.map(([k, v]) => [k.toUpperCase(), v] as const));
       const entries: [string, string][] = [
-        ...docEntries.map(([k, v]) => [k, jsonMap.get(k.toUpperCase()) ?? v] as [string, string]),
+        ...doc.abbreviations.map(([k, v]) => [k, jsonMap.get(k.toUpperCase()) ?? v] as [string, string]),
         ...jsonEntries.filter(([k]) => !docKeys.has(k.toUpperCase())),
       ];
-      return { entries, replace: true, source: path.basename(p) };
+      return { entries, definitions: doc.definitions, replace: true, source: path.basename(p) };
     } catch (err) {
       console.error(`警告: 外部缩写表 ${p} 读取失败（${(err as Error).message}），3.1 回退内置词典合并模式`);
     }
   }
-  return jsonEntries.length > 0 ? { entries: jsonEntries, replace: false } : undefined;
+  return jsonEntries.length > 0 ? { entries: jsonEntries, definitions: [], replace: false } : undefined;
 }
 
 /** report/audit 共用的缩写缺口提示回调（外部表模式下正文出现但无定义的缩写名单） */

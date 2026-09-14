@@ -103,13 +103,15 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
 
 /** 生成完整 HTML 评审报告；传入 mermaidJs（mermaid.min.js 内容）则离线渲染图；
  *  abbreviations 追加自定义缩写词条（同名覆盖内置词典，新模块族的新缩写经 lld.config.json 配置，免发包）；
- *  abbreviationsReplace=true 时 3.1 整章以 abbreviations 为唯一定义来源（外部缩写表模式，内置词典不再兜底），
- *  正文出现但表内未定义的缩写候选经 onAbbreviationGaps 回报名单（供用户反馈外部维护方补表） */
+ *  abbreviationsReplace=true 时 3.1 整章以 abbreviations 为唯一定义来源（外部缩写表模式，内置词典不再兜底）、
+ *  全量收录表中全部条目（不再按模块出现过滤，与外部 Word 表保持一致）；definitions 为外部表「定义」节条目，
+ *  全量列入 3.2；正文出现但表内未定义的缩写候选经 onAbbreviationGaps 回报名单（供用户反馈外部维护方补表） */
 export function generateHtmlReport(model: ModuleModel, opts?: {
   mermaidJs?: string;
   abbreviations?: [string, string][];
   abbreviationsReplace?: boolean;
   abbreviationSource?: string;
+  definitions?: [string, string][];
   onAbbreviationGaps?: (missing: string[]) => void;
 }): string {
   const fnCount = model.providedFunctions.length + model.internalFunctions.length;
@@ -531,8 +533,11 @@ ${callouts.map((e, i) => calloutCard(e, `${calloutSecNo}.${i + 1}`)).join('\n')}
   const abbrDict = replaceMode
     ? userAbbr
     : [...userAbbr, ...ABBR_CANDIDATES.filter(([a]) => !userKeys.has(a.toUpperCase()))];
-  const abbrRows = abbrDict
-    .filter(([abbr]) => new RegExp(`\\b${abbr}\\b`, 'i').test(allText))
+  const abbrRows = (replaceMode
+    // 外部表模式：全量收录外部表条目（用户要求与 Word 表一致），不再按模块出现过滤
+    ? abbrDict
+    : abbrDict.filter(([abbr]) => new RegExp(`\\b${abbr}\\b`, 'i').test(allText))
+  )
     .map(([abbr, desc]) => `<tr><td><code>${esc(abbr)}</code></td><td>${esc(desc)}</td></tr>`)
     .join('');
   // 外部表模式缺口检测：正文出现的全大写词（2+ 字符、非十六进制、非停用词）在外部表中无定义 → 报名单
@@ -561,7 +566,9 @@ ${callouts.map((e, i) => calloutCard(e, `${calloutSecNo}.${i + 1}`)).join('\n')}
   if (/\bCallout\b/.test(allText)) {
     DEF_ROWS.unshift(['Callout', 'Callout 函数：由集成方在配置代码中实现，模块通过调用 Callout 适配项目策略']);
   }
-  const defRows = DEF_ROWS.map(([n, d]) => `<tr><td>${esc(n)}</td><td>${esc(d)}</td></tr>`).join('');
+  // 外部表模式：docx「定义」表条目全量列入 3.2（与 Word 表一致），内置通用行随后
+  const extDefs = replaceMode ? (opts?.definitions ?? []) : [];
+  const defRows = [...extDefs, ...DEF_ROWS].map(([n, d]) => `<tr><td>${esc(n)}</td><td>${esc(d)}</td></tr>`).join('');
   const preSection = `
 <h2 id="s1">1 目的</h2>
 <p>本文档描述 ${esc(model.module)} 软件单元的详细设计，作为该单元编码实现、设计评审与单元测试的依据。</p>
@@ -571,10 +578,12 @@ ${callouts.map((e, i) => calloutCard(e, `${calloutSecNo}.${i + 1}`)).join('\n')}
 <h3>3.1 缩写</h3>
 <table class="simple"><tr><th>缩写</th><th>描述</th></tr>${abbrRows}</table>
 ${replaceMode
-  ? `<p class="muted">注：本表定义由外部缩写表（${esc(opts?.abbreviationSource ?? '外部文档')}）提供，仅列本模块实际出现的条目；新增/修订缩写请联系缩写表维护方，临时补充可写入 lld.config.json 的 abbreviations 节。</p>`
+  ? `<p class="muted">注：本表定义由外部缩写表（${esc(opts?.abbreviationSource ?? '外部文档')}）提供，全量收录表中条目；新增/修订缩写请联系缩写表维护方，临时补充可写入 lld.config.json 的 abbreviations 节。</p>`
   : '<p class="muted">注：仅列出本模块文档/代码中实际出现的缩写，可按项目需要补充。</p>'}
 <h3>3.2 定义</h3>
-<table class="simple"><tr><th>名称</th><th>描述</th></tr>${defRows}</table>`;
+<table class="simple"><tr><th>名称</th><th>描述</th></tr>${defRows}</table>${extDefs.length > 0
+  ? `\n<p class="muted">注：术语定义由外部缩写表（${esc(opts?.abbreviationSource ?? '外部文档')}）「定义」节提供，全量收录表中条目。</p>`
+  : ''}`;
 
   // ---- 8 支持/相关性文件（骨架，编号待人工补充） ----
   const supportSection = `

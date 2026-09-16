@@ -42,6 +42,20 @@
   node packages/cli/dist/index.js audit 测试模块/Gp_EcuStpStdn --out 测试产出/Gp_EcuStpStdn_qwen
   # 浏览器装在非默认路径时：set LLD_EDGE_PATH=<msedge.exe 或 chrome.exe 完整路径>
 
+■ 流程图静态生成（2026-09-16 起，免 LLM）
+  gen 的【流程图】步骤已不再调用 LLM——工具按 C 代码结构（tree-sitter AST →
+  控制流图 → mermaid）确定性生成，节点标签就是代码原文（菱形=条件表达式、
+  方框=语句）。一次调用必出图：完整控制流图 → 未识别构造降级为块 → 顺序链
+  兜底，不再出现「有描述无流程图」；校验不过的图会按「CFG生成器缺陷」记入
+  失败清单并自动用兜底图，不会静默缺图。
+  - 只刷流程图完全离线、不需要 apiKey：
+      node packages/cli/dist/index.js gen 测试模块/Gp_EcuStpStdn --out <产物目录> --only flowcharts
+    （已有产物目录上加 --resume 可只补缺的图；描述/动态设计/配置说明等文字
+     内容仍需 LLM，那些模式照常要 key）
+  - 存量已验收的 LLM 流程图不受影响，只有重跑 gen --only flowcharts 的函数
+    会被替换成静态生成图。
+  - 生成后照常用 report + audit 出报告与渲染验收。
+
 ■ 缩写表定制（可选，两种提供方式）
   ① 外部人员提供 Word 缩写表：lld.config.json 加 "abbreviationsDoc": "项目缩写表.docx"
      （docx 内放两列表格：缩写|描述；「缩写」表进报告 3.1，「定义」表（表头 名称/定义|描述）

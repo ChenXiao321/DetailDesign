@@ -4961,6 +4961,28 @@ window.addEventListener('DOMContentLoaded', async () => {
         if (cand && dirOf(cand) === dirOf(sp) && clean(cand)) { sp = cand; break; }
       }
     }
+    // 首/末段斜段正交化（仅第三遍、深搜也失败后的最后手段）：第三遍中深搜/端点贴形/救援
+    // 都没能把首段（或末段）唯一一段斜线修直时，把它改成 L 形两拐、中间折点原样保留——
+    // dagre 常把折点钉在邻边同高处借 0.6 容差规避严格交叉判定（Startup D0--否-->N15：
+    // 竖干线在 y=1887.23 与 D2-->N10 横臂相触），中间折点一动即变严格交叉。改后同口径
+    // 复检，不过则维持斜线兜底。只在第三遍做：前两遍维持旧管线逐位一致（深搜能救的边
+    // 仍由深搜救，v2 M2_PWR_CHK-->M2_PWR_SHDN 类零回归），本相位只碰深搜穷尽后最终仍
+    // 会渲染成斜线的边。
+    if (useDeep && sp && ctx && hasDiag(sp)) {
+      const diags = [];
+      for (let i = 0; i < sp.length - 1; i++)
+        if (Math.abs(sp[i + 1][0] - sp[i][0]) > 0.6 && Math.abs(sp[i + 1][1] - sp[i][1]) > 0.6) diags.push(i);
+      if (diags.length === 1 && (diags[0] === 0 || diags[0] === sp.length - 2)) {
+        const i = diags[0], a = sp[i], b = sp[i + 1];
+        const pen = ctx.pen ? ctx.pen : () => false;
+        for (const c of [[b[0], a[1]], [a[0], b[1]]]) {
+          const v = [...sp.slice(0, i), a, c, b, ...sp.slice(i + 2)];
+          if ((xBoxes && xBoxes(v).length) || pen(v) || (endDir && dirOf(v) !== endDir) || (xEdge && xEdge(v))) continue;
+          sp = v;
+          break;
+        }
+      }
+    }
     // 标记需要第三遍深搜的边：结果仍带斜段（dagre 兜底被保留），或角部平移/躺平救援
     // 拒收过斜线兜底（旧管线会收进斜线）。隐形钉位边/无目标盒边无深搜上下文，不标。
     if (!useDeep && sp && ctx && !(selfE && selfE.invisible) && (hasDiag(sp) || diagReject)) sp._needDeep = 1;

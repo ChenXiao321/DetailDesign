@@ -1,7 +1,8 @@
 export { analyzeModule, type InputFile } from './analyzer/moduleAnalyzer.js';
 export { parseHeaderComment } from './parser/commentParser.js';
 export { parseCFile, preprocessSource, walkTopLevel, nodeText } from './parser/cParser.js';
-export { generateDesign, type GenerateOptions } from './generator/designGenerator.js';
+export { generateDesign, flowchartProblems, type GenerateOptions } from './generator/designGenerator.js';
+export { buildStaticFlowchart, buildFallbackFlowchart } from './generator/staticFlowchart.js';
 export { generateHtmlReport } from './report/htmlReport.js';
 export { parseAbbreviationsDocx, type AbbreviationsDoc } from './report/abbrDocx.js';
 export { functionCard, calloutCard, esc, escRaw, paramRows } from './report/cards.js';

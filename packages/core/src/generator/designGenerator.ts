@@ -3,12 +3,13 @@ import type {
 } from '../model/types.js';
 import type { LLMProvider } from '../llm/provider.js';
 import {
-  buildFunctionDescriptionPrompt, buildFlowchartPrompt,
+  buildFunctionDescriptionPrompt,
   buildStateMachinePrompt, buildSequencePrompt, buildConfigValueEffectPrompt,
   buildCalloutDescriptionPrompt, buildTypeDescriptionPrompt,
   buildExternalDescriptionPrompt, buildModuleDescriptionPrompt,
 } from '../llm/prompts.js';
 import { lintMermaidSource, lintFlowchartStructure, lintSequenceStructure } from '../report/mermaidPre.js';
+import { buildStaticFlowchart, buildFallbackFlowchart } from './staticFlowchart.js';
 
 /** 从 LLM 输出中提取 Mermaid 源码（剥 ```mermaid 围栏）；非法则抛错 */
 function extractMermaid(expectedStart: RegExp, kindHint: string): (output: string) => string {
@@ -28,65 +29,43 @@ function extractMermaid(expectedStart: RegExp, kindHint: string): (output: strin
       // 面向模型的中文反馈（会随重试回喂给 LLM），避免只给正则表达式
       throw new Error(`你的输出不是有效的 Mermaid 图代码。要求：第一行必须是 ${kindHint}，只输出图代码本身，不要输出任何解释、描述或分析文字。请重新输出。`);
     }
-    // 无标题 subgraph 缺样式兜底：Qwen 常漏写 style（如 IoMcuAdc MainFunction 的 LOOP_BODY），
-    // 默认渲染成可见灰框；泳道/逻辑分组框都应隐形。
-    // 条件编译虚线框由 prompt 规则 6 显式给 dashed style（已写 style 的不在此列），不受影响
-    if (/^(flowchart|graph)\s/.test(firstLine)) {
-      const styled = new Set([...text.matchAll(/^\s*style\s+([A-Za-z0-9_]+)\s/gm)].map(m => m[1]));
-      const missing = [...text.matchAll(/^\s*subgraph\s+([A-Za-z0-9_]+)\s*\["\s*"\]/gm)]
-        .map(m => m[1])
-        .filter(id => !styled.has(id));
-      if (missing.length > 0) {
-        text += '\n' + missing.map(id => `    style ${id} fill:transparent,stroke:transparent`).join('\n');
-      }
-    }
     return text;
   };
 }
 
-/** 流程图输出校验：extractMermaid 提取 + 词法 lint + 结构 lint + 条件编译虚线框存在性；问题拼成中文反馈随重试回喂 */
-function validateFlowchart(fn: FunctionUnit): (output: string) => string {
-  return (output: string) => {
-    const text = extractMermaid(/^(flowchart|graph)\s+(TD|TB|BT|LR|RL)/, 'flowchart TD')(output);
-    const problems = [...lintMermaidSource(text), ...lintFlowchartStructure(text)];
-    // 条件编译虚线框硬校验（v3 实测 Qwen 会整图漏画使能框，或把 #if 误画成运行时菱形）：
-    for (const macro of [...new Set([...fn.conditionalFlags, ...(fn.innerCondFlags ?? [])])]) {
-      const fcLines = text.split('\n');
-      // ① 框存在性：宏名必须出现在注释节点标签（["..."] 行，排除 style/classDef/class 样式行）。
-      //    只出现在菱形 {"..."} 里不算数——那是把编译期条件误画成运行时分支。
-      //    注释里也接受两段式前缀缩写（GP_ECUSTPSHDN_SAFETY_ENABLE→SAFETY_ENABLE，基线既有风格）；
-      //    缩写须仍含下划线（≥2 段），防 GP_X_ENABLE→ENABLE 这种单段缩写在任意注释里误命中。
-      const abbrev = macro.replace(/^GP_[A-Za-z0-9]+_/, '');
-      const names = abbrev.includes('_') ? [macro, abbrev] : [macro];
-      const inNote = fcLines.some(l => l.includes('["') && !/^\s*(style|classDef|class)\s/.test(l) && names.some(n => l.includes(n)));
-      if (!inNote) {
-        problems.push(
-          `缺少条件编译虚线框：宏 ${macro} 对应的代码段未圈出。按规则 6 把该段节点放进无标题 subgraph 并设虚线样式，框内顶部加注释节点写明「注：仅在 ${macro} 生效时参与编译」`,
-        );
-      }
-      // ② 编译期宏禁入菱形：宏在源码中仅出现于 #if/#elif、无运行时 if/for/while 使用时，
-      //    菱形标签出现该宏 = 把编译期条件误画成运行时分支（v2 Startup 实测：
-      //    #if(SAFETY_ACTION_ENABLE==STD_ON) 被画成菱形+是/否）。菱形只表达运行时分支。
-      //    运行时豁免依据 bodyTextWithPP（截断 8500，超长函数宏在截断外运行时使用会误报——
-      //    误报表现为多一次重试进 failures，人工可辨，可接受）。
-      const body = fn.bodyTextWithPP ?? fn.bodyText ?? '';
-      const runtimeUse = body.split('\n').some(l => l.includes(macro) && /^\s*(?:if|for|while)\s*\(/.test(l));
-      const inDiamond = fcLines.some(l => l.includes(macro) && l.includes('{"'));
-      if (inDiamond && !runtimeUse) {
-        problems.push(
-          `宏 ${macro} 是编译期条件（源码中仅出现在 #if/#elif），不得画成菱形判断分支——菱形只用于源码中运行时 if/循环条件。请删除该菱形及其是/否分支，把 #if 控制的代码段按规则 6 画成虚线框（#if/#elif 多路时画多个并列虚线框，每路一个注释节点）`,
-        );
-      }
-    }
-    if (problems.length > 0) {
-      throw new Error(
-        `你的流程图存在以下 ${problems.length} 个问题：\n` +
-        problems.map((p, i) => `${i + 1}. ${p}`).join('\n') +
-        '\n请修正后重新输出完整的图代码（仍然只输出图代码本身）。',
+/** 流程图断言网（纯函数，导出供静态生成器自检与测试直喂恶意图）：
+ *  词法 lint + 结构 lint + 条件编译虚线框存在性 + 编译期宏禁入菱形；返回中文问题清单（空 = 通过） */
+export function flowchartProblems(fn: FunctionUnit, text: string): string[] {
+  const problems = [...lintMermaidSource(text), ...lintFlowchartStructure(text)];
+  // 条件编译虚线框硬校验（v3 实测 Qwen 会整图漏画使能框，或把 #if 误画成运行时菱形）：
+  for (const macro of [...new Set([...fn.conditionalFlags, ...(fn.innerCondFlags ?? [])])]) {
+    const fcLines = text.split('\n');
+    // ① 框存在性：宏名必须出现在注释节点标签（["..."] 行，排除 style/classDef/class 样式行）。
+    //    只出现在菱形 {"..."} 里不算数——那是把编译期条件误画成运行时分支。
+    //    注释里也接受两段式前缀缩写（GP_ECUSTPSHDN_SAFETY_ENABLE→SAFETY_ENABLE，基线既有风格）；
+    //    缩写须仍含下划线（≥2 段），防 GP_X_ENABLE→ENABLE 这种单段缩写在任意注释里误命中。
+    const abbrev = macro.replace(/^GP_[A-Za-z0-9]+_/, '');
+    const names = abbrev.includes('_') ? [macro, abbrev] : [macro];
+    const inNote = fcLines.some(l => l.includes('["') && !/^\s*(style|classDef|class)\s/.test(l) && names.some(n => l.includes(n)));
+    if (!inNote) {
+      problems.push(
+        `缺少条件编译虚线框：宏 ${macro} 对应的代码段未圈出（应有注释节点写明「注：仅在 ${macro} 生效时参与编译」）`,
       );
     }
-    return text;
-  };
+    // ② 编译期宏禁入菱形：宏在源码中仅出现于 #if/#elif、无运行时 if/for/while 使用时，
+    //    菱形标签出现该宏 = 把编译期条件误画成运行时分支。菱形只表达运行时分支。
+    //    运行时豁免依据 bodyTextWithPP（截断 8500，超长函数宏在截断外运行时使用会误报——
+    //    误报表现为多一次重试进 failures，人工可辨，可接受）。
+    const body = fn.bodyTextWithPP ?? fn.bodyText ?? '';
+    const runtimeUse = body.split('\n').some(l => l.includes(macro) && /^\s*(?:if|for|while)\s*\(/.test(l));
+    const inDiamond = fcLines.some(l => l.includes(macro) && l.includes('{"'));
+    if (inDiamond && !runtimeUse) {
+      problems.push(
+        `宏 ${macro} 是编译期条件（源码中仅出现在 #if/#elif），不得画成菱形判断分支——菱形只用于源码中运行时 if/循环条件`,
+      );
+    }
+  }
+  return problems;
 }
 
 /** 带重试的生成（格式校验失败时把错误回喂） */
@@ -208,12 +187,6 @@ function splitSequenceRoles(text: string): { role: string | null; diagram: strin
   }));
 }
 
-/** 判断函数是否需要流程图：有分支/循环且非单行透传 */
-function needsFlowchart(_fn: FunctionUnit): boolean {
-  // 参照既有详细设计文档颗粒度：每个函数工作项都配流程图（含平凡 setter）
-  return true;
-}
-
 type TypeGenerated = NonNullable<TypeUnit['generated']>;
 
 /** 类型描述输出校验：优先解析 JSON（comment + defines/elements 字典）；非 JSON 时整段兜底为 comment */
@@ -259,30 +232,63 @@ function validateTypeDescription(t: TypeUnit): (output: string) => Omit<TypeGene
   };
 }
 
-/** 为单个函数生成流程图 */
+/** 流程图生成结果（静态生成，永不抛错——一切异常收敛到 L3 顺序链兜底图） */
+export interface FlowchartGenResult {
+  warnings: string[];
+  degraded: 'none' | 'subtree' | 'block';
+  /** 断言网检出缺陷（CFG 生成器 bug 信号，应进 failures 让人工知晓；图已按 L3 兜底写出） */
+  defect?: string;
+}
+
+/** 为单个函数生成流程图：tree-sitter CFG 静态构建（零 LLM，结构确定性）。
+ *  断言网 flowchartProblems 自检；失败/异常一律降 L3 顺序链兜底——gen 对任意函数必出图 */
 async function genFlowchart(
-  model: ModuleModel,
   fn: FunctionUnit,
-  provider: LLMProvider,
-): Promise<void> {
-  if (!needsFlowchart(fn)) return;
-  const fc = buildFlowchartPrompt(model, fn);
-  // 流程图结构复杂、校验严格，给 3 次重试（其余生成维持默认 2 次）
-  const diagram = await generateWithRetry(provider, fc.system, fc.user, validateFlowchart(fn), 3);
+  readSource: ((relPath: string) => string | null) | undefined,
+): Promise<FlowchartGenResult> {
+  let diagram: string;
+  let warnings: string[] = [];
+  let degraded: FlowchartGenResult['degraded'] = 'none';
+  let defect: string | undefined;
+  try {
+    if (!readSource) throw new Error('无源码读取通道（readSource 未配置）');
+    const source = readSource(fn.file);
+    if (source == null) throw new Error(`源码文件读取失败: ${fn.file}`);
+    const r = await buildStaticFlowchart(fn, source);
+    diagram = r.mermaid;
+    warnings = r.warnings;
+    degraded = r.degraded;
+    // 断言网只查实际画出框的宏：空区域（#if 只包花括号等片段）被构造性抑制，
+    // 不应触发「缺少条件编译虚线框」误报把整个函数打进 L3（抑制本身已记 warnings）
+    const fnView: FunctionUnit = r.framedMacros.length === (fn.innerCondFlags ?? []).length
+      ? fn
+      : { ...fn, innerCondFlags: (fn.innerCondFlags ?? []).filter(m => r.framedMacros.includes(m)) };
+    const problems = flowchartProblems(fnView, diagram);
+    if (problems.length > 0) throw new Error(`断言网检出 ${problems.length} 个问题: ${problems.join('；')}`);
+  } catch (err) {
+    defect = `CFG生成器缺陷（已降 L3 兜底）: ${(err as Error).message}`;
+    degraded = 'block';
+    diagram = buildFallbackFlowchart(fn);
+    // 兜底图也过一遍断言网：L3 构造上应全绿，出问题说明是更深的生成器 bug
+    const fbProblems = flowchartProblems(fn, diagram);
+    if (fbProblems.length > 0) defect += `；L3 兜底图仍有 ${fbProblems.length} 个问题: ${fbProblems.join('；')}`;
+  }
   fn.generated = fn.generated ?? {
-    detailedDescription: '', llmModel: provider.name, generatedAt: new Date().toISOString(),
+    detailedDescription: '', llmModel: 'static-cfg', generatedAt: new Date().toISOString(),
   };
   fn.generated.flowchart = diagram;
   fn.generated.flowchartFormat = 'mermaid';
+  return { warnings, degraded, defect };
 }
 
-/** 为单个函数生成增强描述（+ 流程图） */
+/** 为单个函数生成增强描述（LLM）+ 流程图（静态） */
 async function enrichFunction(
   model: ModuleModel,
   fn: FunctionUnit,
   provider: LLMProvider,
   abbr?: [string, string][],
-): Promise<void> {
+  readSource?: (relPath: string) => string | null,
+): Promise<FlowchartGenResult> {
   const { system, user } = buildFunctionDescriptionPrompt(model, fn);
   const text = await generateWithRetry(provider, system, withGlossary(user, abbr), (o) => {
     const cleaned = o.trim();
@@ -295,7 +301,7 @@ async function enrichFunction(
     generatedAt: new Date().toISOString(),
   };
 
-  await genFlowchart(model, fn, provider);
+  return genFlowchart(fn, readSource);
 }
 
 /** 生成动态设计（5.3 状态机 + 序列图）；skip 用于 --resume 时只补缺的一半 */
@@ -365,26 +371,33 @@ export interface GenerateOptions {
   /** 外部缩写定义（lld.config.json 的 abbreviationsDoc/abbreviations 解析结果）——按 prompt 内实际出现
    *  过滤后注入文本类生成（描述/配置说明/类型注释/外部接口说明/5.1），术语口径与外部定义一致 */
   abbreviations?: [string, string][];
+  /** 源文件读取通道（core 不碰 fs，由 CLI 注入）：流程图静态生成按 fn.file 重解析用。
+   *  返回 null = 读不到（该函数降 L3 兜底图） */
+  readSource?: (relPath: string) => string | null;
 }
 
-/** 生成入口：就地增强 model（函数 generated 字段 + dynamicDesign） */
+/** 生成入口：就地增强 model（函数 generated 字段 + dynamicDesign）。
+ *  provider 可为 null——仅当只跑 --only flowcharts（纯静态生成）时允许 */
 export async function generateDesign(
   model: ModuleModel,
-  provider: LLMProvider,
+  provider: LLMProvider | null,
   opts?: GenerateOptions,
 ): Promise<ModuleModel> {
   const log = opts?.onProgress ?? (() => {});
   const only = opts?.only;
   const skipExisting = opts?.skipExisting ?? false;
 
-  // --only flowcharts：只重刷各函数的流程图，保留已生成的描述等其余内容
+  // --only flowcharts：只重刷各函数的流程图，保留已生成的描述等其余内容；纯静态生成，无需 LLM
   if (only?.includes('flowcharts')) {
     const fnFilter = only.filter(o => o !== 'flowcharts');
     for (const fn of [...model.providedFunctions, ...model.internalFunctions]) {
       if (fnFilter.length > 0 && !fnFilter.includes(fn.name)) continue;
       log(`重新生成流程图: ${fn.name}`);
       try {
-        await genFlowchart(model, fn, provider);
+        const r = await genFlowchart(fn, opts?.readSource);
+        for (const w of r.warnings) log(`  ⚠ ${fn.name}: ${w}`);
+        if (r.degraded !== 'none') log(`  ⚠ ${fn.name}: 降级级别 ${r.degraded}`);
+        if (r.defect) opts?.failures?.push(`${fn.name}: ${r.defect}`);
       } catch (err) {
         log(`  ⚠ 失败（已跳过，可 --resume 重试）: ${fn.name} — ${(err as Error).message.replace(/\n/g, '\n      ')}`);
         opts?.failures?.push(`${fn.name}: ${(err as Error).message.replace(/\n/g, '\n      ')}`);
@@ -392,6 +405,9 @@ export async function generateDesign(
     }
     return model;
   }
+
+  // 其余生成项均需 LLM
+  if (!provider) throw new Error('生成描述/动态设计/配置说明等内容需要 LLM Provider（仅 --only flowcharts 可免 LLM）');
 
   const allFunctions = [...model.providedFunctions, ...model.internalFunctions];
   const targets = only
@@ -405,7 +421,10 @@ export async function generateDesign(
     }
     log(`生成描述: ${fn.name}`);
     try {
-      await enrichFunction(model, fn, provider, opts?.abbreviations);
+      const r = await enrichFunction(model, fn, provider, opts?.abbreviations, opts?.readSource);
+      for (const w of r.warnings) log(`  ⚠ ${fn.name}: ${w}`);
+      if (r.degraded !== 'none') log(`  ⚠ ${fn.name}: 流程图降级级别 ${r.degraded}`);
+      if (r.defect) opts?.failures?.push(`${fn.name}: ${r.defect}`);
     } catch (err) {
       log(`  ⚠ 失败（已跳过，可 --resume 重试）: ${fn.name} — ${(err as Error).message.replace(/\n/g, '\n      ')}`);
       opts?.failures?.push(`${fn.name}: ${(err as Error).message.replace(/\n/g, '\n      ')}`);

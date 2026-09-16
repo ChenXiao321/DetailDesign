@@ -116,8 +116,10 @@ async function cmdGen(dir: string, outDir: string, mock: boolean, only?: string[
   const model = resume && fs.existsSync(designPath)
     ? (JSON.parse(fs.readFileSync(designPath, 'utf-8')) as ModuleModel)
     : await loadOrAnalyzeModel(dir, modelPath);
-  const provider = makeProvider(mock);
-  console.error(`LLM Provider: ${provider.name}`);
+  // 流程图已改静态生成（零 LLM）：--only flowcharts 不构造 provider，无 LLM 环境也能刷图
+  const flowchartsOnly = only?.includes('flowcharts') ?? false;
+  const provider = flowchartsOnly ? null : makeProvider(mock);
+  console.error(`LLM Provider: ${provider ? provider.name : '无（流程图静态生成）'}`);
 
   // 增量落盘：每完成一个条目（onProgress 在进入下一条目前触发）就把 model 写回，
   // 中途断网/进程被杀时，已生成的内容不丢失，可用 --resume 续跑
@@ -128,11 +130,16 @@ async function cmdGen(dir: string, outDir: string, mock: boolean, only?: string[
   // 外部缩写定义（abbreviationsDoc/JSON 节）注入文本类生成，术语口径与外部一致
   const abbr = resolveAbbreviations(loadConfigFile());
   if (abbr) console.log(`术语表: ${abbr.entries.length} 条（${abbr.replace ? `外部表 ${abbr.source}` : 'JSON 配置'}），按 prompt 内出现过滤注入`);
+  // 流程图静态生成的源码读取通道（fn.file 为 analyze 时相对 dir 的路径）
+  const readSource = (rel: string): string | null => {
+    try { return fs.readFileSync(path.join(dir, rel), 'utf-8'); } catch { return null; }
+  };
   await generateDesign(model, provider, {
     only,
     skipExisting: resume,
     failures,
     abbreviations: abbr?.entries,
+    readSource,
     onProgress: msg => {
       save();
       console.error(`  ${msg}`);
@@ -258,7 +265,8 @@ async function main(): Promise<void> {
   lld analyze <模块目录> [--out 产物目录]   静态分析，产出 lld_model.json
   lld gen <模块目录> [--out 产物目录] [--mock] [--resume] [--only 函数名,dynamic,configs,callouts,flowcharts,types,externals,description]
                                         LLM 生成设计内容，产出 lld_design.json（增量落盘，中断可 --resume 续跑）
-                                        --only flowcharts 仅重刷各函数流程图（可叠加函数名缩小范围），保留描述
+                                        --only flowcharts 仅重刷各函数流程图（可叠加函数名缩小范围），保留描述；
+                                        流程图为静态生成（tree-sitter CFG），该模式免 LLM 配置
                                         --only types / externals / description 分别补类型描述 / 非Callout外部接口说明 / 5.1模块功能描述
   lld report <模块目录> [--out 产物目录]    生成 HTML 评审报告 lld_report.html
   lld audit <模块目录> [--out 产物目录]     渲染质量验收：Edge 预渲染（lld_report.html 成品版）+

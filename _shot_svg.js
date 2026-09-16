@@ -12,8 +12,12 @@ svgs.forEach((s, i) => {
     console.log('candidate svg#' + i, 'len=' + s.length, 'viewBox=' + (vb && vb[1]));
   }
 });
-const hit = svgs.find(s => s.includes(needle) && /viewBox="[-\d\s.,]+"/.test(s));
+// needle 可能命中多张（调用图也含函数名），取高度最大的一张（流程图是长图）
+const hits = svgs.filter(s => s.includes(needle) && /viewBox="[-\d\s.,]+"/.test(s));
+const heightOf = s => +(s.match(/viewBox="([-0-9\s.,]+)"/)?.[1]?.split(/[\s,]+/) ?? [0, 0, 0, 0])[3];
+const hit = hits.length ? hits.reduce((a, b) => heightOf(b) > heightOf(a) ? b : a) : null;
 if (!hit) { console.error('未找到含 ' + needle + ' 的 svg'); process.exit(1); }
+console.log('picked svg#' + svgs.indexOf(hit));
 const vb = hit.match(/viewBox="([^"]+)"/);
 const [x, y, w, h] = vb ? vb[1].split(/[\s,]+/).map(Number) : [0, 0, 800, 600];
 const page = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{margin:0;background:#fff}</style></head><body>${hit}</body></html>`;

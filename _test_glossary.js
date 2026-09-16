@@ -38,16 +38,14 @@ const ABBR = [
     check('不出现条目不注入', !descPrompt.includes('WDG =') && !descPrompt.includes('NEVERUSED'));
     check('注入在 prompt 末尾', descPrompt.trim().endsWith('（外部口径）'));
   }
-  // ② 流程图 prompt 不注入（图源结构生成保持干净）
+  // ② 流程图已改静态生成（零 LLM）：只有描述 1 次调用；图仍产出（无源码通道时 L3 兜底链）
   {
     const users = [];
-    const FLOW = 'flowchart TD\n    A(["开始"]) --> B["处理"]\n    B --> C(["结束"])';
-    const provider = { name: 'fake', async generate(s, u) { users.push(u); return u.includes('flowchart') ? FLOW : '这是一段足够长的函数功能描述，长度超过二十字符。'; } };
+    const provider = { name: 'fake', async generate(s, u) { users.push(u); return '这是一段足够长的函数功能描述，长度超过二十字符。'; } };
     const model = mkModel();
     await generateDesign(model, provider, { only: ['M_Init'], failures: [], abbreviations: ABBR });
-    check('描述+流程图两次调用', users.length === 2, `calls=${users.length}`);
-    const fcPrompt = users[1] || '';
-    check('流程图 prompt 无术语表', fcPrompt.length > 0 && !fcPrompt.includes('# 项目术语表'), fcPrompt.slice(-200));
+    check('流程图免 LLM（仅描述 1 次调用）', users.length === 1, `calls=${users.length}`);
+    check('流程图仍产出（L3 兜底）', !!model.providedFunctions[0].generated?.flowchart?.startsWith('flowchart TD'), model.providedFunctions[0].generated?.flowchart?.slice(0, 60));
   }
   // ③ 无 abbreviations 时 prompt 零变化（回归）
   {

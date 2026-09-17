@@ -76,6 +76,9 @@ function fakeProvider(smText) {
     check('分图:兼容位与列表同内容', dd.stateMachine?.diagram === dd.stateMachines?.[0]?.diagram);
     check('分图:从核图内容', dd.stateMachines?.[1]?.diagram.includes('自旋等待主核屏障'));
     check('分图:polarion章节', dd.stateMachines?.every(s => s.polarion.chapter === '5.3.1' && s.polarion.workItemKind === 'statemachine'));
+    check('分图:迁移解析', dd.stateMachines?.[0]?.transitions.length === 3 && dd.stateMachines?.[1]?.transitions.length === 3,
+      JSON.stringify(dd.stateMachines?.map(s => s.transitions)));
+    check('分图:迁移触发条件', dd.stateMachines?.[0]?.transitions[2]?.trigger === 'master 完成阶段一初始化');
   }
 
   // 2. 单图（无 ### 行）：stateMachines 不写，形态与旧版一致
@@ -130,6 +133,10 @@ function fakeProvider(smText) {
     check('渲染:两节', (html2.match(/5\.3\.1 状态机：/g) || []).length === 2);
     check('渲染:两节标题', html2.includes('5.3.1 状态机：M 状态机（主核 Core0）') && html2.includes('5.3.1 状态机：M 状态机（从核 satellite）'));
     check('渲染:状态表只出一次', (html2.match(/5\.3\.1\.1 状态描述/g) || []).length === 1);
+    // 迁移表合并两角色去重：[*]→UNDEF 与 UNDEF→ONE 两图相同，ONE→TWO 各一条 → 4 行
+    const transTable = html2.match(/5\.3\.1\.2 状态迁移[\s\S]*?<\/table>/)?.[0] ?? '';
+    check('渲染:迁移表合并4行', (transTable.match(/<tr><td><code>/g) || []).length === 4, transTable.slice(0, 400));
+    check('渲染:迁移表含两角色触发', transTable.includes('master 完成阶段一初始化') && transTable.includes('satellite 自旋等待主核屏障'));
 
     const model1 = baseModel();
     await generateDesign(model1, fakeProvider(SINGLE_SM), { only: ['dynamic'], failures: [] });

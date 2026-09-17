@@ -165,6 +165,15 @@ function splitRoleDiagrams(text: string): { role: string | null; diagram: string
   }));
 }
 
+/** 从状态机图源解析迁移表（5.3.1.2）：X --> Y : 触发条件（含 [*] 伪状态，无标签时 trigger 为空串） */
+function parseSmTransitions(diagram: string): StateMachineDesign['transitions'] {
+  const out: StateMachineDesign['transitions'] = [];
+  for (const m of diagram.matchAll(/^\s*(\[\*\]|\w+)\s*-->\s*(\[\*\]|\w+)\s*(?::\s*(.+?))?\s*$/gm)) {
+    out.push({ from: m[1], to: m[2], trigger: m[3]?.trim() ?? '', description: '' });
+  }
+  return out;
+}
+
 /** 状态机输出校验：允许「### 角色名」分段多图（多核模块按角色分图），每张都必须是完整 stateDiagram-v2；
  *  内容硬校验（09-17 内网 v6 根因：prompt 引导不强制，模型分图后照抄旧内容）——
  *  ① 迁移触发条件与 note 必须含中文（禁裸函数名/裸英文）② 多角色分图内容不得雷同 */
@@ -345,7 +354,7 @@ async function generateDynamicDesign(
         diagram: part.diagram,
         diagramFormat: 'mermaid',
         states: smPrompt.states,
-        transitions: [],
+        transitions: parseSmTransitions(part.diagram),
         polarion: {
           isWorkItem: true, chapter: '5.3.1', workItemKind: 'statemachine',
           title: name, workItemId: null,

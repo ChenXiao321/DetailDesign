@@ -320,6 +320,8 @@ ${diagramBlock(g.diagram)}
   // ---- 5.3 动态设计 ----
   const dd = model.dynamicDesign;
   const sms = listStateMachines(dd);
+  // 迁移表合并口径：多角色分图时合并各角色迁移并按 从|到|触发 去重（单图产物与旧版逐字节一致）
+  const mergedTransitions = [...new Map(sms.flatMap(sm => sm.transitions).map(t => [`${t.from}|${t.to}|${t.trigger}`, t])).values()];
   // 多核按角色分图时逐角色各渲染一张（与序列图同章号多节的惯例一致）；单图产物输出与旧版逐字节一致
   const smSection = sms.length > 0 ? `
 ${sms.map(sm => `<h3>5.3.1 状态机：${esc(sm.name)} <span class="badge">工作项 · 5.3.1</span></h3>
@@ -330,7 +332,7 @@ ${diagramBlock(sm.diagram)}
 ${sms[0].states.map(s => `<tr><td><code>${esc(s.name)}</code></td><td>${esc(s.description)}</td></tr>`).join('')}</table>
 <h3>5.3.1.2 状态迁移（每个迁移一个工作项）</h3>
 <table class="simple"><tr><th>从</th><th>到</th><th>触发条件</th><th>说明</th></tr>
-${sms[0].transitions.map(t => `<tr><td><code>${esc(t.from)}</code></td><td><code>${esc(t.to)}</code></td><td>${esc(t.trigger)}</td><td>${esc(t.description)}</td></tr>`).join('')}</table>` : '';
+${mergedTransitions.map(t => `<tr><td><code>${esc(t.from)}</code></td><td><code>${esc(t.to)}</code></td><td>${esc(t.trigger)}</td><td>${esc(t.description)}</td></tr>`).join('')}</table>` : '';
 
   const seqSection = (dd?.sequences ?? []).map(s => {
     // 平铺警告（存量产物补网）：入口函数源码含分支/循环而图全图无组合片段——gen 期硬校验拦不住旧产物
@@ -423,7 +425,7 @@ ${callouts.map((e, i) => calloutCard(e, `${calloutSecNo}.${i + 1}`)).join('\n')}
         : `探测到通讯协议相关调用：${commIfs.map(e => `<code>${esc(e.name)}</code>`).join('、')}。${TODO_CONCLUSION}` },
     { dim: '互操作性/交互', no: 4, content: '分析软件单元是否能够体现动态行为和交互',
       fact: model.dynamicDesign
-        ? `5.3 已生成${sms.length > 0 ? `状态机「${sms.map(sm => esc(sm.name)).join('」与「')}」（${sms[0].states.length} 状态 / ${sms[0].transitions.length} 迁移）` : ''}${model.dynamicDesign.sequences.length > 0 ? `与 ${model.dynamicDesign.sequences.length} 张序列图` : ''}；5.1 功能接口总图与各函数调用图体现交互关系。${TODO_CONCLUSION}`
+        ? `5.3 已生成${sms.length > 0 ? `状态机「${sms.map(sm => esc(sm.name)).join('」与「')}」（${sms[0].states.length} 状态 / ${mergedTransitions.length} 迁移）` : ''}${model.dynamicDesign.sequences.length > 0 ? `与 ${model.dynamicDesign.sequences.length} 张序列图` : ''}；5.1 功能接口总图与各函数调用图体现交互关系。${TODO_CONCLUSION}`
         : `5.3 动态设计（状态机/序列图）尚未生成；5.1 已提供功能接口总图与内部函数调用图。${TODO_CONCLUSION}` },
     { dim: '关键性', no: 5, content: '分析与其他单元/组件的依赖关系',
       fact: `外部依赖模块：${nonCalloutGroups.length > 0 ? nonCalloutGroups.join('、') : '无'}（接口明细见 5.2.2）；Callout 函数 ${calloutCount} 个由集成方在配置代码中实现（见 6.2）。${TODO_CONCLUSION}` },

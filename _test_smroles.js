@@ -97,6 +97,31 @@ function fakeProvider(smText) {
     check('拦截:动态设计整体跳过待resume', model.dynamicDesign === null || model.dynamicDesign.stateMachine === null);
   }
 
+  // 3b. 触发条件是裸函数名/裸英文 → 内容硬校验拦截（09-17 内网 v6 根因：prompt 引导不强制）
+  {
+    const model = baseModel();
+    const failures = [];
+    const bad = SINGLE_SM.replace('进入 Startup', 'M_Init()');
+    await generateDesign(model, fakeProvider(bad), { only: ['dynamic'], failures });
+    check('拦截裸函数名:记失败', failures.some(f => f.startsWith('dynamic')), JSON.stringify(failures).slice(0, 200));
+    check('拦截裸函数名:不入库', model.dynamicDesign === null || model.dynamicDesign.stateMachine === null);
+  }
+
+  // 3c. 两角色分图内容完全相同 → 雷同拦截（分图必须体现角色差异）
+  {
+    const model = baseModel();
+    const failures = [];
+    const dup = [
+      '### 主核 Core0', 'stateDiagram-v2',
+      '    [*] --> UNDEF : 上电复位', '    UNDEF --> ONE : 进入 Startup',
+      '### 从核 satellite', 'stateDiagram-v2',
+      '    [*] --> UNDEF : 上电复位', '    UNDEF --> ONE : 进入 Startup',
+    ].join('\n');
+    await generateDesign(model, fakeProvider(dup), { only: ['dynamic'], failures });
+    check('拦截雷同:记失败', failures.some(f => f.startsWith('dynamic')), JSON.stringify(failures).slice(0, 200));
+    check('拦截雷同:不入库', model.dynamicDesign === null || model.dynamicDesign.stateMachine === null);
+  }
+
   // 4. report 渲染：双角色各一个 5.3.1 节；单图渲染与旧版格式逐字节一致
   {
     const model2 = baseModel();

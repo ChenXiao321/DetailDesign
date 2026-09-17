@@ -254,11 +254,25 @@ export function buildStateMachinePrompt(model: ModuleModel): StateMachinePromptR
     }
     lines.push(``);
     lines.push(`# 状态相关代码事实`);
-    for (const fn of [...model.providedFunctions, ...model.internalFunctions]) {
+    const drivers = [...model.providedFunctions, ...model.internalFunctions].filter(fn => {
       const desc = fn.comment?.description ?? '';
-      if (/stage|state|status/i.test(desc) || fn.name === `${model.module}_Startup`) {
-        lines.push(`- 函数 ${fn.name}: ${desc.replace(/\n/g, ' ')}`);
-        if (fn.calls.length > 0) lines.push(`  调用: ${fn.calls.slice(0, 10).join(', ')}`);
+      return /stage|state|status/i.test(desc) || fn.name === `${model.module}_Startup`;
+    });
+    for (const fn of drivers) {
+      const desc = fn.comment?.description ?? '';
+      lines.push(`- 函数 ${fn.name}: ${desc.replace(/\n/g, ' ')}`);
+      if (fn.calls.length > 0) lines.push(`  调用: ${fn.calls.slice(0, 10).join(', ')}`);
+    }
+    // 迁移驱动函数源码一并喂入：master/satellite 角色差异（GetCoreId 分支、自旋等待屏障）
+    // 只在函数体里可见——只喂简介时模型画不出角色差异，会把同一张图抄两遍（09-17 内网 v6 实测根因）
+    if (drivers.length > 0) {
+      lines.push(``);
+      lines.push(`# 迁移驱动函数源码（角色差异、迁移条件以此为准）`);
+      for (const fn of drivers) {
+        lines.push(`## ${fn.name}`);
+        lines.push('```c');
+        lines.push(fn.bodyText);
+        lines.push('```');
       }
     }
     return finishStateMachinePrompt(model, lines, (stateType.relatedDefines ?? []).map(d => ({
@@ -314,10 +328,13 @@ function finishStateMachinePrompt(
   lines.push(`1. 第一行必须是 stateDiagram-v2，只输出图代码本身，不要用 \`\`\` 包裹，不要输出任何解释`);
   lines.push(`2. 状态名使用定义值去掉前缀后的短名（如 STPSTAGE_ONE → ONE）`);
   lines.push(`3. 迁移格式: 源状态 --> 目标状态 : 触发条件（触发条件中不要出现冒号）`);
-  lines.push(`   触发条件必须是有语义的中文描述（如「master 完成阶段一初始化」「satellite 自旋等待屏障」），禁止只写裸函数名`);
+  lines.push(`   触发条件必须是有语义的中文描述（如「master 完成阶段一初始化」「satellite 自旋等待屏障」），禁止只写裸函数名或裸英文词——`);
+  lines.push(`   正确: ONE --> TWO : master 完成阶段一初始化；错误: ONE --> TWO : Gp_EcuStpShdn_Startup`);
+  lines.push(`   触发条件依据上方驱动函数源码里的实际语句提炼（赋值状态变量、屏障等待、超时退出等），不要凭空概括`);
   lines.push(`4. 用 [*] 表示初始/终止伪状态`);
-  lines.push(`5. 补充说明用 note right of <状态> : 内容（单行，用中文）`);
-  lines.push(`6. 若模块行为依赖核角色（主核 master/Core0 驱动状态迁移、从核 satellite 自旋等待或跟随，如按 GetCoreId 返回值分支），不要画在一张图里——按核角色分别绘制：每个角色一张完整 stateDiagram-v2，每张图前一行写 ### 角色名（### 主核 Core0、### 从核 satellite）；跨核同步（等待对方阶段置位）在被等待的迁移上用触发条件或 note 说明。单核模块或各角色状态机无差异时只画一张，不要输出 ### 行`);
+  lines.push(`5. 补充说明用 note right of <状态> : 内容（单行，必须用中文）`);
+  lines.push(`6. 若模块行为依赖核角色（主核 master/Core0 驱动状态迁移、从核 satellite 自旋等待或跟随，如按 GetCoreId 返回值分支），不要画在一张图里——按核角色分别绘制：每个角色一张完整 stateDiagram-v2，每张图前一行写 ### 角色名（### 主核 Core0、### 从核 satellite）；跨核同步（等待对方阶段置位）在被等待的迁移上用触发条件或 note 说明`);
+  lines.push(`   分图时各角色的图必须体现真实差异（主核执行初始化动作、从核自旋等待屏障等），禁止两个角色输出内容相同的图；单核模块或各角色状态机确实无差异时只画一张，不要输出 ### 行`);
   return { system: SYSTEM_DESIGNER, user: lines.join('\n'), states };
 }
 

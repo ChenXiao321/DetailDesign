@@ -165,13 +165,44 @@ function splitRoleDiagrams(text: string): { role: string | null; diagram: string
   }));
 }
 
-/** 状态机输出校验：允许「### 角色名」分段多图（多核模块按角色分图），每张都必须是完整 stateDiagram-v2 */
+/** 状态机输出校验：允许「### 角色名」分段多图（多核模块按角色分图），每张都必须是完整 stateDiagram-v2；
+ *  内容硬校验（09-17 内网 v6 根因：prompt 引导不强制，模型分图后照抄旧内容）——
+ *  ① 迁移触发条件与 note 必须含中文（禁裸函数名/裸英文）② 多角色分图内容不得雷同 */
 function validateStateMachine(): (output: string) => string {
+  const hasCjk = (s: string) => /[一-鿿]/.test(s);
   return (output: string) => {
     const text = extractDiagramSet(output, 'stateDiagram-v2');
-    for (const part of splitRoleDiagrams(text)) {
+    const parts = splitRoleDiagrams(text);
+    for (const part of parts) {
       if (!part.diagram.trim().startsWith('stateDiagram-v2')) {
         throw new Error(`状态机分图「${part.role ?? '未标角色'}」缺少 stateDiagram-v2 起始行：多角色分图时每张图都必须是完整的状态机图（### 角色名 换行后第一行写 stateDiagram-v2）。请修正后重新输出完整的图代码。`);
+      }
+      const roleTag = part.role ? `分图「${part.role}」` : '状态机图';
+      // 迁移触发条件：X --> Y : 标签 —— 标签必须含中文（裸函数名/裸英文不放行）
+      const badLabels: string[] = [];
+      for (const m of part.diagram.matchAll(/-->\s*[\w[\]*]+\s*:\s*(\S.*)$/gm)) {
+        const label = m[1].trim();
+        if (!hasCjk(label)) badLabels.push(label);
+      }
+      if (badLabels.length > 0) {
+        throw new Error(`${roleTag}的迁移触发条件必须是语义化中文描述，以下触发条件不合格（裸函数名/裸英文）：${[...new Set(badLabels)].join('、')}。请改为描述迁移语义的中文短语（如「master 完成阶段一初始化」「satellite 自旋等待屏障」），依据驱动函数源码里的实际语句提炼。请修正后重新输出完整的图代码。`);
+      }
+      // note 同样必须中文
+      const badNotes: string[] = [];
+      for (const m of part.diagram.matchAll(/^\s*note\s+\S+.*?:\s*(\S.*)$/gm)) {
+        const noteText = m[1].trim();
+        if (!hasCjk(noteText)) badNotes.push(noteText);
+      }
+      if (badNotes.length > 0) {
+        throw new Error(`${roleTag}的 note 必须用中文，以下内容不合格：${[...new Set(badNotes)].join('、')}。请修正后重新输出完整的图代码。`);
+      }
+    }
+    // 多角色分图：各角色图内容不得完全相同（角色差异必须体现在图里，否则分图无意义）
+    if (parts.length > 1) {
+      const norm = (s: string) => s.split('\n').map(l => l.trim()).filter(Boolean).join('\n');
+      const first = norm(parts[0].diagram);
+      if (parts.every(p => norm(p.diagram) === first)) {
+        throw new Error(`各角色分图内容完全相同（${parts.map(p => p.role).join('、')}）：多核模块分图必须体现角色差异——主核执行初始化/驱动状态迁移，从核自旋等待屏障或跟随。请依据驱动函数源码（GetCoreId 分支、自旋等待语句）分别绘制，修正后重新输出完整的图代码。`);
       }
     }
     return text;

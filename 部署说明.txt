@@ -56,6 +56,24 @@
     会被替换成静态生成图。
   - 生成后照常用 report + audit 出报告与渲染验收。
 
+■ 流程图质量修订 + 状态机分图（2026-09-17 起）
+  ① 条件编译虚线框归属修复：if/else 被 #endif 夹断的写法（else 体在 #if 区外），
+     条件菱形现在正确画进所属虚线框（此前会漏到框外）。
+  ② 局部变量定义不再进流程图（int x = 0 之类定义无流程语义），流程图只画
+     赋值/调用/控制流等真实操作；for 循环初始化器不受影响照常显示。
+  ③ 状态机图：多核模块按核角色分别绘制（主核 master/Core0 一张、从核
+     satellite 一张，各成一个工作项，对齐序列图分图惯例）；触发条件改用
+     语义化中文描述（不再只写裸函数名）。单核模块仍只画一张，无变化。
+  - 内网刷新既有产物的方法：
+    a) 流程图（免 LLM）：
+         node packages/cli/dist/index.js gen 测试模块/<模块> --out <产物目录> --only flowcharts --resume
+    b) 状态机分图（需 LLM）：用文本编辑器打开产物目录的 lld_design.json，
+       删掉 "stateMachine": {...} 整个字段（及 "stateMachines" 若有），然后：
+         node packages/cli/dist/index.js gen 测试模块/<模块> --out <产物目录> --only dynamic --resume
+       （--resume 会保留已有序列图，只重生状态机；生成后人工目检一眼新图——
+        若仍只出一张或触发条件退回裸函数名，留日志反馈）
+    c) 照常 report + audit 出报告与验收。
+
 ■ 缩写表定制（可选，两种提供方式）
   ① 外部人员提供 Word 缩写表：lld.config.json 加 "abbreviationsDoc": "项目缩写表.docx"
      （docx 内放两列表格：缩写|描述；「缩写」表进报告 3.1，「定义」表（表头 名称/定义|描述）

@@ -333,6 +333,7 @@ function finishStateMachinePrompt(
   lines.push(`   触发条件依据上方驱动函数源码里的实际语句提炼（赋值状态变量、屏障等待、超时退出等），不要凭空概括`);
   lines.push(`4. 用 [*] 表示初始/终止伪状态`);
   lines.push(`5. 补充说明用 note right of <状态> : 内容（单行，必须用中文）`);
+  lines.push(`   必须覆盖源码中的提前终止路径：若某状态下存在「检出标志后断电/进安全态/不再返回」之类的分支（如注释 program will not run to here、调用 PwrShdn/SafeState 类函数后流程结束），要从该状态画一条到 [*]（或独立终态）的迁移并注明触发条件，禁止只画 happy path`);
   lines.push(`6. 若模块行为依赖核角色（主核 master/Core0 驱动状态迁移、从核 satellite 自旋等待或跟随，如按 GetCoreId 返回值分支），不要画在一张图里——按核角色分别绘制：每个角色一张完整 stateDiagram-v2，每张图前一行写 ### 角色名（### 主核 Core0、### 从核 satellite）；跨核同步（等待对方阶段置位）在被等待的迁移上用触发条件或 note 说明`);
   lines.push(`   分图时各角色的图必须体现真实差异（主核执行初始化动作、从核自旋等待屏障等），禁止两个角色输出内容相同的图；单核模块或各角色状态机确实无差异时只画一张，不要输出 ### 行`);
   return { system: SYSTEM_DESIGNER, user: lines.join('\n'), states };

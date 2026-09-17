@@ -125,6 +125,7 @@ export class MockProvider implements LLMProvider {
         '    UNDEF --> ONE : 进入 Startup',
         '    ONE --> TWO : master 完成阶段一初始化',
         '    TWO --> THREE : master 完成初始化与自检',
+        '    TWO --> [*] : master 检出试断电标志执行断电流程（不再返回）',
         '    THREE --> [*] : 启动完成',
         '### 从核 satellite',
         'stateDiagram-v2',

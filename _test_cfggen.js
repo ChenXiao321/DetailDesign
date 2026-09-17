@@ -52,7 +52,7 @@ void F(void) {
   i += 2U;
 }`, 'F');
     check('顺序:lint', problems.length === 0, problems.join('|'));
-    check('顺序:合并', /N0\["unsigned int i<br>i = 0U<br>Bar_Init\(\)<br>i \+= 2U"\]/.test(mmd), mmd);
+    check('顺序:合并', /N0\["i = 0U<br>Bar_Init\(\)<br>i \+= 2U"\]/.test(mmd), mmd);
     check('顺序:START出边', /START --> N0/.test(mmd), mmd);
     check('顺序:END', /N0 --> END/.test(mmd), mmd);
   }
@@ -483,6 +483,71 @@ void F(unsigned char a) {
     check('空框抑制:无空框', !/subgraph SG/.test(mmd), mmd);
     check('空框抑制:有警告', cfg.warnings.some(w => w.includes('虚线框已省略')), cfg.warnings.join('|'));
     check('空框抑制:流程完整', /One/.test(mmd) && /Two/.test(mmd) && /Done/.test(mmd), mmd);
+  }
+
+  // 28. else 被 #endif 夹断（Gp_EcuStpShdn_Startup L610-629 实测）：菱形在 #if 内、
+  //     else 体在 #if 外 → 菱形按头部行归属虚线框，else 体留框外
+  {
+    const { mmd, problems, cfg } = await gen(`
+void F(unsigned char a) {
+  Before();
+#if(GP_X_SAFETY == STD_ON)
+  if (a == 1U) {
+    Safe_Path();
+  }
+  else
+#endif
+  {
+    Common_Path();
+  }
+  After();
+}`, 'F');
+    check('夹断菱形:lint', problems.length === 0, problems.join('|'));
+    check('夹断菱形:有框', /注：仅在 GP_X_SAFETY 生效时参与编译/.test(mmd), mmd);
+    // 菱形声明落在 subgraph 块内（end 之前）
+    const sgOpen = mmd.indexOf('subgraph SG');
+    const sgClose = mmd.indexOf('\n    end', sgOpen);
+    const diaIdx = mmd.indexOf('{"a == 1U"}');
+    check('夹断菱形:菱形在框内', sgOpen !== -1 && diaIdx > sgOpen && diaIdx < sgClose, mmd);
+    // else 体（Common_Path）在框外
+    const cpIdx = mmd.indexOf('Common_Path');
+    check('夹断菱形:else体在框外', cpIdx > sgClose, mmd);
+    // 条件式不含多行 if 的 else 体行（rowTo 取头部 → 区域内完全包含）
+    const cond = cfg.nodes.find(n => n.kind === 'cond' && n.label.includes('a == 1U'));
+    check('夹断菱形:菱形rowTo=头部行', cond && cond.rowTo === cond.rowFrom, cond ? `${cond.rowFrom}-${cond.rowTo}` : '无菱形');
+  }
+
+  // 29. 局部变量定义一律滤除（09-17 用户定调：定义无流程语义，不论初值形式）；
+  //     赋值/调用等执行语句保留，for 初始化器不受影响
+  {
+    const { mmd, problems } = await gen(`
+void F(void) {
+  unsigned char a = 0U;
+  unsigned char b;
+  unsigned int m = (unsigned int)(1U << 4);
+  unsigned char arr[2] = {1U, 2U};
+  unsigned int t = GetTime();
+  unsigned char* p = &g_buf[0];
+  unsigned char c = a;
+  t = GetTime();
+  p = &g_buf[1];
+  for (unsigned char i = 0U; i < 3U; i++) {
+    Use(i);
+  }
+  Done();
+}`, 'F');
+    check('滤定义:lint', problems.length === 0, problems.join('|'));
+    check('滤定义:常量初值滤除', !/a = 0U/.test(mmd), mmd);
+    check('滤定义:无初值滤除', !/unsigned char b/.test(mmd), mmd);
+    check('滤定义:常量表达式滤除', !/<<|&lt;&lt;/.test(mmd), mmd);
+    check('滤定义:变量拷贝滤除', !/c = a/.test(mmd), mmd);
+    check('滤定义:数组初始化滤除', !/arr\[2\]/.test(mmd), mmd);
+    check('滤定义:调用初值定义滤除', !/unsigned int t/.test(mmd), mmd);
+    check('滤定义:取地址定义滤除', !/unsigned char\* p/.test(mmd), mmd);
+    check('滤定义:赋值语句保留', (mmd.match(/t = GetTime\(\)/g) || []).length === 1, mmd);
+    check('滤定义:取地址赋值保留', /p = &amp;g_buf\[1\]/.test(mmd), mmd);
+    check('滤定义:for初始化器保留', /i = 0U/.test(mmd), mmd);
+    check('滤定义:循环体保留', /Use\(i\)/.test(mmd), mmd);
   }
 
   console.log(`\n通过 ${pass} / ${pass + fail}`);

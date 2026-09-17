@@ -2,6 +2,7 @@ import type {
   ModuleModel, ConfigMacro, ConfigUsage, ExternalInterface,
 } from '../model/types.js';
 import { esc, escRaw, functionCard, calloutCard } from './cards.js';
+import { listStateMachines } from '../model/types.js';
 import { wrapFlowchartLabels, pinEndNodeToBottom, lintMermaidSource, lintFlowchartStructure, lintSequenceStructure } from './mermaidPre.js';
 import { mermaidRenderScript } from './renderScript.js';
 
@@ -318,16 +319,18 @@ ${diagramBlock(g.diagram)}
 
   // ---- 5.3 动态设计 ----
   const dd = model.dynamicDesign;
-  const smSection = dd?.stateMachine ? `
-<h3>5.3.1 状态机：${esc(dd.stateMachine.name)} <span class="badge">工作项 · 5.3.1</span></h3>
-${diagramBlock(dd.stateMachine.diagram)}
-<details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">${escRaw(dd.stateMachine.diagram)}</pre></details>
+  const sms = listStateMachines(dd);
+  // 多核按角色分图时逐角色各渲染一张（与序列图同章号多节的惯例一致）；单图产物输出与旧版逐字节一致
+  const smSection = sms.length > 0 ? `
+${sms.map(sm => `<h3>5.3.1 状态机：${esc(sm.name)} <span class="badge">工作项 · 5.3.1</span></h3>
+${diagramBlock(sm.diagram)}
+<details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">${escRaw(sm.diagram)}</pre></details>`).join('\n')}
 <h3>5.3.1.1 状态描述（每个状态一个工作项）</h3>
 <table class="simple"><tr><th>状态</th><th>说明</th></tr>
-${dd.stateMachine.states.map(s => `<tr><td><code>${esc(s.name)}</code></td><td>${esc(s.description)}</td></tr>`).join('')}</table>
+${sms[0].states.map(s => `<tr><td><code>${esc(s.name)}</code></td><td>${esc(s.description)}</td></tr>`).join('')}</table>
 <h3>5.3.1.2 状态迁移（每个迁移一个工作项）</h3>
 <table class="simple"><tr><th>从</th><th>到</th><th>触发条件</th><th>说明</th></tr>
-${dd.stateMachine.transitions.map(t => `<tr><td><code>${esc(t.from)}</code></td><td><code>${esc(t.to)}</code></td><td>${esc(t.trigger)}</td><td>${esc(t.description)}</td></tr>`).join('')}</table>` : '';
+${sms[0].transitions.map(t => `<tr><td><code>${esc(t.from)}</code></td><td><code>${esc(t.to)}</code></td><td>${esc(t.trigger)}</td><td>${esc(t.description)}</td></tr>`).join('')}</table>` : '';
 
   const seqSection = (dd?.sequences ?? []).map(s => {
     // 平铺警告（存量产物补网）：入口函数源码含分支/循环而图全图无组合片段——gen 期硬校验拦不住旧产物
@@ -420,7 +423,7 @@ ${callouts.map((e, i) => calloutCard(e, `${calloutSecNo}.${i + 1}`)).join('\n')}
         : `探测到通讯协议相关调用：${commIfs.map(e => `<code>${esc(e.name)}</code>`).join('、')}。${TODO_CONCLUSION}` },
     { dim: '互操作性/交互', no: 4, content: '分析软件单元是否能够体现动态行为和交互',
       fact: model.dynamicDesign
-        ? `5.3 已生成${model.dynamicDesign.stateMachine ? `状态机「${esc(model.dynamicDesign.stateMachine.name)}」（${model.dynamicDesign.stateMachine.states.length} 状态 / ${model.dynamicDesign.stateMachine.transitions.length} 迁移）` : ''}${model.dynamicDesign.sequences.length > 0 ? `与 ${model.dynamicDesign.sequences.length} 张序列图` : ''}；5.1 功能接口总图与各函数调用图体现交互关系。${TODO_CONCLUSION}`
+        ? `5.3 已生成${sms.length > 0 ? `状态机「${sms.map(sm => esc(sm.name)).join('」与「')}」（${sms[0].states.length} 状态 / ${sms[0].transitions.length} 迁移）` : ''}${model.dynamicDesign.sequences.length > 0 ? `与 ${model.dynamicDesign.sequences.length} 张序列图` : ''}；5.1 功能接口总图与各函数调用图体现交互关系。${TODO_CONCLUSION}`
         : `5.3 动态设计（状态机/序列图）尚未生成；5.1 已提供功能接口总图与内部函数调用图。${TODO_CONCLUSION}` },
     { dim: '关键性', no: 5, content: '分析与其他单元/组件的依赖关系',
       fact: `外部依赖模块：${nonCalloutGroups.length > 0 ? nonCalloutGroups.join('、') : '无'}（接口明细见 5.2.2）；Callout 函数 ${calloutCount} 个由集成方在配置代码中实现（见 6.2）。${TODO_CONCLUSION}` },
@@ -491,7 +494,7 @@ ${callouts.map((e, i) => calloutCard(e, `${calloutSecNo}.${i + 1}`)).join('\n')}
     ...model.types.map(t => `${t.name} ${t.comment} ${t.generated?.comment ?? ''}`),
     model.functionalDescription ?? '',
     // 序列图/状态机图源也属文档内容（含 actor OS 等角色名）
-    model.dynamicDesign?.stateMachine?.diagram ?? '',
+    ...listStateMachines(model.dynamicDesign).map(sm => sm.diagram),
     ...(model.dynamicDesign?.sequences ?? []).map(s => `${s.name} ${s.diagram} ${s.description}`),
   ].join(' ');
   // 候选缩写词典：仅列本文档/代码中实际出现的
@@ -548,7 +551,9 @@ ${callouts.map((e, i) => calloutCard(e, `${calloutSecNo}.${i + 1}`)).join('\n')}
     const text = allText.replace(/0x[0-9A-Fa-f]+/g, ' ');
     // 状态机的状态名（UNDEF/ONE/TWO…）是图内标识符不是缩写，不报缺口
     const stateNames = new Set<string>();
-    for (const m of (model.dynamicDesign?.stateMachine?.diagram ?? '').matchAll(/\b([A-Z][A-Z0-9]{1,11})\b/g)) stateNames.add(m[1]!);
+    for (const sm of listStateMachines(model.dynamicDesign)) {
+      for (const m of sm.diagram.matchAll(/\b([A-Z][A-Z0-9]{1,11})\b/g)) stateNames.add(m[1]!);
+    }
     const gaps = new Map<string, number>();
     for (const m of text.matchAll(/\b[A-Z][A-Z0-9]{1,11}\b/g)) {
       const t = m[0];

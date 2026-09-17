@@ -11,28 +11,6 @@ import {
 import { lintMermaidSource, lintFlowchartStructure, lintSequenceStructure } from '../report/mermaidPre.js';
 import { buildStaticFlowchart, buildFallbackFlowchart } from './staticFlowchart.js';
 
-/** 从 LLM 输出中提取 Mermaid 源码（剥 ```mermaid 围栏）；非法则抛错 */
-function extractMermaid(expectedStart: RegExp, kindHint: string): (output: string) => string {
-  return (output: string) => {
-    let text = output.trim();
-    const fence = text.match(/```(?:mermaid)?\s*\n([\s\S]*?)```/);
-    if (fence) {
-      text = fence[1].trim();
-    } else {
-      // 无围栏时兜底：模型若在图代码前后加了解释文字，从第一个图起始行截取
-      const lines = text.split('\n');
-      const startIdx = lines.findIndex(l => expectedStart.test(l.trim()));
-      if (startIdx > 0) text = lines.slice(startIdx).join('\n').trim();
-    }
-    const firstLine = text.replace(/\n/g, '\n      ').trim();
-    if (!expectedStart.test(firstLine)) {
-      // 面向模型的中文反馈（会随重试回喂给 LLM），避免只给正则表达式
-      throw new Error(`你的输出不是有效的 Mermaid 图代码。要求：第一行必须是 ${kindHint}，只输出图代码本身，不要输出任何解释、描述或分析文字。请重新输出。`);
-    }
-    return text;
-  };
-}
-
 /** 流程图断言网（纯函数，导出供静态生成器自检与测试直喂恶意图）：
  *  词法 lint + 结构 lint + 条件编译虚线框存在性 + 编译期宏禁入菱形；返回中文问题清单（空 = 通过） */
 export function flowchartProblems(fn: FunctionUnit, text: string): string[] {
@@ -116,16 +94,16 @@ function withGlossary(user: string, abbr?: [string, string][]): string {
   return `${user}\n\n# 项目术语表（以下缩写的定义以此外部口径为准；描述中涉及这些缩写时按其含义理解，正文保持缩写原形、不要自行展开或改写定义）\n${lines}`;
 }
 
-/** 序列图输出校验：允许「### 角色名」分段的多张图（多核模块按角色分图），剥围栏/前言后整体返回 */
-function extractSequenceSet(output: string): string {
+/** 图集输出校验：允许「### 角色名」分段的多张图（多核模块按角色分图），剥围栏/前言后整体返回 */
+function extractDiagramSet(output: string, startLine: 'sequenceDiagram' | 'stateDiagram-v2'): string {
   let text = output.trim();
   const fence = text.match(/```(?:mermaid)?\s*\n([\s\S]*?)```/);
   if (fence) text = fence[1].trim();
   const lines = text.split('\n');
-  const startIdx = lines.findIndex(l => /^sequenceDiagram/.test(l.trim()) || /^### .+/.test(l.trim()));
+  const startIdx = lines.findIndex(l => l.trim().startsWith(startLine) || /^### .+/.test(l.trim()));
   if (startIdx > 0) text = lines.slice(startIdx).join('\n').trim();
-  if (!/^(### .+\n+)?sequenceDiagram/.test(text)) {
-    throw new Error(`你的输出不是有效的 Mermaid 图代码。要求：第一行必须是 sequenceDiagram（多角色分图时每张图前一行写 ### 角色名），只输出图代码本身，不要输出任何解释、描述或分析文字。请重新输出。`);
+  if (!new RegExp(`^(### .+\\n+)?${startLine.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`).test(text)) {
+    throw new Error(`你的输出不是有效的 Mermaid 图代码。要求：第一行必须是 ${startLine}（多角色分图时每张图前一行写 ### 角色名），只输出图代码本身，不要输出任何解释、描述或分析文字。请重新输出。`);
   }
   return text;
 }
@@ -136,10 +114,10 @@ function validateSequence(fn: FunctionUnit): (output: string) => string {
   // 源码有分支/循环，图就该有组合片段；源码无控制流的函数不要求片段（防误报）
   const fnHasControlFlow = /\b(if|for|while|switch)\s*\(/.test(fn.bodyTextWithPP ?? fn.bodyText);
   return (output: string): string => {
-    const text = extractSequenceSet(output);
+    const text = extractDiagramSet(output, 'sequenceDiagram');
     const problems: string[] = [];
     let fragmentTotal = 0;
-    for (const part of splitSequenceRoles(text)) {
+    for (const part of splitRoleDiagrams(text)) {
       fragmentTotal += (part.diagram.match(/^\s*(alt|opt|loop|par|critical|break)\b/gm) ?? []).length;
       for (const p of [...lintMermaidSource(part.diagram), ...lintSequenceStructure(part.diagram)]) {
         problems.push(part.role ? `【${part.role}图】${p}` : p);
@@ -174,8 +152,8 @@ function validateSequence(fn: FunctionUnit): (output: string) => string {
   };
 }
 
-/** 把「### 角色名」分段的多张序列图拆成 {role, diagram} 列表；无分段则单图 role=null */
-function splitSequenceRoles(text: string): { role: string | null; diagram: string }[] {
+/** 把「### 角色名」分段的多张图拆成 {role, diagram} 列表（序列图/状态机共用）；无分段则单图 role=null */
+function splitRoleDiagrams(text: string): { role: string | null; diagram: string }[] {
   const marks: { role: string; start: number; bodyStart: number }[] = [];
   for (const m of text.matchAll(/^### (.+)$/gm)) {
     marks.push({ role: m[1].trim(), start: m.index, bodyStart: m.index + m[0].length });
@@ -185,6 +163,19 @@ function splitSequenceRoles(text: string): { role: string | null; diagram: strin
     role: mk.role,
     diagram: text.slice(mk.bodyStart, i + 1 < marks.length ? marks[i + 1].start : undefined).trim(),
   }));
+}
+
+/** 状态机输出校验：允许「### 角色名」分段多图（多核模块按角色分图），每张都必须是完整 stateDiagram-v2 */
+function validateStateMachine(): (output: string) => string {
+  return (output: string) => {
+    const text = extractDiagramSet(output, 'stateDiagram-v2');
+    for (const part of splitRoleDiagrams(text)) {
+      if (!part.diagram.trim().startsWith('stateDiagram-v2')) {
+        throw new Error(`状态机分图「${part.role ?? '未标角色'}」缺少 stateDiagram-v2 起始行：多角色分图时每张图都必须是完整的状态机图（### 角色名 换行后第一行写 stateDiagram-v2）。请修正后重新输出完整的图代码。`);
+      }
+    }
+    return text;
+  };
 }
 
 type TypeGenerated = NonNullable<TypeUnit['generated']>;
@@ -312,21 +303,26 @@ async function generateDynamicDesign(
 ): Promise<DynamicDesign> {
   const result: DynamicDesign = { stateMachine: null, sequences: [] };
 
-  // ---- 状态机 ----
+  // ---- 状态机（多核模块按角色分图：### 主核 Core0 / ### 从核 satellite 各成一张工作项） ----
   const smPrompt = skip?.stateMachine ? null : buildStateMachinePrompt(model);
   if (smPrompt) {
-    const diagram = await generateWithRetry(provider, smPrompt.system, smPrompt.user, extractMermaid(/^stateDiagram-v2/, 'stateDiagram-v2'));
-    result.stateMachine = {
-      name: `${model.module} 状态机`,
-      diagram,
-      diagramFormat: 'mermaid',
-      states: smPrompt.states,
-      transitions: [],
-      polarion: {
-        isWorkItem: true, chapter: '5.3.1', workItemKind: 'statemachine',
-        title: `${model.module} 状态机`, workItemId: null,
-      },
-    } satisfies StateMachineDesign;
+    const text = await generateWithRetry(provider, smPrompt.system, smPrompt.user, validateStateMachine());
+    const sms = splitRoleDiagrams(text).map((part): StateMachineDesign => {
+      const name = part.role ? `${model.module} 状态机（${part.role}）` : `${model.module} 状态机`;
+      return {
+        name,
+        diagram: part.diagram,
+        diagramFormat: 'mermaid',
+        states: smPrompt.states,
+        transitions: [],
+        polarion: {
+          isWorkItem: true, chapter: '5.3.1', workItemKind: 'statemachine',
+          title: name, workItemId: null,
+        },
+      };
+    });
+    result.stateMachine = sms[0] ?? null;   // 兼容位：旧读取口径只看第一张
+    if (sms.length > 1) result.stateMachines = sms;
   }
 
   // ---- 序列图：初始化入口 + 周期入口（命名约定 _Startup|_Init / _MainFunction|_Mainfunction，大小写兼容） ----
@@ -340,7 +336,7 @@ async function generateDynamicDesign(
     const { system, user } = buildSequencePrompt(model, fn, scenario);
     const text = await generateWithRetry(provider, system, user, validateSequence(fn), 3);
     // 多核模块按角色分图：### 主核 Core0 / ### 从核 satellite 各成一张工作项
-    for (const part of splitSequenceRoles(text)) {
+    for (const part of splitRoleDiagrams(text)) {
       const name = part.role ? `${scenario}（${part.role}）` : scenario;
       result.sequences.push({
         name,
@@ -446,6 +442,7 @@ export async function generateDesign(
         const fresh = await generateDynamicDesign(model, provider, { stateMachine: keepSM, sequences: keepSeq });
         model.dynamicDesign = {
           stateMachine: keepSM ? existing!.stateMachine : fresh.stateMachine,
+          stateMachines: keepSM ? existing!.stateMachines : fresh.stateMachines,
           sequences: keepSeq ? existing!.sequences : fresh.sequences,
         };
       } catch (err) {

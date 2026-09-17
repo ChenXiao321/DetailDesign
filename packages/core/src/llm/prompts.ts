@@ -314,8 +314,10 @@ function finishStateMachinePrompt(
   lines.push(`1. 第一行必须是 stateDiagram-v2，只输出图代码本身，不要用 \`\`\` 包裹，不要输出任何解释`);
   lines.push(`2. 状态名使用定义值去掉前缀后的短名（如 STPSTAGE_ONE → ONE）`);
   lines.push(`3. 迁移格式: 源状态 --> 目标状态 : 触发条件（触发条件中不要出现冒号）`);
+  lines.push(`   触发条件必须是有语义的中文描述（如「master 完成阶段一初始化」「satellite 自旋等待屏障」），禁止只写裸函数名`);
   lines.push(`4. 用 [*] 表示初始/终止伪状态`);
-  lines.push(`5. 补充说明用 note right of <状态> : 内容（单行）`);
+  lines.push(`5. 补充说明用 note right of <状态> : 内容（单行，用中文）`);
+  lines.push(`6. 若模块行为依赖核角色（主核 master/Core0 驱动状态迁移、从核 satellite 自旋等待或跟随，如按 GetCoreId 返回值分支），不要画在一张图里——按核角色分别绘制：每个角色一张完整 stateDiagram-v2，每张图前一行写 ### 角色名（### 主核 Core0、### 从核 satellite）；跨核同步（等待对方阶段置位）在被等待的迁移上用触发条件或 note 说明。单核模块或各角色状态机无差异时只画一张，不要输出 ### 行`);
   return { system: SYSTEM_DESIGNER, user: lines.join('\n'), states };
 }
 

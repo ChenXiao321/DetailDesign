@@ -9,6 +9,7 @@
  *      直接原地补到 model 对象上，保证 map-ids 回写与后续重跑 export 拿到同一份 marker。
  */
 import type { ModuleModel, PolarionMarker } from '../model/types.js';
+import { listStateMachines } from '../model/types.js';
 import {
   DEFAULT_POLARION_CONFIG, markerOf,
   type PolarionConfig, type WorkItemDraft, type WorkItemEntity,
@@ -119,9 +120,8 @@ export function collectWorkItems(
       mermaidSrc: fn.generated?.flowchart ?? null,
     });
   }
-  // 5.3.1 状态机 / 5.3.2 序列图（旧产物补标）
-  const sm = model.dynamicDesign?.stateMachine;
-  if (sm) {
+  // 5.3.1 状态机（多核按角色分图时各角色一个工作项） / 5.3.2 序列图（旧产物补标）
+  for (const sm of listStateMachines(model.dynamicDesign)) {
     const marker = normalizePolarion(sm, '5.3.1', 'statemachine', sm.name);
     if (marker.isWorkItem) {
       push(marker, sm.name, { type: 'diagram', holder: sm as { polarion: PolarionMarker } },

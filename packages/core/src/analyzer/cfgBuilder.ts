@@ -178,6 +178,14 @@ class FnCfgBuilder {
     this.edges.push({ from, to, label, noArrow });
   }
 
+  /** 菱形区域归属行取头部（关键字行 → 条件式末行），不取整语句——
+   *  else 被 #endif 夹断的写法（Gp_EcuStpShdn_Startup L610-629 实测：if/else 链整语句
+   *  横跨条件编译区边界）按整语句算会部分相交漏框，而菱形语义上只属于头部所在区域 */
+  private headerRowTo(s: TSNode): number {
+    const c = s.childForFieldName('condition');
+    return c ? c.endPosition.row : s.startPosition.row;
+  }
+
   /** 把若干挂起出边接到 target；多路时惰性插入隐形汇合点（汇合点保证有出边，lint ⑨ 构造性满足） */
   private wire(pendings: Pending[], target: number): void {
     if (pendings.length === 0) return;
@@ -276,6 +284,9 @@ class FnCfgBuilder {
     };
 
     for (const s of stmts) {
+      // 局部变量定义一律不进图（用户 09-17 定调：定义无流程语义，= 0U / = &buf / = GetTime() 同为噪音；
+      // 真正生效的赋值/调用是独立 expression_statement，不受影响；for 初始化器走 buildFor 也不受影响）
+      if (s.type === 'declaration') continue;
       if (this.isSimple(s)) {
         if (!attachable()) { skipped++; continue; }
         // run 合并在 #if 区域归属变化处断开（跨边界的合并节点无法完整归属任何虚线框）
@@ -376,6 +387,7 @@ class FnCfgBuilder {
         return frag;
       }
       case 'declaration':
+        return EMPTY_FRAG; // 定义不进图（见 buildStatements 同名过滤）
       case 'expression_statement':
         return this.mkRunFrag([s]);
       case 'empty_statement':
@@ -401,7 +413,7 @@ class FnCfgBuilder {
 
   private buildIf(s: TSNode): Frag {
     const beforeWhole = this.nodes.length; // 整语句坍缩组（含菱形）登记起点
-    const d = this.mk('cond', this.condText(s.childForFieldName('condition')), s.startPosition.row, s.endPosition.row);
+    const d = this.mk('cond', this.condText(s.childForFieldName('condition')), s.startPosition.row, this.headerRowTo(s));
 
     const beforeThen = this.nodes.length;
     const thenFrag = this.buildBodyFrag(s.childForFieldName('consequence'));
@@ -451,7 +463,7 @@ class FnCfgBuilder {
 
   private buildWhile(s: TSNode): Frag {
     const beforeWhole = this.nodes.length;
-    const d = this.mk('cond', this.condText(s.childForFieldName('condition')), s.startPosition.row, s.endPosition.row);
+    const d = this.mk('cond', this.condText(s.childForFieldName('condition')), s.startPosition.row, this.headerRowTo(s));
     const body = s.childForFieldName('body');
     const stmts = body && body.type === 'compound_statement' ? this.stmtChildren(body) : body ? [body] : [];
 
@@ -493,7 +505,7 @@ class FnCfgBuilder {
     this.registerGroup(before, bodyFrag);
     const ctx = this.loopStack.pop()!;
 
-    const d = this.mk('cond', this.condText(s.childForFieldName('condition')), s.startPosition.row, s.endPosition.row);
+    const d = this.mk('cond', this.condText(s.childForFieldName('condition')), s.startPosition.row, this.headerRowTo(s));
     if (bodyFrag.entry !== null) {
       this.wire(bodyFrag.exits, d.seq);
       this.edge(d.seq, bodyFrag.entry, '是'); // 回边
@@ -516,7 +528,7 @@ class FnCfgBuilder {
     }
 
     const condNode = s.childForFieldName('condition');
-    const d = this.mk('cond', condNode ? this.condText(condNode) : 'for (;;)', s.startPosition.row, s.endPosition.row);
+    const d = this.mk('cond', condNode ? this.condText(condNode) : 'for (;;)', s.startPosition.row, this.headerRowTo(s));
     if (initSeq !== null) this.edge(initSeq, d.seq);
 
     const body = s.childForFieldName('body');
@@ -550,7 +562,7 @@ class FnCfgBuilder {
 
   private buildSwitch(s: TSNode): Frag {
     const beforeWhole = this.nodes.length;
-    const d = this.mk('cond', `switch (${this.condText(s.childForFieldName('condition'))})`, s.startPosition.row, s.endPosition.row);
+    const d = this.mk('cond', `switch (${this.condText(s.childForFieldName('condition'))})`, s.startPosition.row, this.headerRowTo(s));
     const body = s.childForFieldName('body');
     const children = body ? this.stmtChildren(body) : [];
     const cases = children.filter(c => c.type === 'case_statement');

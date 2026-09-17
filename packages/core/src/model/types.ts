@@ -98,7 +98,16 @@ export interface SequenceDesign {
 
 export interface DynamicDesign {
   stateMachine: StateMachineDesign | null;
+  /** 多核按角色分图时的完整状态机列表（主核/从核各一张）；仅当 >1 张时写入，stateMachine 恒为第一张（兼容旧读取口径） */
+  stateMachines?: StateMachineDesign[];
   sequences: SequenceDesign[];
+}
+
+/** 状态机读取统一入口：多核分图产物返回全部角色图，旧单图产物返回单元素列表 */
+export function listStateMachines(dd?: DynamicDesign | null): StateMachineDesign[] {
+  if (!dd) return [];
+  if (dd.stateMachines && dd.stateMachines.length > 0) return dd.stateMachines;
+  return dd.stateMachine ? [dd.stateMachine] : [];
 }
 
 export interface VariableUnit {

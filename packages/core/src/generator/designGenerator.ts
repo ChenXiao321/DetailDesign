@@ -213,6 +213,17 @@ function validateStateMachine(): (output: string) => string {
       if (parts.every(p => norm(p.diagram) === first)) {
         throw new Error(`各角色分图内容完全相同（${parts.map(p => p.role).join('、')}）：多核模块分图必须体现角色差异——主核执行初始化/驱动状态迁移，从核自旋等待屏障或跟随。请依据驱动函数源码（GetCoreId 分支、自旋等待语句）分别绘制，修正后重新输出完整的图代码。`);
       }
+      // 跨角色总结语（「各核均执行…」）不属于任何单一角色的图：公共步骤应分别画进每个角色自己的流程
+      const crossRole: string[] = [];
+      for (const part of parts) {
+        for (const m of part.diagram.matchAll(/(?:-->[^\n:]*:\s*|^\s*note\s+\S+.*?:\s*)(\S.*)$/gm)) {
+          const label = m[1].trim();
+          if (/各核|所有核|每个核|两核/.test(label)) crossRole.push(`「${part.role ?? '未标角色'}」: ${label}`);
+        }
+      }
+      if (crossRole.length > 0) {
+        throw new Error(`分图中出现跨角色总结语（${[...new Set(crossRole)].join('；')}）：各核都执行的公共步骤不要写成某一角色图里的「各核均执行…」note，请把该步骤分别画进每个角色自己的流程，用该角色的视角描述（如「master 执行预运行测试」「satellite 执行预运行测试」）。请修正后重新输出完整的图代码。`);
+      }
     }
     return text;
   };

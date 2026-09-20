@@ -126,6 +126,22 @@ function fakeProvider(smText) {
     check('拦截雷同:不入库', model.dynamicDesign === null || model.dynamicDesign.stateMachine === null);
   }
 
+  // 3d. 分图中出现「各核均执行…」跨角色总结语 → 拦截（09-18 用户评审 v6 预览：公共步骤应分别画进各角色流程）
+  {
+    const model = baseModel();
+    const failures = [];
+    const bad = TWO_ROLE_SM + '\n    note right of TWO : 各核均执行 PreRunInit 与 PreRunPhase 预运行测试';
+    await generateDesign(model, fakeProvider(bad), { only: ['dynamic'], failures });
+    check('拦截跨角色总结:记失败', failures.some(f => f.startsWith('dynamic')), JSON.stringify(failures).slice(0, 200));
+    check('拦截跨角色总结:不入库', model.dynamicDesign === null || model.dynamicDesign.stateMachine === null);
+    // 单图（未分角色）里写「各核均执行」是合法的——只有一张图覆盖全部角色
+    const model1 = baseModel();
+    const failures1 = [];
+    await generateDesign(model1, fakeProvider(SINGLE_SM + '\n    note right of ONE : 各核均执行预运行测试'), { only: ['dynamic'], failures: failures1 });
+    check('单图跨角色语放行:无失败', failures1.length === 0, failures1.join('|'));
+    check('单图跨角色语放行:入库', model1.dynamicDesign?.stateMachine?.diagram.includes('各核均执行预运行测试'));
+  }
+
   // 4. report 渲染：双角色各一个 5.3.1 节；单图渲染与旧版格式逐字节一致
   {
     const model2 = baseModel();

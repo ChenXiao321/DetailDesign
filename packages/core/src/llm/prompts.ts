@@ -336,6 +336,8 @@ function finishStateMachinePrompt(
   lines.push(`   必须覆盖源码中的提前终止路径：若某状态下存在「检出标志后断电/进安全态/不再返回」之类的分支（如注释 program will not run to here、调用 PwrShdn/SafeState 类函数后流程结束），要从该状态画一条到 [*]（或独立终态）的迁移并注明触发条件，禁止只画 happy path`);
   lines.push(`6. 若模块行为依赖核角色（主核 master/Core0 驱动状态迁移、从核 satellite 自旋等待或跟随，如按 GetCoreId 返回值分支），不要画在一张图里——按核角色分别绘制：每个角色一张完整 stateDiagram-v2，每张图前一行写 ### 角色名（### 主核 Core0、### 从核 satellite）；跨核同步（等待对方阶段置位）在被等待的迁移上用触发条件或 note 说明`);
   lines.push(`   分图时各角色的图必须体现真实差异（主核执行初始化动作、从核自旋等待屏障等），禁止两个角色输出内容相同的图；单核模块或各角色状态机确实无差异时只画一张，不要输出 ### 行`);
+  lines.push(`   各核都要执行的公共步骤（如预运行测试、公共初始化），不要写成某一角色图里的「各核均执行…」总结性 note——`);
+  lines.push(`   把该步骤分别画进每个角色自己的流程，用该角色的视角描述（主核图写 master 执行…，从核图写 satellite 执行…）；note 只用于说明跨核同步关系（等待对方置位）`);
   return { system: SYSTEM_DESIGNER, user: lines.join('\n'), states };
 }
 

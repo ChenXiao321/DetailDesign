@@ -75,8 +75,10 @@ const mkStruct = (name, field, typeName) => ({
       const mT = m.transitions.map(t => `${t.from}->${t.to}:${t.trigger}`);
       check('ecu:主核UNDEF→ONE', mT.some(t => t.startsWith('UNDEF->ONE')), JSON.stringify(mT));
       check('ecu:主核ONE→TWO', mT.some(t => t.startsWith('ONE->TWO')), JSON.stringify(mT));
+      check('ecu:无条件边注释兜底', mT.some(t => t === 'UNDEF->ONE:master set stage one') && mT.some(t => t === 'ONE->TWO:master set stage two'), JSON.stringify(mT));
       check('ecu:主核提前终止', mT.some(t => t === 'TWO->[*]:Mst_ptst->TryPwrShdn_b == TRUE'), JSON.stringify(mT));
       check('ecu:主核TWO→THREE守护原文', mT.some(t => t === 'TWO->THREE:!(Mst_ptst->TryPwrShdn_b == TRUE)'), JSON.stringify(mT));
+      check('ecu:有守护不吃注释', !mT.some(t => t.includes('master set stage three')), JSON.stringify(mT));
       const sT = s.transitions.map(t => `${t.from}->${t.to}:${t.trigger}`);
       check('ecu:从核自旋退出迁移', sT.some(t => t.startsWith('UNDEF->TWO:StpStage_t == GP_ECU_STPSTAGE_TWO（自旋等待退出）')), JSON.stringify(sT));
       check('ecu:从核无赋值迁移', !sT.some(t => t.startsWith('UNDEF->ONE')), JSON.stringify(sT));
@@ -100,8 +102,8 @@ const mkStruct = (name, field, typeName) => ({
       const d = out.sms[0];
       check('tlf:无角色行', !d.diagram.includes('###'), d.name);
       const T = d.transitions.map(t => `${t.from}->${t.to}:${t.trigger}`);
-      check('tlf:隐式状态初态迁移', T.some(t => t === '[*]->INITIAL_TASK:'), JSON.stringify(T));
-      check('tlf:INIT→WAIT', T.some(t => t === 'INITIAL_TASK->WAIT:'), JSON.stringify(T));
+      check('tlf:隐式状态初态迁移', T.some(t => t === '[*]->INITIAL_TASK:Init Memory'), JSON.stringify(T));
+      check('tlf:INIT→WAIT', T.some(t => t === 'INITIAL_TASK->WAIT:wait for user to switch normal'), JSON.stringify(T));
       check('tlf:case守护RUN', T.some(t => t === 'PREPARERUN->RUN:Dev_u8 == GP_TLF_NORMAL_STATE'), JSON.stringify(T));
       check('tlf:case守护ERROR', T.some(t => t === 'PREPARERUN->ERROR:!(Dev_u8 == GP_TLF_NORMAL_STATE)'), JSON.stringify(T));
       check('tlf:default展开WAIT', T.some(t => t.startsWith('WAIT->PREPARERUN')), JSON.stringify(T));

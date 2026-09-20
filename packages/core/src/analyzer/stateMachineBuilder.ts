@@ -157,7 +157,7 @@ export function findSmCandidate(model: ModuleModel): SmCandidate | null {
 }
 
 /** 函数定位（与 buildStaticFlowchart 同策略：名字+行号双匹配，退化名字唯一） */
-async function locateFnCfg(fn: FunctionUnit, source: string): Promise<Cfg> {
+async function locateFnCfg(fn: FunctionUnit, source: string): Promise<{ cfg: Cfg; originalLines: string[] }> {
   const pre = preprocessSource(source);
   const parsed = await parseCFile(pre.clean);
   type TSNode = import('web-tree-sitter').SyntaxNode;
@@ -176,12 +176,76 @@ async function locateFnCfg(fn: FunctionUnit, source: string): Promise<Cfg> {
   if (!fnNode) throw new Error(`源码中定位不到函数 ${fn.name}（${fn.file}:${fn.lineStart}）`);
   const body = fnNode.childForFieldName('body');
   if (!body) throw new Error(`函数 ${fn.name} 无函数体节点`);
-  return buildFnCfg(body, pre.clean, {
+  const cfg = buildFnCfg(body, pre.clean, {
     condRegions: pre.condRegions,
     originalLines: pre.originalLines,
     fnRowFrom: fnNode.startPosition.row,
     fnRowTo: fnNode.endPosition.row,
   });
+  return { cfg, originalLines: pre.originalLines };
+}
+
+/** 剥注释符：块注释头尾/行注释/星号内饰；纯装饰行（/********、*****​/）剥完为空 */
+function cleanCommentLine(t: string): string {
+  let s = t.trim();
+  s = s.replace(/^\/\//, '').replace(/^\/\*+/, '').replace(/\*+\/$/, '');
+  s = s.replace(/^\*+/, '').replace(/\*+$/, '');
+  return s.trim();
+}
+
+/**
+ * 语句紧邻注释提取（触发条件为空时的标签兜底，09-20 用户定调「原文+注释混合」：
+ * 无条件迁移边填源码注释，有条件边保持表达式原文）：
+ * 同行尾部注释 + 上方连续注释块（单行、//、星号内饰块），空行/代码行/预处理行即停。
+ * needle=语句特征子串（赋值宏名/调用名），在节点行范围内定位语句行。
+ */
+function nearbyComment(originalLines: string[], rowFrom: number, rowTo: number, needle: string): string {
+  let r0 = -1;
+  const last = Math.min(rowTo, originalLines.length - 1);
+  for (let r = rowFrom; r <= last; r++) {
+    if (originalLines[r].includes(needle)) { r0 = r; break; }
+  }
+  if (r0 < 0) return '';
+  const parts: string[] = [];
+  // 同行尾部注释
+  const tail = originalLines[r0].match(/\/\*(.*?)\*\/\s*$|\/\/(.*?)$/);
+  const tailTxt = cleanCommentLine(tail?.[1] ?? tail?.[2] ?? '');
+  if (tailTxt) parts.push(tailTxt);
+  // 上方连续注释块
+  let r = r0 - 1;
+  while (r >= 0) {
+    const t = originalLines[r].trim();
+    if (t === '') break;
+    if (t.startsWith('//')) {
+      const txt = cleanCommentLine(t);
+      if (txt) parts.unshift(txt);
+      r--; continue;
+    }
+    if (t.startsWith('/*')) {
+      const txt = cleanCommentLine(t);
+      if (txt) parts.unshift(txt);
+      r--;
+      if (!t.includes('*/')) break; // 未闭合的块起始：上方已非注释内容
+      continue;
+    }
+    if (t.startsWith('*')) {
+      // 星号内饰块：向上吃到 /* 起始行（bare-text 内饰行不吃，防误吞代码；
+      // 行首必须是注释符——`#endif /*x*//*` 这类代码行尾注释不属于本语句）
+      while (r >= 0) {
+        const t2 = originalLines[r].trim();
+        if (t2 === '') break;
+        if (!t2.startsWith('*') && !t2.startsWith('/*')) break;
+        const txt = cleanCommentLine(t2);
+        if (txt) parts.unshift(txt);
+        r--;
+        if (t2.includes('/*')) break;
+      }
+      continue;
+    }
+    break;
+  }
+  const joined = parts.join(' ').replace(/\s+/g, ' ').trim();
+  return joined.length > 120 ? `${joined.slice(0, 117)}…` : joined;
 }
 
 interface WalkCtx {
@@ -199,6 +263,8 @@ interface WalkCtx {
   suffix: string;
   /** 解释中发现的隐式状态（全名 → 短名），由调用方并入候选 */
   implicit: Map<string, string>;
+  /** 原始源行（含注释，行号与 clean 一致）——空触发条件的注释兜底用 */
+  originalLines: string[];
 }
 
 const CALL_FILTER_RE = /^(if|while|for|switch|return|sizeof|sizeof\(.*\)|.*NOP.*|.*GetCoreId.*)$/;
@@ -377,8 +443,11 @@ function interpretCfg(cfg: Cfg, ctx: WalkCtx): SmFnFacts {
           }
           // 提前终止：PwrShdn/SafeState 类调用 → current → [*]，剪枝不走后续
           if (TERMINAL_CALL_RE.test(st) && (caseHint ?? cur)) {
+            const trig = joinTriggers(triggers);
+            const callName = st.match(/\b(\w*(?:PwrShdn|SafeState)\w*)\s*\(/)?.[1] ?? '';
             facts.transitions.push({
-              from: caseHint ?? cur, to: '[*]', trigger: joinTriggers(triggers),
+              from: caseHint ?? cur, to: '[*]',
+              trigger: trig || nearbyComment(ctx.originalLines, node.rowFrom, node.rowTo, callName),
               fn: fnName, row: node.rowFrom, terminal: true,
             });
             pushCalls((caseHint ?? cur)!, calls);
@@ -388,8 +457,10 @@ function interpretCfg(cfg: Cfg, ctx: WalkCtx): SmFnFacts {
           const am = st.match(assignRe);
           const to = am ? resolveState(am[1]) : null;
           if (am && to) {
+            const trig = joinTriggers(triggers);
             facts.transitions.push({
-              from: caseHint ?? cur, to, trigger: joinTriggers(triggers),
+              from: caseHint ?? cur, to,
+              trigger: trig || nearbyComment(ctx.originalLines, node.rowFrom, node.rowTo, am[1]),
               fn: fnName, row: node.rowFrom,
             });
             if (caseHint ?? cur) pushCalls((caseHint ?? cur)!, calls);
@@ -510,8 +581,8 @@ export async function extractStateMachineFacts(
       return interpretBodyText(fn, role, entry);
     }
     try {
-      const cfg = await locateFnCfg(fn, src);
-      return interpretCfg(cfg, { field, shortOf, macroAlt, role, coreIdVars, fnName: fn.name, entryCurrent: entry, prefix, suffix, implicit });
+      const { cfg, originalLines } = await locateFnCfg(fn, src);
+      return interpretCfg(cfg, { field, shortOf, macroAlt, role, coreIdVars, fnName: fn.name, entryCurrent: entry, prefix, suffix, implicit, originalLines });
     } catch (err) {
       partial = true;
       warnings.push(`${fn.name} CFG 构建失败（${(err as Error).message}），走行级兜底`);
@@ -567,8 +638,8 @@ export async function extractStateMachineFacts(
       const src = readSource?.(fn.file);
       if (!src) continue;
       try {
-        const cfg = await locateFnCfg(fn, src);
-        const f = interpretCfg(cfg, { field, shortOf, macroAlt, role: null, coreIdVars, fnName: fn.name, entryCurrent: null, prefix, suffix, implicit });
+        const { cfg, originalLines } = await locateFnCfg(fn, src);
+        const f = interpretCfg(cfg, { field, shortOf, macroAlt, role: null, coreIdVars, fnName: fn.name, entryCurrent: null, prefix, suffix, implicit, originalLines });
         if (f.roleCondFound) return true;
       } catch { /* 定位失败已记录 */ }
     }

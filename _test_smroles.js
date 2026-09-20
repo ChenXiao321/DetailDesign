@@ -126,20 +126,50 @@ function fakeProvider(smText) {
     check('拦截雷同:不入库', model.dynamicDesign === null || model.dynamicDesign.stateMachine === null);
   }
 
-  // 3d. 分图中出现「各核均执行…」跨角色总结语 → 拦截（09-18 用户评审 v6 预览：公共步骤应分别画进各角色流程）
+  // 3d. note 一律拦截（09-18 用户定调 note 先不加，单图/分图都不放行）
   {
     const model = baseModel();
     const failures = [];
     const bad = TWO_ROLE_SM + '\n    note right of TWO : 各核均执行 PreRunInit 与 PreRunPhase 预运行测试';
     await generateDesign(model, fakeProvider(bad), { only: ['dynamic'], failures });
-    check('拦截跨角色总结:记失败', failures.some(f => f.startsWith('dynamic')), JSON.stringify(failures).slice(0, 200));
-    check('拦截跨角色总结:不入库', model.dynamicDesign === null || model.dynamicDesign.stateMachine === null);
-    // 单图（未分角色）里写「各核均执行」是合法的——只有一张图覆盖全部角色
+    check('拦截note分图:记失败', failures.some(f => f.startsWith('dynamic')), JSON.stringify(failures).slice(0, 200));
+    check('拦截note分图:不入库', model.dynamicDesign === null || model.dynamicDesign.stateMachine === null);
     const model1 = baseModel();
     const failures1 = [];
     await generateDesign(model1, fakeProvider(SINGLE_SM + '\n    note right of ONE : 各核均执行预运行测试'), { only: ['dynamic'], failures: failures1 });
-    check('单图跨角色语放行:无失败', failures1.length === 0, failures1.join('|'));
-    check('单图跨角色语放行:入库', model1.dynamicDesign?.stateMachine?.diagram.includes('各核均执行预运行测试'));
+    check('拦截note单图:记失败', failures1.some(f => f.startsWith('dynamic')), JSON.stringify(failures1).slice(0, 200));
+    check('拦截note单图:不入库', model1.dynamicDesign === null || model1.dynamicDesign.stateMachine === null);
+  }
+
+  // 3e. 「各核均…」跨角色总结语写在迁移标签里也拦截（09-18：公共步骤分别画进各角色流程）
+  {
+    const model = baseModel();
+    const failures = [];
+    const bad = TWO_ROLE_SM.replace('satellite 自旋等待主核屏障', '各核均等待主核屏障');
+    await generateDesign(model, fakeProvider(bad), { only: ['dynamic'], failures });
+    check('拦截跨角色总结标签:记失败', failures.some(f => f.startsWith('dynamic')), JSON.stringify(failures).slice(0, 200));
+    check('拦截跨角色总结标签:不入库', model.dynamicDesign === null || model.dynamicDesign.stateMachine === null);
+  }
+
+  // 3f. 状态内容行（状态名 : 状态名——描述）：合规放行入库；裸英文/缺状态名开头均拦截（mermaid 内容顶名）
+  {
+    const model = baseModel();
+    const failures = [];
+    await generateDesign(model, fakeProvider(SINGLE_SM + '\n    ONE : ONE——master 执行预运行测试'), { only: ['dynamic'], failures });
+    check('状态内容:无失败', failures.length === 0, failures.join('|'));
+    check('状态内容:入库', model.dynamicDesign?.stateMachine?.diagram.includes('ONE : ONE——master 执行预运行测试'));
+    check('状态内容:不算迁移', model.dynamicDesign?.stateMachine?.transitions.length === 2,
+      JSON.stringify(model.dynamicDesign?.stateMachine?.transitions));
+    const model1 = baseModel();
+    const failures1 = [];
+    await generateDesign(model1, fakeProvider(SINGLE_SM + '\n    ONE : PreRunInit'), { only: ['dynamic'], failures: failures1 });
+    check('拦截裸英文状态内容:记失败', failures1.some(f => f.startsWith('dynamic')), JSON.stringify(failures1).slice(0, 200));
+    check('拦截裸英文状态内容:不入库', model1.dynamicDesign === null || model1.dynamicDesign.stateMachine === null);
+    const model2 = baseModel();
+    const failures2 = [];
+    await generateDesign(model2, fakeProvider(SINGLE_SM + '\n    ONE : master 执行预运行测试'), { only: ['dynamic'], failures: failures2 });
+    check('拦截缺状态名开头:记失败', failures2.some(f => f.startsWith('dynamic')), JSON.stringify(failures2).slice(0, 200));
+    check('拦截缺状态名开头:不入库', model2.dynamicDesign === null || model2.dynamicDesign.stateMachine === null);
   }
 
   // 4. report 渲染：双角色各一个 5.3.1 节；单图渲染与旧版格式逐字节一致

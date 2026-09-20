@@ -196,14 +196,18 @@ function validateStateMachine(): (output: string) => string {
       if (badLabels.length > 0) {
         throw new Error(`${roleTag}的迁移触发条件必须是语义化中文描述，以下触发条件不合格（裸函数名/裸英文）：${[...new Set(badLabels)].join('、')}。请改为描述迁移语义的中文短语（如「master 完成阶段一初始化」「satellite 自旋等待屏障」），依据驱动函数源码里的实际语句提炼。请修正后重新输出完整的图代码。`);
       }
-      // note 同样必须中文
-      const badNotes: string[] = [];
-      for (const m of part.diagram.matchAll(/^\s*note\s+\S+.*?:\s*(\S.*)$/gm)) {
-        const noteText = m[1].trim();
-        if (!hasCjk(noteText)) badNotes.push(noteText);
+      // note 全禁（09-18 用户定调 note 先不加）：补充信息只走状态内容（状态名 : 描述）与迁移触发条件两个通道
+      if (/^\s*note\s/m.test(part.diagram)) {
+        throw new Error(`${roleTag}包含 note 注释框：状态机图一律不使用 note，补充信息请用状态内容（\`状态名 : 描述\` 单独一行）或迁移触发条件表达。请去掉 note 后重新输出完整的图代码。`);
       }
-      if (badNotes.length > 0) {
-        throw new Error(`${roleTag}的 note 必须用中文，以下内容不合格：${[...new Set(badNotes)].join('、')}。请修正后重新输出完整的图代码。`);
+      // 状态内容行（`状态 : 描述`）：必须中文，且必须以状态名开头（mermaid 渲染时内容顶替状态名，不抄名则框里看不到状态名）
+      const badStateDesc: string[] = [];
+      for (const m of part.diagram.matchAll(/^\s*(\w+)\s*:\s*(\S.*)$/gm)) {
+        const desc = m[2].trim();
+        if (!hasCjk(desc) || !desc.startsWith(m[1])) badStateDesc.push(`${m[1]} : ${desc}`);
+      }
+      if (badStateDesc.length > 0) {
+        throw new Error(`${roleTag}的状态内容不合格：${[...new Set(badStateDesc)].join('、')}。状态内容必须是语义化中文、且以状态名开头（mermaid 渲染时内容会顶替状态名）——格式：\`状态名 : 状态名——描述\`，如「TWO : TWO——master 执行预运行测试」。请修正后重新输出完整的图代码。`);
       }
     }
     // 多角色分图：各角色图内容不得完全相同（角色差异必须体现在图里，否则分图无意义）

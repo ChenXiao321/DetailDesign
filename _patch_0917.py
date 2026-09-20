@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-# 迁移包补丁-20260917-流程图修订与状态机分图.zip：菱形虚线框归属修复 + 定义滤除 + 状态机按核角色分图（纯工具链，不含产物 json）
+# 迁移包补丁-20260920-状态机确定性生成.zip：状态机改纯静态生成（零 LLM）——
+# 含 0917 全部内容（条件编译虚线框归属修复 + 定义滤除 + 状态机分图约定的静态落地）
 import zipfile, io, sys, os
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
@@ -7,11 +8,14 @@ files = []
 # 工具链改动（src + dist + node_modules/@lld 镜像）
 core_files = [
     'analyzer/cfgBuilder',
+    'analyzer/stateMachineBuilder',
     'generator/designGenerator',
+    'generator/staticStateMachine',
     'llm/prompts', 'llm/provider',
     'model/types',
     'polarion/collect',
     'report/htmlReport',
+    'index',
 ]
 for f in core_files:
     files.append(f'packages/core/src/{f}.ts')
@@ -25,33 +29,25 @@ missing = [f for f in files if not os.path.isfile(f)]
 if missing:
     print('!! 缺失:'); [print('  ', m) for m in missing]; sys.exit(1)
 
-readme = '''迁移包补丁-20260917-流程图修订与状态机分图 —— 覆盖说明
+readme = '''迁移包补丁-20260920-状态机确定性生成 —— 覆盖说明
 ================================================
 
-■ 内容（全部为工具链改动，不含任何生成产物）
-  1. 条件编译虚线框归属修复：if/else 被 #endif 夹断的写法（else 体在 #if
-     区外，Gp_EcuStpShdn_Startup 实测），条件菱形此前会漏到虚线框外，
-     现在按菱形头部所在行归属，正确画进框内。
-  2. 局部变量定义不再进流程图：int x = 0 / 指针取地址定义等 declaration
-     语句一律不画（定义无流程语义），赋值/调用/控制流等真实操作照常；
-     for 循环初始化器不受影响。
-  3. 状态机按核角色分图：多核模块（master/Core0 与 satellite 行为不同）
-     分别绘制主核/从核各一张状态机，各成一个工作项（对齐序列图分图惯例）；
-     迁移触发条件改为语义化中文描述，不再只写裸函数名。单核模块无变化。
-     ※ 09-17 晚补强（内网 v6 反馈「分了图但内容没变」的根因修复）：
-     a) 状态机 prompt 现在把迁移驱动函数【源码】一并喂给模型——此前只喂
-        函数简介，模型看不到 satellite 自旋等待等语句，画不出角色差异；
-     b) 新增内容硬校验：触发条件/note 必须是中文（裸函数名/英文直接打回
-        重试）、多角色分图内容不得雷同（雷同打回重试），重试耗尽记失败清单，
-        不再静默收旧风格内容。
-     c) 09-18 补强（用户评审 v6 预览反馈）：状态机图一律不画 note 注释框，
-        补充信息只走两个通道——迁移触发条件、状态内容行（`状态名 : 状态名
-        ——描述`，mermaid 渲染时内容会顶替状态名，故状态名必须抄在内容开头）；
-        各核都执行的公共步骤（如预运行测试）不得写成某一角色图里的「各核均
-        执行…」总结语，必须分别画进每个角色自己的流程（master 执行…/
-        satellite 执行…）。硬校验同步拦截：note 出现即打回、「各核/所有核/
-        每个核/两核」字样打回（多角色分图时）、状态内容缺状态名开头或裸英文
-        打回。
+■ 内容（全部为工具链改动，不含任何生成产物；取代 0917 补丁，未打过 0917 的直接打本补丁）
+  1. 状态机生成改为纯确定性（零 LLM）：不再调用大模型画状态机——
+     从源码机械提取：候选检测（枚举 typedef 关联宏 / *_STATE|_MODE|_STAGE 宏族）、
+     CFG 抽象解释提取迁移（赋值=迁移、switch case=迁移源、自旋等待 while(状态!=X)NOP
+     退出=迁移并标注「自旋等待退出」、PwrShdn/SafeState 类不返回分支=到 [*] 的提前
+     终止）、触发条件一律用条件表达式原文（与流程图同口径，不再做中文润色）。
+     多核模块按 GetCoreId 角色分支自动分主核/从核两张图（分支内状态行为无差异则不
+     分，如 IoM 的 GetCoreId 索引用法）。
+     降级阶梯保证任意模块必出图、gen 永不因状态机中断：CFG 失败的函数走行级正则
+     兜底；完全无迁移时出状态清单图；模块无状态机则 5.3.1 不出节（同现状）。
+  2. 状态内容行（某状态存续期间调用的函数，格式 `X : X——执行 a()、b()`）与迁移
+     触发条件是两个补充信息通道；状态机图不画 note 注释框（构造性保证）。
+  3. （0917 已有）条件编译虚线框归属修复：if/else 被 #endif 夹断的写法，条件菱形
+     按头部所在行归属画进框内。
+  4. （0917 已有）局部变量定义不进流程图：int x = 0 / 指针取地址等 declaration
+     语句不画；赋值/调用/控制流照常；for 循环初始化器不受影响。
 
 ■ 应用方法（内网）
   在迁移包解压目录上直接覆盖本补丁全部文件（目录结构一致）。
@@ -59,25 +55,31 @@ readme = '''迁移包补丁-20260917-流程图修订与状态机分图 —— �
 ■ 内网刷新步骤
   ① 流程图（免 LLM，直接刷）：
        node packages/cli/dist/index.js gen 测试模块/<模块> --out <产物目录> --only flowcharts --resume
-  ② 状态机分图（需 LLM）：用文本编辑器打开产物目录的 lld_design.json，
-     删掉 "stateMachine": {...} 整个字段（及 "stateMachines" 若有），然后：
+  ② 状态机（已免 LLM）：用文本编辑器打开产物目录的 lld_design.json，删掉
+     "stateMachine": {...} 整个字段（及 "stateMachines" 若有），然后：
        node packages/cli/dist/index.js gen 测试模块/<模块> --out <产物目录> --only dynamic --resume
-     （--resume 自动保留已有序列图，只重生状态机；触发条件裸函数名/英文、
-      两角色图雷同等不合格内容会被硬校验自动打回重试，重试耗尽记入失败
-      清单——生成后看失败清单里有没有 dynamic 条目即可）
+     （--resume 自动保留已有序列图；状态机为确定性生成，同一源码必得同一图，
+      不再有重试/失败清单问题。序列图仍需 Qwen 的部分不受影响）
   ③ 出报告 + 渲染验收：
        node packages/cli/dist/index.js report 测试模块/<模块> --out <产物目录>
        node packages/cli/dist/index.js audit 测试模块/<模块> --out <产物目录>
-     预期：audit 斜线 0、交叉/穿盒/箭头全绿。
+     预期：audit 斜线 0、交叉/穿盒/箭头全绿（存量已接受项除外）。
+
+■ 生成结果口径说明（与旧 LLM 版的预期差异，评审时请留意）
+  - 迁移触发条件是条件表达式原文（如 `MstImpl_ptst->TryPwrShdn_b == TRUE`、
+    `StpStage_t == GP_ECUSTPSHDN_STPSTAGE_TWO（自旋等待退出）`），不再是中文润色句。
+  - 从核图按代码实际路径画：satellite 可能出现 UNDEF→TWO 直达（源码里从核没有
+    置位 ONE 的语句，ONE 是主核置的），这是忠实于代码的结果。
+  - switch 的 default 分支会展开为「未被 case 覆盖的状态各出一条迁移」。
 
 ■ 兼容说明
-  - 旧产物 json 不用改也能照常 report/audit（单状态机渲染与旧版一致）；
-    只有重跑 gen 的条目才会换成新版内容。
+  - 旧产物 json 不用改也能照常 report/audit（渲染逻辑零改动，存量 json 重出报告
+    与旧版字节一致）；只有重跑 gen 的条目才会换成新版内容。
   - 状态机分图后 5.3.1 会出现「主核 Core0」「从核 satellite」两节，
     各为一个 Polarion 工作项（章节号同为 5.3.1）。
 '''
 
-out = '迁移包补丁-20260917-流程图修订与状态机分图.zip'
+out = '迁移包补丁-20260920-状态机确定性生成.zip'
 with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as z:
     z.writestr('覆盖说明.txt', readme)
     for f in files:

@@ -27,6 +27,7 @@ export {
   type LLMProvider, type LLMConfig,
 } from './llm/provider.js';
 export {
-  buildFunctionDescriptionPrompt, buildStateMachinePrompt, buildSequencePrompt,
+  buildFunctionDescriptionPrompt, buildSequencePrompt,
 } from './llm/prompts.js';
+export { buildStaticStateMachine, parseSmTransitions } from './generator/staticStateMachine.js';
 export type * from './model/types.js';

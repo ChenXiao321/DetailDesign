@@ -115,27 +115,7 @@ export class MockProvider implements LLMProvider {
 
   async generate(system: string, user: string): Promise<string> {
     this.calls.push({ system, user });
-    // 流程图已改静态生成（cfgBuilder/flowchartEmitter），mock 不再有 flowchart 罐头
-    if (user.includes('stateDiagram')) {
-      // 多核罐头：主核/从核分图（与 prompt 规则 6 的分图约定一致，冒烟覆盖角色拆分路径）
-      return [
-        '### 主核 Core0',
-        'stateDiagram-v2',
-        '    [*] --> UNDEF : 上电复位',
-        '    UNDEF --> ONE : 进入 Startup',
-        '    ONE --> TWO : master 完成阶段一初始化',
-        '    TWO --> THREE : master 完成初始化与自检',
-        '    TWO --> [*] : master 检出试断电标志执行断电流程（不再返回）',
-        '    THREE --> [*] : 启动完成',
-        '### 从核 satellite',
-        'stateDiagram-v2',
-        '    [*] --> UNDEF : 上电复位',
-        '    UNDEF --> ONE : 进入 Startup',
-        '    ONE --> TWO : satellite 自旋等待主核阶段二屏障',
-        '    TWO --> THREE : satellite 完成初始化并记录时间戳',
-        '    THREE --> [*] : 启动完成',
-      ].join('\n');
-    }
+    // 流程图/状态机均已改静态生成（cfgBuilder/flowchartEmitter + stateMachineBuilder），mock 不再有图类罐头
     if (user.includes('sequenceDiagram')) {
       return [
         'sequenceDiagram',

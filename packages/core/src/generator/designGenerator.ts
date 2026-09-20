@@ -1,15 +1,16 @@
 import type {
-  ModuleModel, FunctionUnit, DynamicDesign, StateMachineDesign, SequenceDesign, TypeUnit,
+  ModuleModel, FunctionUnit, DynamicDesign, SequenceDesign, TypeUnit,
 } from '../model/types.js';
 import type { LLMProvider } from '../llm/provider.js';
 import {
   buildFunctionDescriptionPrompt,
-  buildStateMachinePrompt, buildSequencePrompt, buildConfigValueEffectPrompt,
+  buildSequencePrompt, buildConfigValueEffectPrompt,
   buildCalloutDescriptionPrompt, buildTypeDescriptionPrompt,
   buildExternalDescriptionPrompt, buildModuleDescriptionPrompt,
 } from '../llm/prompts.js';
 import { lintMermaidSource, lintFlowchartStructure, lintSequenceStructure } from '../report/mermaidPre.js';
 import { buildStaticFlowchart, buildFallbackFlowchart } from './staticFlowchart.js';
+import { buildStaticStateMachine } from './staticStateMachine.js';
 
 /** 流程图断言网（纯函数，导出供静态生成器自检与测试直喂恶意图）：
  *  词法 lint + 结构 lint + 条件编译虚线框存在性 + 编译期宏禁入菱形；返回中文问题清单（空 = 通过） */
@@ -152,7 +153,7 @@ function validateSequence(fn: FunctionUnit): (output: string) => string {
   };
 }
 
-/** 把「### 角色名」分段的多张图拆成 {role, diagram} 列表（序列图/状态机共用）；无分段则单图 role=null */
+/** 把「### 角色名」分段的多张图拆成 {role, diagram} 列表（序列图用）；无分段则单图 role=null */
 function splitRoleDiagrams(text: string): { role: string | null; diagram: string }[] {
   const marks: { role: string; start: number; bodyStart: number }[] = [];
   for (const m of text.matchAll(/^### (.+)$/gm)) {
@@ -163,74 +164,6 @@ function splitRoleDiagrams(text: string): { role: string | null; diagram: string
     role: mk.role,
     diagram: text.slice(mk.bodyStart, i + 1 < marks.length ? marks[i + 1].start : undefined).trim(),
   }));
-}
-
-/** 从状态机图源解析迁移表（5.3.1.2）：X --> Y : 触发条件（含 [*] 伪状态，无标签时 trigger 为空串） */
-function parseSmTransitions(diagram: string): StateMachineDesign['transitions'] {
-  const out: StateMachineDesign['transitions'] = [];
-  for (const m of diagram.matchAll(/^\s*(\[\*\]|\w+)\s*-->\s*(\[\*\]|\w+)\s*(?::\s*(.+?))?\s*$/gm)) {
-    out.push({ from: m[1], to: m[2], trigger: m[3]?.trim() ?? '', description: '' });
-  }
-  return out;
-}
-
-/** 状态机输出校验：允许「### 角色名」分段多图（多核模块按角色分图），每张都必须是完整 stateDiagram-v2；
- *  内容硬校验（09-17 内网 v6 根因：prompt 引导不强制，模型分图后照抄旧内容）——
- *  ① 迁移触发条件与 note 必须含中文（禁裸函数名/裸英文）② 多角色分图内容不得雷同 */
-function validateStateMachine(): (output: string) => string {
-  const hasCjk = (s: string) => /[一-鿿]/.test(s);
-  return (output: string) => {
-    const text = extractDiagramSet(output, 'stateDiagram-v2');
-    const parts = splitRoleDiagrams(text);
-    for (const part of parts) {
-      if (!part.diagram.trim().startsWith('stateDiagram-v2')) {
-        throw new Error(`状态机分图「${part.role ?? '未标角色'}」缺少 stateDiagram-v2 起始行：多角色分图时每张图都必须是完整的状态机图（### 角色名 换行后第一行写 stateDiagram-v2）。请修正后重新输出完整的图代码。`);
-      }
-      const roleTag = part.role ? `分图「${part.role}」` : '状态机图';
-      // 迁移触发条件：X --> Y : 标签 —— 标签必须含中文（裸函数名/裸英文不放行）
-      const badLabels: string[] = [];
-      for (const m of part.diagram.matchAll(/-->\s*[\w[\]*]+\s*:\s*(\S.*)$/gm)) {
-        const label = m[1].trim();
-        if (!hasCjk(label)) badLabels.push(label);
-      }
-      if (badLabels.length > 0) {
-        throw new Error(`${roleTag}的迁移触发条件必须是语义化中文描述，以下触发条件不合格（裸函数名/裸英文）：${[...new Set(badLabels)].join('、')}。请改为描述迁移语义的中文短语（如「master 完成阶段一初始化」「satellite 自旋等待屏障」），依据驱动函数源码里的实际语句提炼。请修正后重新输出完整的图代码。`);
-      }
-      // note 全禁（09-18 用户定调 note 先不加）：补充信息只走状态内容（状态名 : 描述）与迁移触发条件两个通道
-      if (/^\s*note\s/m.test(part.diagram)) {
-        throw new Error(`${roleTag}包含 note 注释框：状态机图一律不使用 note，补充信息请用状态内容（\`状态名 : 描述\` 单独一行）或迁移触发条件表达。请去掉 note 后重新输出完整的图代码。`);
-      }
-      // 状态内容行（`状态 : 描述`）：必须中文，且必须以状态名开头（mermaid 渲染时内容顶替状态名，不抄名则框里看不到状态名）
-      const badStateDesc: string[] = [];
-      for (const m of part.diagram.matchAll(/^\s*(\w+)\s*:\s*(\S.*)$/gm)) {
-        const desc = m[2].trim();
-        if (!hasCjk(desc) || !desc.startsWith(m[1])) badStateDesc.push(`${m[1]} : ${desc}`);
-      }
-      if (badStateDesc.length > 0) {
-        throw new Error(`${roleTag}的状态内容不合格：${[...new Set(badStateDesc)].join('、')}。状态内容必须是语义化中文、且以状态名开头（mermaid 渲染时内容会顶替状态名）——格式：\`状态名 : 状态名——描述\`，如「TWO : TWO——master 执行预运行测试」。请修正后重新输出完整的图代码。`);
-      }
-    }
-    // 多角色分图：各角色图内容不得完全相同（角色差异必须体现在图里，否则分图无意义）
-    if (parts.length > 1) {
-      const norm = (s: string) => s.split('\n').map(l => l.trim()).filter(Boolean).join('\n');
-      const first = norm(parts[0].diagram);
-      if (parts.every(p => norm(p.diagram) === first)) {
-        throw new Error(`各角色分图内容完全相同（${parts.map(p => p.role).join('、')}）：多核模块分图必须体现角色差异——主核执行初始化/驱动状态迁移，从核自旋等待屏障或跟随。请依据驱动函数源码（GetCoreId 分支、自旋等待语句）分别绘制，修正后重新输出完整的图代码。`);
-      }
-      // 跨角色总结语（「各核均执行…」）不属于任何单一角色的图：公共步骤应分别画进每个角色自己的流程
-      const crossRole: string[] = [];
-      for (const part of parts) {
-        for (const m of part.diagram.matchAll(/(?:-->[^\n:]*:\s*|^\s*note\s+\S+.*?:\s*)(\S.*)$/gm)) {
-          const label = m[1].trim();
-          if (/各核|所有核|每个核|两核/.test(label)) crossRole.push(`「${part.role ?? '未标角色'}」: ${label}`);
-        }
-      }
-      if (crossRole.length > 0) {
-        throw new Error(`分图中出现跨角色总结语（${[...new Set(crossRole)].join('；')}）：各核都执行的公共步骤不要写成某一角色图里的「各核均执行…」note，请把该步骤分别画进每个角色自己的流程，用该角色的视角描述（如「master 执行预运行测试」「satellite 执行预运行测试」）。请修正后重新输出完整的图代码。`);
-      }
-    }
-    return text;
-  };
 }
 
 type TypeGenerated = NonNullable<TypeUnit['generated']>;
@@ -350,34 +283,25 @@ async function enrichFunction(
   return genFlowchart(fn, readSource);
 }
 
-/** 生成动态设计（5.3 状态机 + 序列图）；skip 用于 --resume 时只补缺的一半 */
+/** 生成动态设计（5.3 状态机[确定性静态] + 序列图[LLM]）；skip 用于 --resume 时只补缺的一半 */
 async function generateDynamicDesign(
   model: ModuleModel,
   provider: LLMProvider,
   skip?: { stateMachine?: boolean; sequences?: boolean },
+  readSource?: (relPath: string) => string | null,
+  log: (msg: string) => void = () => {},
 ): Promise<DynamicDesign> {
   const result: DynamicDesign = { stateMachine: null, sequences: [] };
 
-  // ---- 状态机（多核模块按角色分图：### 主核 Core0 / ### 从核 satellite 各成一张工作项） ----
-  const smPrompt = skip?.stateMachine ? null : buildStateMachinePrompt(model);
-  if (smPrompt) {
-    const text = await generateWithRetry(provider, smPrompt.system, smPrompt.user, validateStateMachine());
-    const sms = splitRoleDiagrams(text).map((part): StateMachineDesign => {
-      const name = part.role ? `${model.module} 状态机（${part.role}）` : `${model.module} 状态机`;
-      return {
-        name,
-        diagram: part.diagram,
-        diagramFormat: 'mermaid',
-        states: smPrompt.states,
-        transitions: parseSmTransitions(part.diagram),
-        polarion: {
-          isWorkItem: true, chapter: '5.3.1', workItemKind: 'statemachine',
-          title: name, workItemId: null,
-        },
-      };
-    });
-    result.stateMachine = sms[0] ?? null;   // 兼容位：旧读取口径只看第一张
-    if (sms.length > 1) result.stateMachines = sms;
+  // ---- 状态机：确定性静态生成（零 LLM，CFG 抽象解释提取迁移；降级阶梯 L0-L3 必出图） ----
+  if (!skip?.stateMachine) {
+    const smOut = await buildStaticStateMachine(model, readSource);
+    if (smOut) {
+      for (const w of smOut.warnings) log(`  ⚠ 状态机: ${w}`);
+      if (smOut.degraded !== 'none') log(`  ⚠ 状态机: 降级级别 ${smOut.degraded}`);
+      result.stateMachine = smOut.sms[0] ?? null;   // 兼容位：旧读取口径只看第一张
+      if (smOut.sms.length > 1) result.stateMachines = smOut.sms;
+    }
   }
 
   // ---- 序列图：初始化入口 + 周期入口（命名约定 _Startup|_Init / _MainFunction|_Mainfunction，大小写兼容） ----
@@ -494,7 +418,7 @@ export async function generateDesign(
     } else {
       log('生成动态设计（状态机/序列图）');
       try {
-        const fresh = await generateDynamicDesign(model, provider, { stateMachine: keepSM, sequences: keepSeq });
+        const fresh = await generateDynamicDesign(model, provider, { stateMachine: keepSM, sequences: keepSeq }, opts?.readSource, log);
         model.dynamicDesign = {
           stateMachine: keepSM ? existing!.stateMachine : fresh.stateMachine,
           stateMachines: keepSM ? existing!.stateMachines : fresh.stateMachines,

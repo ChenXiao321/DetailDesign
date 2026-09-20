@@ -10,7 +10,7 @@ import {
 } from '../llm/prompts.js';
 import { lintMermaidSource, lintFlowchartStructure, lintSequenceStructure } from '../report/mermaidPre.js';
 import { buildStaticFlowchart, buildFallbackFlowchart } from './staticFlowchart.js';
-import { buildStaticStateMachine } from './staticStateMachine.js';
+import { buildStaticStateMachine, polishSmLabels } from './staticStateMachine.js';
 
 /** 流程图断言网（纯函数，导出供静态生成器自检与测试直喂恶意图）：
  *  词法 lint + 结构 lint + 条件编译虚线框存在性 + 编译期宏禁入菱形；返回中文问题清单（空 = 通过） */
@@ -293,12 +293,17 @@ async function generateDynamicDesign(
 ): Promise<DynamicDesign> {
   const result: DynamicDesign = { stateMachine: null, sequences: [] };
 
-  // ---- 状态机：确定性静态生成（零 LLM，CFG 抽象解释提取迁移；降级阶梯 L0-L3 必出图） ----
+  // ---- 状态机：确定性静态生成（CFG 抽象解释提取迁移；降级阶梯 L0-L3 必出图） ----
+  // 结构零 LLM；迁移标签随后交 LLM 润色为中文短句（09-20 定调），失败保持原文
   if (!skip?.stateMachine) {
     const smOut = await buildStaticStateMachine(model, readSource);
     if (smOut) {
       for (const w of smOut.warnings) log(`  ⚠ 状态机: ${w}`);
       if (smOut.degraded !== 'none') log(`  ⚠ 状态机: 降级级别 ${smOut.degraded}`);
+      for (const sm of smOut.sms) {
+        const warn = await polishSmLabels(sm, model.module, provider);
+        if (warn) log(`  ⚠ 状态机标签润色(${sm.name}): ${warn}`);
+      }
       result.stateMachine = smOut.sms[0] ?? null;   // 兼容位：旧读取口径只看第一张
       if (smOut.sms.length > 1) result.stateMachines = smOut.sms;
     }

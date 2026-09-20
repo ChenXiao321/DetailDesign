@@ -29,5 +29,5 @@ export {
 export {
   buildFunctionDescriptionPrompt, buildSequencePrompt,
 } from './llm/prompts.js';
-export { buildStaticStateMachine, parseSmTransitions } from './generator/staticStateMachine.js';
+export { buildStaticStateMachine, parseSmTransitions, polishSmLabels } from './generator/staticStateMachine.js';
 export type * from './model/types.js';

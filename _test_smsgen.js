@@ -3,7 +3,7 @@
 //       IoM 式 GetCoreId 索引用法不分图、降级（无候选 null / 无迁移 L3 清单图）、report/polarion 兼容
 const fs = require('fs');
 const path = require('path');
-const { buildStaticStateMachine, parseSmTransitions } = require('./packages/core/dist/generator/staticStateMachine.js');
+const { buildStaticStateMachine, parseSmTransitions, polishSmLabels } = require('./packages/core/dist/generator/staticStateMachine.js');
 const { generateDesign } = require('./packages/core/dist/generator/designGenerator.js');
 const { generateHtmlReport } = require('./packages/core/dist/report/htmlReport.js');
 const { collectWorkItems } = require('./packages/core/dist/polarion/collect.js');
@@ -175,7 +175,7 @@ const mkStruct = (name, field, typeName) => ({
     await generateDesign(model, provider, { only: ['dynamic'], failures: [], readSource });
     const dd = model.dynamicDesign;
     check('gen:双图入库', dd?.stateMachines?.length === 2 && dd.stateMachine?.name.includes('主核'), JSON.stringify(dd?.stateMachines?.map(s => s.name)));
-    check('gen:SM不调LLM', !providerCalls.some(u => u.includes('状态机')), providerCalls.map(u => u.slice(0, 20)).join('|'));
+    check('gen:SM结构不调LLM（仅润色调）', providerCalls.filter(u => u.includes('状态机')).every(u => u.includes('润色')), providerCalls.map(u => u.slice(0, 20)).join('|'));
     check('gen:序列图仍在', dd?.sequences.length === 1, JSON.stringify(dd?.sequences?.length));
     check('gen:迁移解析入库', dd?.stateMachines?.[0]?.transitions.length === 5, JSON.stringify(dd?.stateMachines?.[0]?.transitions));
 
@@ -190,6 +190,50 @@ const mkStruct = (name, field, typeName) => ({
     const items = collectWorkItems(model);
     check('polarion:两个状态机工作项', items.filter(w => w.kind === 'statemachine').length === 2,
       JSON.stringify(items.map(w => w.title)).slice(0, 300));
+  }
+
+  // 6. LLM 润色标签：成功映射 / 垃圾响应保持原文 / mermaid 注入拦截
+  {
+    const mkSm = (diagram) => ({
+      name: 'Ecu 状态机（主核 Core0）', diagram, diagramFormat: 'mermaid',
+      states: [], transitions: parseSmTransitions(diagram), polarion: null,
+    });
+    const DIAG = [
+      'stateDiagram-v2',
+      '    [*] --> UNDEF : 复位初值',
+      '    UNDEF --> ONE : master set stage one',
+      '    TWO --> [*] : Mst_ptst->TryPwrShdn_b == TRUE',
+      '    ONE : ONE——执行 CalloutInitStageOneCore0()',
+    ].join('\n');
+
+    const sm = mkSm(DIAG);
+    const provider = {
+      name: 'fake',
+      async generate(system, user) {
+        const input = JSON.parse(user.match(/```json\s*(\{[\s\S]*?\})\s*```/)[1]);
+        const out = {};
+        for (const [k, v] of Object.entries(input)) {
+          out[k] = v.includes('TryPwrShdn') ? '检出试断电标志，执行断电流程'
+            : v.includes('master set') ? '置位阶段一' : v;
+        }
+        return JSON.stringify(out);
+      },
+    };
+    const warn = await polishSmLabels(sm, 'Ecu', provider);
+    check('润色:无告警', warn === null, warn);
+    check('润色:标签替换', sm.diagram.includes('UNDEF --> ONE : 置位阶段一') && sm.diagram.includes('检出试断电标志，执行断电流程'), sm.diagram);
+    check('润色:复位初值不动', sm.diagram.includes('[*] --> UNDEF : 复位初值'));
+    check('润色:内容行不动', sm.diagram.includes('ONE : ONE——执行 CalloutInitStageOneCore0()'));
+    check('润色:迁移表重解析', sm.transitions.some(t => t.trigger === '检出试断电标志，执行断电流程'), JSON.stringify(sm.transitions));
+
+    const sm2 = mkSm(DIAG);
+    const warn2 = await polishSmLabels(sm2, 'Ecu', { name: 'bad', async generate() { return '我不会输出JSON'; } });
+    check('润色:垃圾响应告警', typeof warn2 === 'string' && warn2.includes('保持原文'), warn2);
+    check('润色:垃圾响应原文不动', sm2.diagram === DIAG);
+
+    const sm3 = mkSm(DIAG);
+    const warn3 = await polishSmLabels(sm3, 'Ecu', { name: 'evil', async generate() { return '{"1":"a --> B::x","2":"ok"}'; } });
+    check('润色:注入拦截', sm3.diagram.includes('UNDEF --> ONE : master set stage one') && sm3.diagram.includes('TWO --> [*] : ok'), sm3.diagram + ' | ' + warn3);
   }
 
   console.log(`\n通过 ${pass} / ${pass + fail}`);

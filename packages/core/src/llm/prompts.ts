@@ -262,3 +262,29 @@ export function buildSequencePrompt(
   lines.push(`7. 行为无核角色差异时只出一张图，不写 ### 行`);
   return { system: SYSTEM_DESIGNER, user: lines.join('\n') };
 }
+
+/** 状态机迁移标签润色（09-20 用户定调「结构确定+LLM 只润色标签」）：
+ *  结构与迁移由 stateMachineBuilder 确定性提取（零幻觉），LLM 只把机械标签
+ *  （条件表达式原文/英文注释）润色为简洁中文短句。输入输出均为 JSON 对象。 */
+export function buildSmLabelPolishPrompt(
+  labels: string[],
+  module: string,
+  role: 'master' | 'satellite' | null,
+): { system: string; user: string } {
+  const roleDesc = role === 'master' ? '主核 Core0 视角（动作主体是 master）'
+    : role === 'satellite' ? '从核 satellite 视角（动作主体是 satellite）'
+    : '单核视角';
+  const input = JSON.stringify(Object.fromEntries(labels.map((l, i) => [String(i + 1), l])), null, 1);
+  const user = `「${module}」模块状态机标签润色（${roleDesc}）：以下是迁移触发条件，由工具从 C 代码机械提取（条件表达式原文或英文注释）。请逐条润色为简洁中文短句，用作状态机图的边标签。
+要求：
+1. 忠实原意：!(A) 表示 A 不成立，&& 表示且，|| 表示或；不得增删条件、不得发明代码中不存在的含义
+2. 每条不超过 30 字；宏/变量保留可识别核心词（如 TryPwrShdn_b → 试断电标志、STPSTAGE_TWO → 阶段二）
+3. Callout 函数名保留原文不翻译
+4. 「（自旋等待退出）」表示等到该条件成立、自旋等待退出时发生迁移
+5. 只输出 JSON 对象，键与输入一致，不要输出任何其他内容
+输入：
+\`\`\`json
+${input}
+\`\`\``;
+  return { system: SYSTEM_DESIGNER, user };
+}

@@ -14,6 +14,8 @@
  *   - 单图不输出 ### 角色行；分图仅 主核 Core0 / 从核 satellite
  */
 import { extractStateMachineFacts, fnRank, smInitialState, type SmBuildFacts } from '../analyzer/stateMachineBuilder.js';
+import { buildSmLabelPolishPrompt } from '../llm/prompts.js';
+import type { LLMProvider } from '../llm/provider.js';
 import type { ModuleModel, StateMachineDesign } from '../model/types.js';
 
 /** 从状态机图源解析迁移表（5.3.1.2）：X --> Y : 触发条件（含 [*] 伪状态，无标签时 trigger 为空串） */
@@ -175,4 +177,65 @@ export async function buildStaticStateMachine(
   }
 
   return { sms, warnings, degraded };
+}
+
+/**
+ * LLM 润色迁移标签（09-20 用户定调「结构确定+LLM 只润色标签」）：
+ * 图的骨架与迁移集合是确定性提取的零幻觉产物，本函数只把边上的机械标签
+ * （条件表达式原文/英文注释）换成 LLM 润色的中文短句，随后重解析迁移表。
+ * 任何一步失败都保持原文，返回告警字符串；成功或无可润色返回 null。绝不抛错。
+ * 防线：逐条校验（非空/≤60字/无换行/无 mermaid 语法符）+ 润色前后迁移行数一致。
+ */
+export async function polishSmLabels(
+  sm: StateMachineDesign,
+  module: string,
+  provider: LLMProvider,
+): Promise<string | null> {
+  const triggers = [...new Set(
+    parseSmTransitions(sm.diagram).map(t => t.trigger).filter(t => t && t !== '复位初值'),
+  )];
+  if (triggers.length === 0) return null;
+  const role = sm.name.includes('主核') ? 'master' as const
+    : sm.name.includes('从核') ? 'satellite' as const : null;
+  const { system, user } = buildSmLabelPolishPrompt(triggers, module, role);
+
+  let text: string;
+  try {
+    text = await provider.generate(system, user, { temperature: 0 });
+  } catch (err) {
+    return `润色请求失败（${(err as Error).message}），保持原文`;
+  }
+  const jsonPart = text.match(/\{[\s\S]*\}/);
+  if (!jsonPart) return '润色响应无 JSON，保持原文';
+  let parsed: Record<string, unknown>;
+  try {
+    parsed = JSON.parse(jsonPart[0]);
+  } catch {
+    return '润色响应 JSON 解析失败，保持原文';
+  }
+
+  const map = new Map<string, string>();
+  for (const [i, label] of triggers.entries()) {
+    const v = parsed[String(i + 1)];
+    if (typeof v !== 'string') continue;
+    const s = v.replace(/\s+/g, ' ').trim();
+    if (!s || s === label || s.length > 60) continue;
+    if (/-->|\[\*\]|:::|^\s*note\b/i.test(s)) continue; // mermaid 注入防护
+    map.set(label, s);
+  }
+  if (map.size === 0) return null;
+
+  // 逐行整标签替换（锚定行尾，不存在子串误伤）；替换后迁移行数必须不变
+  const before = parseSmTransitions(sm.diagram).length;
+  const lines = sm.diagram.split('\n').map(line => {
+    const lm = line.match(/^(\s*(?:\[\*\]|\w+)\s*-->\s*(?:\[\*\]|\w+)\s*:\s*)(.+?)\s*$/);
+    if (!lm) return line;
+    const nu = map.get(lm[2]);
+    return nu ? lm[1] + nu : line;
+  });
+  const diagram = lines.join('\n');
+  if (parseSmTransitions(diagram).length !== before) return '润色后迁移行数变化，放弃润色保持原文';
+  sm.diagram = diagram;
+  sm.transitions = parseSmTransitions(diagram);
+  return null;
 }

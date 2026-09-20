@@ -116,6 +116,11 @@ export class MockProvider implements LLMProvider {
   async generate(system: string, user: string): Promise<string> {
     this.calls.push({ system, user });
     // 流程图/状态机均已改静态生成（cfgBuilder/flowchartEmitter + stateMachineBuilder），mock 不再有图类罐头
+    // 状态机标签润色罐头：原样回显输入 JSON（恒等映射=标签不变，mock 产物零漂移）
+    if (user.includes('状态机标签润色')) {
+      const m = user.match(/```json\s*(\{[\s\S]*?\})\s*```/);
+      if (m) return m[1];
+    }
     if (user.includes('sequenceDiagram')) {
       return [
         'sequenceDiagram',

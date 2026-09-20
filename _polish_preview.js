@@ -22,6 +22,13 @@ const MAP = {
   // IoMcuAdc
   '(Ret_t == E_NOT_OK) || (FuncCompl_b == FALSE)': '硬件初始化失败或未完成',
   '!((Ret_t == E_NOT_OK) || (FuncCompl_b == FALSE))': '硬件初始化成功且完成',
+  // ---- 状态内容行（「——」后的部分）----
+  '执行 Gp_EcuStpShdn_CalloutInitStageOneCore0()、Gp_RstM_InitOne()': 'master 执行阶段一初始化（CalloutInitStageOneCore0、RstM_InitOne）',
+  '执行 Gp_TstApp_PreRunInit()、Gp_TstApp_PreRunPhase()、Gp_EcuStpShdn_CalloutGetSysTimeMs()、Gp_RstM_InitTwo()……等 11 项': 'master 执行 PreRunInit 与 PreRunPhase 预运行测试等 11 项',
+  '执行 Gp_TstApp_PreRunInit()、Gp_TstApp_PreRunPhase()、Gp_EcuStpShdn_CalloutGetSysTimeMs()': 'satellite 执行 PreRunInit 与 PreRunPhase 预运行测试',
+  '执行 StpStageTwo_pf()、Gp_EcuStpShdn_CalloutGetSysTimeMs()': 'satellite 执行阶段二功能（StpStageTwo_pf）并记录时间戳',
+  '执行 Gp_TLF35584_CalloutWdiService()、Gp_TLF35584_GetState()、Gp_TLF35584_GetWdgInfo()、Gp_TLF35584_WwdSpiService()……等 7 项': '执行 Wdi 服务、读状态与看门狗信息等 7 项',
+  '执行 Gp_TLF35584_RtSetMode()、Gp_TLF35584_GetAllFaultRegister()、Gp_TLF35584_RtWdgRegCfg()、Gp_TLF35584_GetWdgInfo()……等 8 项': '执行模式切换、故障寄存器读取与看门狗配置等 8 项',
 };
 
 const fakeLlm = {

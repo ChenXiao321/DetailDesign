@@ -214,7 +214,9 @@ const mkStruct = (name, field, typeName) => ({
         const out = {};
         for (const [k, v] of Object.entries(input)) {
           out[k] = v.includes('TryPwrShdn') ? '检出试断电标志，执行断电流程'
-            : v.includes('master set') ? '置位阶段一' : v;
+            : v.includes('master set') ? '置位阶段一'
+            : v.startsWith('执行 CalloutInitStageOneCore0') ? 'master 执行阶段一初始化（CalloutInitStageOneCore0）'
+            : v;
         }
         return JSON.stringify(out);
       },
@@ -223,7 +225,7 @@ const mkStruct = (name, field, typeName) => ({
     check('润色:无告警', warn === null, warn);
     check('润色:标签替换', sm.diagram.includes('UNDEF --> ONE : 置位阶段一') && sm.diagram.includes('检出试断电标志，执行断电流程'), sm.diagram);
     check('润色:复位初值不动', sm.diagram.includes('[*] --> UNDEF : 复位初值'));
-    check('润色:内容行不动', sm.diagram.includes('ONE : ONE——执行 CalloutInitStageOneCore0()'));
+    check('润色:内容行润色且状态名前缀保留', sm.diagram.includes('ONE : ONE——master 执行阶段一初始化（CalloutInitStageOneCore0）'), sm.diagram);
     check('润色:迁移表重解析', sm.transitions.some(t => t.trigger === '检出试断电标志，执行断电流程'), JSON.stringify(sm.transitions));
 
     const sm2 = mkSm(DIAG);

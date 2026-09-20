@@ -180,11 +180,13 @@ export async function buildStaticStateMachine(
 }
 
 /**
- * LLM 润色迁移标签（09-20 用户定调「结构确定+LLM 只润色标签」）：
+ * LLM 润色迁移标签+状态内容（09-20 用户定调「结构确定+LLM 只润色标签」）：
  * 图的骨架与迁移集合是确定性提取的零幻觉产物，本函数只把边上的机械标签
- * （条件表达式原文/英文注释）换成 LLM 润色的中文短句，随后重解析迁移表。
+ * （条件表达式原文/英文注释）与状态内容行（`X : X——执行 a()、b()` 的函数列表部分）
+ * 换成 LLM 润色的中文短句，随后重解析迁移表。内容行的 `X : X——` 前缀构造性保留
+ * （09-18 内嵌状态名定调，mermaid 会用内容顶掉状态名显示）。
  * 任何一步失败都保持原文，返回告警字符串；成功或无可润色返回 null。绝不抛错。
- * 防线：逐条校验（非空/≤60字/无换行/无 mermaid 语法符）+ 润色前后迁移行数一致。
+ * 防线：逐条校验（非空/超长/无换行/无 mermaid 语法符）+ 润色前后迁移行数一致。
  */
 export async function polishSmLabels(
   sm: StateMachineDesign,
@@ -194,10 +196,15 @@ export async function polishSmLabels(
   const triggers = [...new Set(
     parseSmTransitions(sm.diagram).map(t => t.trigger).filter(t => t && t !== '复位初值'),
   )];
-  if (triggers.length === 0) return null;
+  // 状态内容行：`    X : X——执行 a()、b()……等 N 项`，润色目标=「——」后的部分
+  const contentRe = /^\s*(\w+) : \1——(.+?)\s*$/;
+  const contents = [...new Set(
+    sm.diagram.split('\n').map(l => l.match(contentRe)?.[2]).filter((c): c is string => !!c),
+  )];
+  if (triggers.length === 0 && contents.length === 0) return null;
   const role = sm.name.includes('主核') ? 'master' as const
     : sm.name.includes('从核') ? 'satellite' as const : null;
-  const { system, user } = buildSmLabelPolishPrompt(triggers, module, role);
+  const { system, user } = buildSmLabelPolishPrompt(triggers, contents, module, role);
 
   let text: string;
   try {
@@ -214,24 +221,39 @@ export async function polishSmLabels(
     return '润色响应 JSON 解析失败，保持原文';
   }
 
-  const map = new Map<string, string>();
-  for (const [i, label] of triggers.entries()) {
-    const v = parsed[String(i + 1)];
-    if (typeof v !== 'string') continue;
+  const sanitize = (v: unknown, orig: string, maxLen: number): string | null => {
+    if (typeof v !== 'string') return null;
     const s = v.replace(/\s+/g, ' ').trim();
-    if (!s || s === label || s.length > 60) continue;
-    if (/-->|\[\*\]|:::|^\s*note\b/i.test(s)) continue; // mermaid 注入防护
-    map.set(label, s);
+    if (!s || s === orig || s.length > maxLen) return null;
+    if (/-->|\[\*\]|:::|^\s*note\b/i.test(s)) return null; // mermaid 注入防护
+    return s;
+  };
+  const trigMap = new Map<string, string>();
+  for (const [i, label] of triggers.entries()) {
+    const s = sanitize(parsed[String(i + 1)], label, 60);
+    if (s) trigMap.set(label, s);
   }
-  if (map.size === 0) return null;
+  const contMap = new Map<string, string>();
+  for (const [i, c] of contents.entries()) {
+    const s = sanitize(parsed[`C${i + 1}`], c, 100);
+    if (s) contMap.set(c, s);
+  }
+  if (trigMap.size === 0 && contMap.size === 0) return null;
 
   // 逐行整标签替换（锚定行尾，不存在子串误伤）；替换后迁移行数必须不变
   const before = parseSmTransitions(sm.diagram).length;
   const lines = sm.diagram.split('\n').map(line => {
-    const lm = line.match(/^(\s*(?:\[\*\]|\w+)\s*-->\s*(?:\[\*\]|\w+)\s*:\s*)(.+?)\s*$/);
-    if (!lm) return line;
-    const nu = map.get(lm[2]);
-    return nu ? lm[1] + nu : line;
+    const tm = line.match(/^(\s*(?:\[\*\]|\w+)\s*-->\s*(?:\[\*\]|\w+)\s*:\s*)(.+?)\s*$/);
+    if (tm) {
+      const nu = trigMap.get(tm[2]);
+      return nu ? tm[1] + nu : line;
+    }
+    const cm = line.match(contentRe);
+    if (cm) {
+      const nu = contMap.get(cm[2]);
+      if (nu) return `${line.match(/^\s*/)![0]}${cm[1]} : ${cm[1]}——${nu}`;
+    }
+    return line;
   });
   const diagram = lines.join('\n');
   if (parseSmTransitions(diagram).length !== before) return '润色后迁移行数变化，放弃润色保持原文';

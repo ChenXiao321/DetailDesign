@@ -301,7 +301,7 @@ async function generateDynamicDesign(
       for (const w of smOut.warnings) log(`  ⚠ 状态机: ${w}`);
       if (smOut.degraded !== 'none') log(`  ⚠ 状态机: 降级级别 ${smOut.degraded}`);
       for (const sm of smOut.sms) {
-        const warn = await polishSmLabels(sm, model.module, provider);
+        const warn = await polishSmLabels(sm, model.module, provider, smOut.edgeCtx.get(sm));
         if (warn) log(`  ⚠ 状态机标签润色(${sm.name}): ${warn}`);
       }
       result.stateMachine = smOut.sms[0] ?? null;   // 兼容位：旧读取口径只看第一张

@@ -7,6 +7,7 @@ const { polishSmLabels } = require('./packages/core/dist/generator/staticStateMa
 const MAP = {
   // EcuStp 主核
   'master set ECU is init stage two': 'master 完成阶段一初始化，置位阶段二',
+  '从 UNDEF 迁移到 ONE（无守护条件）': 'master 初始化启动数据并置位阶段一',
   'MstImpl_ptst->TryPwrShdn_b == TRUE': 'master 检出试断电标志，执行断电流程（不再返回）',
   '!(MstImpl_ptst->TryPwrShdn_b == TRUE) && MstImpl_ptst->SafeState_b == TRUE': 'master 检出安全态标志，进安全态（不再返回）',
   '!(MstImpl_ptst->TryPwrShdn_b == TRUE) && !(MstImpl_ptst->SafeState_b == TRUE)': 'master 完成初始化与自检，置位阶段三',
@@ -14,6 +15,8 @@ const MAP = {
   'StpStage_t == GP_ECUSTPSHDN_STPSTAGE_TWO（自旋等待退出）': 'satellite 等到主核置位阶段二（自旋等待退出）',
   'StpStage_t == GP_ECUSTPSHDN_STPSTAGE_THREE（自旋等待退出）': 'satellite 等到主核置位阶段三（自旋等待退出）',
   // TLF35584
+  '从 [*] 迁移到 INITIAL_TASK（无守护条件）': '预初始化：初始化内存，进 INITIAL_TASK 态',
+  '从 INITIAL_TASK 迁移到 PREPARERUN（无守护条件）': '未被 case 覆盖，default 分支回预运行态',
   '!(Data_pst->StatusData_tst.BistFunctCalled_u8 == FALSE) && !(Data_pst->StatusData_tst.DeviceState_u8 == GP_TLF35584_NORMAL_STATE) && …': 'BIST 已执行且设备未就绪，转等待态',
   'Data_pst->StatusData_tst.DeviceState_u8 == GP_TLF35584_NORMAL_STATE': '设备进入 NORMAL 态',
   '!(Data_pst->StatusData_tst.DeviceState_u8 == GP_TLF35584_NORMAL_STATE) && Data_pst->ReInitRetry_u8 < GP_TLF35584_TRY_REINIT_MAX': '设备未就绪且重初始化次数未达上限，重新预运行',

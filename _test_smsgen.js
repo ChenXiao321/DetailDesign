@@ -71,7 +71,7 @@ const mkStruct = (name, field, typeName) => ({
       const [m, s] = out.sms;
       check('ecu:主核名', m.name === 'Ecu 状态机（主核 Core0）', m.name);
       check('ecu:从核名', s.name === 'Ecu 状态机（从核 satellite）', s.name);
-      check('ecu:初值', m.diagram.includes('[*] --> UNDEF : 复位初值'), m.diagram);
+      check('ecu:初值', m.diagram.includes('[*] --> UNDEF : 上电复位'), m.diagram);
       const mT = m.transitions.map(t => `${t.from}->${t.to}:${t.trigger}`);
       check('ecu:主核UNDEF→ONE', mT.some(t => t.startsWith('UNDEF->ONE')), JSON.stringify(mT));
       check('ecu:主核ONE→TWO', mT.some(t => t.startsWith('ONE->TWO')), JSON.stringify(mT));
@@ -127,7 +127,7 @@ const mkStruct = (name, field, typeName) => ({
     check('iom:单图', !!out && out.sms.length === 1, JSON.stringify(out?.sms.map(s => s.name)));
     if (out && out.sms.length === 1) {
       const T = out.sms[0].transitions.map(t => `${t.from}->${t.to}:${t.trigger}`);
-      check('iom:初值', out.sms[0].diagram.includes('[*] --> UNDEF : 复位初值'), out.sms[0].diagram);
+      check('iom:初值', out.sms[0].diagram.includes('[*] --> UNDEF : 上电复位'), out.sms[0].diagram);
       check('iom:守护INITED', T.some(t => t === 'UNDEF->INITED:Gp_Iom_HwInit(core) == E_OK'), JSON.stringify(T));
       check('iom:守护FAILED', T.some(t => t === 'UNDEF->INIT_FAILED:!(Gp_Iom_HwInit(core) == E_OK)'), JSON.stringify(T));
     }
@@ -149,7 +149,7 @@ const mkStruct = (name, field, typeName) => ({
     ]);
     const out3 = await buildStaticStateMachine(noTrans, readSource);
     check('降级:L3清单图', !!out3 && out3.degraded === 'list' && out3.sms.length === 1, JSON.stringify(out3?.warnings));
-    check('降级:L3含状态声明', !!out3 && out3.sms[0].diagram.includes('[*] --> UNDEF : 复位初值') && /^\s*A$/m.test(out3.sms[0].diagram), out3?.sms[0]?.diagram);
+    check('降级:L3含状态声明', !!out3 && out3.sms[0].diagram.includes('[*] --> UNDEF : 上电复位') && /^\s*A$/m.test(out3.sms[0].diagram), out3?.sms[0]?.diagram);
   }
 
   // 5. gen 接线 + report/polarion 兼容（--only dynamic：SM 静态生成不调 LLM，序列图走假 provider）
@@ -200,8 +200,9 @@ const mkStruct = (name, field, typeName) => ({
     });
     const DIAG = [
       'stateDiagram-v2',
-      '    [*] --> UNDEF : 复位初值',
+      '    [*] --> UNDEF : 上电复位',
       '    UNDEF --> ONE : master set stage one',
+      '    ONE --> TWO',
       '    TWO --> [*] : Mst_ptst->TryPwrShdn_b == TRUE',
       '    ONE : ONE——执行 CalloutInitStageOneCore0()',
     ].join('\n');
@@ -215,6 +216,7 @@ const mkStruct = (name, field, typeName) => ({
         for (const [k, v] of Object.entries(input)) {
           out[k] = v.includes('TryPwrShdn') ? '检出试断电标志，执行断电流程'
             : v.includes('master set') ? '置位阶段一'
+            : v.startsWith('从 ONE 迁移到 TWO') ? '完成阶段一初始化，置位阶段二'
             : v.startsWith('执行 CalloutInitStageOneCore0') ? 'master 执行阶段一初始化（CalloutInitStageOneCore0）'
             : v;
         }
@@ -224,7 +226,8 @@ const mkStruct = (name, field, typeName) => ({
     const warn = await polishSmLabels(sm, 'Ecu', provider);
     check('润色:无告警', warn === null, warn);
     check('润色:标签替换', sm.diagram.includes('UNDEF --> ONE : 置位阶段一') && sm.diagram.includes('检出试断电标志，执行断电流程'), sm.diagram);
-    check('润色:复位初值不动', sm.diagram.includes('[*] --> UNDEF : 复位初值'));
+    check('润色:上电复位不动', sm.diagram.includes('[*] --> UNDEF : 上电复位'));
+    check('润色:裸边补标签', sm.diagram.includes('ONE --> TWO : 完成阶段一初始化，置位阶段二'), sm.diagram);
     check('润色:内容行润色且状态名前缀保留', sm.diagram.includes('ONE : ONE——master 执行阶段一初始化（CalloutInitStageOneCore0）'), sm.diagram);
     check('润色:迁移表重解析', sm.transitions.some(t => t.trigger === '检出试断电标志，执行断电流程'), JSON.stringify(sm.transitions));
 
@@ -236,6 +239,18 @@ const mkStruct = (name, field, typeName) => ({
     const sm3 = mkSm(DIAG);
     const warn3 = await polishSmLabels(sm3, 'Ecu', { name: 'evil', async generate() { return '{"1":"a --> B::x","2":"ok"}'; } });
     check('润色:注入拦截', sm3.diagram.includes('UNDEF --> ONE : master set stage one') && sm3.diagram.includes('TWO --> [*] : ok'), sm3.diagram + ' | ' + warn3);
+
+    // 裸边上下文（函数名+目标状态内容）进 prompt
+    const sm4 = mkSm(DIAG);
+    let seenU = '';
+    await polishSmLabels(sm4, 'Ecu', {
+      name: 'echo', async generate(s, u) {
+        const inp = JSON.parse(u.match(/```json\s*(\{[\s\S]*?\})\s*```/)[1]);
+        seenU = inp.U1 ?? '';
+        return JSON.stringify(inp);
+      },
+    }, new Map([['ONE->TWO', '发生在函数 Gp_Ecu_Startup；TWO 状态内容：a()、b()']]));
+    check('润色:裸边上下文进prompt', seenU.includes('从 ONE 迁移到 TWO') && seenU.includes('发生在函数 Gp_Ecu_Startup'), seenU);
   }
 
   console.log(`\n通过 ${pass} / ${pass + fail}`);

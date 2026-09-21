@@ -93,6 +93,8 @@
     if (CalloutChk() == FALSE)）会先发一条调用消息再进片段。
   - 任意函数必出图：控制流分析失败自动降级为按调用顺序的平铺图，不再
     出现序列图缺失或重试。
+  - 序列图描述段（图上方文字）为工具确定性生成的中文说明（入口函数、
+    调用消息数、涉及外部模块、控制结构计数），不再引用英文源码头注释。
   - 内网刷新既有产物：用文本编辑器打开 lld_design.json，删掉
     "sequences": [...] 整个字段（改为 "sequences": []），然后：
       node packages/cli/dist/index.js gen 测试模块/<模块> --out <产物目录> --only dynamic --resume

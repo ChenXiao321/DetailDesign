@@ -87,7 +87,7 @@ function emitTransitions(facts: SmBuildFacts, roleFacts: SmBuildFacts['perRole']
     if (seen.has(key)) continue;
     seen.add(key);
     if (t.from === ANY_STATE_ID) anyUsed = true;
-    if (!t.trigger && t.to !== '[*]' && !bareCtx.has(`${t.from}->${t.to}`)) {
+    if (!t.trigger && !bareCtx.has(`${t.from}->${t.to}`)) {
       bareCtx.set(`${t.from}->${t.to}`, t.fn);
     }
     lines.push(`    ${t.from} --> ${t.to}${t.trigger ? ` : ${t.trigger}` : ''}`);
@@ -171,6 +171,11 @@ export async function buildStaticStateMachine(
       const ctx = new Map<string, string>();
       for (const [edge, fn] of bareCtx) {
         const to = edge.split('->')[1];
+        if (to === '[*]') {
+          // 结束状态边：函数执行完毕返回即状态机生命周期结束（09-21 v6 定调）
+          ctx.set(edge, `发生在函数 ${fn} 执行完毕返回（此后无状态赋值，状态机生命周期结束）`);
+          continue;
+        }
         const calls = (roleFacts.stateCalls.get(to) ?? []).slice(0, 3).map(c => `${c}()`).join('、');
         ctx.set(edge, `发生在函数 ${fn}${calls ? `；${to} 状态内容：${calls}` : ''}`);
       }
@@ -227,7 +232,7 @@ export async function polishSmLabels(
   // 裸边（无标签迁移）：对照 v6 手绘风格由 LLM 补一句动作描述，上下文取自代码事实
   // （函数名+目标状态内容调用，由 buildStaticStateMachine 提供）；无上下文时只给 from/to
   const bareKeys = [...new Set(
-    parsed0.filter(t => !t.trigger && t.to !== '[*]').map(t => `${t.from}->${t.to}`),
+    parsed0.filter(t => !t.trigger && !(t.from === '[*]' && t.to === '[*]')).map(t => `${t.from}->${t.to}`),
   )];
   const bares = bareKeys.map(edge => {
     const [from, to] = edge.split('->');

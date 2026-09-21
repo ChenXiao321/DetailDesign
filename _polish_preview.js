@@ -34,27 +34,36 @@ const MAP = {
   '执行 Gp_TLF35584_RtSetMode()、Gp_TLF35584_GetAllFaultRegister()、Gp_TLF35584_RtWdgRegCfg()、Gp_TLF35584_GetWdgInfo()……等 8 项': '执行模式切换、故障寄存器读取与看门狗配置等 8 项',
 };
 
-const fakeLlm = {
+// 结束状态边（THREE→[*]）按角色分标签（对照 v6 手绘；主从核裸边 U 文本相同，须按图角色区分）
+const TERMINAL_MAP = {
+  master: 'master 阶段三无动作，函数返回',
+  satellite: 'satellite 完成初始化并记录时间戳，函数返回',
+};
+
+const mkFakeLlm = (smName) => ({
   name: 'pseudo-qwen',
   async generate(system, user) {
     const input = JSON.parse(user.match(/```json\s*(\{[\s\S]*?\})\s*```/)[1]);
     const out = {};
+    const role = smName.includes('主核') ? 'master' : smName.includes('从核') ? 'satellite' : null;
     for (const [k, v] of Object.entries(input)) {
-      if (MAP[v]) out[k] = MAP[v];
+      if (role && v.startsWith('从 THREE 迁移到 [*]')) out[k] = TERMINAL_MAP[role];
+      else if (MAP[v]) out[k] = MAP[v];
       else console.log('  （无映射保持原文）' + v.slice(0, 60));
     }
     return JSON.stringify(out);
   },
-};
+});
 
 (async () => {
-  for (const m of ['Gp_EcuStpStdn', 'Gp_IoMcuAdc_3.2.0', 'Gp_TLF35584_5.0.3']) {
+  // 09-21 用户定调：本轮只改 EcuStpStdn，另外两个模块不动
+  for (const m of ['Gp_EcuStpStdn']) {
     const p = `内网测试/v7_状态机静态生成预览/${m}/lld_design.json`;
     const d = JSON.parse(fs.readFileSync(p, 'utf-8'));
     const dd = d.dynamicDesign;
     const sms = dd.stateMachines ?? (dd.stateMachine ? [dd.stateMachine] : []);
     for (const sm of sms) {
-      const warn = await polishSmLabels(sm, d.module, fakeLlm);
+      const warn = await polishSmLabels(sm, d.module, mkFakeLlm(sm.name));
       console.log(`${m} ${sm.name}: ${warn ?? '润色完成'}`);
     }
     fs.writeFileSync(p, JSON.stringify(d, null, 1));

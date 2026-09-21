@@ -47,6 +47,8 @@ export interface SmFnFacts {
   roleCondFound: boolean;
   /** 本函数 switch(状态变量) 覆盖的 case 状态集合（default 展开用） */
   caseStates: Set<string>;
+  /** 函数出口（end/return）处的 current 状态——发射「函数返回=状态机结束」终态边用（09-21 v6 定调） */
+  exitStates: { state: string; row: number }[];
 }
 
 const FAMILY_RE = /\b([A-Z][A-Z0-9]+(?:_[A-Z0-9]+)*?)_([A-Z0-9]+)_(STATE|MODE|STAGE)\b/g;
@@ -272,7 +274,7 @@ const CALL_FILTER_RE = /^(if|while|for|switch|return|sizeof|sizeof\(.*\)|.*NOP.*
 /** CFG 抽象解释：携带 current 状态沿路径传播，提取迁移/自旋/提前终止/状态内容调用 */
 function interpretCfg(cfg: Cfg, ctx: WalkCtx): SmFnFacts {
   const { field, shortOf, macroAlt, role, coreIdVars, fnName } = ctx;
-  const facts: SmFnFacts = { transitions: [], stateCalls: new Map(), roleCondFound: false, caseStates: new Set() };
+  const facts: SmFnFacts = { transitions: [], stateCalls: new Map(), roleCondFound: false, caseStates: new Set(), exitStates: [] };
   if (!field) return facts;
 
   const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -359,7 +361,10 @@ function interpretCfg(cfg: Cfg, ctx: WalkCtx): SmFnFacts {
         break;
 
       case 'end':
-        if (w.current) pushCalls(w.current, w.calls);
+        if (w.current) {
+          pushCalls(w.current, w.calls);
+          facts.exitStates.push({ state: w.current, row: node.rowFrom });
+        }
         break;
 
       case 'cond': {
@@ -469,7 +474,10 @@ function interpretCfg(cfg: Cfg, ctx: WalkCtx): SmFnFacts {
         }
         if (terminalHit) break;
         if (node.kind === 'return') {
-          if (cur) pushCalls(cur, calls);
+          if (cur) {
+            pushCalls(cur, calls);
+            facts.exitStates.push({ state: cur, row: node.rowFrom });
+          }
           break;
         }
         follow(() => true, nw => { nw.current = cur; nw.caseHint = caseHint; nw.triggers = triggers; nw.calls = calls; });
@@ -592,17 +600,19 @@ export async function extractStateMachineFacts(
 
   /** L2 行级兜底：bodyText 正则扫赋值/自旋，from 用 entry 顺序推进 */
   function interpretBodyText(fn: FunctionUnit, _role: 'master' | 'satellite' | null, entry: string | null): SmFnFacts {
-    const facts: SmFnFacts = { transitions: [], stateCalls: new Map(), roleCondFound: false, caseStates: new Set() };
+    const facts: SmFnFacts = { transitions: [], stateCalls: new Map(), roleCondFound: false, caseStates: new Set(), exitStates: [] };
     if (!field) return facts;
     const esc = field.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const assignG = new RegExp(`\\b${esc}\\b[^;=]*?(?<![=!<>])=\\s*(${macroAlt})\\b`, 'g');
     let cur = entry;
-    (fn.bodyText ?? '').split('\n').forEach((line, i) => {
+    const bodyLines = (fn.bodyText ?? '').split('\n');
+    bodyLines.forEach((line, i) => {
       for (const m of line.matchAll(assignG)) {
         facts.transitions.push({ from: cur, to: shortOf.get(m[1])!, trigger: `${fn.name} 第 ${i + 1} 行`, fn: fn.name, row: i });
         cur = shortOf.get(m[1])!;
       }
     });
+    if (cur) facts.exitStates.push({ state: cur, row: bodyLines.length });
     return facts;
   }
 
@@ -610,10 +620,12 @@ export async function extractStateMachineFacts(
   async function walkAll(role: 'master' | 'satellite' | null): Promise<SmBuildFacts['perRole'][number]> {
     const merged = { role, transitions: [] as SmTransitionFact[], stateCalls: new Map<string, string[]>(), caseStates: new Set<string>() };
     let carry: string | null = initial;
+    const perFn: { fn: FunctionUnit; f: SmFnFacts }[] = [];
     for (const fn of drivers) {
       const rank = fnRank(fn.name);
       const entry = rank <= 2 ? carry : null;
       const f = await interpretFn(fn, role, entry);
+      perFn.push({ fn, f });
       merged.transitions.push(...f.transitions);
       for (const [k, v] of f.stateCalls) {
         const arr = merged.stateCalls.get(k) ?? [];
@@ -624,6 +636,26 @@ export async function extractStateMachineFacts(
       if (rank <= 2) {
         const last = f.transitions.filter(t => t.to !== '[*]').slice(-1)[0];
         if (last) carry = last.to;
+      }
+    }
+
+    // 结束状态边（09-21 用户定调「状态机应有起始状态和结束状态」，对照 v6 手绘）：
+    // 机器不被 MainFunction 族周期驱动时，最后一个产生迁移的 init 家族函数（rank≤2）
+    // 执行完毕返回即状态机生命周期结束 → 出口状态 → [*]（裸边，标签交润色层）。
+    // 出口状态必须是本函数内到达过的状态（排除入口携带值，防早退路径制造 UNDEF→[*] 噪音）。
+    if (!drivers.some(fn => fnRank(fn.name) === 3)) {
+      for (let i = perFn.length - 1; i >= 0; i--) {
+        const { fn, f } = perFn[i];
+        if (fnRank(fn.name) > 2) continue;
+        const reached = new Set(f.transitions.filter(t => t.to !== '[*]').map(t => t.to));
+        if (reached.size === 0) continue;
+        const seenExit = new Set<string>();
+        for (const xs of f.exitStates) {
+          if (!reached.has(xs.state) || seenExit.has(xs.state)) continue;
+          seenExit.add(xs.state);
+          merged.transitions.push({ from: xs.state, to: '[*]', trigger: '', fn: fn.name, row: xs.row, terminal: true });
+        }
+        break;
       }
     }
     return merged;

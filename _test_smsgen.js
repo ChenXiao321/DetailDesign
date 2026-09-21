@@ -77,12 +77,14 @@ const mkStruct = (name, field, typeName) => ({
       check('ecu:主核ONE→TWO', mT.some(t => t.startsWith('ONE->TWO')), JSON.stringify(mT));
       check('ecu:无条件边注释兜底', mT.some(t => t === 'UNDEF->ONE:master set stage one') && mT.some(t => t === 'ONE->TWO:master set stage two'), JSON.stringify(mT));
       check('ecu:主核提前终止', mT.some(t => t === 'TWO->[*]:Mst_ptst->TryPwrShdn_b == TRUE'), JSON.stringify(mT));
+      check('ecu:主核结束状态边', mT.some(t => t === 'THREE->[*]:'), JSON.stringify(mT));
       check('ecu:主核TWO→THREE守护原文', mT.some(t => t === 'TWO->THREE:!(Mst_ptst->TryPwrShdn_b == TRUE)'), JSON.stringify(mT));
       check('ecu:有守护不吃注释', !mT.some(t => t.includes('master set stage three')), JSON.stringify(mT));
       const sT = s.transitions.map(t => `${t.from}->${t.to}:${t.trigger}`);
       check('ecu:从核自旋退出迁移', sT.some(t => t.startsWith('UNDEF->TWO:StpStage_t == GP_ECU_STPSTAGE_TWO（自旋等待退出）')), JSON.stringify(sT));
       check('ecu:从核无赋值迁移', !sT.some(t => t.startsWith('UNDEF->ONE')), JSON.stringify(sT));
       check('ecu:从核提前终止', sT.some(t => t.startsWith('TWO->[*]:')), JSON.stringify(sT));
+      check('ecu:从核结束状态边', sT.some(t => t === 'THREE->[*]:'), JSON.stringify(sT));
       check('ecu:主核ONE内容行', m.diagram.includes('ONE : ONE——执行 CalloutInitStageOneCore0()'), m.diagram);
       check('ecu:主核TWO内容行', m.diagram.includes('TWO : TWO——执行 Gp_TstApp_PreRunInit()'), m.diagram);
       check('ecu:从核UNDEF内容行', s.diagram.includes('UNDEF : UNDEF——执行 CalloutInitStageOneSat()'), s.diagram);
@@ -177,13 +179,13 @@ const mkStruct = (name, field, typeName) => ({
     check('gen:双图入库', dd?.stateMachines?.length === 2 && dd.stateMachine?.name.includes('主核'), JSON.stringify(dd?.stateMachines?.map(s => s.name)));
     check('gen:SM结构不调LLM（仅润色调）', providerCalls.filter(u => u.includes('状态机')).every(u => u.includes('润色')), providerCalls.map(u => u.slice(0, 20)).join('|'));
     check('gen:序列图仍在', dd?.sequences.length === 1, JSON.stringify(dd?.sequences?.length));
-    check('gen:迁移解析入库', dd?.stateMachines?.[0]?.transitions.length === 5, JSON.stringify(dd?.stateMachines?.[0]?.transitions));
+    check('gen:迁移解析入库', dd?.stateMachines?.[0]?.transitions.length === 6, JSON.stringify(dd?.stateMachines?.[0]?.transitions));
 
     const html = generateHtmlReport(model);
     check('report:两节', (html.match(/5\.3\.1 状态机：/g) || []).length === 2);
     check('report:状态表一次', (html.match(/5\.3\.1\.1 状态描述/g) || []).length === 1);
     const transTable = html.match(/5\.3\.1\.2 状态迁移[\s\S]*?<\/table>/)?.[0] ?? '';
-    check('report:迁移表合并', (transTable.match(/<tr><td><code>/g) || []).length === 6, transTable.slice(0, 500));
+    check('report:迁移表合并', (transTable.match(/<tr><td><code>/g) || []).length === 7, transTable.slice(0, 500));
     check('report:迁移表含自旋退出', transTable.includes('自旋等待退出'));
     check('report:迁移表含提前终止', transTable.includes('TryPwrShdn_b == TRUE'));
 

@@ -53,7 +53,24 @@ export interface SmFnFacts {
 
 const FAMILY_RE = /\b([A-Z][A-Z0-9]+(?:_[A-Z0-9]+)*?)_([A-Z0-9]+)_(STATE|MODE|STAGE)\b/g;
 const TERMINAL_CALL_RE = /\b\w*(?:PwrShdn|SafeState)\w*\s*\(/;
-const COREID_ASSIGN_RE = /(\b\w+)\s*=\s*[\w\s\->.]*?GetCoreId\w*\s*\(/;
+/** GetCoreId 返回值赋值（角色分支检测）：序列图生成器（sequenceBuilder）同用，勿改口径 */
+export const COREID_ASSIGN_RE = /(\b\w+)\s*=\s*[\w\s\->.]*?GetCoreId\w*\s*\(/;
+
+/** 角色分支判定（SM/序列图共用）：cond 标签为条件表达式原文，返回 master 应走的边
+ *  标签（是/否），null=非角色分支。变量必须紧邻比较符（`var == X` / `X == var`）——
+ *  IoM 式 `HwInit(core) == E_OK` 把 GetCoreId 返回值当索引用，不得误判为角色分支 */
+export function roleEdgeForLabel(label: string, coreIdVars: string[]): '是' | '否' | null {
+  const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const v = coreIdVars.find(vv =>
+    new RegExp(`\\b${esc(vv)}\\s*(==|!=)`).test(label) || new RegExp(`(==|!=)\\s*${esc(vv)}\\b`).test(label));
+  if (!v) return null;
+  // CoreId == CORE0_ID / == 0U → 是=master；!= 则否=master
+  const masterConst = /(\w*CORE0\w*|\b0U?\b)/;
+  const eq = /==/.test(label);
+  const cmpWithMaster = masterConst.test(label);
+  if (!cmpWithMaster) return '是'; // 形如 CoreId == x（非0）：默认是=master
+  return eq ? '是' : '否';
+}
 
 /** 最长公共前缀/后缀（整段下划线分隔对齐，短名剥离用） */
 function commonAffix(names: string[]): { prefix: string; suffix: string } {
@@ -158,8 +175,9 @@ export function findSmCandidate(model: ModuleModel): SmCandidate | null {
   };
 }
 
-/** 函数定位（与 buildStaticFlowchart 同策略：名字+行号双匹配，退化名字唯一） */
-async function locateFnCfg(fn: FunctionUnit, source: string): Promise<{ cfg: Cfg; originalLines: string[] }> {
+/** 函数定位（与 buildStaticFlowchart 同策略：名字+行号双匹配，退化名字唯一）；
+ *  序列图生成器（staticSequence）同用 */
+export async function locateFnCfg(fn: FunctionUnit, source: string): Promise<{ cfg: Cfg; originalLines: string[] }> {
   const pre = preprocessSource(source);
   const parsed = await parseCFile(pre.clean);
   type TSNode = import('web-tree-sitter').SyntaxNode;
@@ -333,19 +351,9 @@ function interpretCfg(cfg: Cfg, ctx: WalkCtx): SmFnFacts {
     return false;
   };
 
-  /** 角色分支判定：返回 master 应走的边标签（是/否），null=非角色分支。
-   *  变量必须紧邻比较符（`var == X` / `X == var`）——IoM 式 `HwInit(core) == E_OK`
-   *  把 GetCoreId 返回值当索引用，不得误判为角色分支 */
+  /** 角色分支判定：委托模块级 roleEdgeForLabel（序列图生成器共用同一口径） */
   function roleEdgeFor(label: string): '是' | '否' | null {
-    const v = coreIdVars.find(vv =>
-      new RegExp(`\\b${esc(vv)}\\s*(==|!=)`).test(label) || new RegExp(`(==|!=)\\s*${esc(vv)}\\b`).test(label));
-    if (!v) return null;
-    // CoreId == CORE0_ID / == 0U → 是=master；!= 则否=master
-    const masterConst = /(\w*CORE0\w*|\b0U?\b)/;
-    const eq = /==/.test(label);
-    const cmpWithMaster = masterConst.test(label);
-    if (!cmpWithMaster) return '是'; // 形如 CoreId == x（非0）：默认是=master
-    return eq ? '是' : '否';
+    return roleEdgeForLabel(label, coreIdVars);
   }
 
   function pushCalls(state: string, calls: string[]): void {

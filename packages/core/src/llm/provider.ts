@@ -115,7 +115,8 @@ export class MockProvider implements LLMProvider {
 
   async generate(system: string, user: string): Promise<string> {
     this.calls.push({ system, user });
-    // 流程图/状态机均已改静态生成（cfgBuilder/flowchartEmitter + stateMachineBuilder），mock 不再有图类罐头
+    // 流程图/状态机/序列图均已改静态生成（cfgBuilder/flowchartEmitter + stateMachineBuilder +
+    // sequenceBuilder），mock 不再有图类罐头
     // 状态机标签润色罐头：原样回显输入 JSON（恒等映射=标签不变，mock 产物零漂移）；
     // U 键（裸边补标签）不回显——mock 没有真模型，补不出动作描述，保持裸边
     if (user.includes('状态机标签润色')) {
@@ -127,19 +128,6 @@ export class MockProvider implements LLMProvider {
           return JSON.stringify(obj);
         } catch { return m[1]; }
       }
-    }
-    if (user.includes('sequenceDiagram')) {
-      return [
-        'sequenceDiagram',
-        '    actor OS',
-        '    OS->>Module: Startup()',
-        '    Module->>Module: CalloutGetCoreId()',
-        '    alt 主核',
-        '        Module->>Gp_RstM: Init()',
-        '    else 从核',
-        '        Module->>Module: 自旋等待主核屏障',
-        '    end',
-      ].join('\n');
     }
     return `[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 ${user.length} 字符）。`;
   }

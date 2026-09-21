@@ -4,13 +4,14 @@ import type {
 import type { LLMProvider } from '../llm/provider.js';
 import {
   buildFunctionDescriptionPrompt,
-  buildSequencePrompt, buildConfigValueEffectPrompt,
+  buildConfigValueEffectPrompt,
   buildCalloutDescriptionPrompt, buildTypeDescriptionPrompt,
   buildExternalDescriptionPrompt, buildModuleDescriptionPrompt,
 } from '../llm/prompts.js';
-import { lintMermaidSource, lintFlowchartStructure, lintSequenceStructure } from '../report/mermaidPre.js';
+import { lintMermaidSource, lintFlowchartStructure } from '../report/mermaidPre.js';
 import { buildStaticFlowchart, buildFallbackFlowchart } from './staticFlowchart.js';
 import { buildStaticStateMachine, polishSmLabels } from './staticStateMachine.js';
+import { buildStaticSequence } from './staticSequence.js';
 
 /** 流程图断言网（纯函数，导出供静态生成器自检与测试直喂恶意图）：
  *  词法 lint + 结构 lint + 条件编译虚线框存在性 + 编译期宏禁入菱形；返回中文问题清单（空 = 通过） */
@@ -93,77 +94,6 @@ function withGlossary(user: string, abbr?: [string, string][]): string {
   if (hits.length === 0) return user;
   const lines = hits.map(([a, d]) => `- ${a} = ${d}`).join('\n');
   return `${user}\n\n# 项目术语表（以下缩写的定义以此外部口径为准；描述中涉及这些缩写时按其含义理解，正文保持缩写原形、不要自行展开或改写定义）\n${lines}`;
-}
-
-/** 图集输出校验：允许「### 角色名」分段的多张图（多核模块按角色分图），剥围栏/前言后整体返回 */
-function extractDiagramSet(output: string, startLine: 'sequenceDiagram' | 'stateDiagram-v2'): string {
-  let text = output.trim();
-  const fence = text.match(/```(?:mermaid)?\s*\n([\s\S]*?)```/);
-  if (fence) text = fence[1].trim();
-  const lines = text.split('\n');
-  const startIdx = lines.findIndex(l => l.trim().startsWith(startLine) || /^### .+/.test(l.trim()));
-  if (startIdx > 0) text = lines.slice(startIdx).join('\n').trim();
-  if (!new RegExp(`^(### .+\\n+)?${startLine.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`).test(text)) {
-    throw new Error(`你的输出不是有效的 Mermaid 图代码。要求：第一行必须是 ${startLine}（多角色分图时每张图前一行写 ### 角色名），只输出图代码本身，不要输出任何解释、描述或分析文字。请重新输出。`);
-  }
-  return text;
-}
-
-/** 序列图输出校验：extractSequenceSet 提取 + 逐角色图词法 lint + 组合片段结构 lint；问题拼成中文反馈随重试回喂 */
-function validateSequence(fn: FunctionUnit): (output: string) => string {
-  // 平铺判定的可靠信号在函数源码而非图文本（TLF 实测：平铺图的消息全是裸函数名，无关键词可抓）——
-  // 源码有分支/循环，图就该有组合片段；源码无控制流的函数不要求片段（防误报）
-  const fnHasControlFlow = /\b(if|for|while|switch)\s*\(/.test(fn.bodyTextWithPP ?? fn.bodyText);
-  return (output: string): string => {
-    const text = extractDiagramSet(output, 'sequenceDiagram');
-    const problems: string[] = [];
-    let fragmentTotal = 0;
-    for (const part of splitRoleDiagrams(text)) {
-      fragmentTotal += (part.diagram.match(/^\s*(alt|opt|loop|par|critical|break)\b/gm) ?? []).length;
-      for (const p of [...lintMermaidSource(part.diagram), ...lintSequenceStructure(part.diagram)]) {
-        problems.push(part.role ? `【${part.role}图】${p}` : p);
-      }
-      // Callout 不得建参与者：Callout 是本模块留给集成方的接口函数，属本模块，参与者只建模块粒度。
-      // 检测声明式（participant X as Callout / participant Callout）与隐式（消息端点恰为 Callout）两种；
-      // 消息文本里的 CalloutXxx 函数名不算（自调用 M->>M: CalloutXxx() 是正确画法）。
-      const dia = part.diagram;
-      const declared = dia.split('\n').some(l => /^\s*participant\s+(\w+\s+as\s+)?Callout\s*$/i.test(l));
-      const asEndpoint = dia.split('\n').some(l => {
-        const m = l.match(/^\s*(\w+)\s*-{1,2}>>\s*(\w+)\s*:/);
-        return !!m && (m[1] === 'Callout' || m[2] === 'Callout');
-      });
-      if (declared || asEndpoint) {
-        problems.push(
-          (part.role ? `【${part.role}图】` : '') +
-          '不得把 Callout 列为参与者：Callout 是本模块的接口函数不是独立模块，参与者只建模块粒度。删除 Callout 参与者，调用 Callout 函数画成自调用（本模块->>本模块: CalloutXxx()）',
-        );
-      }
-    }
-    if (fnHasControlFlow && fragmentTotal === 0) {
-      problems.push('函数源码含 if/for/while/switch 分支或循环，但序列图全图没有任何组合片段：对应的消息段必须用 alt [条件]/else、opt [条件]、loop [循环条件] 标注并以 end 结束，禁止把分支/循环平铺成普通消息');
-    }
-    if (problems.length > 0) {
-      throw new Error(
-        `你的序列图存在以下 ${problems.length} 个问题：\n` +
-        problems.map((p, i) => `${i + 1}. ${p}`).join('\n') +
-        '\n请修正后重新输出完整的图代码（仍然只输出图代码本身，多角色分图时保留 ### 角色名 行）。',
-      );
-    }
-    return text;
-  };
-}
-
-/** 把「### 角色名」分段的多张图拆成 {role, diagram} 列表（序列图用）；无分段则单图 role=null */
-function splitRoleDiagrams(text: string): { role: string | null; diagram: string }[] {
-  const marks: { role: string; start: number; bodyStart: number }[] = [];
-  for (const m of text.matchAll(/^### (.+)$/gm)) {
-    marks.push({ role: m[1].trim(), start: m.index, bodyStart: m.index + m[0].length });
-  }
-  if (marks.length === 0) return [{ role: null, diagram: text.trim() }];
-  return marks.map((mk, i) => ({
-    role: mk.role,
-    diagram: text.slice(mk.bodyStart, i + 1 < marks.length ? marks[i + 1].start : undefined).trim(),
-  }));
 }
 
 type TypeGenerated = NonNullable<TypeUnit['generated']>;
@@ -283,7 +213,7 @@ async function enrichFunction(
   return genFlowchart(fn, readSource);
 }
 
-/** 生成动态设计（5.3 状态机[确定性静态] + 序列图[LLM]）；skip 用于 --resume 时只补缺的一半 */
+/** 生成动态设计（5.3 状态机 + 序列图，均确定性静态；skip 用于 --resume 时只补缺的一半） */
 async function generateDynamicDesign(
   model: ModuleModel,
   provider: LLMProvider,
@@ -309,7 +239,8 @@ async function generateDynamicDesign(
     }
   }
 
-  // ---- 序列图：初始化入口 + 周期入口（命名约定 _Startup|_Init / _MainFunction|_Mainfunction，大小写兼容） ----
+  // ---- 序列图：确定性静态生成（CFG 遍历发消息+组合片段；09-21 定调不依赖 LLM） ----
+  // 初始化入口 + 周期入口（命名约定 _Startup|_Init / _MainFunction|_Mainfunction，大小写兼容）
   const scenarios: { pattern: RegExp; scenario: string }[] = [
     { pattern: /_(Startup|Init)$/i, scenario: 'Initialization' },
     { pattern: /_MainFunction$/i, scenario: 'Runtime' },
@@ -317,10 +248,11 @@ async function generateDynamicDesign(
   for (const { pattern, scenario } of skip?.sequences ? [] : scenarios) {
     const fn = model.providedFunctions.find(f => pattern.test(f.name));
     if (!fn) continue;
-    const { system, user } = buildSequencePrompt(model, fn, scenario);
-    const text = await generateWithRetry(provider, system, user, validateSequence(fn), 3);
-    // 多核模块按角色分图：### 主核 Core0 / ### 从核 satellite 各成一张工作项
-    for (const part of splitRoleDiagrams(text)) {
+    const out = await buildStaticSequence(model, fn, readSource);
+    for (const w of out.warnings) log(`  ⚠ 序列图(${scenario}): ${w}`);
+    if (out.degraded !== 'none') log(`  ⚠ 序列图(${scenario}): 降级级别 ${out.degraded}`);
+    // 多核模块按角色分图：主核 Core0 / 从核 satellite 各成一张工作项
+    for (const part of out.parts) {
       const name = part.role ? `${scenario}（${part.role}）` : scenario;
       result.sequences.push({
         name,

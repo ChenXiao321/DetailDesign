@@ -1,4 +1,5 @@
 // 一次性：验证 dynamic 粒度化 skipExisting——状态机保留、空 sequences 重生成
+// （序列图已改确定性生成：无 readSource → flat 降级按 fn.calls 出图，不再走 LLM）
 const { generateDesign } = require('./packages/core/dist/generator/designGenerator.js');
 
 (async () => {
@@ -25,15 +26,18 @@ const { generateDesign } = require('./packages/core/dist/generator/designGenerat
     name: 'fake',
     async generate(system, user) {
       calls.push(user.slice(0, 30));
-      if (user.includes('序列图')) return 'sequenceDiagram\n    actor A as OS\n    participant F as M\n    A->>F: M_Init()\n    loop [每通道]\n    F->>F: 处理\n    end';
       return '描述';
     },
   };
   await generateDesign(model, provider, { only: ['dynamic'], skipExisting: true, failures: [] });
   const smKept = model.dynamicDesign.stateMachine === oldSM;
-  const seqRegen = model.dynamicDesign.sequences.length === 1 && model.dynamicDesign.sequences[0].diagram.includes('loop [每通道]');
+  const seqRegen = model.dynamicDesign.sequences.length === 1
+    && model.dynamicDesign.sequences[0].diagram.includes('M_Init()')
+    && model.dynamicDesign.sequences[0].diagram.includes('X_SetUp');
   const smCalled = calls.some(c => c.includes('状态机'));
+  const seqCalled = calls.some(c => c.includes('序列图'));
   console.log('状态机原对象保留:', smKept ? 'PASS' : 'FAIL');
-  console.log('序列图重生成(带 loop 片段):', seqRegen ? 'PASS' : 'FAIL');
+  console.log('序列图重生成(flat 降级含 fn.calls):', seqRegen ? 'PASS' : 'FAIL');
   console.log('状态机 LLM 未被调用:', !smCalled ? 'PASS' : 'FAIL');
+  console.log('序列图 LLM 未被调用:', !seqCalled ? 'PASS' : 'FAIL');
 })();

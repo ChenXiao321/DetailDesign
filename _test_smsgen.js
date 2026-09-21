@@ -154,7 +154,7 @@ const mkStruct = (name, field, typeName) => ({
     check('降级:L3含状态声明', !!out3 && out3.sms[0].diagram.includes('[*] --> UNDEF : 上电复位') && /^\s*A$/m.test(out3.sms[0].diagram), out3?.sms[0]?.diagram);
   }
 
-  // 5. gen 接线 + report/polarion 兼容（--only dynamic：SM 静态生成不调 LLM，序列图走假 provider）
+  // 5. gen 接线 + report/polarion 兼容（--only dynamic：SM/序列图均静态生成，LLM 仅 SM 标签润色）
   {
     const model = mkModel('Ecu', [mkFn('ecu.c', 'Gp_Ecu_Startup')], [
       mkTypedef('GP_ECU_StpStageType', [
@@ -170,7 +170,6 @@ const mkStruct = (name, field, typeName) => ({
       name: 'fake',
       async generate(system, user) {
         providerCalls.push(user);
-        if (user.includes('序列图')) return 'sequenceDiagram\n    actor A as OS\n    participant F as Ecu\n    A->>F: Gp_Ecu_Startup()\n    loop [每通道]\n    F->>F: 处理\n    end';
         return '描述';
       },
     };
@@ -178,7 +177,12 @@ const mkStruct = (name, field, typeName) => ({
     const dd = model.dynamicDesign;
     check('gen:双图入库', dd?.stateMachines?.length === 2 && dd.stateMachine?.name.includes('主核'), JSON.stringify(dd?.stateMachines?.map(s => s.name)));
     check('gen:SM结构不调LLM（仅润色调）', providerCalls.filter(u => u.includes('状态机')).every(u => u.includes('润色')), providerCalls.map(u => u.slice(0, 20)).join('|'));
-    check('gen:序列图仍在', dd?.sequences.length === 1, JSON.stringify(dd?.sequences?.length));
+    check('gen:序列图双图（角色分支）', dd?.sequences.length === 2
+      && dd.sequences.some(s => s.name.includes('主核')) && dd.sequences.some(s => s.name.includes('从核')),
+      JSON.stringify(dd?.sequences?.map(s => s.name)));
+    check('gen:序列图不调LLM', !providerCalls.some(u => u.includes('序列图')), providerCalls.map(u => u.slice(0, 20)).join('|'));
+    const satSeq = dd?.sequences.find(s => s.name.includes('从核'))?.diagram ?? '';
+    check('gen:从核序列图含自旋loop', /loop .*StpStage_t != GP_ECU_STPSTAGE_TWO/.test(satSeq) && satSeq.includes('Gp_Ecu_NOP()'), satSeq);
     check('gen:迁移解析入库', dd?.stateMachines?.[0]?.transitions.length === 6, JSON.stringify(dd?.stateMachines?.[0]?.transitions));
 
     const html = generateHtmlReport(model);

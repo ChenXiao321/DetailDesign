@@ -231,38 +231,6 @@ export function buildConfigValueEffectPrompt(
   lines.push(`直接输出说明正文，不要输出标题、列表编号或任何格式标记。`);
   return { system: SYSTEM_DESIGNER, user: lines.join('\n') };
 }
-/** 序列图 Mermaid（5.3.2）——为指定函数场景生成 */
-export function buildSequencePrompt(
-  model: ModuleModel,
-  fn: FunctionUnit,
-  scenarioName: string,
-): { system: string; user: string } {
-  const lines: string[] = [];
-  lines.push(`# 任务`);
-  lines.push(`为模块 ${model.module} 的"${scenarioName}"场景绘制序列图（Mermaid sequenceDiagram 语法），`);
-  lines.push(`展示函数 ${fn.name} 执行过程中与各外部模块的交互顺序。`);
-  lines.push(``);
-  lines.push(`# 函数信息`);
-  lines.push(`- 签名: ${fn.signature}`);
-  if (fn.comment?.description) lines.push(`- 功能: ${fn.comment.description.replace(/\n/g, ' ')}`);
-  lines.push(`- 调用顺序（代码中出现的先后）:`);
-  fn.calls.forEach((c, i) => lines.push(`  ${i + 1}. ${c}`));
-  if (fn.globalsAccessed.length > 0) {
-    lines.push(`- 访问的全局变量: ${fn.globalsAccessed.join(', ')}`);
-  }
-  lines.push(``);
-  lines.push(`# 输出要求`);
-  lines.push(`1. 第一行必须是 sequenceDiagram，只输出图代码本身，不要用 \`\`\` 包裹，不要输出任何解释`);
-  lines.push(`2. 参与者只建「模块」粒度：调用者用 actor（如 OS/EcuM），本模块与每个交互的外部模块（如 Gp_RstM、SBC）各一个 participant，声明时起短别名: participant RM as Gp_RstM`);
-  lines.push(`   本模块的 Callout 函数属于本模块（是模块留给集成方的接口），不得为 Callout 建参与者——调用 Callout 画成自调用: 本模块->>本模块: CalloutXxx()`);
-  lines.push(`3. 消息格式: A->>B: 消息名，按调用顺序排列`);
-  lines.push(`4. 控制流必须用组合片段标注，禁止把分支/循环体平铺成普通消息：互斥分支用 alt [条件] / else [条件]；仅在某条件下执行的可选段用 opt [条件]；循环（如遍历每个通道、计数分频）用 loop [循环条件]；各片段以 end 结束。自调用用 A->>A: 说明，注释用 Note over/right of`);
-  lines.push(`5. 消息文本中不要出现冒号、分号、# 号`);
-  lines.push(`6. 若函数行为依赖核角色（主核 master/Core0 与从核 satellite 路径不同，如按 GetCoreId 返回值分支），不要画在一张图里——按核角色分别绘制：每个角色一张完整 sequenceDiagram，每张图前一行写 ### 角色名（如 ### 主核 Core0、### 从核 satellite）；角色图内只保留该角色的参与者，跨核同步（自旋等待、屏障置位）用 Note 说明，不为另一角色建参与者`);
-  lines.push(`7. 行为无核角色差异时只出一张图，不写 ### 行`);
-  return { system: SYSTEM_DESIGNER, user: lines.join('\n') };
-}
-
 /** 状态机迁移标签润色（09-20 用户定调「结构确定+LLM 只润色标签」）：
  *  结构与迁移由 stateMachineBuilder 确定性提取（零幻觉），LLM 只把机械标签
  *  （条件表达式原文/英文注释/状态内容函数列表）润色为简洁中文短句。输入输出均为 JSON 对象。

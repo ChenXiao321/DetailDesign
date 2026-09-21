@@ -21,7 +21,7 @@ import { lintMermaidSource, lintSequenceStructure } from '../report/mermaidPre.j
 import type { FunctionUnit, ModuleModel } from '../model/types.js';
 
 export interface StaticSequenceResult {
-  parts: { role: string | null; diagram: string }[];
+  parts: { role: string | null; diagram: string; description: string }[];
   warnings: string[];
   degraded: 'none' | 'flat';
 }
@@ -36,6 +36,7 @@ export async function buildStaticSequence(
   model: ModuleModel,
   fn: FunctionUnit,
   readSource?: (relPath: string) => string | null,
+  scenario?: string,
 ): Promise<StaticSequenceResult> {
   const warnings: string[] = [];
   const selfAlias = aliasOf(model.module);
@@ -67,7 +68,11 @@ export async function buildStaticSequence(
     for (const a of extAliases) lines.push(`    participant ${a} as ${aliasGroup.get(a) ?? a}`);
     lines.push('', `    OS->>${selfAlias}: ${fn.name}()`);
     for (const c of fn.calls) lines.push(`    ${selfAlias}->>${resolveParticipant(c)}: ${c}()`);
-    return { parts: [{ role: null, diagram: lines.join('\n') }], warnings, degraded: 'flat' };
+    const extGroups = extAliases.map(a => aliasGroup.get(a) ?? a);
+    const description = `本图为${scenario ?? '该'}场景的平铺兜底图：按源码顺序列出 ${fn.name}() 的 ${fn.calls.length} 个直接调用`
+      + (extGroups.length ? `，涉及外部模块 ${extGroups.join('、')}` : '，均为模块内部调用')
+      + '；因控制流分析不可用，未展开条件分支与循环结构。';
+    return { parts: [{ role: null, diagram: lines.join('\n'), description }], warnings, degraded: 'flat' };
   };
 
   const src = readSource?.(fn.file);
@@ -89,7 +94,8 @@ export async function buildStaticSequence(
       ? [{ role: 'master', name: '主核 Core0' }, { role: 'satellite', name: '从核 satellite' }]
       : [{ role: null, name: null }];
 
-    const parts: { role: string | null; diagram: string }[] = [];
+    const parts: { role: string | null; diagram: string; description: string }[] = [];
+    const partEvents: SeqEvent[][] = [];
     for (const r of roles) {
       const built = buildSequenceEvents(cfg, {
         role: r.role, coreIdVars, resolveParticipant, selfAlias,
@@ -101,12 +107,20 @@ export async function buildStaticSequence(
       if (coreIdCall && !hasGetCoreIdMsg(events)) {
         events.unshift({ kind: 'msg', to: selfAlias, text: `${coreIdCall[1]}()`, rpath: '' });
       }
-      parts.push({ role: r.name, diagram: emitDiagram(model.module, selfAlias, fn.name, events, aliasGroup) });
+      partEvents.push(events);
+      parts.push({
+        role: r.name,
+        diagram: emitDiagram(model.module, selfAlias, fn.name, events, aliasGroup),
+        description: describeEvents(model.module, fn.name, scenario, r.name, events, selfAlias, aliasGroup),
+      });
     }
 
     // 两角色图逐字节相同 → 行为无角色差异，并回单图
     const merged = parts.length === 2 && parts[0].diagram === parts[1].diagram
-      ? [{ role: null, diagram: parts[0].diagram }]
+      ? [{
+        role: null, diagram: parts[0].diagram,
+        description: describeEvents(model.module, fn.name, scenario, null, partEvents[0], selfAlias, aliasGroup),
+      }]
       : parts;
 
     // 内置断言网：词法 + 组合片段结构（构造性全绿，命中即工具链 bug）
@@ -132,8 +146,41 @@ function hasGetCoreIdMsg(events: SeqEvent[]): boolean {
   return false;
 }
 
-/** 事件树 → mermaid 文本（参与者声明=OS、本模块、外部首用序） */
-function emitDiagram(module: string, selfAlias: string, fnName: string, events: SeqEvent[], aliasGroup: Map<string, string>): string {
+/** 事件树 → 确定性中文描述（零 LLM：只统计代码事实——消息数、外部模块、控制结构计数） */
+function describeEvents(
+  moduleName: string, fnName: string, scenario: string | undefined, role: string | null,
+  events: SeqEvent[], selfAlias: string, aliasGroup: Map<string, string>,
+): string {
+  let msgs = 0, opts = 0, alts = 0, loops = 0;
+  const extGroups: string[] = [];
+  const visit = (es: SeqEvent[]): void => {
+    for (const e of es) {
+      if (e.kind === 'msg') {
+        msgs++;
+        if (e.to !== selfAlias) {
+          const g = aliasGroup.get(e.to) ?? e.to;
+          if (!extGroups.includes(g)) extGroups.push(g);
+        }
+      } else if (e.kind === 'opt') { opts++; visit(e.events); }
+      else if (e.kind === 'loop') { loops++; visit(e.events); }
+      else { alts++; e.branches.forEach(b => visit(b.events)); }
+    }
+  };
+  visit(events);
+  const lines = [
+    `本图描述 ${moduleName} 模块 ${fnName}() 在${scenario ?? '该'}场景${role ? `（${role}）` : ''}下的函数调用顺序与交互关系。`,
+    `OS 触发入口函数后共发出 ${msgs} 条调用消息`
+    + (extGroups.length ? `，涉及外部模块 ${extGroups.join('、')}` : '，均为模块内部调用') + '。',
+  ];
+  const frags: string[] = [];
+  if (alts > 0) frags.push(`${alts} 处条件分支（alt）`);
+  if (opts > 0) frags.push(`${opts} 处条件执行（opt）`);
+  if (loops > 0) frags.push(`${loops} 处循环（loop）`);
+  if (frags.length > 0) lines.push(`控制结构包含${frags.join('、')}。`);
+  return lines.join('\n');
+}
+
+/** 事件树 → mermaid 文本（参与者声明=OS、本模块、外部首用序） */function emitDiagram(module: string, selfAlias: string, fnName: string, events: SeqEvent[], aliasGroup: Map<string, string>): string {
   // 外部参与者首用序收集
   const externals: string[] = [];
   const collect = (evts: SeqEvent[]): void => {

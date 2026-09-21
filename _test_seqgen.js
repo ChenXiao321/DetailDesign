@@ -52,7 +52,7 @@ function mkModel(fns) {
   // 1. Startup 式：角色分支 + 自旋 NOP + #if opt + else-if 拉平 + 兄弟区域 opt
   {
     const fn = mkFn('seq.c', 'Gp_Seq_Startup');
-    const out = await buildStaticSequence(mkModel([fn]), fn, readSource);
+    const out = await buildStaticSequence(mkModel([fn]), fn, readSource, '初始化');
     check('startup:双图', out.parts.length === 2, JSON.stringify(out.parts.map(p => p.role)));
     check('startup:无降级无断言网', out.degraded === 'none' && !out.warnings.some(w => w.includes('断言网')), out.warnings.join('|'));
     const m = out.parts.find(p => p.role === '主核 Core0')?.diagram ?? '';
@@ -68,6 +68,11 @@ function mkModel(fns) {
       && m.indexOf('participant RstM') < m.indexOf('participant TstApp'), m);
     check('startup:从核自旋NOP', /loop Sat_ptst->StpStage_t != GP_SEQ_STPSTAGE_TWO\n        Seq->>Seq: Gp_Seq_NOP\(\)/.test(s), s);
     check('startup:从核无主核调用', !s.includes('InitStageOneCore0') && s.includes('Gp_TstApp_PreRunInit()'), s);
+    const md = out.parts.find(p => p.role === '主核 Core0')?.description ?? '';
+    check('startup:主核描述中文事实', md.includes('初始化场景（主核 Core0）') && md.includes('Gp_RstM、Gp_TstApp')
+      && /1 处条件分支（alt）/.test(md) && /3 处条件执行（opt）/.test(md), md);
+    const sd = out.parts.find(p => p.role === '从核 satellite')?.description ?? '';
+    check('startup:从核描述含循环计数', /1 处循环（loop）/.test(sd), sd);
   }
 
   // 2. MainFunction 式：cond 标签调用发消息（if (Chk() == FALSE)）
@@ -98,6 +103,8 @@ function mkModel(fns) {
     const fn = mkFn('seq.c', 'Gp_Seq_RegionAlt', ['Gp_RstM_InitTwo', 'CalloutSbcInit']);
     const out = await buildStaticSequence(mkModel([fn]), fn, () => null);
     check('flat:降级标记', out.degraded === 'flat', out.degraded);
+    check('flat:描述注明兜底', (out.parts[0]?.description ?? '').includes('平铺兜底图')
+      && (out.parts[0]?.description ?? '').includes('Gp_RstM'), out.parts[0]?.description);
     const d = out.parts[0]?.diagram ?? '';
     check('flat:按calls直发无片段', d.includes('Seq->>RstM: Gp_RstM_InitTwo()')
       && d.includes('Seq->>Seq: CalloutSbcInit()') && !d.includes('opt ') && !d.includes('alt '), d);

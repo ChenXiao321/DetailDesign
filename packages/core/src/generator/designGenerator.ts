@@ -241,14 +241,15 @@ async function generateDynamicDesign(
 
   // ---- 序列图：确定性静态生成（CFG 遍历发消息+组合片段；09-21 定调不依赖 LLM） ----
   // 初始化入口 + 周期入口（命名约定 _Startup|_Init / _MainFunction|_Mainfunction，大小写兼容）
-  const scenarios: { pattern: RegExp; scenario: string }[] = [
-    { pattern: /_(Startup|Init)$/i, scenario: 'Initialization' },
-    { pattern: /_MainFunction$/i, scenario: 'Runtime' },
+  // scenario 沿用英文场景名（与 v6 基准命名一致）；label 为描述段中文场景名
+  const scenarios: { pattern: RegExp; scenario: string; label: string }[] = [
+    { pattern: /_(Startup|Init)$/i, scenario: 'Initialization', label: '初始化' },
+    { pattern: /_MainFunction$/i, scenario: 'Runtime', label: '周期运行' },
   ];
-  for (const { pattern, scenario } of skip?.sequences ? [] : scenarios) {
+  for (const { pattern, scenario, label } of skip?.sequences ? [] : scenarios) {
     const fn = model.providedFunctions.find(f => pattern.test(f.name));
     if (!fn) continue;
-    const out = await buildStaticSequence(model, fn, readSource);
+    const out = await buildStaticSequence(model, fn, readSource, label);
     for (const w of out.warnings) log(`  ⚠ 序列图(${scenario}): ${w}`);
     if (out.degraded !== 'none') log(`  ⚠ 序列图(${scenario}): 降级级别 ${out.degraded}`);
     // 多核模块按角色分图：主核 Core0 / 从核 satellite 各成一张工作项
@@ -258,7 +259,7 @@ async function generateDynamicDesign(
         name,
         diagram: part.diagram,
         diagramFormat: 'mermaid',
-        description: fn.comment?.description?.replace(/\n/g, '\n      ') ?? '',
+        description: part.description,
         polarion: {
           isWorkItem: true, chapter: '5.3.2', workItemKind: 'sequence',
           title: part.role ? `${model.module} ${scenario} 序列图（${part.role}）` : `${model.module} ${scenario} 序列图`,

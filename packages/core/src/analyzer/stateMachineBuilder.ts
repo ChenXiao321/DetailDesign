@@ -308,6 +308,31 @@ function interpretCfg(cfg: Cfg, ctx: WalkCtx): SmFnFacts {
   }
   const nodeOf = (seq: number) => cfg.nodes[seq];
 
+  /** 前向可达性：fromSeq 下游（不含自身）是否还有状态赋值。
+   *  PwrShdn/SafeState 类调用的「真终止」判定用（09-21 V6/V7 比对定调）：
+   *  调用之后路径上仍可达状态赋值（如 EcuStp 的 CalloutSafeState() 返回后汇合
+   *  置位阶段三）→ 不是终止；只有结构上下游无任何状态赋值（CalloutPwrShdnInStpPhase
+   *  所在 if 分支直接出函数，注释「program will not run to here」）才是提前终止。 */
+  const downstreamAssign = (fromSeq: number): boolean => {
+    const seen = new Set<number>([fromSeq]);
+    const q = (outEdges.get(fromSeq) ?? []).map(e => e.to);
+    while (q.length > 0) {
+      const s = q.pop()!;
+      if (seen.has(s)) continue;
+      seen.add(s);
+      const n = nodeOf(s);
+      if (!n || n.dead) continue;
+      if (n.kind !== 'cond') {
+        for (const s2 of n.label.split(/[;\n]+/)) {
+          const a2 = s2.match(assignRe);
+          if (a2 && resolveState(a2[1])) return true;
+        }
+      }
+      for (const e of outEdges.get(s) ?? []) q.push(e.to);
+    }
+    return false;
+  };
+
   /** 角色分支判定：返回 master 应走的边标签（是/否），null=非角色分支。
    *  变量必须紧邻比较符（`var == X` / `X == var`）——IoM 式 `HwInit(core) == E_OK`
    *  把 GetCoreId 返回值当索引用，不得误判为角色分支 */
@@ -337,7 +362,9 @@ function interpretCfg(cfg: Cfg, ctx: WalkCtx): SmFnFacts {
 
   while (stack.length > 0 && steps++ < 20000) {
     const w = stack.pop()!;
-    const key = `${w.seq}|${w.current}|${w.caseHint}`;
+    // visited 键含触发条件签名：汇合点（如安全态/正常两条路共同置位下一阶段）两条路径
+    // 守护不同但都会到达，须都走通（迁移+状态内容调用才不丢），事后由互补守护合并收成一条
+    const key = `${w.seq}|${w.current}|${w.caseHint}|${w.triggers.join('')}`;
     if (visited.has(key)) continue;
     visited.add(key);
     const node = nodeOf(w.seq);
@@ -441,13 +468,22 @@ function interpretCfg(cfg: Cfg, ctx: WalkCtx): SmFnFacts {
         let triggers = [...w.triggers];
         let calls = [...w.calls];
         let terminalHit = false;
-        for (const st of label.split(/[;\n]+/)) {
+        const stmts = label.split(/[;\n]+/);
+        for (let si = 0; si < stmts.length; si++) {
+          const st = stmts[si];
           for (const cm of st.matchAll(/(\w+)\s*\(/g)) {
             const n = cm[1];
             if (!CALL_FILTER_RE.test(n) && !shortOf.has(n)) calls.push(n);
           }
-          // 提前终止：PwrShdn/SafeState 类调用 → current → [*]，剪枝不走后续
+          // 提前终止：PwrShdn/SafeState 类调用 → current → [*]，剪枝不走后续。
+          // 但须先验「真终止」：本节点剩余语句或 CFG 下游仍可达状态赋值的，
+          // 路径并未终止（SafeState 后汇合置位下一阶段），按普通调用处理
           if (TERMINAL_CALL_RE.test(st) && (caseHint ?? cur)) {
+            const restAssign = stmts.slice(si + 1).some(s2 => {
+              const a2 = s2.match(assignRe);
+              return !!a2 && !!resolveState(a2[1]);
+            });
+            if (restAssign || downstreamAssign(w.seq)) continue;
             const trig = joinTriggers(triggers);
             const callName = st.match(/\b(\w*(?:PwrShdn|SafeState)\w*)\s*\(/)?.[1] ?? '';
             facts.transitions.push({
@@ -658,6 +694,31 @@ export async function extractStateMachineFacts(
         break;
       }
     }
+    // 互补守护合并（09-21 V6/V7 比对）：同 from→to 的两条迁移，守护只在最后一个
+    // 合取项上互为否定（!(A)&&B 与 !(A)&&!B）→ 该条件对目标无影响，合并为公共前缀
+    // （!(A)）。只处理恰好两条且余项严格互补的情形，其余保留原样（不发明 || 语义）。
+    const negate = (c: string): string => (c.startsWith('!(') && c.endsWith(')') ? c.slice(2, -1).trim() : `!(${c})`);
+    const groups = new Map<string, number[]>();
+    merged.transitions.forEach((t, i) => {
+      if (t.terminal || !t.trigger) return;
+      const g = `${t.from}->${t.to}|${t.fn}`;
+      groups.set(g, [...(groups.get(g) ?? []), i]);
+    });
+    const drop = new Set<number>();
+    for (const idxs of groups.values()) {
+      if (idxs.length !== 2) continue;
+      const [a, b] = idxs.map(i => merged.transitions[i]);
+      const ca = a.trigger.split(' && '), cb = b.trigger.split(' && ');
+      const commonA = ca.filter(c => cb.includes(c));
+      const ra = ca.filter(c => !cb.includes(c)), rb = cb.filter(c => !commonA.includes(c));
+      if (ra.length === 1 && rb.length === 1 && negate(ra[0]) === rb[0]) {
+        a.trigger = commonA.join(' && ');
+        a.row = Math.min(a.row, b.row);
+        drop.add(idxs[1]);
+      }
+    }
+    if (drop.size > 0) merged.transitions = merged.transitions.filter((_, i) => !drop.has(i));
+
     return merged;
   }
 

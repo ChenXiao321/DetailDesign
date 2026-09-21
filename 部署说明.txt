@@ -80,6 +80,27 @@
         清单——生成后看失败清单里有没有 dynamic 条目即可，无需逐张目检）
     c) 照常 report + audit 出报告与验收。
 
+■ 序列图静态生成（2026-09-21 起，免 LLM）
+  gen 的【序列图】步骤已不再调用 LLM——与流程图同一套确定性路径（tree-sitter
+  AST → 控制流图 → mermaid sequenceDiagram）：if/else→alt、else-if 链拉平、
+  if 无 else→opt、while/for/自旋等待→loop、编译期 #if 区域→「宏 生效时/
+  未生效时」opt/alt 包裹，消息=源码出现顺序的调用，标签一律代码原文
+  （条件守卫是条件表达式原文，不再做中文润色）。
+  - 多核角色分支（GetCoreId 返回值紧邻比较）自动分主核/从核两张图；
+    两图内容无差异自动并回单图（如 IoM 的 GetCoreId 索引用法）。
+  - 只画直接调用：跨模块被调函数在它自己的图里展开（与 v6 基准同口径）；
+    空操作宏（NOP 类）除自旋等待体内外不画；条件里的调用（如
+    if (CalloutChk() == FALSE)）会先发一条调用消息再进片段。
+  - 任意函数必出图：控制流分析失败自动降级为按调用顺序的平铺图，不再
+    出现序列图缺失或重试。
+  - 内网刷新既有产物：用文本编辑器打开 lld_design.json，删掉
+    "sequences": [...] 整个字段（改为 "sequences": []），然后：
+      node packages/cli/dist/index.js gen 测试模块/<模块> --out <产物目录> --only dynamic --resume
+    完全离线、不需要 apiKey（同一命令若同时缺状态机，状态机边标签润色
+    仍会尝试调 LLM，Qwen 不可用时自动保持原文不中断）。
+  - 存量已验收的 LLM 序列图（含 v6 手修基准）不受影响，只有删 sequences
+    重跑的条目会被替换成静态生成图。
+
 ■ 缩写表定制（可选，两种提供方式）
   ① 外部人员提供 Word 缩写表：lld.config.json 加 "abbreviationsDoc": "项目缩写表.docx"
      （docx 内放两列表格：缩写|描述；「缩写」表进报告 3.1，「定义」表（表头 名称/定义|描述）

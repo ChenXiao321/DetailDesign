@@ -9,7 +9,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { generateHtmlReport, type ModuleModel } from '@lld/core';
-import { findEdge } from './polarion/renderFigures.js';
+import { findEdge } from './edge.js';
 import { loadConfigFile, resolveAbbreviations, abbrGapLogger } from './config.js';
 
 /** file:// URL 编码（中文路径必须逐段 encodeURIComponent，照抄 _render.js） */

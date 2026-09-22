@@ -2,7 +2,7 @@
   "name": "lld-agent",
   "private": true,
   "version": "0.1.0",
-  "description": "Detailed Design (ASPICE SWE.3) generation agent: C code -> LLD -> Polarion",
+  "description": "Detailed Design (ASPICE SWE.3) generation agent: C code -> LLD HTML report",
   "workspaces": [
     "packages/*"
   ],

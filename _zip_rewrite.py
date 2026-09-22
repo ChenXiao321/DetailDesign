@@ -14,6 +14,15 @@ old_set = set(names)
 old_info = {n: (old.getinfo(n).date_time, old.getinfo(n).external_attr) for n in names}
 old.close()
 
+# 已删除功能：Polarion 同步层（2026-09-22 起下线）——相关条目整包剔除
+DROP = [n for n in names if '/polarion/' in n or n.endswith('/pandoc.ts')
+        or '/pandoc.' in n]
+if DROP:
+    print('-- 剔除已下线条目:')
+    for d in DROP: print('  ', d)
+    names = [n for n in names if n not in set(DROP)]
+    old_set = set(names)
+
 missing = [n for n in names if not os.path.isfile(n)]
 if missing:
     print('!! zip 条目在工作区缺失:')

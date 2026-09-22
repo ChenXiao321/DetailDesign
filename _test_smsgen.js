@@ -1,12 +1,11 @@
 // 确定性状态机生成（零 LLM）：stateMachineBuilder CFG 抽象解释 + staticStateMachine 发射
 // 覆盖：EcuStp 式双核分图（角色分支/自旋/提前终止/状态内容）、TLF 式 switch+default 展开单图、
-//       IoM 式 GetCoreId 索引用法不分图、降级（无候选 null / 无迁移 L3 清单图）、report/polarion 兼容
+//       IoM 式 GetCoreId 索引用法不分图、降级（无候选 null / 无迁移 L3 清单图）、report 兼容
 const fs = require('fs');
 const path = require('path');
 const { buildStaticStateMachine, parseSmTransitions, polishSmLabels } = require('./packages/core/dist/generator/staticStateMachine.js');
 const { generateDesign } = require('./packages/core/dist/generator/designGenerator.js');
 const { generateHtmlReport } = require('./packages/core/dist/report/htmlReport.js');
-const { collectWorkItems } = require('./packages/core/dist/polarion/collect.js');
 
 let pass = 0, fail = 0;
 const failures = [];
@@ -192,10 +191,6 @@ const mkStruct = (name, field, typeName) => ({
     check('report:迁移表合并', (transTable.match(/<tr><td><code>/g) || []).length === 7, transTable.slice(0, 500));
     check('report:迁移表含自旋退出', transTable.includes('自旋等待退出'));
     check('report:迁移表含提前终止', transTable.includes('TryPwrShdn_b == TRUE'));
-
-    const items = collectWorkItems(model);
-    check('polarion:两个状态机工作项', items.filter(w => w.kind === 'statemachine').length === 2,
-      JSON.stringify(items.map(w => w.title)).slice(0, 300));
   }
 
   // 6. LLM 润色标签：成功映射 / 垃圾响应保持原文 / mermaid 注入拦截

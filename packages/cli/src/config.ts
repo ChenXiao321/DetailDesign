@@ -1,11 +1,10 @@
 /** lld.config.json 加载（可选，放当前工作目录；已 gitignore，勿提交真实 token） */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { parseAbbreviationsDocx, type LLMConfig, type PolarionConfig } from '@lld/core';
+import { parseAbbreviationsDocx, type LLMConfig } from '@lld/core';
 
 export interface LldConfigFile {
   llm?: Partial<LLMConfig>;
-  polarion?: Partial<PolarionConfig>;
   /** 3.1 缩写表追加词条：{ "SPI": "Serial Peripheral Interface 串行外设接口" }（同名覆盖内置词典；
    *  外部缩写表模式下仍生效：同名覆盖 docx 条目、新增条目补入——临时补表走这里，正式补充走 docx 维护方） */
   abbreviations?: Record<string, string>;

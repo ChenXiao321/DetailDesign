@@ -3,12 +3,9 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import {
   analyzeModule, generateDesign, generateHtmlReport, resolveConfig, normalizeBaseUrl,
-  OpenAICompatibleProvider, MockProvider, resolvePolarionConfig,
+  OpenAICompatibleProvider, MockProvider,
   type InputFile, type ModuleModel, type LLMProvider,
 } from '@lld/core';
-import { cmdPolarionExport } from './polarion/exportCmd.js';
-import { cmdPolarionMapIds } from './polarion/mapIdsCmd.js';
-import { cmdPolarionPush } from './polarion/pushCmd.js';
 import { cmdAudit } from './audit.js';
 import { loadConfigFile, resolveAbbreviations, abbrGapLogger } from './config.js';
 
@@ -195,8 +192,8 @@ async function cmdReport(outDir: string): Promise<void> {
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
   const command = args[0];
-  // 位置参数：剔除 --out/--only/--ids 及其值，剩下的才是命令参数
-  const flagsWithValue = new Set(['--out', '--only', '--ids']);
+  // 位置参数：剔除 --out/--only 及其值，剩下的才是命令参数
+  const flagsWithValue = new Set(['--out', '--only']);
   const positional: string[] = [];
   for (let i = 1; i < args.length; i++) {
     const a = args[i]!;
@@ -205,11 +202,8 @@ async function main(): Promise<void> {
   }
   const mock = args.includes('--mock');
   const resume = args.includes('--resume');
-  const partial = args.includes('--partial');
   const onlyIdx = args.indexOf('--only');
   const only = onlyIdx >= 0 ? args[onlyIdx + 1]?.split(',') : undefined;
-  const idsIdx = args.indexOf('--ids');
-  const idsPath = idsIdx >= 0 && args[idsIdx + 1] ? path.resolve(args[idsIdx + 1]!) : undefined;
 
   const dir = positional[0] ? path.resolve(positional[0]) : '';
   // 产物目录：--out 指定；未指定时默认与模块目录相同（向后兼容）
@@ -239,25 +233,6 @@ async function main(): Promise<void> {
       if (!dir) break;
       await cmdAudit(outDir);
       return;
-    case 'polarion': {
-      if (!dir) break;
-      const sub = positional[1];
-      const polarionCfg = resolvePolarionConfig(loadConfigFile().polarion);
-      if (sub === 'export') {
-        await cmdPolarionExport(outDir, polarionCfg);
-        return;
-      }
-      if (sub === 'map-ids') {
-        cmdPolarionMapIds(outDir, polarionCfg, idsPath, partial);
-        return;
-      }
-      if (sub === 'push') {
-        await cmdPolarionPush(outDir, polarionCfg);
-        return;
-      }
-      console.error(`未知 polarion 子动作: ${sub ?? '(空)'}（支持 export / map-ids / push）`);
-      process.exit(1);
-    }
   }
 
   console.error(`用法:
@@ -271,13 +246,7 @@ async function main(): Promise<void> {
   lld report <模块目录> [--out 产物目录]    生成 HTML 评审报告 lld_report.html
   lld audit <模块目录> [--out 产物目录]     渲染质量验收：Edge 预渲染（lld_report.html 成品版）+
                                         斜线计数/交叉穿盒/箭头朝向审计，打印中文量化报告（需 Edge）
-  lld polarion <模块目录> [--out 产物目录] export
-                                        生成 Polarion Word 导入文件（<out>/polarion/polarion_workitems.docx + manifest csv + figs/）
-  lld polarion <模块目录> [--out 产物目录] map-ids --ids <Polarion导出csv> [--partial]
-                                        导入后回写 workItemId 到 lld_design.json（锚点 LLD-KEY 匹配 > title 匹配）
-  lld polarion <模块目录> [--out 产物目录] push
-                                        REST 直连推送（本期仅骨架：校验配置并打印，推送报未实现）
-  （不带 --out 时产物写在模块目录内；report/polarion 只需 --out 指向产物目录，模块目录仅作占位）
+  （不带 --out 时产物写在模块目录内；report/audit 只需 --out 指向产物目录，模块目录仅作占位）
 LLM 配置: 环境变量 LLD_LLM_BASE_URL / LLD_LLM_API_KEY / LLD_LLM_MODEL / LLD_LLM_TIMEOUT_MS，
   或当前目录 lld.config.json（{"llm":{"baseUrl":"http://server:4000","model":"..."}}）；只给 host:port 时自动补 /v1`);
   process.exit(1);

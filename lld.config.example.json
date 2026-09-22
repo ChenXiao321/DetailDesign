@@ -5,20 +5,6 @@
     "model": "qwen3.8-27b",
     "timeoutMs": 180000
   },
-  "polarion": {
-    "baseUrl": "https://<polarion-server>/polarion",
-    "projectId": "<project-id>",
-    "token": "<access-token>",
-    "tableTitleTemplate": "{group} 接口函数：{name}",
-    "workItemTypes": {
-      "function": "Function",
-      "diagram": "Diagram",
-      "statemachine": "StateMachine",
-      "sequence": "Sequence",
-      "table": "Table"
-    },
-    "maxImageWidthPx": 700
-  },
   "abbreviationsDoc": "项目缩写表.docx",
   "abbreviations": {
     "WWD": "Window Watchdog 窗口看门狗",

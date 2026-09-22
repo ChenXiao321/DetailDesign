@@ -118,7 +118,8 @@ export class MockProvider implements LLMProvider {
     // 流程图/状态机/序列图均已改静态生成（cfgBuilder/flowchartEmitter + stateMachineBuilder +
     // sequenceBuilder），mock 不再有图类罐头
     // 状态机标签润色罐头：原样回显输入 JSON（恒等映射=标签不变，mock 产物零漂移）；
-    // U 键（裸边补标签）不回显——mock 没有真模型，补不出动作描述，保持裸边
+    // U 键（裸边补标签）不回显——mock 没有真模型，补不出动作描述，保持裸边；
+    // S/T 键（状态描述/迁移说明）回显后被润色层「回显输入即拒绝」防线挡下，描述保持空
     if (user.includes('状态机标签润色')) {
       const m = user.match(/```json\s*(\{[\s\S]*?\})\s*```/);
       if (m) {

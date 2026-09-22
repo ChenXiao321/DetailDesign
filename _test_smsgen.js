@@ -257,6 +257,43 @@ const mkStruct = (name, field, typeName) => ({
       },
     }, new Map([['ONE->TWO', '发生在函数 Gp_Ecu_Startup；TWO 状态内容：a()、b()']]));
     check('润色:裸边上下文进prompt', seenU.includes('从 ONE 迁移到 TWO') && seenU.includes('发生在函数 Gp_Ecu_Startup'), seenU);
+
+    // S/T 类：状态描述（5.3.1.1）+ 迁移说明（5.3.1.2）并入同一次润色调用
+    const mkSm5 = () => ({
+      name: 'Ecu 状态机（主核 Core0）', diagram: DIAG, diagramFormat: 'mermaid',
+      states: [
+        { name: 'GP_ECU_STPSTAGE_ONE', description: 'stage one' },
+        { name: 'GP_ECU_STPSTAGE_TWO', description: '' },
+      ],
+      transitions: parseSmTransitions(DIAG), polarion: null,
+    });
+    const sm5 = mkSm5();
+    let seenS1 = '', seenT1 = '';
+    const warn5 = await polishSmLabels(sm5, 'Ecu', {
+      name: 'fake2', async generate(s, u) {
+        const inp = JSON.parse(u.match(/```json\s*(\{[\s\S]*?\})\s*```/)[1]);
+        seenS1 = inp.S1 ?? ''; seenT1 = inp.T1 ?? '';
+        const out = {};
+        for (const [k, v] of Object.entries(inp)) {
+          if (k === 'S1') out[k] = '阶段一：初始化启动数据';
+          else if (k === 'S2') out[k] = '阶段二';
+          else if (k.startsWith('T')) out[k] = `迁移说明${k}`;
+          else out[k] = v; // 其余回显=保持原文（触发 sanitize 回显拒绝）
+        }
+        return JSON.stringify(out);
+      },
+    }, undefined, new Map([['GP_ECU_STPSTAGE_ONE', '代码注释: stage one；存续期间执行: CalloutInitStageOneCore0()']]));
+    check('润色S/T:无告警', warn5 === null, warn5);
+    check('润色S/T:S上下文进prompt', seenS1.includes('状态 GP_ECU_STPSTAGE_ONE') && seenS1.includes('存续期间执行'), seenS1);
+    check('润色S/T:T上下文进prompt', seenT1.includes('从 [*] 迁移到 UNDEF') && seenT1.includes('触发: 上电复位'), seenT1);
+    check('润色S/T:状态描述写入且空注释也生成', sm5.states[0].description === '阶段一：初始化启动数据' && sm5.states[1].description === '阶段二', JSON.stringify(sm5.states));
+    check('润色S/T:迁移说明按行序写入', sm5.transitions.length === 4 && sm5.transitions.every((t, i) => t.description === `迁移说明T${i + 1}`), JSON.stringify(sm5.transitions));
+    check('润色S/T:标签原文不动', sm5.diagram === DIAG, sm5.diagram);
+
+    // 全回显（mock 口径）：S/T 被 sanitize 拒绝，描述保持原值/空
+    const sm6 = mkSm5();
+    await polishSmLabels(sm6, 'Ecu', { name: 'echo', async generate(s, u) { return u.match(/```json\s*(\{[\s\S]*?\})\s*```/)[1]; } });
+    check('润色S/T:回显拒绝保原值', sm6.states[0].description === 'stage one' && sm6.states[1].description === '' && sm6.transitions.every(t => t.description === ''), JSON.stringify(sm6.states) + JSON.stringify(sm6.transitions));
   }
 
   console.log(`\n通过 ${pass} / ${pass + fail}`);

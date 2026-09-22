@@ -234,13 +234,18 @@ export function buildConfigValueEffectPrompt(
 /** 状态机迁移标签润色（09-20 用户定调「结构确定+LLM 只润色标签」）：
  *  结构与迁移由 stateMachineBuilder 确定性提取（零幻觉），LLM 只把机械标签
  *  （条件表达式原文/英文注释/状态内容函数列表）润色为简洁中文短句。输入输出均为 JSON 对象。
- *  条目两类：键 "1".."n"=迁移触发条件（边标签）；键 "C1".."Ck"=状态内容（某状态存续期间做的事） */
+ *  条目五类：键 "1".."n"=迁移触发条件（边标签）；键 "U1"..=无标签裸边补动作描述；
+ *  键 "C1".."Ck"=状态内容（某状态存续期间做的事）；
+ *  键 "S1".."Sm"=状态描述（5.3.1.1 说明列，09-21 用户反馈英文/全空）；
+ *  键 "T1".."Tp"=迁移说明（5.3.1.2 说明列，原恒空） */
 export function buildSmLabelPolishPrompt(
   labels: string[],
   contents: string[],
   module: string,
   role: 'master' | 'satellite' | null,
   bares: string[] = [],
+  states: string[] = [],
+  transitionDescs: string[] = [],
 ): { system: string; user: string } {
   const roleDesc = role === 'master' ? '主核 Core0 视角（动作主体是 master）'
     : role === 'satellite' ? '从核 satellite 视角（动作主体是 satellite）'
@@ -248,19 +253,22 @@ export function buildSmLabelPolishPrompt(
   const entries: [string, string][] = labels.map((l, i) => [String(i + 1), l]);
   bares.forEach((b, i) => entries.push([`U${i + 1}`, b]));
   contents.forEach((c, i) => entries.push([`C${i + 1}`, c]));
+  states.forEach((s, i) => entries.push([`S${i + 1}`, s]));
+  transitionDescs.forEach((t, i) => entries.push([`T${i + 1}`, t]));
   const input = JSON.stringify(Object.fromEntries(entries), null, 1);
-  const user = `「${module}」模块状态机标签润色（${roleDesc}）：以下条目由工具从 C 代码机械提取，请逐条润色为简洁中文短句，用作状态机图标签。
-条目三类：数字键 = 迁移触发条件（条件表达式原文或英文注释）；U 开头键 = 无标签迁移（只给了源/目标状态与代码事实，请补一句动作描述）；C 开头键 = 状态内容（该状态存续期间执行的函数列表，「等 N 项」表示还有函数未列出）。
+  const user = `「${module}」模块状态机标签润色（${roleDesc}）：以下条目由工具从 C 代码机械提取，请逐条润色为简洁中文短句，用作状态机图标签与文档表格。
+条目五类：数字键 = 迁移触发条件（条件表达式原文或英文注释）；U 开头键 = 无标签迁移（只给了源/目标状态与代码事实，请补一句动作描述）；C 开头键 = 状态内容（该状态存续期间执行的函数列表，「等 N 项」表示还有函数未列出）；S 开头键 = 状态描述（给了状态宏名，可能附代码注释/存续期间执行的函数，写一句该状态的含义，用于文档状态描述表）；T 开头键 = 迁移说明（给了源/目标状态、触发条件与发生函数，写一句该迁移做什么，用于文档迁移表说明列）。
 要求：
 1. 忠实原意：!(A) 表示 A 不成立，&& 表示且，|| 表示或；不得增删条件、不得发明代码中不存在的含义
-2. 触发条件与 U 类每条不超过 30 字，状态内容每条不超过 50 字
+2. 触发条件与 U 类每条不超过 30 字，状态内容每条不超过 50 字，S/T 类每条不超过 40 字
 3. 句式以角色开头描述动作（如「master 初始化启动数据并置位阶段一」「satellite 自旋等待主核置位阶段二」）；目标状态用中文名（置位阶段二、进 NORMAL 态）
 4. 宏/变量保留可识别核心词（如 TryPwrShdn_b → 试断电标志、STPSTAGE_TWO → 阶段二）；函数名可去模块前缀留核心词（Gp_RstM_InitOne → RstM_InitOne）
 5. Callout 函数名保留原文不翻译
 6. 「（自旋等待退出）」表示等到该条件成立、自旋等待退出时发生迁移；可改写为句内表达（如「自旋等待主核置位阶段二」），不必保留括注
 7. 状态内容可概括为一句语义描述（依据函数名推断用途），保留 1~2 个关键函数名即可，「等 N 项」计数可省略
 8. U 类只依据所给事实（函数名、状态内容调用）写动作描述，不要编造没有依据的细节；上下文提到「函数执行完毕返回」的，写「…完成，函数返回」式描述（这是状态机的结束状态边）
-9. 只输出 JSON 对象，键与输入一致，不要输出任何其他内容
+9. S 类描述该状态代表的阶段/含义（依据状态名、注释与存续期间执行推断），T 类描述该迁移完成什么动作、为何发生；两者都不照搬英文，写成通顺中文
+10. 只输出 JSON 对象，键与输入一致，不要输出任何其他内容
 输入：
 \`\`\`json
 ${input}

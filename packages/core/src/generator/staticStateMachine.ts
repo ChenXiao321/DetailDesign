@@ -31,8 +31,12 @@ export interface StaticSmOutput {
   sms: StateMachineDesign[];
   warnings: string[];
   degraded: 'none' | 'partial' | 'list';
-  /** 每张图的裸边上下文：`from->to` → 提示文本（发生在函数 X；目标状态内容调用），仅供 polishSmLabels 补标签，不持久化 */
+  /** 每张图的迁移上下文，仅供 polishSmLabels 补标签/说明，不持久化。键两种格式：
+   *  `from->to` = 裸边（无标签迁移），值含函数名+目标状态内容调用；
+   *  `from->to:trigger` = 带标签边，值为「发生在函数 X」（迁移说明的上下文素材） */
   edgeCtx: Map<StateMachineDesign, Map<string, string>>;
+  /** 每张图的状态上下文：状态全名 → 提示文本（代码注释/存续期间调用），仅供 polishSmLabels 写状态描述，不持久化 */
+  stateCtx: Map<StateMachineDesign, Map<string, string>>;
 }
 
 const ANY_STATE_ID = 'ANY_STATE';
@@ -48,8 +52,9 @@ function contentLine(state: string, calls: string[]): string | null {
 }
 
 /** 发射一张图的迁移行：from 兜底（[*]/任意状态）、default 展开、去重、排序；
- *  顺带收集裸边（无标签迁移）的上下文 `from->to` → 函数名，供润色层补标签 */
-function emitTransitions(facts: SmBuildFacts, roleFacts: SmBuildFacts['perRole'][number]): { lines: string[]; bareCtx: Map<string, string> } {
+ *  顺带收集裸边（无标签迁移）的上下文 `from->to` → 函数名，供润色层补标签；
+ *  以及全部已发射边的 `from->to:trigger` → 函数名，供润色层写迁移说明 */
+function emitTransitions(facts: SmBuildFacts, roleFacts: SmBuildFacts['perRole'][number]): { lines: string[]; bareCtx: Map<string, string>; fnByEdge: Map<string, string> } {
   const { candidate } = facts;
   const initial = smInitialState(candidate);
   const stateNames = new Set(candidate.states.map(s => s.name));
@@ -80,12 +85,14 @@ function emitTransitions(facts: SmBuildFacts, roleFacts: SmBuildFacts['perRole']
   const seen = new Set<string>();
   const lines: string[] = [];
   const bareCtx = new Map<string, string>();
+  const fnByEdge = new Map<string, string>();
   let anyUsed = false;
   for (const t of resolved) {
     if (t.to !== '[*]' && !stateNames.has(t.to)) continue; // 目标不在候选集（不应发生，断言网前置）
     const key = `${t.from}->${t.to}:${t.trigger}`;
     if (seen.has(key)) continue;
     seen.add(key);
+    if (!fnByEdge.has(key)) fnByEdge.set(key, t.fn);
     if (t.from === ANY_STATE_ID) anyUsed = true;
     if (!t.trigger && !bareCtx.has(`${t.from}->${t.to}`)) {
       bareCtx.set(`${t.from}->${t.to}`, t.fn);
@@ -99,7 +106,7 @@ function emitTransitions(facts: SmBuildFacts, roleFacts: SmBuildFacts['perRole']
   }
   const tail: string[] = [];
   if (anyUsed) tail.push(`    state "任意状态" as ${ANY_STATE_ID}`);
-  return { lines: [...head, ...lines, ...tail], bareCtx };
+  return { lines: [...head, ...lines, ...tail], bareCtx, fnByEdge };
 }
 
 /** L3 状态清单图：无任何迁移事实时的兜底 */
@@ -146,6 +153,7 @@ export async function buildStaticStateMachine(
 
   const sms: StateMachineDesign[] = [];
   const edgeCtx = new Map<StateMachineDesign, Map<string, string>>();
+  const stateCtx = new Map<StateMachineDesign, Map<string, string>>();
   let degraded: StaticSmOutput['degraded'] = facts.partial ? 'partial' : 'none';
 
   // 驱动函数缺失/字段定位失败时 perRole 为空：仍出 L3 状态清单图（必出图契约）
@@ -165,10 +173,12 @@ export async function buildStaticStateMachine(
       degraded = 'list';
       warnings.push(`${name}: 未提取到迁移，降级为状态清单图`);
     } else {
-      const { lines: tLines, bareCtx } = emitTransitions(facts, roleFacts);
+      const { lines: tLines, bareCtx, fnByEdge } = emitTransitions(facts, roleFacts);
       const lines = ['stateDiagram-v2', ...tLines];
-      // 裸边上下文：函数名 + 目标状态内容调用（润色层补标签的素材，全部源自代码事实）
+      // 迁移上下文：带标签边记 `from->to:trigger` → 发生函数（迁移说明素材）；
+      // 裸边记 `from->to` → 函数名 + 目标状态内容调用（润色层补标签的素材，全部源自代码事实）
       const ctx = new Map<string, string>();
+      for (const [edge, fn] of fnByEdge) ctx.set(edge, `发生在函数 ${fn}`);
       for (const [edge, fn] of bareCtx) {
         const to = edge.split('->')[1];
         if (to === '[*]') {
@@ -196,34 +206,49 @@ export async function buildStaticStateMachine(
     }
 
     const sm: StateMachineDesign = {
-      name, diagram, diagramFormat: 'mermaid', states,
+      name, diagram, diagramFormat: 'mermaid',
+      // 逐图拷贝：润色层就地改写 states[].description，主核/从核两图不能共享同一数组
+      states: states.map(s => ({ ...s })),
       transitions: parseSmTransitions(diagram),
       polarion: polarion(name),
     };
     sms.push(sm);
     if (pendingCtx) edgeCtx.set(sm, pendingCtx);
     pendingCtx = null;
+    // 状态上下文：代码注释 + 存续期间调用（润色层写 5.3.1.1 状态描述的素材）
+    const sCtx = new Map<string, string>();
+    for (const s of facts.candidate.states) {
+      const calls = (roleFacts.stateCalls.get(s.name) ?? []).slice(0, 3).map(c => `${c}()`).join('、');
+      const parts: string[] = [];
+      if (s.description) parts.push(`代码注释: ${s.description}`);
+      if (calls) parts.push(`存续期间执行: ${calls}`);
+      if (parts.length > 0) sCtx.set(s.full, parts.join('；'));
+    }
+    if (sCtx.size > 0) stateCtx.set(sm, sCtx);
   }
 
-  return { sms, warnings, degraded, edgeCtx };
+  return { sms, warnings, degraded, edgeCtx, stateCtx };
 }
 
 /**
- * LLM 润色迁移标签+状态内容（09-20 用户定调「结构确定+LLM 只润色标签」）：
+ * LLM 润色迁移标签+状态内容+状态/迁移描述（09-20 用户定调「结构确定+LLM 只润色标签」；
+ * 09-21 用户反馈 5.3.1.1 状态描述英文/全空、5.3.1.2 迁移说明恒空 → 并入本润色调用）：
  * 图的骨架与迁移集合是确定性提取的零幻觉产物，本函数只把边上的机械标签
  * （条件表达式原文/英文注释）与状态内容行（`X : X——执行 a()、b()` 的函数列表部分）
- * 换成 LLM 润色的中文短句，随后重解析迁移表；无标签的裸边也按 v6 手绘风格补一句
- * 动作描述（上下文=函数名+目标状态内容调用，全部源自代码事实，不发明结构）。
- * 内容行的 `X : X——` 前缀构造性保留
+ * 换成 LLM 润色的中文短句，并生成状态描述（states[].description）与迁移说明
+ * （transitions[].description，按行序对位——润色前后迁移行数不变，索引稳定）。
+ * 无标签的裸边也按 v6 手绘风格补一句动作描述（上下文=函数名+目标状态内容调用，
+ * 全部源自代码事实，不发明结构）。内容行的 `X : X——` 前缀构造性保留
  * （09-18 内嵌状态名定调，mermaid 会用内容顶掉状态名显示）。
  * 任何一步失败都保持原文，返回告警字符串；成功或无可润色返回 null。绝不抛错。
- * 防线：逐条校验（非空/超长/无换行/无 mermaid 语法符）+ 润色前后迁移行数一致。
+ * 防线：逐条校验（非空/超长/无换行/无 mermaid 语法符/不回显输入）+ 润色前后迁移行数一致。
  */
 export async function polishSmLabels(
   sm: StateMachineDesign,
   module: string,
   provider: LLMProvider,
   edgeCtx?: Map<string, string>,
+  stateCtx?: Map<string, string>,
 ): Promise<string | null> {
   const parsed0 = parseSmTransitions(sm.diagram);
   const triggers = [...new Set(
@@ -244,10 +269,23 @@ export async function polishSmLabels(
   const contents = [...new Set(
     sm.diagram.split('\n').map(l => l.match(contentRe)?.[2]).filter((c): c is string => !!c),
   )];
-  if (triggers.length === 0 && contents.length === 0 && bares.length === 0) return null;
+  // S 类：状态描述（5.3.1.1 说明列）。上下文=代码注释+存续期间调用（stateCtx），缺省时至少给状态全名
+  const stateInputs = sm.states.map(s => {
+    const ctx = stateCtx?.get(s.name) ?? (s.description ? `代码注释: ${s.description}` : '');
+    return `状态 ${s.name}${ctx ? `（${ctx}）` : ''}`;
+  });
+  // T 类：迁移说明（5.3.1.2 说明列）。上下文=触发条件+发生函数（edgeCtx 的 `from->to:trigger` 键）
+  const transInputs = parsed0.map(t => {
+    const ctx = edgeCtx?.get(`${t.from}->${t.to}:${t.trigger}`) ?? edgeCtx?.get(`${t.from}->${t.to}`);
+    const parts = [`从 ${t.from} 迁移到 ${t.to}`, t.trigger ? `触发: ${t.trigger}` : '无守护条件'];
+    if (ctx) parts.push(ctx);
+    return parts.join('，');
+  });
+  if (triggers.length === 0 && contents.length === 0 && bares.length === 0
+    && stateInputs.length === 0 && transInputs.length === 0) return null;
   const role = sm.name.includes('主核') ? 'master' as const
     : sm.name.includes('从核') ? 'satellite' as const : null;
-  const { system, user } = buildSmLabelPolishPrompt(triggers, contents, module, role, bares);
+  const { system, user } = buildSmLabelPolishPrompt(triggers, contents, module, role, bares, stateInputs, transInputs);
 
   let text: string;
   try {
@@ -286,7 +324,16 @@ export async function polishSmLabels(
     const s = sanitize(parsed[`C${i + 1}`], c, 100);
     if (s) contMap.set(c, s);
   }
-  if (trigMap.size === 0 && contMap.size === 0 && bareMap.size === 0) return null;
+  // S 类：状态描述（按 sm.states 顺序对位）；回显输入=未润色，拒绝（mock 零漂移也靠这条）
+  const stateMap = new Map<string, string>();
+  for (const [i, st] of sm.states.entries()) {
+    const s = sanitize(parsed[`S${i + 1}`], stateInputs[i], 60);
+    if (s) stateMap.set(st.name, s);
+  }
+  // T 类：迁移说明（按 parsed0 行序对位——行数不变已校验，索引稳定）
+  const transDescs = parsed0.map((t, i) => sanitize(parsed[`T${i + 1}`], transInputs[i], 60));
+  if (trigMap.size === 0 && contMap.size === 0 && bareMap.size === 0
+    && stateMap.size === 0 && transDescs.every(d => d === null)) return null;
 
   // 逐行整标签替换（锚定行尾，不存在子串误伤）；替换后迁移行数必须不变
   const before = parseSmTransitions(sm.diagram).length;
@@ -313,5 +360,14 @@ export async function polishSmLabels(
   if (parseSmTransitions(diagram).length !== before) return '润色后迁移行数变化，放弃润色保持原文';
   sm.diagram = diagram;
   sm.transitions = parseSmTransitions(diagram);
+  // 状态描述/迁移说明对位写入（迁移按行序——上图已校验行数不变）
+  for (const s of sm.states) {
+    const d = stateMap.get(s.name);
+    if (d) s.description = d;
+  }
+  sm.transitions.forEach((t, i) => {
+    const d = transDescs[i];
+    if (d) t.description = d;
+  });
   return null;
 }

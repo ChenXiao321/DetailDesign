@@ -6,6 +6,7 @@ import { listStateMachines } from '../model/types.js';
 import { wrapFlowchartLabels, pinEndNodeToBottom, lintMermaidSource, lintFlowchartStructure, lintSequenceStructure } from './mermaidPre.js';
 import { mermaidRenderScript } from './renderScript.js';
 import { buildDocumentContent } from '../generator/staticDocument.js';
+import { buildIncludeGraph } from './includeGraph.js';
 
 /** 文件用途说明（4.1 文件说明表）：按角色 + 分析数据生成中文描述 */
 function describeFile(path: string, role: string, model: ModuleModel): string {
@@ -54,7 +55,8 @@ function fileSortKey(f: { path: string; role: string }): string {
   return `${rank[f.role] ?? 9}${isC}${f.path}`;
 }
 
-const CSS = `
+// 导出给 imageBatch（PNG 物化批量页）复用，保证与报告渲染度量口径一致
+export const REPORT_CSS = `
 :root { --border:#d0d7de; --label-bg:#f6f8fa; --accent:#0969da; }
 * { box-sizing: border-box; }
 body { font-family: "Segoe UI", "Microsoft YaHei", sans-serif; margin:0; color:#1f2328; }
@@ -241,48 +243,8 @@ ${detailTable}`;
         `<tr><td><code>${esc(v.name)}</code></td><td><code>${esc(v.type)}</code></td><td>${esc(v.comment)}</td></tr>`).join('')}</table>`;
 
   // ---- 4.2 文件包含关系（由 #include 静态生成 Mermaid 图，无需 LLM） ----
-  // 样式对齐模板：UML 版型节点（«header»/«Source» + 加粗文件名），虚线 «include» 箭头，
-  // BT 布局——源文件在底部，箭头朝上指向被包含的头文件（模板约定：箭头指向被调用的元素）
-  const sanitizeId = (s: string) => s.replace(/[^A-Za-z0-9_]/g, '_');
-  // 长文件名按模块前缀折行，控制节点宽度避免导出超页宽
-  const wrapFileLabel = (base: string) =>
-    base.startsWith(`${model.module}_`) ? `${model.module}_<br/>${base.slice(model.module.length + 1)}` : base;
-  const moduleFileBases = new Set(model.files.map(f => f.path.split(/[\\/]/).pop()!));
-  const isMemmap = (base: string) => /memmap/i.test(base);
-  const includeNodes: string[] = [];
-  const includeEdges: string[] = [];
-  const seenNodes = new Set<string>();
-  const addIncludeNode = (base: string): void => {
-    if (seenNodes.has(base)) return;
-    seenNodes.add(base);
-    const stereotype = /\.c$/i.test(base) ? '«Source»' : '«header»';
-    includeNodes.push(`    ${sanitizeId(base)}["${stereotype}<br/><b>${wrapFileLabel(base)}</b>"]`);
-  };
-  for (const f of model.files) {
-    const base = f.path.split(/[\\/]/).pop()!;
-    if (isMemmap(base)) continue;   // Memmap 文件不出图（纯 pragma 包装）
-    for (const inc of f.includes ?? []) {
-      const incBase = inc.split(/[\\/]/).pop()!;
-      if (isMemmap(incBase)) continue;   // MemMap.h 默认被各文件包含，不画出
-      if (!moduleFileBases.has(incBase) && incBase !== 'Std_Types.h') {
-        continue;   // 外部模块头文件不画出（Std_Types.h 除外），名单见 doc.notes.include
-      }
-      addIncludeNode(base);
-      addIncludeNode(incBase);
-      includeEdges.push(`    ${sanitizeId(base)} -.->|"«include»"| ${sanitizeId(incBase)}`);
-    }
-  }
-  const includeGraph = includeEdges.length > 0
-    ? [
-        'flowchart BT',
-        ...includeNodes,
-        ...includeEdges,
-        '    classDef header fill:#dae8fc,stroke:#6c8ebf,color:#1a1a1a',
-        '    classDef source fill:#d5e8d4,stroke:#82b366,color:#1a1a1a',
-        `    class ${[...seenNodes].filter(b => !/\.c$/i.test(b)).map(sanitizeId).join(',')} header`,
-        `    class ${[...seenNodes].filter(b => /\.c$/i.test(b)).map(sanitizeId).join(',')} source`,
-      ].join('\n')
-    : '';
+  // 图源码构建抽至 includeGraph.ts（PNG 物化与报告共享同一份源码，保证一致）
+  const includeGraph = buildIncludeGraph(model);
 
   // ---- 5.1 功能描述 ----
   // LLM 输出为「总述段落 + \n- 要点」；连续的 "- " 行渲染为列表，其余行各成段落
@@ -478,7 +440,7 @@ ${doc.supportFiles.map(([no, name, code]) =>
 <head>
 <meta charset="UTF-8">
 <title>${esc(model.module)} 软件详细设计规范（Code）- 评审稿</title>
-<style>${CSS}</style>
+<style>${REPORT_CSS}</style>
 </head>
 <body>
 <header>

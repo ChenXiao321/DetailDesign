@@ -7,29 +7,9 @@
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { execFileSync } from 'node:child_process';
 import { generateHtmlReport, type ModuleModel } from '@lld/core';
-import { findEdge } from './edge.js';
+import { findEdge, edgeDump } from './edge.js';
 import { loadConfigFile, resolveAbbreviations, abbrGapLogger } from './config.js';
-
-/** file:// URL 编码（中文路径必须逐段 encodeURIComponent，照抄 _render.js） */
-function toFileUrl(p: string): string {
-  return 'file:///' + p.replace(/\\/g, '/').replace(/#/g, '%23')
-    .split('/').map(encodeURIComponent).join('/').replace(/%3A/, ':');
-}
-
-function edgeDump(edge: string, htmlPath: string): string {
-  // stderr 不继承（Edge 无头模式噪音多：libpng/同步组件报错等），失败时取尾部打印
-  try {
-    return execFileSync(edge, ['--headless', '--disable-gpu', '--dump-dom',
-      '--virtual-time-budget=20000', toFileUrl(htmlPath)],
-      { maxBuffer: 64 * 1024 * 1024, timeout: 180_000, stdio: ['ignore', 'pipe', 'pipe'] }).toString('utf-8');
-  } catch (err) {
-    const e = err as { message: string; stderr?: Buffer };
-    const tail = e.stderr ? e.stderr.toString('utf-8').slice(-300) : '';
-    throw new Error(`无头浏览器渲染失败（${e.message}）${tail ? ': ' + tail : ''}\n  排查：Edge/Chrome 是否可正常运行；路径含特殊字符时可把产物目录换到纯英文路径再试`);
-  }
-}
 
 /** 斜线计数：flowchart 边路径逐段判斜（|dx|>0.6 且 |dy|>0.6），含曲线命令即非直角 */
 function countDiagonalEdges(html: string): { ortho: number; diag: number; diagIds: string[] } {

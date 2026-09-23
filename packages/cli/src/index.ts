@@ -7,6 +7,7 @@ import {
   type InputFile, type ModuleModel, type LLMProvider,
 } from '@lld/core';
 import { cmdAudit } from './audit.js';
+import { cmdImages } from './images.js';
 import { loadConfigFile, resolveAbbreviations, abbrGapLogger } from './config.js';
 
 function collectCFiles(dir: string, base: string, out: InputFile[]): void {
@@ -236,6 +237,14 @@ async function main(): Promise<void> {
       return;
     case 'gen':
       if (!dir) break;
+      if (only?.includes('images')) {
+        if (only.length > 1) {
+          console.error('--only images 不与其他类别混用（图 PNG 物化需 Edge，免 LLM）');
+          process.exit(1);
+        }
+        await cmdImages(outDir, resume === true);
+        return;
+      }
       await cmdGen(dir, outDir, mock, only, resume);
       return;
     case 'report':
@@ -251,13 +260,15 @@ async function main(): Promise<void> {
   console.error(`用法:
   lld ping                              LLM 连通性自检（/models + 最小 chat 调用）
   lld analyze <模块目录> [--out 产物目录]   静态分析，产出 lld_model.json
-  lld gen <模块目录> [--out 产物目录] [--mock] [--resume] [--only 函数名,dynamic,configs,callouts,flowcharts,types,externals,description,document]
+  lld gen <模块目录> [--out 产物目录] [--mock] [--resume] [--only 函数名,dynamic,configs,callouts,flowcharts,types,externals,description,document,images]
                                         LLM 生成设计内容，产出 lld_design.json（增量落盘，中断可 --resume 续跑）
                                         --only flowcharts 仅重刷各函数流程图（可叠加函数名缩小范围），保留描述；
                                         流程图为静态生成（tree-sitter CFG），该模式免 LLM 配置
                                         --only types / externals / description 分别补类型描述 / 非Callout外部接口说明 / 5.1模块功能描述
                                         --only document 物化报告骨架内容（1/2/3/7/8 章与引导句，含 3.1/3.2 缩写定义表
                                         按 gen 期 lld.config.json 缩写表定型）进 document 节，免 LLM；配 --resume 加载 design json
+                                        --only images 图 PNG 物化：全部六类 mermaid 图渲染成 PNG（2x）以 base64 存回
+                                        design json（不与其他类别混用，需 Edge，免 LLM；--resume 跳过已有 PNG 的图）
   lld report <模块目录> [--out 产物目录]    生成 HTML 评审报告 lld_report.html
   lld audit <模块目录> [--out 产物目录]     渲染质量验收：Edge 预渲染（lld_report.html 成品版）+
                                         斜线计数/交叉穿盒/箭头朝向审计，打印中文量化报告（需 Edge）

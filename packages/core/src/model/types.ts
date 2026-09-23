@@ -72,6 +72,8 @@ export interface GeneratedFunctionContent {
   /** 函数流程图（Mermaid flowchart 源码）；简单顺序函数无此字段 */
   flowchart?: string;
   flowchartFormat?: 'mermaid';
+  /** 流程图渲染 PNG（base64，gen --only images 物化，2x） */
+  flowchartPng?: string;
   /** 生成来源与状态，便于评审追溯 */
   llmModel: string;
   generatedAt: string;
@@ -82,6 +84,8 @@ export interface StateMachineDesign {
   name: string;
   diagram: string;              // mermaid stateDiagram-v2 源码
   diagramFormat: 'mermaid';
+  /** 渲染 PNG（base64，gen --only images 物化） */
+  diagramPng?: string;
   states: { name: string; description: string }[];
   transitions: { from: string; to: string; trigger: string; description: string }[];
   polarion: PolarionMarker;
@@ -92,6 +96,8 @@ export interface SequenceDesign {
   name: string;                 // 场景名，如 "Initialization"
   diagram: string;              // mermaid sequenceDiagram 源码
   diagramFormat: 'mermaid';
+  /** 渲染 PNG（base64，gen --only images 物化） */
+  diagramPng?: string;
   description: string;
   polarion: PolarionMarker;
 }
@@ -207,6 +213,8 @@ export interface DocumentContent {
    *  internalVars=5.2.4.1 注 configGeneral=6.1 引导句 configFunctional=6.2 引导句
    *  calloutCfg=6.2 Callout function 引导句 evalSummaryIntro=7 章总结引导句 */
   notes: Record<string, string>;
+  /** 4.2 包含关系图渲染 PNG（base64，gen --only images 物化；图 mermaid 源码渲染期由 files[].includes 派生） */
+  includeGraphPng?: string;
 }
 
 export interface ModuleModel {
@@ -227,9 +235,11 @@ export interface ModuleModel {
   configMacros: ConfigMacro[];          // 6
   dynamicDesign?: DynamicDesign;        // 5.3（LLM 生成后填入）
   /** 5.1 功能接口总图（分析时静态生成，工作项，随模型进 diff/同步） */
-  interfaceOverview?: { diagram: string; diagramFormat: 'mermaid'; polarion: PolarionMarker };
+  interfaceOverview?: { diagram: string; diagramFormat: 'mermaid'; polarion: PolarionMarker;
+    /** 渲染 PNG（base64，gen --only images 物化） */ diagramPng?: string };
   /** 5.1 内部函数调用图（分析时静态生成；按对外接口函数逐张拆分，每张一个工作项） */
-  callGraphs?: { name: string; diagram: string; diagramFormat: 'mermaid'; polarion: PolarionMarker }[];
+  callGraphs?: { name: string; diagram: string; diagramFormat: 'mermaid'; polarion: PolarionMarker;
+    /** 渲染 PNG（base64，gen --only images 物化） */ diagramPng?: string }[];
   /** 报告骨架内容（gen --only document 物化；缺省时 report/audit 渲染期现算，产物一致） */
   document?: DocumentContent;
 }

@@ -18,4 +18,8 @@ export {
 export { buildStaticStateMachine, parseSmTransitions, polishSmLabels } from './generator/staticStateMachine.js';
 export { buildStaticSequence } from './generator/staticSequence.js';
 export { buildDocumentContent, type AbbrTableInput } from './generator/staticDocument.js';
+export {
+  collectDiagrams, buildBatchPage, extractDiagramSvgs, svgNaturalSize, pickShotParams,
+  wrapSvgShotPage, hasDiagramPng, applyDiagramPng, type DiagramEntry,
+} from './report/imageBatch.js';
 export type * from './model/types.js';

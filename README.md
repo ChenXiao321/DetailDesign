@@ -147,6 +147,18 @@ node packages/cli/dist/index.js audit 测试模块/Gp_EcuStpStdn --out 测试产
 （确定性零 LLM，秒级）才反映到报告；描述类内容重生成后同样需重刷 document（3.1 按文档实际出现过滤）。
 存量 design json 无 document 节时 report/audit 回退旧行为（report 期现读配置，产物一致）并打印提示。
 
+图 PNG 物化（2026-09-23 起）：除 mermaid 源码外，可把全部六类图（函数流程图/功能接口总图/
+内部函数调用图/状态机/序列图/4.2 包含关系图）渲染成 PNG（2x）以 base64 存回 lld_design.json：
+```bash
+node packages/cli/dist/index.js gen <模块目录> --out <产物目录> --only images --resume
+```
+渲染走与报告完全一致的管线（内嵌 mermaid.js + 正交化后处理 + Edge 无头），PNG 与已验收报告
+逐图一致；超大图自动降 scale 避开浏览器纹理上限。需 Edge，免 LLM；`--resume` 跳过已有 PNG 的图，
+单图失败不中断可续跑补齐。字段：`generated.flowchartPng`、`interfaceOverview.diagramPng`、
+`callGraphs[].diagramPng`、`stateMachines[].diagramPng`、`sequences[].diagramPng`、
+`document.includeGraphPng`（该项需先物化 document）。HTML 报告渲染不变（仍由浏览器端
+mermaid 实时渲染），PNG 为归档/导出用途。
+
 ## 当前状态
 
 | 阶段 | 状态 |

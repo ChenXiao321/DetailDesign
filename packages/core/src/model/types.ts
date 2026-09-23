@@ -184,6 +184,31 @@ export interface ConfigMacro {
   polarion: PolarionMarker;
 }
 
+/** 报告骨架内容（1/2/3/7/8 章正文与各章引导句，gen 期物化进 design json）；
+ *  物化后 report/audit 纯渲染只读 json，不再现读外部缩写表/配置。
+ *  边界：章节标题/表头/角标等纯版式文字不下沉；派生数据（4.1 文件说明、5.2.1.1 引用类型表、
+ *  圈复杂度明细表）源数据已在 json，渲染期计算。 */
+export interface DocumentContent {
+  purpose: string;                          // 1 目的（最终文本）
+  scope: string;                            // 2 适用范围（最终文本）
+  abbreviations: [string, string][];        // 3.1 最终表行（合并模式按出现过滤 / replace 模式全量）
+  abbreviationNote: string;                 // 3.1 表下注释
+  definitions: [string, string][];          // 3.2 最终表行
+  definitionNote: string | null;            // 3.2 表下注释（无外部定义表时为 null）
+  abbreviationGaps: string[];               // 缺口名单（replace 模式正文出现但表内未定义；空=无缺口/非 replace）
+  evaluationRows: { dim: string; no: number; content: string; fact: string }[]; // 7 章 14 行（fact=最终 HTML 片段）
+  complexityNote: string;                   // 圈复杂度明细表上方注释
+  evaluationSummary: string[];              // 7 章总结列表（最终 HTML 片段）
+  supportFiles: [string, string, string][]; // 8 章表（序号/文档名称/文档编号）
+  supportNote: string;                      // 8 章表下注释
+  /** 各章引导句/说明句（最终文本，键=章节位）：
+   *  overview=功能接口总图引导句 callGraph=内部函数调用图引导句 include=4.2 包含关系注
+   *  providedVarsEmpty=5.2.3.1 空注 externalVars=5.2.2.1 注 externalFnsCallout=5.2.2.2 Callout 注
+   *  internalVars=5.2.4.1 注 configGeneral=6.1 引导句 configFunctional=6.2 引导句
+   *  calloutCfg=6.2 Callout function 引导句 evalSummaryIntro=7 章总结引导句 */
+  notes: Record<string, string>;
+}
+
 export interface ModuleModel {
   module: string;               // FC 名，如 Gp_EcuStpShdn
   analyzedAt: string;           // ISO 时间戳
@@ -205,4 +230,6 @@ export interface ModuleModel {
   interfaceOverview?: { diagram: string; diagramFormat: 'mermaid'; polarion: PolarionMarker };
   /** 5.1 内部函数调用图（分析时静态生成；按对外接口函数逐张拆分，每张一个工作项） */
   callGraphs?: { name: string; diagram: string; diagramFormat: 'mermaid'; polarion: PolarionMarker }[];
+  /** 报告骨架内容（gen --only document 物化；缺省时 report/audit 渲染期现算，产物一致） */
+  document?: DocumentContent;
 }

@@ -113,10 +113,11 @@ async function cmdGen(dir: string, outDir: string, mock: boolean, only?: string[
   const model = resume && fs.existsSync(designPath)
     ? (JSON.parse(fs.readFileSync(designPath, 'utf-8')) as ModuleModel)
     : await loadOrAnalyzeModel(dir, modelPath);
-  // 流程图已改静态生成（零 LLM）：--only flowcharts 不构造 provider，无 LLM 环境也能刷图
-  const flowchartsOnly = only?.includes('flowcharts') ?? false;
-  const provider = flowchartsOnly ? null : makeProvider(mock);
-  console.error(`LLM Provider: ${provider ? provider.name : '无（流程图静态生成）'}`);
+  // 流程图/骨架内容均为静态生成（零 LLM）：--only 全为 flowcharts/document 时不构造 provider，无 LLM 环境也能刷
+  const noLlmOnly = only !== undefined
+    && (only.includes('flowcharts') || only.every(o => o === 'flowcharts' || o === 'document'));
+  const provider = noLlmOnly ? null : makeProvider(mock);
+  console.error(`LLM Provider: ${provider ? provider.name : '无（静态生成）'}`);
 
   // 增量落盘：每完成一个条目（onProgress 在进入下一条目前触发）就把 model 写回，
   // 中途断网/进程被杀时，已生成的内容不丢失，可用 --resume 续跑
@@ -136,6 +137,9 @@ async function cmdGen(dir: string, outDir: string, mock: boolean, only?: string[
     skipExisting: resume,
     failures,
     abbreviations: abbr?.entries,
+    abbreviationTable: abbr
+      ? { entries: abbr.entries, definitions: abbr.definitions, replace: abbr.replace, source: abbr.source }
+      : undefined,
     readSource,
     onProgress: msg => {
       save();
@@ -175,13 +179,22 @@ async function cmdReport(outDir: string): Promise<void> {
   } catch {
     console.error('警告: 未找到 mermaid.min.js，图将以源码显示');
   }
-  const abbr = resolveAbbreviations(loadConfigFile());
+  // 骨架内容（document 节）已物化 → 纯渲染只读 json；未物化（存量产物）→ 回退 report 期现读配置，
+  // 同一实现产物一致，但缩写表随 config 漂移，建议 gen --only document --resume 物化定型
+  let abbrOpts = {};
+  if (!model.document) {
+    const abbr = resolveAbbreviations(loadConfigFile());
+    abbrOpts = {
+      abbreviations: abbr?.entries,
+      abbreviationsReplace: abbr?.replace,
+      abbreviationSource: abbr?.source,
+      definitions: abbr?.definitions,
+    };
+    console.error('提示: design json 无 document 节，1/2/3/7/8 章按 report 期配置现算（可 gen --only document --resume 物化进 json）');
+  }
   const html = generateHtmlReport(model, {
     mermaidJs,
-    abbreviations: abbr?.entries,
-    abbreviationsReplace: abbr?.replace,
-    abbreviationSource: abbr?.source,
-    definitions: abbr?.definitions,
+    ...abbrOpts,
     onAbbreviationGaps: abbrGapLogger,
   });
   const output = path.join(outDir, 'lld_report.html');
@@ -238,11 +251,13 @@ async function main(): Promise<void> {
   console.error(`用法:
   lld ping                              LLM 连通性自检（/models + 最小 chat 调用）
   lld analyze <模块目录> [--out 产物目录]   静态分析，产出 lld_model.json
-  lld gen <模块目录> [--out 产物目录] [--mock] [--resume] [--only 函数名,dynamic,configs,callouts,flowcharts,types,externals,description]
+  lld gen <模块目录> [--out 产物目录] [--mock] [--resume] [--only 函数名,dynamic,configs,callouts,flowcharts,types,externals,description,document]
                                         LLM 生成设计内容，产出 lld_design.json（增量落盘，中断可 --resume 续跑）
                                         --only flowcharts 仅重刷各函数流程图（可叠加函数名缩小范围），保留描述；
                                         流程图为静态生成（tree-sitter CFG），该模式免 LLM 配置
                                         --only types / externals / description 分别补类型描述 / 非Callout外部接口说明 / 5.1模块功能描述
+                                        --only document 物化报告骨架内容（1/2/3/7/8 章与引导句，含 3.1/3.2 缩写定义表
+                                        按 gen 期 lld.config.json 缩写表定型）进 document 节，免 LLM；配 --resume 加载 design json
   lld report <模块目录> [--out 产物目录]    生成 HTML 评审报告 lld_report.html
   lld audit <模块目录> [--out 产物目录]     渲染质量验收：Edge 预渲染（lld_report.html 成品版）+
                                         斜线计数/交叉穿盒/箭头朝向审计，打印中文量化报告（需 Edge）

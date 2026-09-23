@@ -17,4 +17,5 @@ export {
 } from './llm/prompts.js';
 export { buildStaticStateMachine, parseSmTransitions, polishSmLabels } from './generator/staticStateMachine.js';
 export { buildStaticSequence } from './generator/staticSequence.js';
+export { buildDocumentContent, type AbbrTableInput } from './generator/staticDocument.js';
 export type * from './model/types.js';

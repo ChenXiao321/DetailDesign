@@ -325,13 +325,20 @@ export async function cmdAudit(outDir: string): Promise<void> {
   const mermaidJs = fs.readFileSync(mermaidPath, 'utf-8');
 
   // 1) 报告源版（与 report 命令同管线，图源 lint 警告会打到 stderr）
-  const abbr = resolveAbbreviations(loadConfigFile());
+  // 骨架内容（document 节）已物化 → 只读 json；未物化 → 回退 audit 期现读配置（与 report 同口径）
+  let abbrOpts = {};
+  if (!model.document) {
+    const abbr = resolveAbbreviations(loadConfigFile());
+    abbrOpts = {
+      abbreviations: abbr?.entries,
+      abbreviationsReplace: abbr?.replace,
+      abbreviationSource: abbr?.source,
+      definitions: abbr?.definitions,
+    };
+  }
   const html = generateHtmlReport(model, {
     mermaidJs,
-    abbreviations: abbr?.entries,
-    abbreviationsReplace: abbr?.replace,
-    abbreviationSource: abbr?.source,
-    definitions: abbr?.definitions,
+    ...abbrOpts,
     onAbbreviationGaps: abbrGapLogger,
   });
   const srcPath = path.join(outDir, 'lld_report_src.html');

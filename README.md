@@ -140,6 +140,13 @@ node packages/cli/dist/index.js audit 测试模块/Gp_EcuStpStdn --out 测试产
 「项目术语表」块（按 prompt 内实际出现过滤——`Spi_Setup` 这类标识符分段也算 SPI 出现），
 生成正文的术语口径与外部定义一致；流程图/序列图等结构生成不注入。
 
+报告骨架内容物化（document 节，2026-09-23 起）：1/2/3/7/8 章正文与各章引导句（含 3.1/3.2 缩写定义表）
+在 gen 期物化进 lld_design.json 的 `document` 节，report/audit 纯渲染只读 json，不再现读缩写表配置——
+**缩写表改为 gen 期定型**：维护方更新 docx 后需重跑
+`node packages/cli/dist/index.js gen <模块目录> --out <产物目录> --only document --resume`
+（确定性零 LLM，秒级）才反映到报告；描述类内容重生成后同样需重刷 document（3.1 按文档实际出现过滤）。
+存量 design json 无 document 节时 report/audit 回退旧行为（report 期现读配置，产物一致）并打印提示。
+
 ## 当前状态
 
 | 阶段 | 状态 |

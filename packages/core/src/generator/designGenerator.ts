@@ -12,6 +12,7 @@ import { lintMermaidSource, lintFlowchartStructure } from '../report/mermaidPre.
 import { buildStaticFlowchart, buildFallbackFlowchart } from './staticFlowchart.js';
 import { buildStaticStateMachine, polishSmLabels } from './staticStateMachine.js';
 import { buildStaticSequence } from './staticSequence.js';
+import { buildDocumentContent, type AbbrTableInput } from './staticDocument.js';
 
 /** 流程图断言网（纯函数，导出供静态生成器自检与测试直喂恶意图）：
  *  词法 lint + 结构 lint + 条件编译虚线框存在性 + 编译期宏禁入菱形；返回中文问题清单（空 = 通过） */
@@ -284,6 +285,9 @@ export interface GenerateOptions {
   /** 外部缩写定义（lld.config.json 的 abbreviationsDoc/abbreviations 解析结果）——按 prompt 内实际出现
    *  过滤后注入文本类生成（描述/配置说明/类型注释/外部接口说明/5.1），术语口径与外部定义一致 */
   abbreviations?: [string, string][];
+  /** 报告骨架内容（document 节）物化用的缩写表全量解析结果（entries+definitions+replace+source）；
+   *  缺省 = 纯内置词典合并模式。仅在 document 生成点消费 */
+  abbreviationTable?: AbbrTableInput;
   /** 源文件读取通道（core 不碰 fs，由 CLI 注入）：流程图静态生成按 fn.file 重解析用。
    *  返回 null = 读不到（该函数降 L3 兜底图） */
   readSource?: (relPath: string) => string | null;
@@ -299,6 +303,18 @@ export async function generateDesign(
   const log = opts?.onProgress ?? (() => {});
   const only = opts?.only;
   const skipExisting = opts?.skipExisting ?? false;
+
+  // 报告骨架内容物化（零 LLM 确定性，幂等重算）。--only document（可叠加 flowcharts）时
+  // 免 provider 直接物化；全量 gen 在末尾统一物化——3.1 出现过滤扫描 generated 文本，
+  // 须在描述类生成完成后执行，否则漏收描述里的新缩写
+  const docStage = (): void => {
+    model.document = buildDocumentContent(model, opts?.abbreviationTable);
+    log('物化报告骨架内容（document 节：1/2/3/7/8 章正文与各章引导句）');
+  };
+  if (only?.includes('document') && !only.some(o => o !== 'document' && o !== 'flowcharts')) {
+    docStage();
+    if (!only.includes('flowcharts')) return model;
+  }
 
   // --only flowcharts：只重刷各函数的流程图，保留已生成的描述等其余内容；纯静态生成，无需 LLM
   if (only?.includes('flowcharts')) {
@@ -489,6 +505,9 @@ export async function generateDesign(
       }
     }
   }
+
+  // 末尾统一物化报告骨架内容（全量 gen 或 --only 含 document 且混杂 LLM 阶段时在此落地）
+  if (!only || only.includes('document')) docStage();
 
   return model;
 }

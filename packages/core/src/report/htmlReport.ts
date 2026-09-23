@@ -5,6 +5,7 @@ import { esc, escRaw, functionCard, calloutCard } from './cards.js';
 import { listStateMachines } from '../model/types.js';
 import { wrapFlowchartLabels, pinEndNodeToBottom, lintMermaidSource, lintFlowchartStructure, lintSequenceStructure } from './mermaidPre.js';
 import { mermaidRenderScript } from './renderScript.js';
+import { buildDocumentContent } from '../generator/staticDocument.js';
 
 /** 文件用途说明（4.1 文件说明表）：按角色 + 分析数据生成中文描述 */
 function describeFile(path: string, role: string, model: ModuleModel): string {
@@ -103,10 +104,11 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
 `;
 
 /** 生成完整 HTML 评审报告；传入 mermaidJs（mermaid.min.js 内容）则离线渲染图；
- *  abbreviations 追加自定义缩写词条（同名覆盖内置词典，新模块族的新缩写经 lld.config.json 配置，免发包）；
- *  abbreviationsReplace=true 时 3.1 整章以 abbreviations 为唯一定义来源（外部缩写表模式，内置词典不再兜底）、
- *  全量收录表中全部条目（不再按模块出现过滤，与外部 Word 表保持一致）；definitions 为外部表「定义」节条目，
- *  全量列入 3.2；正文出现但表内未定义的缩写候选经 onAbbreviationGaps 回报名单（供用户反馈外部维护方补表） */
+ *  骨架内容（1/2/3/7/8 章正文与各章引导句）统一来自 model.document（gen 期物化）；
+ *  存量 json 无 document 时由 buildDocumentContent 渲染期现算——同一实现，产物逐字节一致，
+ *  此时 abbreviations 系列 opts 作为现算入参（legacy 兼容，_test_abbrdocx 走此路径）；
+ *  model.document 在场时这些 opts 被忽略。缩写缺口名单统一从 doc.abbreviationGaps 经
+ *  onAbbreviationGaps 回报（物化产物名单为 gen 期口径）。 */
 export function generateHtmlReport(model: ModuleModel, opts?: {
   mermaidJs?: string;
   abbreviations?: [string, string][];
@@ -117,6 +119,17 @@ export function generateHtmlReport(model: ModuleModel, opts?: {
 }): string {
   const fnCount = model.providedFunctions.length + model.internalFunctions.length;
   const generatedCount = [...model.providedFunctions, ...model.internalFunctions].filter(f => f.generated).length;
+
+  // 骨架内容单一来源：物化值优先，缺省现算（两条路径同一实现，字节一致）
+  const doc = model.document ?? buildDocumentContent(model, {
+    entries: opts?.abbreviations ?? [],
+    definitions: opts?.definitions ?? [],
+    replace: opts?.abbreviationsReplace === true,
+    source: opts?.abbreviationSource,
+  });
+  if (opts?.onAbbreviationGaps && doc.abbreviationGaps.length > 0) {
+    opts.onAbbreviationGaps(doc.abbreviationGaps);
+  }
 
   const diagramBlock = (src: string) => {
     // 生成期静态检查：定界符错误的图源会在浏览器端 mermaid 词法报错整图失败，提前点名；
@@ -204,7 +217,6 @@ ${detailTable}`;
   // ---- 5.2.2 调用的外部接口（按组） ----
   // Callout 属于本模块配置代码（ConfTemplate），不算外部接口，此处排除；
   // 其声明/实现见 4.1 文件说明，调用关系见各函数卡片"调用"行
-  const calloutCount = model.calledExternalFunctions.filter(e => e.group === 'Callout').length;
   const calledSection = [...groups.entries()]
     .filter(([group]) => group !== 'Callout')
     .map(([group, items]) => {
@@ -224,7 +236,7 @@ ${detailTable}`;
 
   // ---- 5.2.3.1 提供的外部全局变量 ----
   const providedVarSection = model.providedVariables.length === 0
-    ? '<p class="muted">注：本模块未提供外部链接的全局变量（即非 static 的文件作用域变量），模块数据均通过函数接口访问。</p>'
+    ? `<p class="muted">${doc.notes.providedVarsEmpty}</p>`
     : `<table class="simple"><tr><th>变量名</th><th>数据类型</th><th>说明</th></tr>${model.providedVariables.map(v =>
         `<tr><td><code>${esc(v.name)}</code></td><td><code>${esc(v.type)}</code></td><td>${esc(v.comment)}</td></tr>`).join('')}</table>`;
 
@@ -240,7 +252,6 @@ ${detailTable}`;
   const includeNodes: string[] = [];
   const includeEdges: string[] = [];
   const seenNodes = new Set<string>();
-  const droppedExternals = new Set<string>();
   const addIncludeNode = (base: string): void => {
     if (seenNodes.has(base)) return;
     seenNodes.add(base);
@@ -254,8 +265,7 @@ ${detailTable}`;
       const incBase = inc.split(/[\\/]/).pop()!;
       if (isMemmap(incBase)) continue;   // MemMap.h 默认被各文件包含，不画出
       if (!moduleFileBases.has(incBase) && incBase !== 'Std_Types.h') {
-        droppedExternals.add(incBase);   // 外部模块头文件不画出（Std_Types.h 除外）
-        continue;
+        continue;   // 外部模块头文件不画出（Std_Types.h 除外），名单见 doc.notes.include
       }
       addIncludeNode(base);
       addIncludeNode(incBase);
@@ -273,9 +283,6 @@ ${detailTable}`;
         `    class ${[...seenNodes].filter(b => /\.c$/i.test(b)).map(sanitizeId).join(',')} source`,
       ].join('\n')
     : '';
-  const includeNote = droppedExternals.size > 0
-    ? `注：箭头指向被包含的头文件（模板约定：箭头指向被调用的元素）。MemMap.h 为内存映射包装文件，默认被本模块各文件包含，图中不再画出；外部模块头文件（${[...droppedExternals].sort().join('、')}）不在图中展示，标准类型头文件 Std_Types.h 除外。`
-    : '注：箭头指向被包含的头文件（模板约定：箭头指向被调用的元素）。MemMap.h 为内存映射包装文件，默认被本模块各文件包含，图中不再画出。';
 
   // ---- 5.1 功能描述 ----
   // LLM 输出为「总述段落 + \n- 要点」；连续的 "- " 行渲染为列表，其余行各成段落
@@ -306,13 +313,13 @@ ${detailTable}`;
   // 功能接口总图：analyze 时静态生成并存入模型（工作项 · 5.1），此处仅渲染
   const overviewSection = model.interfaceOverview ? `
 <h3>功能接口总图 <span class="badge">工作项 · ${esc(model.interfaceOverview.polarion.chapter)}</span></h3>
-<p class="muted">本模块对外提供 ${model.providedFunctions.length} 个接口函数（左侧为调用方），并调用 ${model.calledExternalFunctions.length - calloutCount} 个外部接口（右侧按来源模块归组）；箭头方向为调用方向。Callout 函数属本模块配置点，不在本图展示，其调用关系见下方内部函数调用图与 6.2；各接口的模块内调用者见内部函数调用图与 5.2.2 表。</p>
+<p class="muted">${doc.notes.overview}</p>
 ${diagramBlock(model.interfaceOverview.diagram)}
 <details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">${escRaw(model.interfaceOverview.diagram)}</pre></details>` : '';
   // 内部函数调用图：analyze 时按对外接口函数逐张静态生成（每张一个工作项 · 5.1），此处仅渲染
   const callGraphSection = (model.callGraphs?.length ?? 0) > 0 ? `
 <h3>内部函数调用图（每张图一个工作项）</h3>
-<p class="muted">按对外接口函数分别绘制其模块内调用树（深蓝=入口函数，灰=内部函数，蓝=被内部调用的对外接口，黄=Callout 函数（配置代码））；同一函数被多处调用时按调用路径重复出现，保证布局无交叉。经配置表函数指针间接引用的 Callout 单独成图。无模块内调用的平凡函数不出图，其余跨模块调用（Gp_RstM / Gp_TstApp 等）见功能接口总图与 5.2.2 表。</p>
+<p class="muted">${doc.notes.callGraph}</p>
 ${model.callGraphs!.map(g => `<h4>内部函数调用图：${esc(g.name)} <span class="badge">工作项 · ${esc(g.polarion.chapter)}</span></h4>
 ${diagramBlock(g.diagram)}
 <details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">${escRaw(g.diagram)}</pre></details>`).join('\n')}` : '';
@@ -393,68 +400,18 @@ ${c.affects.length > 0 ? `<p><b>影响范围（条件编译直接作用的函数
   const callouts = model.calledExternalFunctions.filter(e => e.group === 'Callout');
   const calloutSecNo = `6.2.${functionalCfgs.length + 1}`;
   const calloutCfgSection = callouts.length === 0 ? '' : `<h4>${calloutSecNo} Callout function</h4>
-<p class="muted">Callout 函数由集成方在配置代码（ConfTemplate）中实现，是本模块的功能配置点：通过编写/修改 Callout 实现来适配项目策略（核ID获取、阶段初始化、故障处理等）。每个 Callout 为一个独立工作项。</p>
+<p class="muted">${doc.notes.calloutCfg}</p>
 ${callouts.map((e, i) => calloutCard(e, `${calloutSecNo}.${i + 1}`)).join('\n')}`;
   const aliasCfgs = model.configMacros.filter(c => c.kind === 'alias');
   const aliasCfgNote = aliasCfgs.length === 0 ? '' :
     `<p class="muted">注：以下宏为固定别名（实现重定义，无可选值，不属于配置项）：${aliasCfgs.map(c => `<code>${esc(c.name)}${c.isFunctionLike ? '()' : ''} → ${esc(c.value)}</code>`).join('，')}</p>`;
 
-  // ---- 7 详细设计规范评估（模板固定 14 项；事实依据自动填，结论人工确认） ----
+  // ---- 7 详细设计规范评估（评估行/总结物化自 doc；维度列 rowspan 与明细表为渲染期版式/派生数据） ----
   const allFns = [...model.providedFunctions, ...model.internalFunctions];
-  const extGroupNames = [...groups.keys()];
-  const nonCalloutGroups = extGroupNames.filter(g => g !== 'Callout');
-  const commIfs = model.calledExternalFunctions.filter(e =>
-    /\b(Spi|Can(Fd)?|Lin|Eth|Com_|PduR|Dcm|SoAd|Fr)(_|$|\b)/i.test(e.name));
-  const maxComplexity = Math.max(0, ...allFns.map(f => f.complexity ?? 0));
-  const highComplexity = allFns.filter(f => (f.complexity ?? 0) > 10);
-  const loopFns = allFns.filter(f => f.infiniteLoop);
-  const condCfgs = model.configMacros.filter(c => c.usages.some(u => u.kind === 'condCompile'));
-  const safetyIds = [
-    ...allFns.filter(f => /safe|safety/i.test(f.name)).map(f => f.name),
-    ...model.configMacros.filter(c => /safe|safety/i.test(c.name)).map(c => c.name),
-  ];
-  const TODO_CONCLUSION = '<span class="todo">结论待人工确认</span>';
-  const evalRows: { dim: string; no: number; content: string; fact: string }[] = [
-    { dim: '互操作性/交互', no: 1, content: '对软件单元的接口一致性进行分析',
-      fact: `本模块提供 ${model.providedFunctions.length} 个接口函数（5.2.3.2），调用外部接口 ${model.calledExternalFunctions.length} 个（${extGroupNames.join('、')}），签名与调用点均已由静态分析提取；与软件架构接口的一致性需对照架构文档确认。${TODO_CONCLUSION}` },
-    { dim: '互操作性/交互', no: 2, content: '软件单元对全局变量引用的正确性',
-      fact: `模块内静态全局变量 ${model.internalVariables.length} 个（5.2.4.1），外部链接全局变量 ${model.providedVariables.length} 个（5.2.3.1）；各函数的全局变量访问已在函数卡片逐条列出。${TODO_CONCLUSION}` },
-    { dim: '互操作性/交互', no: 3, content: '对涉及通讯协议的软件单元分析协议的一致性',
-      fact: commIfs.length === 0
-        ? '静态分析未探测到通讯协议相关接口（Spi/Can/Lin/Eth/Com/PduR 等）调用，本模块不涉及通讯协议。<span class="muted">（自动判定，如有遗漏请人工更正）</span>'
-        : `探测到通讯协议相关调用：${commIfs.map(e => `<code>${esc(e.name)}</code>`).join('、')}。${TODO_CONCLUSION}` },
-    { dim: '互操作性/交互', no: 4, content: '分析软件单元是否能够体现动态行为和交互',
-      fact: model.dynamicDesign
-        ? `5.3 已生成${sms.length > 0 ? `状态机「${sms.map(sm => esc(sm.name)).join('」与「')}」（${sms[0].states.length} 状态 / ${mergedTransitions.length} 迁移）` : ''}${model.dynamicDesign.sequences.length > 0 ? `与 ${model.dynamicDesign.sequences.length} 张序列图` : ''}；5.1 功能接口总图与各函数调用图体现交互关系。${TODO_CONCLUSION}`
-        : `5.3 动态设计（状态机/序列图）尚未生成；5.1 已提供功能接口总图与内部函数调用图。${TODO_CONCLUSION}` },
-    { dim: '关键性', no: 5, content: '分析与其他单元/组件的依赖关系',
-      fact: `外部依赖模块：${nonCalloutGroups.length > 0 ? nonCalloutGroups.join('、') : '无'}（接口明细见 5.2.2）；Callout 函数 ${calloutCount} 个由集成方在配置代码中实现（见 6.2）。${TODO_CONCLUSION}` },
-    { dim: '关键性', no: 6, content: '其他关键性的分析维度(如任务、算法等)',
-      fact: condCfgs.length > 0
-        ? `条件编译配置项 ${condCfgs.length} 个（${condCfgs.map(c => `<code>${esc(c.name)}</code>`).join('、')}）直接裁剪参与编译的函数/变量（影响范围见第 6 章）。${TODO_CONCLUSION}`
-        : `本模块无条件编译裁剪点。${TODO_CONCLUSION}` },
-    { dim: '技术复杂性', no: 7, content: '分析详细设计单元的复杂度（模型复杂度、圈复杂度）',
-      fact: `已静态计算全部 ${allFns.length} 个函数的圈复杂度（明细见下表）：最大 ${maxComplexity}${highComplexity.length > 0 ? `，超过 10 的函数 ${highComplexity.length} 个（${highComplexity.map(f => `<code>${esc(f.name)}</code>`).join('、')}）` : '，无超过 10 的函数'}。${TODO_CONCLUSION}` },
-    { dim: '可实现性', no: 8, content: '从时间周期、实现条件（人员、设备等）下分析相应功能的实现能力，分析出风险、并制定处理措施',
-      fact: `（项目管理层面的评估，无代码事实可自动提取）${TODO_CONCLUSION}` },
-    { dim: '可测试性', no: 9, content: '分析软件单元的可控性（是否存在死循环、复杂度过高的情况）',
-      fact: `死循环（while(1)/for(;;)）探测：${loopFns.length === 0 ? '未发现' : `发现 ${loopFns.length} 处（${loopFns.map(f => `<code>${esc(f.name)}</code>`).join('、')}）`}；圈复杂度最大 ${maxComplexity}${highComplexity.length > 0 ? `，${highComplexity.length} 个函数超过 10` : ''}。${TODO_CONCLUSION}` },
-    { dim: '可测试性', no: 10, content: '分析单元输入、输出的可观测性',
-      fact: `全部 ${allFns.length} 个函数的输入/输出参数与返回值已在 5.2.3.2 / 5.2.4.2 函数卡片中逐项列出（含取值范围说明）。${TODO_CONCLUSION}` },
-    { dim: '可复用性', no: 11, content: '分析详细设计单元是否能够被本系统或其他系统使用的可能性',
-      fact: `本模块含 ${calloutCount} 个 Callout 项目适配点与 ${model.configMacros.filter(c => c.kind !== 'alias').length} 个配置宏，平台化/复用策略需人工评估。${TODO_CONCLUSION}` },
-    { dim: '安全性', no: 12, content: '分析软件设计单元是否是功能安全输出',
-      fact: safetyIds.length > 0
-        ? `探测到安全相关标识符：${safetyIds.map(s => `<code>${esc(s)}</code>`).join('、')}；是否构成功能安全输出需人工判定。${TODO_CONCLUSION}`
-        : `未探测到安全相关标识符。${TODO_CONCLUSION}` },
-    { dim: '安全性', no: 13, content: '分析违反功能安全目标的风险可控性',
-      fact: `（需结合系统级安全分析人工评估）${TODO_CONCLUSION}` },
-    { dim: '安全性', no: 14, content: '分析是否违背功能安全',
-      fact: `（需结合系统级安全分析人工评估）${TODO_CONCLUSION}` },
-  ];
   // 维度列合并（rowspan）
   const evalTableRows: string[] = [];
   let i = 0;
+  const evalRows = doc.evaluationRows;
   while (i < evalRows.length) {
     const dim = evalRows[i].dim;
     let span = 0;
@@ -473,133 +430,42 @@ ${callouts.map((e, i) => calloutCard(e, `${calloutSecNo}.${i + 1}`)).join('\n')}
 <h2 id="s7">7 详细设计规范评估</h2>
 <table class="simple"><tr><th>维度</th><th>序号</th><th>评估内容</th><th>是否评估</th><th>分析结果（事实依据自动生成，结论人工确认）</th></tr>${evalTableRows.join('')}</table>
 <h3>圈复杂度明细（序号 7 事实依据，静态计算）</h3>
-<p class="muted">判定节点计数法：1 + if / for / while / case / &amp;&amp; / || / ?: 数量。阈值 10 为常见评审参考值，最终以项目规范为准。</p>
+<p class="muted">${doc.complexityNote}</p>
 <table class="simple"><tr><th>函数</th><th>圈复杂度</th><th>死循环</th><th>参考评估</th></tr>${complexityRows}</table>
 <h3>总结</h3>
-<p class="muted">本模块设计过程中已对上述内容进行评估，各维度说明如下（骨架自动生成，需人工补全/确认）：</p>
+<p class="muted">${doc.notes.evalSummaryIntro}</p>
 <ul class="muted">
-<li>互操作性/交互：接口与全局变量的定义、调用关系详见 5.2；通讯协议${commIfs.length === 0 ? '不涉及' : '一致性待确认'}。<span class="todo">待人工确认</span></li>
-<li>关键性：外部依赖（${nonCalloutGroups.join('、') || '无'}）与任务调度考虑。<span class="todo">待人工确认</span></li>
-<li>技术复杂性：圈复杂度最大 ${maxComplexity}${highComplexity.length > 0 ? `，${highComplexity.length} 个函数超过 10` : '，均在 10 以内'}。<span class="todo">待人工确认</span></li>
-<li>可实现性：按项目时间安排与既往经验评估。<span class="todo">待人工补充</span></li>
-<li>可测试性：函数输入输出及范围均已列出，圈复杂度已控制。<span class="todo">待人工确认</span></li>
-<li>可复用性：是否平台化需人工说明。<span class="todo">待人工补充</span></li>
-<li>安全性：${safetyIds.length > 0 ? '涉及安全相关接口/配置，是否功能安全输出需人工判定' : '是否涉及功能安全需人工判定'}。<span class="todo">待人工确认</span></li>
+${doc.evaluationSummary.map(s => `<li>${s}</li>`).join('\n')}
 </ul>`;
 
-  // ---- 1~3 章（固定套话 + 术语表自动筛选；文档骨架内容，非工作项） ----
-  const allText = [
-    model.module,
-    ...allFns.map(f => `${f.name} ${f.signature} ${f.generated?.detailedDescription ?? ''}`),
-    ...model.calledExternalFunctions.map(e => `${e.name} ${e.generated?.detailedDescription ?? ''}`),
-    ...model.configMacros.map(c => `${c.name} ${c.generated?.valueEffect ?? ''}`),
-    ...model.types.map(t => `${t.name} ${t.comment} ${t.generated?.comment ?? ''}`),
-    model.functionalDescription ?? '',
-    // 序列图/状态机图源也属文档内容（含 actor OS 等角色名）
-    ...listStateMachines(model.dynamicDesign).map(sm => sm.diagram),
-    ...(model.dynamicDesign?.sequences ?? []).map(s => `${s.name} ${s.diagram} ${s.description}`),
-  ].join(' ');
-  // 候选缩写词典：仅列本文档/代码中实际出现的
-  const ABBR_CANDIDATES: [string, string][] = [
-    ['ABIST', 'Analog Built-In Self Test 模拟内建自测试'],
-    ['ADC', 'Analog to Digital Converter 模数转换器'],
-    ['ASIL', 'Automotive Safety Integrity Level 汽车安全完整性等级'],
-    ['ASW', 'Application Software 应用软件'],
-    ['AUTOSAR', 'AUTomotive Open System ARchitecture 汽车开放系统架构'],
-    ['BIST', 'Built-In Self Test 内建自测试'],
-    ['DEM', 'Diagnostic Event Manager 诊断事件管理模块（AUTOSAR）'],
-    ['DET', 'Default Error Tracer 默认错误追踪模块（AUTOSAR）'],
-    ['ECU', 'Electronic Control Unit 电子控制单元'],
-    ['EcuM', 'ECU State Manager ECU 状态管理模块'],
-    ['ENA', 'Enable 使能信号（TLF35584 唤醒源之一）'],
-    ['ERR', 'Error 错误指示信号（TLF35584 安全路径）'],
-    ['FC', 'Function Cluster 功能簇'],
-    ['FWD', 'Functional Watchdog 功能看门狗'],
-    ['LLD', 'Low Level Design 详细设计'],
-    ['MCAL', 'Microcontroller Abstraction Layer 微控制器抽象层'],
-    ['MCU', 'Microcontroller Unit 微控制器'],
-    ['OS', 'Operating System 操作系统'],
-    ['PORST', 'Power-On Reset 上电复位'],
-    ['ROT', 'Reset Output 复位输出信号（TLF35584）'],
-    ['RTE', 'Runtime Environment 运行时环境'],
-    ['SBC', 'System Basis Chip 系统基础芯片'],
-    ['SPI', 'Serial Peripheral Interface 串行外设接口'],
-    ['SSC', 'Safe State Control 安全状态控制（TLF35584）'],
-    ['WAK', 'Wake-up 唤醒信号（TLF35584 唤醒源之一）'],
-    ['Wdg', 'Watchdog 看门狗'],
-    ['WDI', 'Watchdog Input 看门狗输入信号（TLF35584）'],
-    ['WWD', 'Window Watchdog 窗口看门狗'],
-  ];
-  // 用户配置词条优先（同名覆盖内置），其余内置词条照常参与出现过滤；
-  // 外部缩写表模式（abbreviationsReplace）则内置词典不兜底，3.1 以外部词条为唯一来源
-  const userAbbr = opts?.abbreviations ?? [];
-  const userKeys = new Set(userAbbr.map(([a]) => a.toUpperCase()));
-  const replaceMode = opts?.abbreviationsReplace === true;
-  const abbrDict = replaceMode
-    ? userAbbr
-    : [...userAbbr, ...ABBR_CANDIDATES.filter(([a]) => !userKeys.has(a.toUpperCase()))];
-  const abbrRows = (replaceMode
-    // 外部表模式：全量收录外部表条目（用户要求与 Word 表一致），不再按模块出现过滤
-    ? abbrDict
-    : abbrDict.filter(([abbr]) => new RegExp(`\\b${abbr}\\b`, 'i').test(allText))
-  )
+  // ---- 1~3 章（骨架内容物化自 doc；文档骨架内容，非工作项） ----
+  const abbrRows = doc.abbreviations
     .map(([abbr, desc]) => `<tr><td><code>${esc(abbr)}</code></td><td>${esc(desc)}</td></tr>`)
     .join('');
-  // 外部表模式缺口检测：正文出现的全大写词（2+ 字符、非十六进制、非停用词）在外部表中无定义 → 报名单
-  if (replaceMode && opts?.onAbbreviationGaps) {
-    // 流程图节点/代码层常见非缩写词；名单是提示性的，宁多勿漏由用户甄别
-    const STOP = new Set(['STD', 'ON', 'OFF', 'OK', 'TRUE', 'FALSE', 'NULL', 'VOID',
-      'START', 'END', 'NOTE', 'TODO', 'NA', 'ID', 'IF', 'IN', 'OUT']);
-    const text = allText.replace(/0x[0-9A-Fa-f]+/g, ' ');
-    // 状态机的状态名（UNDEF/ONE/TWO…）是图内标识符不是缩写，不报缺口
-    const stateNames = new Set<string>();
-    for (const sm of listStateMachines(model.dynamicDesign)) {
-      for (const m of sm.diagram.matchAll(/\b([A-Z][A-Z0-9]{1,11})\b/g)) stateNames.add(m[1]!);
-    }
-    const gaps = new Map<string, number>();
-    for (const m of text.matchAll(/\b[A-Z][A-Z0-9]{1,11}\b/g)) {
-      const t = m[0];
-      if (STOP.has(t) || userKeys.has(t) || stateNames.has(t)) continue;
-      gaps.set(t, (gaps.get(t) ?? 0) + 1);
-    }
-    const list = [...gaps.entries()].sort((a, b) => b[1] - a[1]).map(([t]) => t).slice(0, 50);
-    if (list.length > 0) opts.onAbbreviationGaps(list);
-  }
-  // 术语定义：Callout 是术语而非缩写，归 3.2；与缩写同样按文档实际出现过滤（无 Callout 的模块不列）
-  const DEF_ROWS: [string, string][] = [
-    ['可重入性', '函数在同时多次调用，例如操作系统在进程调度过程中，或者单片机、处理器等中断的时候会发生重入的现象。（可重入函数可以在任意时刻被打断，稍后再继续运行，不会丢失数据；不可重入函数不能由超过一个任务共享，除非能确保函数的互斥）'],
-    ['静态全局变量', 'static 声明的文件作用域变量（内部链接），仅本模块内可见，外部模块不可直接访问；本报告 5.2.4.1 节列出。'],
-  ];
-  if (/\bCallout\b/.test(allText)) {
-    DEF_ROWS.unshift(['Callout', 'Callout 函数：由集成方在配置代码中实现，模块通过调用 Callout 适配项目策略']);
-  }
-  // 外部表模式：docx「定义」表条目全量列入 3.2（与 Word 表一致），内置通用行随后
-  const extDefs = replaceMode ? (opts?.definitions ?? []) : [];
-  const defRows = [...extDefs, ...DEF_ROWS].map(([n, d]) => `<tr><td>${esc(n)}</td><td>${esc(d)}</td></tr>`).join('');
+  const defRows = doc.definitions
+    .map(([n, d]) => `<tr><td>${esc(n)}</td><td>${esc(d)}</td></tr>`)
+    .join('');
   const preSection = `
 <h2 id="s1">1 目的</h2>
-<p>本文档描述 ${esc(model.module)} 软件单元的详细设计，作为该单元编码实现、设计评审与单元测试的依据。</p>
+<p>${doc.purpose}</p>
 <h2 id="s2">2 适用范围</h2>
-<p>本文档适用于 ${esc(model.module)} 软件单元的开发、评审与维护。</p>
+<p>${doc.scope}</p>
 <h2 id="s3">3 定义和缩写</h2>
 <h3>3.1 缩写</h3>
 <table class="simple"><tr><th>缩写</th><th>描述</th></tr>${abbrRows}</table>
-${replaceMode
-  ? `<p class="muted">注：本表定义由外部缩写表（${esc(opts?.abbreviationSource ?? '外部文档')}）提供，全量收录表中条目；新增/修订缩写请联系缩写表维护方，临时补充可写入 lld.config.json 的 abbreviations 节。</p>`
-  : '<p class="muted">注：仅列出本模块文档/代码中实际出现的缩写，可按项目需要补充。</p>'}
+<p class="muted">${doc.abbreviationNote}</p>
 <h3>3.2 定义</h3>
-<table class="simple"><tr><th>名称</th><th>描述</th></tr>${defRows}</table>${extDefs.length > 0
-  ? `\n<p class="muted">注：术语定义由外部缩写表（${esc(opts?.abbreviationSource ?? '外部文档')}）「定义」节提供，全量收录表中条目。</p>`
-  : ''}`;
+<table class="simple"><tr><th>名称</th><th>描述</th></tr>${defRows}</table>${doc.definitionNote
+  ? `\n<p class="muted">${doc.definitionNote}</p>` : ''}`;
 
-  // ---- 8 支持/相关性文件（骨架，编号待人工补充） ----
+  // ---- 8 支持/相关性文件（物化自 doc；编号以「（待」开头的单元格标 todo 待人工补充） ----
   const supportSection = `
 <h2 id="s8">8 支持/相关性文件</h2>
 <table class="simple"><tr><th>序号</th><th>文档名称</th><th>文档编号</th></tr>
-<tr><td>1</td><td>软件详细设计规范（Code）</td><td>G-B035-005</td></tr>
-<tr><td>2</td><td>软件接口命名规范</td><td class="todo">（待补充）</td></tr>
+${doc.supportFiles.map(([no, name, code]) =>
+  `<tr><td>${esc(no)}</td><td>${esc(name)}</td><td${code.startsWith('（待') ? ' class="todo"' : ''}>${esc(code)}</td></tr>`).join('\n')}
 </table>
-<p class="muted">注：项目级相关文件（软件架构设计、需求规格等）请人工补充。</p>`;
+<p class="muted">${doc.supportNote}</p>`;
 
   // ---- 文件清单（主文件在前） ----
 
@@ -642,7 +508,7 @@ ${preSection}
 <table class="simple"><tr><th>文件</th><th>说明</th></tr>${fileRows}</table>
 
 <h3>4.2 文件包含关系</h3>
-<p class="muted">模块内部文件间的包含关系如下图所示（由 #include 静态分析生成）。${includeNote}</p>
+<p class="muted">模块内部文件间的包含关系如下图所示（由 #include 静态分析生成）。${doc.notes.include}</p>
 ${includeGraph ? `${diagramBlock(includeGraph)}
 <details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">${escRaw(includeGraph)}</pre></details>` : '<p class="todo">（未解析到 include 关系）</p>'}
 
@@ -660,9 +526,9 @@ ${typesSection}
 
 <h3 id="s522">5.2.2 调用的外部接口</h3>
 <h3>5.2.2.1 全局变量</h3>
-<p class="muted">注：本模块未引用外部模块的全局变量，跨模块数据交互均通过函数接口完成。</p>
+<p class="muted">${doc.notes.externalVars}</p>
 <h3>5.2.2.2 接口函数</h3>
-<p class="muted">注：Callout 函数（${calloutCount} 个）属于本模块配置代码（ConfTemplate），由集成方实现，不属于外部接口，未列入本节；其作为功能配置点见 ${calloutSecNo} Callout function，声明见 4.1 文件说明，调用关系见各接口函数卡片的「调用」行。</p>
+<p class="muted">${doc.notes.externalFnsCallout}</p>
 ${calledSection}
 
 <h3 id="s523">5.2.3 提供的外部接口</h3>
@@ -673,7 +539,7 @@ ${model.providedFunctions.map(f => functionCard(f, diagramBlock, staticVarNames)
 
 <h3 id="s524">5.2.4 内部接口</h3>
 <h3>5.2.4.1 全局变量定义</h3>
-<p class="muted">注：以下为本模块的静态全局变量/常量（<code>static</code> 声明，内部链接，仅本模块内可见，外部模块不可直接访问）；其中 <code>const</code> 修饰的为只读常量，<code>volatile</code> 修饰的为易变变量。</p>
+<p class="muted">${doc.notes.internalVars}</p>
 <table class="simple"><tr><th>变量名</th><th>数据类型</th><th>说明</th><th>备注</th></tr>${internalVarRows}</table>
 <h3>5.2.4.2 内部函数说明</h3>
 ${model.internalFunctions.map(f => functionCard(f, diagramBlock, staticVarNames)).join('\n')}
@@ -684,10 +550,10 @@ ${seqSection}
 
 <h2 id="s6">6 配置说明</h2>
 <h3>6.1 通用配置说明</h3>
-<p class="muted">通用配置项适用于所有项目，控制模块基础行为。</p>
+<p class="muted">${doc.notes.configGeneral}</p>
 ${generalCfgSection}
 <h3>6.2 功能配置说明</h3>
-<p class="muted">功能配置项根据项目需求裁剪模块特性。</p>
+<p class="muted">${doc.notes.configFunctional}</p>
 ${functionalCfgSection}
 ${calloutCfgSection}
 ${aliasCfgNote}

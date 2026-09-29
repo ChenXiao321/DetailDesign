@@ -199,6 +199,8 @@ export interface DocumentContent {
   fileTable?: [string, string][];           // 4.1 文件说明表（文件基名, 说明），已按报告顺序排序（0929 起物化；存量物化 json 缺省时渲染期现算补齐）
   importedTypes?: [string, string[]][];     // 5.2.1.1 引用的数据类型表（模块名, 类型名单），已按报告顺序排序（0929 起物化；缺省时渲染期现算补齐）
   complexityTable?: [string, number | null, boolean][]; // 7 章圈复杂度明细表（函数名, 圈复杂度[null=未计算], 含死循环），已按复杂度降序（0929 起物化；缺省时渲染期现算补齐）
+  configDetails?: Record<string, { usageItems: string[]; example: string }>; // 6 章各配置宏：使用方式列表项（最终 HTML <li> 片段）+ 配置示例行（最终文本），键=宏名（0929 起物化；缺省时渲染期现算补齐）
+  aliasNote?: string;                       // 6.2 别名宏注（最终 HTML 片段；无别名宏时为空串）（0929 起物化；缺省时渲染期现算补齐）
   abbreviations: [string, string][];        // 3.1 最终表行（合并模式按出现过滤 / replace 模式全量）
   abbreviationNote: string;                 // 3.1 表下注释
   definitions: [string, string][];          // 3.2 最终表行

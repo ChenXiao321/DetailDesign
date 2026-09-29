@@ -2955,6 +2955,35 @@
         false
       ]
     ],
+    "configDetails": {
+      "GP_ECUSTPSHDN_ACTIVE_CORE_NUM": {
+        "usageItems": [
+          "<li>条件编译裁剪 25 处：<code>(GP_ECUSTPSHDN_ACTIVE_CORE_NUM &gt; 1U)</code>，<code>(GP_ECUSTPSHDN_ACTIVE_CORE_NUM &gt; 2U)</code>，<code>(GP_ECUSTPSHDN_ACTIVE_CORE_NUM &gt; 3U)</code>，<code>(GP_ECUSTPSHDN_ACTIVE_CORE_NUM &gt; 4U)</code>，<code>(GP_ECUSTPSHDN_ACTIVE_CORE_NUM &gt; 5U)</code></li>",
+          "<li>数组维度 1 处（Gp_EcuStpShdn.c:324），如 <code>uint32  TimeStamp_u32[GP_ECUSTPSHDN_ACTIVE_CORE_NUM];</code></li>",
+          "<li>循环上界 1 处（Gp_EcuStpShdn.c:351），如 <code>for (Cnt_u32 = 0U; Cnt_u32 &lt; (uint32)GP_ECUSTPSHDN_ACTIVE_CORE_NUM; Cnt_u32++)</code></li>"
+        ],
+        "example": "#define GP_ECUSTPSHDN_ACTIVE_CORE_NUM   (2U)  /* define active core number */"
+      },
+      "GP_ECUSTPSHDN_NOP": {
+        "usageItems": [
+          "<li>代码中调用 2 处（Gp_EcuStpShdn.c:566，Gp_EcuStpShdn.c:660），如 <code>GP_ECUSTPSHDN_NOP();</code> 等</li>"
+        ],
+        "example": "#define GP_ECUSTPSHDN_NOP()   MCAL_NOP()  /* define NOP */"
+      },
+      "GP_ECUSTPSHDN_SAFETY_ENABLE": {
+        "usageItems": [
+          "<li>条件编译裁剪 13 处：<code>(GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)</code></li>"
+        ],
+        "example": "#define GP_ECUSTPSHDN_SAFETY_ENABLE   (STD_ON)  /* safety enable */"
+      },
+      "GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE": {
+        "usageItems": [
+          "<li>条件编译裁剪 8 处：<code>(GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE == STD_ON)</code></li>"
+        ],
+        "example": "#define GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE   (STD_ON)"
+      }
+    },
+    "aliasNote": "<p class=\"muted\">注：以下宏为固定别名（实现重定义，无可选值，不属于配置项）：<code>GP_ECUSTPSHDN_NOP() → MCAL_NOP()</code></p>",
     "abbreviations": [
       [
         "ASW",

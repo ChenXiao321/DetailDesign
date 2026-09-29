@@ -4,7 +4,7 @@
  * report/audit 纯渲染只读 json；存量 json 无 document 时由 htmlReport 渲染期
  * 调用同一函数现算——单一实现保证两条路径产物逐字节一致。
  */
-import type { ModuleModel, DocumentContent } from '../model/types.js';
+import type { ModuleModel, DocumentContent, ConfigMacro, ConfigUsage } from '../model/types.js';
 import { listStateMachines } from '../model/types.js';
 import { esc } from '../report/cards.js';
 
@@ -125,6 +125,42 @@ function fileSortKey(f: { path: string; role: string }): string {
   const rank: Record<string, number> = { source: 0, header: 1, types: 2, config: 3, callout: 4, memmap: 5 };
   const isC = /\.c$/i.test(f.path) ? '1' : '0';  // 同角色 .h 在 .c 前
   return `${rank[f.role] ?? 9}${isC}${f.path}`;
+}
+
+/** 6 章配置宏使用方式种类标签（自 htmlReport 搬入） */
+const USAGE_KIND_LABEL: Record<ConfigUsage['kind'], string> = {
+  condCompile: '条件编译裁剪',
+  arrayDim: '数组维度',
+  loopBound: '循环上界',
+  call: '代码中调用',
+  reference: '直接引用',
+};
+
+/** 6 章配置宏明细（自 htmlReport 搬入，物化进 document.configDetails）：
+ *  usageItems=使用方式列表项（最终 HTML <li> 片段）；example=配置示例行（原始文本，渲染期 escRaw） */
+function buildConfigDetail(c: ConfigMacro): { usageItems: string[]; example: string } {
+  const usageItems: string[] = [];
+  const condUsages = c.usages.filter(u => u.kind === 'condCompile');
+  if (condUsages.length > 0) {
+    const exprs = [...new Set(condUsages.map(u => u.context.replace(/^#\s*(?:if|elif)\s*/, '')))];
+    usageItems.push(`<li>条件编译裁剪 ${condUsages.length} 处：${exprs.map(e => `<code>${esc(e)}</code>`).join('，')}</li>`);
+  }
+  for (const kind of ['arrayDim', 'loopBound', 'call', 'reference'] as const) {
+    const us = c.usages.filter(u => u.kind === kind);
+    if (us.length === 0) continue;
+    const locs = us.map(u => `${esc(u.file.split(/[\\/]/).pop()!)}:${u.line}`).join('，');
+    usageItems.push(`<li>${USAGE_KIND_LABEL[kind]} ${us.length} 处（${locs}），如 <code>${esc(us[0].context)}</code>${us.length > 1 ? ' 等' : ''}</li>`);
+  }
+  if (c.usages.length === 0) usageItems.push('<li class="muted">模块内未发现引用点</li>');
+  const example = `#define ${c.name}${c.isFunctionLike ? '()' : ''}   ${c.value || ''}${c.comment ? `  /* ${c.comment} */` : ''}`;
+  return { usageItems, example };
+}
+
+/** 6.2 别名宏注（自 htmlReport 搬入，物化进 document.aliasNote；无别名宏时为空串） */
+function buildAliasNote(model: ModuleModel): string {
+  const aliasCfgs = model.configMacros.filter(c => c.kind === 'alias');
+  return aliasCfgs.length === 0 ? '' :
+    `<p class="muted">注：以下宏为固定别名（实现重定义，无可选值，不属于配置项）：${aliasCfgs.map(c => `<code>${esc(c.name)}${c.isFunctionLike ? '()' : ''} → ${esc(c.value)}</code>`).join('，')}</p>`;
 }
 
 /** 5.2.1.1 引用的数据类型表（自 htmlReport 搬入，物化进 document.importedTypes）；
@@ -330,6 +366,9 @@ export function buildDocumentContent(model: ModuleModel, abbr?: AbbrTableInput):
     complexityTable: [...allFns]
       .sort((a, b) => (b.complexity ?? 0) - (a.complexity ?? 0))
       .map(f => [f.name, f.complexity ?? null, f.infiniteLoop === true]),
+    // ---- 6 章配置宏明细 + 别名宏注（原 htmlReport 渲染期现算，物化后 report 只读） ----
+    configDetails: Object.fromEntries(model.configMacros.map(c => [c.name, buildConfigDetail(c)])),
+    aliasNote: buildAliasNote(model),
     abbreviations,
     abbreviationNote,
     definitions,

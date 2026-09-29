@@ -240,35 +240,20 @@ ${diagramBlock(s.diagram)}
   }).join('\n');
 
   // ---- 6 配置（6.1 通用 / 6.2 功能，每个配置项一个子章节） ----
-  const USAGE_KIND_LABEL: Record<ConfigUsage['kind'], string> = {
-    condCompile: '条件编译裁剪',
-    arrayDim: '数组维度',
-    loopBound: '循环上界',
-    call: '代码中调用',
-    reference: '直接引用',
-  };
+  // 使用方式/配置示例物化自 doc.configDetails；别名宏注物化自 doc.aliasNote
+  //（0929 前的物化 json 缺字段时现算补齐，同实现字节一致；map 内缺单个宏时按宏现算兜底）
+  const configDetails = doc.configDetails ?? buildDocumentContent(model).configDetails!;
+  const configDetailOf = (c: ConfigMacro) =>
+    configDetails[c.name] ?? buildDocumentContent(model).configDetails![c.name]!;
   const configSubsection = (c: ConfigMacro, secNo: string): string => {
-    const usageParts: string[] = [];
-    const condUsages = c.usages.filter(u => u.kind === 'condCompile');
-    if (condUsages.length > 0) {
-      const exprs = [...new Set(condUsages.map(u => u.context.replace(/^#\s*(?:if|elif)\s*/, '')))];
-      usageParts.push(`<li>条件编译裁剪 ${condUsages.length} 处：${exprs.map(e => `<code>${esc(e)}</code>`).join('，')}</li>`);
-    }
-    for (const kind of ['arrayDim', 'loopBound', 'call', 'reference'] as const) {
-      const us = c.usages.filter(u => u.kind === kind);
-      if (us.length === 0) continue;
-      const locs = us.map(u => `${esc(u.file.split(/[\\/]/).pop()!)}:${u.line}`).join('，');
-      usageParts.push(`<li>${USAGE_KIND_LABEL[kind]} ${us.length} 处（${locs}），如 <code>${esc(us[0].context)}</code>${us.length > 1 ? ' 等' : ''}</li>`);
-    }
-    if (c.usages.length === 0) usageParts.push('<li class="muted">模块内未发现引用点</li>');
-    const example = `#define ${c.name}${c.isFunctionLike ? '()' : ''}   ${c.value || ''}${c.comment ? `  /* ${c.comment} */` : ''}`;
+    const detail = configDetailOf(c);
     return `<h4>${secNo} <code>${esc(c.name)}</code></h4>
 <table class="simple"><tr><th>配置项</th><th>取值</th><th>形式</th><th>说明</th></tr>
 <tr><td><code>${esc(c.name)}</code></td><td><code>${esc(c.value)}</code></td><td>${c.isFunctionLike ? '函数式宏' : '值宏'}</td><td>${esc(c.comment)}</td></tr></table>
 <p><b>配置示例：</b></p>
-<pre class="plantuml">${escRaw(example)}</pre>
+<pre class="plantuml">${escRaw(detail.example)}</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul>${usageParts.join('')}</ul>
+<ul>${detail.usageItems.join('')}</ul>
 ${c.affects.length > 0 ? `<p><b>影响范围（条件编译直接作用的函数/变量）：</b>${c.affects.map(a => `<code>${esc(a)}</code>`).join('，')}</p>` : ''}
 <p><b>取值影响：</b>${c.generated ? `${esc(c.generated.valueEffect)}<span class="inferred">推断，待确认</span>` : '<span class="todo">（待 LLM 生成）</span>'}</p>`;
   };
@@ -285,9 +270,7 @@ ${c.affects.length > 0 ? `<p><b>影响范围（条件编译直接作用的函数
   const calloutCfgSection = callouts.length === 0 ? '' : `<h4>${calloutSecNo} Callout function</h4>
 <p class="muted">${doc.notes.calloutCfg}</p>
 ${callouts.map((e, i) => calloutCard(e, `${calloutSecNo}.${i + 1}`)).join('\n')}`;
-  const aliasCfgs = model.configMacros.filter(c => c.kind === 'alias');
-  const aliasCfgNote = aliasCfgs.length === 0 ? '' :
-    `<p class="muted">注：以下宏为固定别名（实现重定义，无可选值，不属于配置项）：${aliasCfgs.map(c => `<code>${esc(c.name)}${c.isFunctionLike ? '()' : ''} → ${esc(c.value)}</code>`).join('，')}</p>`;
+  const aliasCfgNote = doc.aliasNote ?? buildDocumentContent(model).aliasNote!;
 
   // ---- 7 详细设计规范评估（评估行/总结物化自 doc；维度列 rowspan 与明细表为渲染期版式/派生数据） ----
   const allFns = [...model.providedFunctions, ...model.internalFunctions];

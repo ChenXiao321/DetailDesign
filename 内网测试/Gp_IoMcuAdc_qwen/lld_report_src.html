@@ -90,7 +90,7 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
 <table class="simple"><tr><th>文件</th><th>说明</th></tr><tr><td><code>Gp_IoMcuAdc.c</code></td><td>模块主实现文件：实现 4 个对外接口函数与 5 个内部函数；主要入口为 Init、MainFunction</td></tr><tr><td><code>Gp_IoMcuAdc.h</code></td><td>模块对外头文件：声明 4 个对外接口函数</td></tr><tr><td><code>Gp_IoMcuAdc_Types.h</code></td><td>类型定义头文件：定义 4 个枚举式 typedef 与 7 个结构体</td></tr><tr><td><code>Gp_IoMcuAdc_Cfg.h</code></td><td>配置参数头文件（配置代码）：定义 26 个配置宏</td></tr><tr><td><code>Gp_IoMcuAdc_CfgData.h</code></td><td>配置数据头文件（配置代码）：配置数据的类型与声明</td></tr><tr><td><code>Gp_IoMcuAdc_Cfg.c</code></td><td>配置数据文件（配置代码）：定义模块配置数据（核运行时容器、函数指针表等）</td></tr><tr><td><code>Gp_IoMcuAdc_Callout.h</code></td><td>Callout 声明头文件（配置代码）：声明 4 个由集成方实现的 Callout 函数</td></tr><tr><td><code>Gp_IoMcuAdc_Callout.c</code></td><td>Callout 实现文件（配置代码）：由集成方实现 4 个 Callout 函数的具体策略</td></tr><tr><td><code>Gp_IoMcuAdc_MemMap.h</code></td><td>内存映射头文件：定义变量/函数的存储段放置（MemMap），不影响功能逻辑</td></tr></table>
 
 <h3>4.2 文件包含关系</h3>
-<p class="muted">模块内部文件间的包含关系如下图所示（由 #include 静态分析生成）。注：箭头指向被包含的头文件（模板约定：箭头指向被调用的元素）。MemMap.h 为内存映射包装文件，默认被本模块各文件包含，图中不再画出。</p>
+<p class="muted">模块内部文件间的包含关系如下图所示。注：箭头指向被包含的头文件（模板约定：箭头指向被调用的元素）。MemMap.h 为内存映射包装文件，默认被本模块各文件包含，图中不再画出。</p>
 <div class="mermaid">flowchart BT
     Gp_IoMcuAdc_Callout_c["«Source»&lt;br&gt;&lt;b&gt;Gp_IoMcuAdc_&lt;br&gt;Callout.c&lt;/b&gt;"]
     Gp_IoMcuAdc_Callout_h["«header»&lt;br&gt;&lt;b&gt;Gp_IoMcuAdc_&lt;br&gt;Callout.h&lt;/b&gt;"]

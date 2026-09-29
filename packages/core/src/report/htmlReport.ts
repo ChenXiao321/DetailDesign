@@ -353,10 +353,14 @@ ${doc.supportFiles.map(([no, name, code]) =>
   const fileRows = (doc.fileTable ?? buildDocumentContent(model).fileTable!)
     .map(([name, desc]) => `<tr><td><code>${esc(name)}</code></td><td>${esc(desc)}</td></tr>`).join('');
 
-  // ---- 4.2 说明段（0929 起 notes.include 整段物化；旧物化 json 仅注部分，补引导句，字节一致） ----
-  const INCLUDE_INTRO = '模块内部文件间的包含关系如下图所示（由 #include 静态分析生成）。';
+  // ---- 4.2 说明段（0929 起 notes.include 整段物化；旧物化 json 仅注部分或带旧版括号引导句，归一化兜底，字节一致） ----
+  const INCLUDE_INTRO = '模块内部文件间的包含关系如下图所示。';
+  const INCLUDE_INTRO_OLD = '模块内部文件间的包含关系如下图所示（由 #include 静态分析生成）。';
   const includeNote = doc.notes.include.startsWith(INCLUDE_INTRO)
-    ? doc.notes.include : INCLUDE_INTRO + doc.notes.include;
+    ? doc.notes.include
+    : doc.notes.include.startsWith(INCLUDE_INTRO_OLD)
+      ? INCLUDE_INTRO + doc.notes.include.slice(INCLUDE_INTRO_OLD.length)
+      : INCLUDE_INTRO + doc.notes.include;
 
   return `<!DOCTYPE html>
 <html lang="zh-CN">

@@ -2893,6 +2893,68 @@
         ]
       ]
     ],
+    "complexityTable": [
+      [
+        "Gp_EcuStpShdn_Startup",
+        13,
+        false
+      ],
+      [
+        "Gp_EcuStpShdn_Mainfunction",
+        7,
+        false
+      ],
+      [
+        "Gp_EcuStpShdn_MstPostInit",
+        4,
+        false
+      ],
+      [
+        "Gp_EcuStpShdn_CheckInitRslt",
+        3,
+        false
+      ],
+      [
+        "Gp_EcuStpShdn_GetLastSatTimeStamp",
+        3,
+        false
+      ],
+      [
+        "Gp_EcuStpShdn_MstProcMcuPreRunTest",
+        2,
+        false
+      ],
+      [
+        "Gp_EcuStpShdn_SetSafeState",
+        1,
+        false
+      ],
+      [
+        "Gp_EcuStpShdn_SetTryPwrShdn",
+        1,
+        false
+      ],
+      [
+        "Gp_EcuStpShdn_GetSafeState",
+        1,
+        false
+      ],
+      [
+        "Gp_EcuStpShdn_TrapRecov",
+        1,
+        false
+      ],
+      [
+        "Gp_EcuStpShdn_OsErrRecov",
+        1,
+        false
+      ],
+      [
+        "Gp_EcuStpShdn_PwrShdnInShdnPhase",
+        1,
+        false
+      ]
+    ],
     "abbreviations": [
       [
         "ASW",

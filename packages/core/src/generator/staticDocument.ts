@@ -324,6 +324,10 @@ export function buildDocumentContent(model: ModuleModel, abbr?: AbbrTableInput):
       .map(f => [f.path.split(/[\\/]/).pop()!, describeFile(f.path, f.role, model)]),
     // ---- 5.2.1.1 引用的数据类型表（原 htmlReport 渲染期现算，物化后 report 只读） ----
     importedTypes: buildImportedTypes(model),
+    // ---- 7 章圈复杂度明细表（同上；按复杂度降序，排序在 gen 期定死） ----
+    complexityTable: [...allFns]
+      .sort((a, b) => (b.complexity ?? 0) - (a.complexity ?? 0))
+      .map(f => [f.name, f.complexity ?? null, f.infiniteLoop === true]),
     abbreviations,
     abbreviationNote,
     definitions,

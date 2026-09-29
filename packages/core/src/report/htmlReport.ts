@@ -304,10 +304,9 @@ ${callouts.map((e, i) => calloutCard(e, `${calloutSecNo}.${i + 1}`)).join('\n')}
     });
     i += span;
   }
-  // 序号 7 的事实明细：圈复杂度表（按复杂度降序）
-  const complexityRows = [...allFns]
-    .sort((a, b) => (b.complexity ?? 0) - (a.complexity ?? 0))
-    .map(f => `<tr><td><code>${esc(f.name)}</code></td><td>${f.complexity ?? '—'}</td><td>${f.infiniteLoop ? '含死循环' : ''}</td><td>${(f.complexity ?? 0) > 10 ? '<span class="todo">超过 10，需人工评审</span>' : '<span class="muted">≤10</span>'}</td></tr>`)
+  // 序号 7 的事实明细：圈复杂度表（物化自 doc.complexityTable；旧物化 json 缺字段时现算补齐，同实现字节一致）
+  const complexityRows = (doc.complexityTable ?? buildDocumentContent(model).complexityTable!)
+    .map(([name, cx, loop]) => `<tr><td><code>${esc(name)}</code></td><td>${cx ?? '—'}</td><td>${loop ? '含死循环' : ''}</td><td>${(cx ?? 0) > 10 ? '<span class="todo">超过 10，需人工评审</span>' : '<span class="muted">≤10</span>'}</td></tr>`)
     .join('');
   const evalSection = `
 <h2 id="s7">7 详细设计规范评估</h2>

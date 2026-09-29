@@ -210,7 +210,7 @@ export interface DocumentContent {
   supportFiles: [string, string, string][]; // 8 章表（序号/文档名称/文档编号）
   supportNote: string;                      // 8 章表下注释
   /** 各章引导句/说明句（最终文本，键=章节位）：
-   *  overview=功能接口总图引导句 callGraph=内部函数调用图引导句 include=4.2 包含关系注
+   *  overview=功能接口总图引导句 callGraph=内部函数调用图引导句 include=4.2 说明段整段（0929 起含引导句，旧物化值仅注部分渲染期补引导句）
    *  providedVarsEmpty=5.2.3.1 空注 externalVars=5.2.2.1 注 externalFnsCallout=5.2.2.2 Callout 注
    *  internalVars=5.2.4.1 注 configGeneral=6.1 引导句 configFunctional=6.2 引导句
    *  calloutCfg=6.2 Callout function 引导句 evalSummaryIntro=7 章总结引导句 */

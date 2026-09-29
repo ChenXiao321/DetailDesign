@@ -353,6 +353,11 @@ ${doc.supportFiles.map(([no, name, code]) =>
   const fileRows = (doc.fileTable ?? buildDocumentContent(model).fileTable!)
     .map(([name, desc]) => `<tr><td><code>${esc(name)}</code></td><td>${esc(desc)}</td></tr>`).join('');
 
+  // ---- 4.2 说明段（0929 起 notes.include 整段物化；旧物化 json 仅注部分，补引导句，字节一致） ----
+  const INCLUDE_INTRO = '模块内部文件间的包含关系如下图所示（由 #include 静态分析生成）。';
+  const includeNote = doc.notes.include.startsWith(INCLUDE_INTRO)
+    ? doc.notes.include : INCLUDE_INTRO + doc.notes.include;
+
   return `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -388,7 +393,7 @@ ${preSection}
 <table class="simple"><tr><th>文件</th><th>说明</th></tr>${fileRows}</table>
 
 <h3>4.2 文件包含关系</h3>
-<p class="muted">模块内部文件间的包含关系如下图所示（由 #include 静态分析生成）。${doc.notes.include}</p>
+<p class="muted">${includeNote}</p>
 ${includeGraph ? `${diagramBlock(includeGraph)}
 <details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">${escRaw(includeGraph)}</pre></details>` : '<p class="todo">（未解析到 include 关系）</p>'}
 

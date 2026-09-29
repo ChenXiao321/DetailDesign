@@ -299,12 +299,14 @@ export function buildDocumentContent(model: ModuleModel, abbr?: AbbrTableInput):
 
   // ---- 各章引导句/说明句 ----
   const droppedExternals = droppedExternalIncludes(model);
+  // 4.2 说明段整段物化（0929 起含引导句；旧物化 json 的 notes.include 仅注部分，渲染期补引导句）
+  const includeIntro = '模块内部文件间的包含关系如下图所示（由 #include 静态分析生成）。';
   const notes: Record<string, string> = {
     overview: `本模块对外提供 ${model.providedFunctions.length} 个接口函数（左侧为调用方），并调用 ${model.calledExternalFunctions.length - calloutCount} 个外部接口（右侧按来源模块归组）；箭头方向为调用方向。Callout 函数属本模块配置点，不在本图展示，其调用关系见下方内部函数调用图与 6.2；各接口的模块内调用者见内部函数调用图与 5.2.2 表。`,
     callGraph: '按对外接口函数分别绘制其模块内调用树（深蓝=入口函数，灰=内部函数，蓝=被内部调用的对外接口，黄=Callout 函数（配置代码））；同一函数被多处调用时按调用路径重复出现，保证布局无交叉。经配置表函数指针间接引用的 Callout 单独成图。无模块内调用的平凡函数不出图，其余跨模块调用（Gp_RstM / Gp_TstApp 等）见功能接口总图与 5.2.2 表。',
     include: droppedExternals.length > 0
-      ? `注：箭头指向被包含的头文件（模板约定：箭头指向被调用的元素）。MemMap.h 为内存映射包装文件，默认被本模块各文件包含，图中不再画出；外部模块头文件（${droppedExternals.join('、')}）不在图中展示，标准类型头文件 Std_Types.h 除外。`
-      : '注：箭头指向被包含的头文件（模板约定：箭头指向被调用的元素）。MemMap.h 为内存映射包装文件，默认被本模块各文件包含，图中不再画出。',
+      ? `${includeIntro}注：箭头指向被包含的头文件（模板约定：箭头指向被调用的元素）。MemMap.h 为内存映射包装文件，默认被本模块各文件包含，图中不再画出；外部模块头文件（${droppedExternals.join('、')}）不在图中展示，标准类型头文件 Std_Types.h 除外。`
+      : `${includeIntro}注：箭头指向被包含的头文件（模板约定：箭头指向被调用的元素）。MemMap.h 为内存映射包装文件，默认被本模块各文件包含，图中不再画出。`,
     providedVarsEmpty: '注：本模块未提供外部链接的全局变量（即非 static 的文件作用域变量），模块数据均通过函数接口访问。',
     externalVars: '注：本模块未引用外部模块的全局变量，跨模块数据交互均通过函数接口完成。',
     externalFnsCallout: `注：Callout 函数（${calloutCount} 个）属于本模块配置代码（ConfTemplate），由集成方实现，不属于外部接口，未列入本节；其作为功能配置点见 ${calloutSecNo} Callout function，声明见 4.1 文件说明，调用关系见各接口函数卡片的「调用」行。`,

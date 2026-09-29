@@ -8,52 +8,8 @@ import { mermaidRenderScript } from './renderScript.js';
 import { buildDocumentContent } from '../generator/staticDocument.js';
 import { buildIncludeGraph } from './includeGraph.js';
 
-/** 文件用途说明（4.1 文件说明表）：按角色 + 分析数据生成中文描述 */
-function describeFile(path: string, role: string, model: ModuleModel): string {
-  const base = path.split(/[\\/]/).pop() ?? path;
-  const isC = /\.c$/i.test(base);
-  switch (role) {
-    case 'source': {
-      // 主要入口：按命名约定识别 Startup/Mainfunction/Init 类入口函数
-      const entries = model.providedFunctions
-        .filter(f => /_(Startup|Mainfunction|MainFunction|Init)$/.test(f.name))
-        .map(f => f.name.replace(/^Gp_\w+?_(?=[A-Z])/, ''));
-      const entryNote = entries.length > 0 ? `；主要入口为 ${entries.join('、')}` : '';
-      return `模块主实现文件：实现 ${model.providedFunctions.length} 个对外接口函数与 ${model.internalFunctions.length} 个内部函数${entryNote}`;
-    }
-    case 'header':
-      return `模块对外头文件：声明 ${model.providedFunctions.length} 个对外接口函数`;
-    case 'types': {
-      const td = model.types.filter(t => t.kind === 'typedef').length;
-      const st = model.types.filter(t => t.kind === 'struct').length;
-      return `类型定义头文件：定义 ${td} 个枚举式 typedef 与 ${st} 个结构体`;
-    }
-    case 'callout': {
-      const n = model.calledExternalFunctions.filter(e => e.group === 'Callout').length;
-      return isC
-        ? `Callout 实现文件（配置代码）：由集成方实现 ${n} 个 Callout 函数的具体策略`
-        : `Callout 声明头文件（配置代码）：声明 ${n} 个由集成方实现的 Callout 函数`;
-    }
-    case 'config': {
-      if (isC) return '配置数据文件（配置代码）：定义模块配置数据（核运行时容器、函数指针表等）';
-      const n = model.configMacros.filter(c => c.file === path && c.kind !== 'alias').length;
-      return n > 0
-        ? `配置参数头文件（配置代码）：定义 ${n} 个配置宏`
-        : '配置数据头文件（配置代码）：配置数据的类型与声明';
-    }
-    case 'memmap':
-      return '内存映射头文件：定义变量/函数的存储段放置（MemMap），不影响功能逻辑';
-    default:
-      return role;
-  }
-}
-
-/** 4.1 表格顺序：主文件在前，其后按 头文件→类型→配置→Callout→Memmap */
-function fileSortKey(f: { path: string; role: string }): string {
-  const rank: Record<string, number> = { source: 0, header: 1, types: 2, config: 3, callout: 4, memmap: 5 };
-  const isC = /\.c$/i.test(f.path) ? '1' : '0';  // 同角色 .h 在 .c 前
-  return `${rank[f.role] ?? 9}${isC}${f.path}`;
-}
+/** 4.1 文件说明表物化前（存量 json 无 document.fileTable）的现算实现，已搬入 staticDocument.ts；
+ *  两条路径同一实现，产物逐字节一致 */
 
 // 导出给 imageBatch（PNG 物化批量页）复用，保证与报告渲染度量口径一致
 export const REPORT_CSS = `
@@ -429,11 +385,9 @@ ${doc.supportFiles.map(([no, name, code]) =>
 </table>
 <p class="muted">${doc.supportNote}</p>`;
 
-  // ---- 文件清单（主文件在前） ----
-
-  const fileRows = [...model.files]
-    .sort((a, b) => fileSortKey(a).localeCompare(fileSortKey(b)))
-    .map(f => `<tr><td><code>${esc(f.path.split(/[\\/]/).pop()!)}</code></td><td>${esc(describeFile(f.path, f.role, model))}</td></tr>`).join('');
+  // ---- 文件清单（4.1，物化自 doc.fileTable；0929 前的物化 json 缺该字段时现算补齐，同实现字节一致） ----
+  const fileRows = (doc.fileTable ?? buildDocumentContent(model).fileTable!)
+    .map(([name, desc]) => `<tr><td><code>${esc(name)}</code></td><td>${esc(desc)}</td></tr>`).join('');
 
   return `<!DOCTYPE html>
 <html lang="zh-CN">

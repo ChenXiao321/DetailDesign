@@ -80,6 +80,53 @@ function droppedExternalIncludes(model: ModuleModel): string[] {
   return [...dropped].sort();
 }
 
+/** 文件用途说明（4.1 文件说明表）：按角色 + 分析数据生成中文描述（自 htmlReport 搬入，物化进 document.fileTable） */
+function describeFile(path: string, role: string, model: ModuleModel): string {
+  const base = path.split(/[\\/]/).pop() ?? path;
+  const isC = /\.c$/i.test(base);
+  switch (role) {
+    case 'source': {
+      // 主要入口：按命名约定识别 Startup/Mainfunction/Init 类入口函数
+      const entries = model.providedFunctions
+        .filter(f => /_(Startup|Mainfunction|MainFunction|Init)$/.test(f.name))
+        .map(f => f.name.replace(/^Gp_\w+?_(?=[A-Z])/, ''));
+      const entryNote = entries.length > 0 ? `；主要入口为 ${entries.join('、')}` : '';
+      return `模块主实现文件：实现 ${model.providedFunctions.length} 个对外接口函数与 ${model.internalFunctions.length} 个内部函数${entryNote}`;
+    }
+    case 'header':
+      return `模块对外头文件：声明 ${model.providedFunctions.length} 个对外接口函数`;
+    case 'types': {
+      const td = model.types.filter(t => t.kind === 'typedef').length;
+      const st = model.types.filter(t => t.kind === 'struct').length;
+      return `类型定义头文件：定义 ${td} 个枚举式 typedef 与 ${st} 个结构体`;
+    }
+    case 'callout': {
+      const n = model.calledExternalFunctions.filter(e => e.group === 'Callout').length;
+      return isC
+        ? `Callout 实现文件（配置代码）：由集成方实现 ${n} 个 Callout 函数的具体策略`
+        : `Callout 声明头文件（配置代码）：声明 ${n} 个由集成方实现的 Callout 函数`;
+    }
+    case 'config': {
+      if (isC) return '配置数据文件（配置代码）：定义模块配置数据（核运行时容器、函数指针表等）';
+      const n = model.configMacros.filter(c => c.file === path && c.kind !== 'alias').length;
+      return n > 0
+        ? `配置参数头文件（配置代码）：定义 ${n} 个配置宏`
+        : '配置数据头文件（配置代码）：配置数据的类型与声明';
+    }
+    case 'memmap':
+      return '内存映射头文件：定义变量/函数的存储段放置（MemMap），不影响功能逻辑';
+    default:
+      return role;
+  }
+}
+
+/** 4.1 表格顺序：主文件在前，其后按 头文件→类型→配置→Callout→Memmap */
+function fileSortKey(f: { path: string; role: string }): string {
+  const rank: Record<string, number> = { source: 0, header: 1, types: 2, config: 3, callout: 4, memmap: 5 };
+  const isC = /\.c$/i.test(f.path) ? '1' : '0';  // 同角色 .h 在 .c 前
+  return `${rank[f.role] ?? 9}${isC}${f.path}`;
+}
+
 /** 物化报告骨架内容。abbr 缺省 = 纯内置词典合并模式（无 config 时的现行行为） */
 export function buildDocumentContent(model: ModuleModel, abbr?: AbbrTableInput): DocumentContent {
   const allFns = [...model.providedFunctions, ...model.internalFunctions];
@@ -230,6 +277,10 @@ export function buildDocumentContent(model: ModuleModel, abbr?: AbbrTableInput):
   return {
     purpose: `本文档描述 ${esc(model.module)} 软件单元的详细设计，作为该单元编码实现、设计评审与单元测试的依据。`,
     scope: `本文档适用于 ${esc(model.module)} 软件单元的开发、评审与维护。`,
+    // ---- 4.1 文件说明表（原 htmlReport 渲染期现算，物化后 report 只读） ----
+    fileTable: [...model.files]
+      .sort((a, b) => fileSortKey(a).localeCompare(fileSortKey(b)))
+      .map(f => [f.path.split(/[\\/]/).pop()!, describeFile(f.path, f.role, model)]),
     abbreviations,
     abbreviationNote,
     definitions,

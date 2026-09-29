@@ -192,12 +192,12 @@ export interface ConfigMacro {
 
 /** 报告骨架内容（1/2/3/7/8 章正文与各章引导句，gen 期物化进 design json）；
  *  物化后 report/audit 纯渲染只读 json，不再现读外部缩写表/配置。
- *  边界：章节标题/表头/角标等纯版式文字不下沉；派生数据（5.2.1.1 引用类型表、
- *  圈复杂度明细表）源数据已在 json，渲染期计算。 */
+ *  边界：章节标题/表头/角标等纯版式文字不下沉；派生数据（圈复杂度明细表）源数据已在 json，渲染期计算。 */
 export interface DocumentContent {
   purpose: string;                          // 1 目的（最终文本）
   scope: string;                            // 2 适用范围（最终文本）
   fileTable?: [string, string][];           // 4.1 文件说明表（文件基名, 说明），已按报告顺序排序（0929 起物化；存量物化 json 缺省时渲染期现算补齐）
+  importedTypes?: [string, string[]][];     // 5.2.1.1 引用的数据类型表（模块名, 类型名单），已按报告顺序排序（0929 起物化；缺省时渲染期现算补齐）
   abbreviations: [string, string][];        // 3.1 最终表行（合并模式按出现过滤 / replace 模式全量）
   abbreviationNote: string;                 // 3.1 表下注释
   definitions: [string, string][];          // 3.2 最终表行

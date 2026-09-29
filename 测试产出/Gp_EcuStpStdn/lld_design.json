@@ -2882,6 +2882,17 @@
         "内存映射头文件：定义变量/函数的存储段放置（MemMap），不影响功能逻辑"
       ]
     ],
+    "importedTypes": [
+      [
+        "Std_Types",
+        [
+          "Std_ReturnType",
+          "boolean",
+          "uint8",
+          "uint32"
+        ]
+      ]
+    ],
     "abbreviations": [
       [
         "ASW",

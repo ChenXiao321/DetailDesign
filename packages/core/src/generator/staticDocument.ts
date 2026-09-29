@@ -127,6 +127,47 @@ function fileSortKey(f: { path: string; role: string }): string {
   return `${rank[f.role] ?? 9}${isC}${f.path}`;
 }
 
+/** 5.2.1.1 引用的数据类型表（自 htmlReport 搬入，物化进 document.importedTypes）；
+ *  只列类型，对应模板 模块名|Imported Type；外部函数归属 5.2.2，不在此列 */
+function buildImportedTypes(model: ModuleModel): [string, string[]][] {
+  const STD_TYPES = ['Std_ReturnType', 'boolean', 'uint8', 'uint16', 'uint32', 'uint64',
+    'sint8', 'sint16', 'sint32', 'sint64', 'float32', 'float64'];
+  const scanText = [
+    ...[...model.providedFunctions, ...model.internalFunctions].map(f => f.signature),
+    ...[...model.internalVariables, ...model.providedVariables].map(v => v.type),
+    ...model.types.flatMap(t => [t.underlyingType ?? '', ...(t.elements ?? []).map(e => e.type)]),
+  ].join(' ');
+  const usedStdTypes = STD_TYPES.filter(t => new RegExp(`\\b${t}\\b`).test(scanText));
+  // 外部类型探测：按 AUTOSAR 命名约定取 XxxType 形标识符，排除本模块已定义类型、Std_Types 与已知函数名
+  //（TLF 有函数 Gp_TLF35584_GetResetType 以 Type 结尾会被误当类型）。
+  // 模块名归组：标准 AUTOSAR 前缀取首段（Dem_EventIdType → Dem）；项目根前缀（module 首段，如 Gp）下的
+  // 名字取「去 Type 后缀后的前两段」（Gp_TimeCalType → Gp_TimeCal）——首段 Gp 是产品族前缀而非模块名；
+  // 无下划线前缀的（如 CounterType）归入「其他」
+  const localTypeNames = new Set(model.types.map(t => t.name));
+  const knownFnNames = new Set(
+    [...model.providedFunctions, ...model.internalFunctions, ...model.calledExternalFunctions]
+      .map(f => f.name),
+  );
+  const rootPrefix = model.module.split('_')[0];
+  const extTypeGroups = new Map<string, Set<string>>();
+  for (const tok of scanText.match(/[A-Za-z_]\w*/g) ?? []) {
+    if (!/Type$/.test(tok)) continue;
+    if (localTypeNames.has(tok) || STD_TYPES.includes(tok) || knownFnNames.has(tok)) continue;
+    const stripped = tok.replace(/Type$/, '');
+    const mod = tok.startsWith(`${rootPrefix}_`) && stripped.includes('_')
+      ? stripped.split('_').slice(0, 2).join('_')
+      : tok.includes('_') ? tok.split('_')[0] : '其他';
+    if (!extTypeGroups.has(mod)) extTypeGroups.set(mod, new Set());
+    extTypeGroups.get(mod)!.add(tok);
+  }
+  const rows: [string, string[]][] = [];
+  if (usedStdTypes.length > 0) rows.push(['Std_Types', usedStdTypes]);
+  for (const [mod, types] of [...extTypeGroups.entries()].sort()) {
+    rows.push([mod, [...types]]);
+  }
+  return rows;
+}
+
 /** 物化报告骨架内容。abbr 缺省 = 纯内置词典合并模式（无 config 时的现行行为） */
 export function buildDocumentContent(model: ModuleModel, abbr?: AbbrTableInput): DocumentContent {
   const allFns = [...model.providedFunctions, ...model.internalFunctions];
@@ -281,6 +322,8 @@ export function buildDocumentContent(model: ModuleModel, abbr?: AbbrTableInput):
     fileTable: [...model.files]
       .sort((a, b) => fileSortKey(a).localeCompare(fileSortKey(b)))
       .map(f => [f.path.split(/[\\/]/).pop()!, describeFile(f.path, f.role, model)]),
+    // ---- 5.2.1.1 引用的数据类型表（原 htmlReport 渲染期现算，物化后 report 只读） ----
+    importedTypes: buildImportedTypes(model),
     abbreviations,
     abbreviationNote,
     definitions,

@@ -243,19 +243,23 @@ ${diagramBlock(s.diagram)}
   // 使用方式/配置示例物化自 doc.configDetails；别名宏注物化自 doc.aliasNote
   //（0929 前的物化 json 缺字段时现算补齐，同实现字节一致；map 内缺单个宏时按宏现算兜底）
   const configDetails = doc.configDetails ?? buildDocumentContent(model).configDetails!;
-  const configDetailOf = (c: ConfigMacro) =>
-    configDetails[c.name] ?? buildDocumentContent(model).configDetails![c.name]!;
+  // 字段级兜底：0930 前物化的条目只有 usageItems/example，缺 tableRow/valueEffect 时按宏现算补齐
+  const configDetailOf = (c: ConfigMacro) => {
+    const d = configDetails[c.name];
+    if (d && d.tableRow && d.valueEffect !== undefined) return d;
+    return buildDocumentContent(model).configDetails![c.name]!;
+  };
   const configSubsection = (c: ConfigMacro, secNo: string): string => {
     const detail = configDetailOf(c);
     return `<h4>${secNo} <code>${esc(c.name)}</code></h4>
 <table class="simple"><tr><th>配置项</th><th>取值</th><th>形式</th><th>说明</th></tr>
-<tr><td><code>${esc(c.name)}</code></td><td><code>${esc(c.value)}</code></td><td>${c.isFunctionLike ? '函数式宏' : '值宏'}</td><td>${esc(c.comment)}</td></tr></table>
+<tr><td><code>${esc(c.name)}</code></td><td><code>${esc(detail.tableRow![0])}</code></td><td>${detail.tableRow![1]}</td><td>${esc(detail.tableRow![2])}</td></tr></table>
 <p><b>配置示例：</b></p>
 <pre class="plantuml">${escRaw(detail.example)}</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
 <ul>${detail.usageItems.join('')}</ul>
 ${c.affects.length > 0 ? `<p><b>影响范围（条件编译直接作用的函数/变量）：</b>${c.affects.map(a => `<code>${esc(a)}</code>`).join('，')}</p>` : ''}
-<p><b>取值影响：</b>${c.generated ? `${esc(c.generated.valueEffect)}<span class="inferred">推断，待确认</span>` : '<span class="todo">（待 LLM 生成）</span>'}</p>`;
+<p><b>取值影响：</b>${detail.valueEffect}</p>`;
   };
   const configSections = (list: ConfigMacro[], base: string) =>
     list.length === 0

@@ -2962,25 +2962,49 @@
           "<li>数组维度 1 处（Gp_EcuStpShdn.c:324），如 <code>uint32  TimeStamp_u32[GP_ECUSTPSHDN_ACTIVE_CORE_NUM];</code></li>",
           "<li>循环上界 1 处（Gp_EcuStpShdn.c:351），如 <code>for (Cnt_u32 = 0U; Cnt_u32 &lt; (uint32)GP_ECUSTPSHDN_ACTIVE_CORE_NUM; Cnt_u32++)</code></li>"
         ],
-        "example": "#define GP_ECUSTPSHDN_ACTIVE_CORE_NUM   (2U)  /* define active core number */"
+        "example": "#define GP_ECUSTPSHDN_ACTIVE_CORE_NUM   (2U)  /* define active core number */",
+        "tableRow": [
+          "(2U)",
+          "值宏",
+          "define active core number"
+        ],
+        "valueEffect": "定义项目中实际激活的核数量，取值范围 1~6。该值通过 25 处条件编译（&gt; 1U 至 &gt; 5U 五档）裁剪 Core1~Core5 的缓冲区定义与 Callout 代码，同时决定主核 TimeStamp_u32 数组维度和 GetLastSatTimeStamp 的遍历上界。当前配置为 2，即激活 Core0 与 Core1，Core2~Core5 相关代码不参与编译。<span class=\"inferred\">推断，待确认</span>"
       },
       "GP_ECUSTPSHDN_NOP": {
         "usageItems": [
           "<li>代码中调用 2 处（Gp_EcuStpShdn.c:566，Gp_EcuStpShdn.c:660），如 <code>GP_ECUSTPSHDN_NOP();</code> 等</li>"
         ],
-        "example": "#define GP_ECUSTPSHDN_NOP()   MCAL_NOP()  /* define NOP */"
+        "example": "#define GP_ECUSTPSHDN_NOP()   MCAL_NOP()  /* define NOP */",
+        "tableRow": [
+          "MCAL_NOP()",
+          "函数式宏",
+          "define NOP"
+        ],
+        "valueEffect": "<span class=\"todo\">（待 LLM 生成）</span>"
       },
       "GP_ECUSTPSHDN_SAFETY_ENABLE": {
         "usageItems": [
           "<li>条件编译裁剪 13 处：<code>(GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)</code></li>"
         ],
-        "example": "#define GP_ECUSTPSHDN_SAFETY_ENABLE   (STD_ON)  /* safety enable */"
+        "example": "#define GP_ECUSTPSHDN_SAFETY_ENABLE   (STD_ON)  /* safety enable */",
+        "tableRow": [
+          "(STD_ON)",
+          "值宏",
+          "safety enable"
+        ],
+        "valueEffect": "安全功能总开关。STD_ON 时编译预运行/运行时自检、安全状态与故障处理相关代码（13 处条件编译）；STD_OFF 时上述代码全部裁剪，且 GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE 不再定义。<span class=\"inferred\">推断，待确认</span>"
       },
       "GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE": {
         "usageItems": [
           "<li>条件编译裁剪 8 处：<code>(GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE == STD_ON)</code></li>"
         ],
-        "example": "#define GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE   (STD_ON)"
+        "example": "#define GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE   (STD_ON)",
+        "tableRow": [
+          "(STD_ON)",
+          "值宏",
+          ""
+        ],
+        "valueEffect": "安全动作执行开关，仅在 GP_ECUSTPSHDN_SAFETY_ENABLE 为 STD_ON 时有效（Cfg.h 中受其条件编译包裹）。STD_ON 时编译自检失败后的安全动作执行代码（8 处条件编译）；STD_OFF 时仅保留检测与记录，不执行故障处理动作。<span class=\"inferred\">推断，待确认</span>"
       }
     },
     "aliasNote": "<p class=\"muted\">注：以下宏为固定别名（实现重定义，无可选值，不属于配置项）：<code>GP_ECUSTPSHDN_NOP() → MCAL_NOP()</code></p>",

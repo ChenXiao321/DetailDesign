@@ -137,8 +137,9 @@ const USAGE_KIND_LABEL: Record<ConfigUsage['kind'], string> = {
 };
 
 /** 6 章配置宏明细（自 htmlReport 搬入，物化进 document.configDetails）：
- *  usageItems=使用方式列表项（最终 HTML <li> 片段）；example=配置示例行（原始文本，渲染期 escRaw） */
-function buildConfigDetail(c: ConfigMacro): { usageItems: string[]; example: string } {
+ *  usageItems=使用方式列表项（最终 HTML <li> 片段）；example=配置示例行（原始文本，渲染期 escRaw）；
+ *  tableRow=表行（取值/形式/说明，原始值，渲染期 esc）；valueEffect=取值影响（最终 HTML，含推断角标） */
+function buildConfigDetail(c: ConfigMacro): { usageItems: string[]; example: string; tableRow: [string, string, string]; valueEffect: string } {
   const usageItems: string[] = [];
   const condUsages = c.usages.filter(u => u.kind === 'condCompile');
   if (condUsages.length > 0) {
@@ -153,7 +154,11 @@ function buildConfigDetail(c: ConfigMacro): { usageItems: string[]; example: str
   }
   if (c.usages.length === 0) usageItems.push('<li class="muted">模块内未发现引用点</li>');
   const example = `#define ${c.name}${c.isFunctionLike ? '()' : ''}   ${c.value || ''}${c.comment ? `  /* ${c.comment} */` : ''}`;
-  return { usageItems, example };
+  const tableRow: [string, string, string] = [c.value, c.isFunctionLike ? '函数式宏' : '值宏', c.comment ?? ''];
+  const valueEffect = c.generated
+    ? `${esc(c.generated.valueEffect)}<span class="inferred">推断，待确认</span>`
+    : '<span class="todo">（待 LLM 生成）</span>';
+  return { usageItems, example, tableRow, valueEffect };
 }
 
 /** 6.2 别名宏注（自 htmlReport 搬入，物化进 document.aliasNote；无别名宏时为空串） */

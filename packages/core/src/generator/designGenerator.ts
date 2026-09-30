@@ -308,7 +308,9 @@ export async function generateDesign(
   // 免 provider 直接物化；全量 gen 在末尾统一物化——3.1 出现过滤扫描 generated 文本，
   // 须在描述类生成完成后执行，否则漏收描述里的新缩写
   const docStage = (): void => {
-    model.document = buildDocumentContent(model, opts?.abbreviationTable);
+    // 合并而非整节替换：buildDocumentContent 不产出的字段（如 gen --only images 物化的
+    // includeGraphPng）须保留——0929 整节替换曾把该 PNG 静默冲掉
+    model.document = { ...model.document, ...buildDocumentContent(model, opts?.abbreviationTable) };
     log('物化报告骨架内容（document 节：1/2/3/7/8 章正文与各章引导句）');
   };
   if (only?.includes('document') && !only.some(o => o !== 'document' && o !== 'flowcharts')) {

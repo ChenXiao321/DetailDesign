@@ -6,6 +6,7 @@ import type {
   ModuleModel, FunctionUnit, VariableUnit, TypeUnit,
   ExternalInterface, ConfigMacro, ConfigUsage, HeaderComment, Parameter, PolarionMarker,
 } from '../model/types.js';
+import { SCHEMA_VERSION } from '../model/types.js';
 
 export interface InputFile {
   /** 相对路径，如 Gp_EcuStpStdn/Gp_EcuStpShdn.c */
@@ -720,6 +721,7 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
 
   return {
     module,
+    schemaVersion: SCHEMA_VERSION,
     analyzedAt: new Date().toISOString(),
     files: fileInfos,
     providedFunctions,

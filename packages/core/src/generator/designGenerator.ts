@@ -1,6 +1,7 @@
 import type {
   ModuleModel, FunctionUnit, DynamicDesign, SequenceDesign, TypeUnit,
 } from '../model/types.js';
+import { SCHEMA_VERSION } from '../model/types.js';
 import type { LLMProvider } from '../llm/provider.js';
 import {
   buildFunctionDescriptionPrompt,
@@ -303,6 +304,9 @@ export async function generateDesign(
   const log = opts?.onProgress ?? (() => {});
   const only = opts?.only;
   const skipExisting = opts?.skipExisting ?? false;
+
+  // 结构版本回填：存量 json（v1 前形态）经任何 gen 通道写回时补 schemaVersion
+  model.schemaVersion ??= SCHEMA_VERSION;
 
   // 报告骨架内容物化（零 LLM 确定性，幂等重算）。--only document（可叠加 flowcharts）时
   // 免 provider 直接物化；全量 gen 在末尾统一物化——3.1 出现过滤扫描 generated 文本，

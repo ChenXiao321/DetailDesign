@@ -190,6 +190,11 @@ export interface ConfigMacro {
   polarion: PolarionMarker;
 }
 
+/** design json 结构版本。结构已冻结（2026-09-30，用户确认内容齐备后锁定）：
+ *  规则=只增不改——允许新增可选字段，禁止改名/删字段/改语义；改动须同步 bump 本版本。
+ *  v1 = 0930 定型：顶层 14 键 + schemaVersion；document 节 19 键全量物化（见 DocumentContent）。 */
+export const SCHEMA_VERSION = 1;
+
 /** 报告骨架内容（1/2/3/7/8 章正文与各章引导句，gen 期物化进 design json）；
  *  物化后 report/audit 纯渲染只读 json，不再现读外部缩写表/配置。
  *  边界：章节标题/表头/角标等纯版式文字不下沉。 */
@@ -223,6 +228,7 @@ export interface DocumentContent {
 
 export interface ModuleModel {
   module: string;               // FC 名，如 Gp_EcuStpShdn
+  schemaVersion?: number;       // 结构版本（0930 冻结起写入；存量 json 缺省视为 v1 前形态，渲染期全字段兜底）
   analyzedAt: string;           // ISO 时间戳
   functionalDescription?: string; // 5.1 功能描述（LLM 生成后填入）
   files: {

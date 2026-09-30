@@ -3,7 +3,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import {
   analyzeModule, generateDesign, generateHtmlReport, resolveConfig, normalizeBaseUrl,
-  OpenAICompatibleProvider, MockProvider,
+  OpenAICompatibleProvider, MockProvider, lintModelSchema,
   type InputFile, type ModuleModel, type LLMProvider,
 } from '@lld/core';
 import { cmdAudit } from './audit.js';
@@ -148,6 +148,17 @@ async function cmdGen(dir: string, outDir: string, mock: boolean, only?: string[
     },
   });
   save();
+
+  // 结构完整性自检（0930 冻结 v1）：本阶段应产出的字段缺失即失败，防残缺 json 静默流出
+  const schemaProblems = lintModelSchema(model, {
+    requireDocument: !only || only.includes('document'),
+    requireDynamic: !only || only.includes('dynamic'),
+  });
+  if (schemaProblems.length > 0) {
+    console.log(`\n✗ 结构完整性自检 ${schemaProblems.length} 项缺失:`);
+    for (const p of schemaProblems) console.log(`  - ${p}`);
+    process.exitCode = 1;
+  }
 
   if (failures.length > 0) {
     console.log(`\n⚠ ${failures.length} 个条目生成失败（加 --resume 可只重试这些条目）:`);

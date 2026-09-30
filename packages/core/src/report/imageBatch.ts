@@ -84,7 +84,26 @@ export function applyDiagramPng(model: ModuleModel, key: string, base64: string)
   const t = findPngTarget(model, key);
   if (!t) return key === 'include' ? '无 document 节（先跑 gen --only document --resume）' : `找不到图归属（${key}）`;
   (t.obj as Record<string, unknown>)[t.field] = base64;
+  // 多核分图时 stateMachine 是 stateMachines[0] 的兼容别名（json 反序列化后成独立对象），
+  // 同名即同步别名 PNG，保持「stateMachine 恒为第一张」口径含 PNG 字段一致
+  if (key.startsWith('sm:')) {
+    const alias = model.dynamicDesign?.stateMachine;
+    if (alias && alias.name === key.slice(3) && (t.obj as object) !== (alias as object)) {
+      (alias as unknown as Record<string, unknown>)[t.field] = base64;
+    }
+  }
   return null;
+}
+
+/** 存量多核 json 自愈：旧版 images 只写 stateMachines[]，兼容别名 stateMachine 缺 PNG——
+ *  同名即同步（返回 true=有改动需落盘）。applyDiagramPng 对新写入已镜像，此处兜旧产物 */
+export function syncSmAliasPng(model: ModuleModel): boolean {
+  const dd = model.dynamicDesign;
+  const first = dd?.stateMachines?.[0];
+  if (!dd?.stateMachine || !first || dd.stateMachine.name !== first.name) return false;
+  if (dd.stateMachine.diagramPng || !first.diagramPng) return false;
+  dd.stateMachine.diagramPng = first.diagramPng;
+  return true;
 }
 
 /** 批量渲染页：与报告同款 CSS + mermaid + 正交化脚本，每张图外包 data-key 定位容器 */

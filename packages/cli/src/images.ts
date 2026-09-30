@@ -12,9 +12,20 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import {
   collectDiagrams, buildBatchPage, extractDiagramSvgs, svgNaturalSize, pickShotParams,
-  wrapSvgShotPage, hasDiagramPng, applyDiagramPng, type ModuleModel,
+  wrapSvgShotPage, hasDiagramPng, applyDiagramPng, syncSmAliasPng, lintModelSchema,
+  type ModuleModel,
 } from '@lld/core';
 import { findEdge, edgeDump, edgeScreenshot } from './edge.js';
+
+/** 成品口径结构自检（0930 冻结 v1）：全字段+全 PNG 在场，缺陷即非零退出 */
+function lintOrFail(model: ModuleModel): void {
+  const problems = lintModelSchema(model, { requirePngs: true, requireDocument: true, requireDynamic: true });
+  if (problems.length > 0) {
+    console.log(`\n✗ 结构完整性自检 ${problems.length} 项缺失:`);
+    for (const p of problems) console.log(`  - ${p}`);
+    process.exitCode = 1;
+  }
+}
 
 export async function cmdImages(outDir: string, resume: boolean): Promise<void> {
   const designPath = path.join(outDir, 'lld_design.json');
@@ -23,6 +34,11 @@ export async function cmdImages(outDir: string, resume: boolean): Promise<void> 
     process.exit(1);
   }
   const model = JSON.parse(fs.readFileSync(designPath, 'utf-8')) as ModuleModel;
+  // 存量多核 json 自愈：旧版 images 只写 stateMachines[]，兼容别名 stateMachine 缺 PNG
+  if (syncSmAliasPng(model)) {
+    fs.writeFileSync(designPath, JSON.stringify(model, null, 2), 'utf-8');
+    console.error('  兼容别名 stateMachine.diagramPng 已从 stateMachines[0] 同步');
+  }
 
   const mermaidPath = new URL('../assets/mermaid.min.js', import.meta.url);
   if (!fs.existsSync(mermaidPath)) {
@@ -35,6 +51,7 @@ export async function cmdImages(outDir: string, resume: boolean): Promise<void> 
   const all = collectDiagrams(model);
   const todo = resume ? all.filter(e => !hasDiagramPng(model, e.key)) : all;
   if (todo.length === 0) {
+    lintOrFail(model);   // 无事可做也按成品口径验一遍（存量 json 可能缺 document 等字段）
     console.log(`全部 ${all.length} 张图均已有 PNG，无需处理（不加 --resume 可强制重渲）`);
     return;
   }
@@ -86,6 +103,9 @@ export async function cmdImages(outDir: string, resume: boolean): Promise<void> 
     }
   }
   save();
+
+  // 结构完整性自检（0930 冻结 v1）：images 是成品前最后一站，要求全字段+全 PNG 在场
+  lintOrFail(model);
 
   // 清理临时文件
   for (const p of [batchPath, shotHtml, shotPng]) { try { fs.unlinkSync(p); } catch { /* 忽略 */ } }

@@ -20,6 +20,10 @@ export { buildStaticSequence } from './generator/staticSequence.js';
 export { buildDocumentContent, type AbbrTableInput } from './generator/staticDocument.js';
 export {
   collectDiagrams, buildBatchPage, extractDiagramSvgs, svgNaturalSize, pickShotParams,
-  wrapSvgShotPage, hasDiagramPng, applyDiagramPng, type DiagramEntry,
+  wrapSvgShotPage, hasDiagramPng, applyDiagramPng, syncSmAliasPng, type DiagramEntry,
 } from './report/imageBatch.js';
+export {
+  lintModelSchema, TOP_KEYS, DOC_KEYS, NOTES_KEYS, CONFIG_DETAIL_FIELDS,
+  type SchemaLintOptions,
+} from './model/schemaLint.js';
 export type * from './model/types.js';

@@ -1,0 +1,3037 @@
+{
+  "module": "Gp_EcuStpShdn",
+  "analyzedAt": "2026-09-21T10:15:03.137Z",
+  "files": [
+    {
+      "path": "ConfTemplate\\Gp_EcuStpShdn_Callout.c",
+      "role": "callout",
+      "includes": [
+        "Gp_EcuStpShdn_Callout.h",
+        "Gp_EcuStpShdn_MemMap.h"
+      ]
+    },
+    {
+      "path": "ConfTemplate\\Gp_EcuStpShdn_Callout.h",
+      "role": "callout",
+      "includes": [
+        "Gp_EcuStpShdn_Types.h",
+        "Gp_EcuStpShdn_MemMap.h"
+      ]
+    },
+    {
+      "path": "ConfTemplate\\Gp_EcuStpShdn_Cfg.c",
+      "role": "config",
+      "includes": [
+        "Gp_EcuStpShdn_CfgData.h"
+      ]
+    },
+    {
+      "path": "ConfTemplate\\Gp_EcuStpShdn_Cfg.h",
+      "role": "config",
+      "includes": [
+        "Std_Types.h",
+        "McalLib.h",
+        "Gp_TstApp.h",
+        "Gp_RstM.h"
+      ]
+    },
+    {
+      "path": "ConfTemplate\\Gp_EcuStpShdn_CfgData.h",
+      "role": "config",
+      "includes": [
+        "Gp_EcuStpShdn_Types.h",
+        "Gp_EcuStpShdn_MemMap.h"
+      ]
+    },
+    {
+      "path": "ConfTemplate\\Gp_EcuStpShdn_Memmap.h",
+      "role": "memmap",
+      "includes": []
+    },
+    {
+      "path": "Gp_EcuStpShdn.c",
+      "role": "source",
+      "includes": [
+        "Gp_EcuStpShdn_Callout.h",
+        "Gp_EcuStpShdn.h",
+        "Gp_EcuStpShdn_MemMap.h"
+      ]
+    },
+    {
+      "path": "Gp_EcuStpShdn.h",
+      "role": "header",
+      "includes": [
+        "Gp_EcuStpShdn_CfgData.h",
+        "Gp_EcuStpShdn_MemMap.h"
+      ]
+    },
+    {
+      "path": "Gp_EcuStpShdn_Types.h",
+      "role": "types",
+      "includes": [
+        "Gp_EcuStpShdn_Cfg.h"
+      ]
+    }
+  ],
+  "providedFunctions": [
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_SetSafeState",
+      "name": "Gp_EcuStpShdn_SetSafeState",
+      "signature": "void Gp_EcuStpShdn_SetSafeState(void)",
+      "returnType": "void",
+      "parameters": [],
+      "isStatic": false,
+      "file": "Gp_EcuStpShdn.c",
+      "lineStart": 377,
+      "lineEnd": 380,
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_SetSafeState",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "void",
+        "description": "Gp_EcuStpShdn set safe state."
+      },
+      "calls": [],
+      "calledBy": [],
+      "globalsAccessed": [
+        "Gp_EcuStpShdn_bufMstLocalImpl_ltst"
+      ],
+      "conditionalFlags": [],
+      "bodyText": "{\n    Gp_EcuStpShdn_bufMstLocalImpl_ltst.SafeState_b = TRUE;\n}",
+      "bodyHash": "1a0f22a68a314b11",
+      "sigHash": "ed66befbc2076a1d",
+      "complexity": 1,
+      "infiniteLoop": false,
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.3.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_SetSafeState",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 356 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.142Z",
+        "flowchart": "flowchart TD\n    START([\"开始\"])\n    N0[\"Gp_EcuStpShdn_bufMstLocalImpl_ltst.SafeState_b = TRUE\"]\n    END([\"结束\"])\n    START --> N0\n    N0 --> END",
+        "flowchartFormat": "mermaid"
+      }
+    },
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_SetTryPwrShdn",
+      "name": "Gp_EcuStpShdn_SetTryPwrShdn",
+      "signature": "void Gp_EcuStpShdn_SetTryPwrShdn(void)",
+      "returnType": "void",
+      "parameters": [],
+      "isStatic": false,
+      "file": "Gp_EcuStpShdn.c",
+      "lineStart": 393,
+      "lineEnd": 396,
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_SetTryPwrShdn",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "void",
+        "description": "Gp_EcuStpShdn set try power shutdown."
+      },
+      "calls": [],
+      "calledBy": [],
+      "globalsAccessed": [
+        "Gp_EcuStpShdn_bufMstLocalImpl_ltst"
+      ],
+      "conditionalFlags": [],
+      "bodyText": "{\n    Gp_EcuStpShdn_bufMstLocalImpl_ltst.TryPwrShdn_b = TRUE;\n}",
+      "bodyHash": "a1b77face62e9bc7",
+      "sigHash": "a8a5783ab6e1c170",
+      "complexity": 1,
+      "infiniteLoop": false,
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.3.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_SetTryPwrShdn",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 365 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.149Z",
+        "flowchart": "flowchart TD\n    START([\"开始\"])\n    N0[\"Gp_EcuStpShdn_bufMstLocalImpl_ltst.TryPwrShdn_b = TRUE\"]\n    END([\"结束\"])\n    START --> N0\n    N0 --> END",
+        "flowchartFormat": "mermaid"
+      }
+    },
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_GetSafeState",
+      "name": "Gp_EcuStpShdn_GetSafeState",
+      "signature": "boolean Gp_EcuStpShdn_GetSafeState(void)",
+      "returnType": "boolean",
+      "parameters": [],
+      "isStatic": false,
+      "file": "Gp_EcuStpShdn.c",
+      "lineStart": 409,
+      "lineEnd": 416,
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_GetSafeState",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "boolean - TRUE/FASLE",
+        "description": "Gp_EcuStpShdn get safe state."
+      },
+      "calls": [],
+      "calledBy": [],
+      "globalsAccessed": [
+        "Gp_EcuStpShdn_bufMstLocalImpl_ltst"
+      ],
+      "conditionalFlags": [],
+      "bodyText": "{\n    boolean SafeState_b = FALSE;\n\n    SafeState_b = Gp_EcuStpShdn_bufMstLocalImpl_ltst.SafeState_b;\n\n    return (SafeState_b);\n}",
+      "bodyHash": "ba1fa11f9c5c36c0",
+      "sigHash": "a92fd30ccf33a0f2",
+      "complexity": 1,
+      "infiniteLoop": false,
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.3.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_GetSafeState",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 359 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.154Z",
+        "flowchart": "flowchart TD\n    START([\"开始\"])\n    N0[\"SafeState_b = Gp_EcuStpShdn_bufMstLocalImpl_ltst.SafeState_b\"]\n    N1[\"return (SafeState_b)\"]\n    END([\"结束\"])\n    N1 --> END\n    N0 --> N1\n    START --> N0",
+        "flowchartFormat": "mermaid"
+      }
+    },
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_TrapRecov",
+      "name": "Gp_EcuStpShdn_TrapRecov",
+      "signature": "void Gp_EcuStpShdn_TrapRecov(uint8 OsStatus_u8)",
+      "returnType": "void",
+      "parameters": [
+        {
+          "type": "uint8",
+          "name": "OsStatus_u8",
+          "pointerDepth": 0
+        }
+      ],
+      "isStatic": false,
+      "file": "Gp_EcuStpShdn.c",
+      "lineStart": 428,
+      "lineEnd": 431,
+      "comment": {
+        "paramsIn": [
+          {
+            "raw": "uint8 OsStatus_u8 - OS status",
+            "description": "OS status",
+            "name": "OsStatus_u8",
+            "type": "uint8"
+          }
+        ],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_TrapRecov",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "void",
+        "description": "Gp_EcuStpShdn trap recovery."
+      },
+      "calls": [
+        "Gp_EcuStpShdn_CalloutTrapRecov"
+      ],
+      "calledBy": [],
+      "globalsAccessed": [],
+      "conditionalFlags": [],
+      "bodyText": "{\n    Gp_EcuStpShdn_CalloutTrapRecov(OsStatus_u8);\n}",
+      "bodyHash": "5d99b560217eb2a8",
+      "sigHash": "743c41963c7dafe3",
+      "complexity": 1,
+      "infiniteLoop": false,
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.3.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_TrapRecov",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 366 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.158Z",
+        "flowchart": "flowchart TD\n    START([\"开始\"])\n    N0[[\"Gp_EcuStpShdn_CalloutTrapRecov(OsStatus_u8)\"]]\n    END([\"结束\"])\n    START --> N0\n    N0 --> END",
+        "flowchartFormat": "mermaid"
+      }
+    },
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_OsErrRecov",
+      "name": "Gp_EcuStpShdn_OsErrRecov",
+      "signature": "void Gp_EcuStpShdn_OsErrRecov(uint8 OsStatus_u8)",
+      "returnType": "void",
+      "parameters": [
+        {
+          "type": "uint8",
+          "name": "OsStatus_u8",
+          "pointerDepth": 0
+        }
+      ],
+      "isStatic": false,
+      "file": "Gp_EcuStpShdn.c",
+      "lineStart": 444,
+      "lineEnd": 447,
+      "comment": {
+        "paramsIn": [
+          {
+            "raw": "uint8 OsStatus_u8 - OS status",
+            "description": "OS status",
+            "name": "OsStatus_u8",
+            "type": "uint8"
+          }
+        ],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_OsErrRecov",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "void",
+        "description": "Gp_EcuStpShdn OS error recovery."
+      },
+      "calls": [
+        "Gp_EcuStpShdn_CalloutOsErrRecov"
+      ],
+      "calledBy": [],
+      "globalsAccessed": [],
+      "conditionalFlags": [],
+      "bodyText": "{\n    Gp_EcuStpShdn_CalloutOsErrRecov(OsStatus_u8);\n}",
+      "bodyHash": "b49e151128dc0d3b",
+      "sigHash": "77a98bd0648e625a",
+      "complexity": 1,
+      "infiniteLoop": false,
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.3.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_OsErrRecov",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 372 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.161Z",
+        "flowchart": "flowchart TD\n    START([\"开始\"])\n    N0[[\"Gp_EcuStpShdn_CalloutOsErrRecov(OsStatus_u8)\"]]\n    END([\"结束\"])\n    START --> N0\n    N0 --> END",
+        "flowchartFormat": "mermaid"
+      }
+    },
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_PwrShdnInShdnPhase",
+      "name": "Gp_EcuStpShdn_PwrShdnInShdnPhase",
+      "signature": "void Gp_EcuStpShdn_PwrShdnInShdnPhase(void)",
+      "returnType": "void",
+      "parameters": [],
+      "isStatic": false,
+      "file": "Gp_EcuStpShdn.c",
+      "lineStart": 462,
+      "lineEnd": 465,
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_PwrShdnInShdnPhase",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "void",
+        "description": "Gp_EcuStpShdn power shut down in shutdown phase.\nthis function will invoke callout function in shut down phase.\nthis function should be invoke by core0 only."
+      },
+      "calls": [
+        "Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase"
+      ],
+      "calledBy": [],
+      "globalsAccessed": [],
+      "conditionalFlags": [],
+      "bodyText": "{\n    Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase();\n}",
+      "bodyHash": "d397d8793c1185c6",
+      "sigHash": "4be05919dd197aa6",
+      "complexity": 1,
+      "infiniteLoop": false,
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.3.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_PwrShdnInShdnPhase",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 500 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.164Z",
+        "flowchart": "flowchart TD\n    START([\"开始\"])\n    N0[[\"Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase()\"]]\n    END([\"结束\"])\n    START --> N0\n    N0 --> END",
+        "flowchartFormat": "mermaid"
+      }
+    },
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_Startup",
+      "name": "Gp_EcuStpShdn_Startup",
+      "signature": "void Gp_EcuStpShdn_Startup(void)",
+      "returnType": "void",
+      "parameters": [],
+      "isStatic": false,
+      "file": "Gp_EcuStpShdn.c",
+      "lineStart": 484,
+      "lineEnd": 703,
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_Startup",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "void",
+        "description": "Gp_EcuStpShdn startup.\nthis function will realize multi-core timing controlling. invoke microcontroller PreRun test function\nand check test result, and process test failed situation. get reset information from Gp_RstM,\ncheck safe state flag and try power shutdown flag, the program will enter the corresponding state if the flag is set,\nelse, the program will invoke MCAL initialization function and check initialization result,\nand process initialization failed situation. invoke SBC self test function and check test result,\nand process test failed situation. this function will record several system time of startup key point for observing."
+      },
+      "calls": [
+        "Gp_EcuStpShdn_CalloutGetCoreId",
+        "Gp_EcuStpShdn_CalloutInitStageOneCore0",
+        "Gp_RstM_InitOne",
+        "GP_ECUSTPSHDN_NOP",
+        "Gp_TstApp_PreRunInit",
+        "Gp_TstApp_PreRunPhase",
+        "Gp_EcuStpShdn_CalloutGetSysTimeMs",
+        "Gp_RstM_InitTwo",
+        "Gp_RstM_Init",
+        "Gp_RstM_GetLastRstTypeInfo",
+        "Gp_EcuStpShdn_CalloutPwrShdnInStpPhase",
+        "(*)->StpStageTwo_pf",
+        "Gp_EcuStpShdn_CalloutSbcInitInSafeState",
+        "Gp_EcuStpShdn_CalloutSafeState",
+        "Gp_EcuStpShdn_MstProcMcuPreRunTest",
+        "Gp_EcuStpShdn_MstPostInit",
+        "Gp_EcuStpShdn_CalloutSbcInit",
+        "Gp_EcuStpShdn_CheckInitRslt",
+        "Gp_EcuStpShdn_CalloutInitFailedHnd"
+      ],
+      "calledBy": [],
+      "globalsAccessed": [
+        "Gp_EcuStpShdn_rtSatCont_lcatst",
+        "Gp_EcuStpShdn_bufMstLocalImpl_ltst",
+        "Gp_EcuStpShdn_bufSatLocalImplCore0_ltst"
+      ],
+      "conditionalFlags": [],
+      "innerCondFlags": [
+        "GP_RSTM_PROJ_TYPE_SEL",
+        "GP_ECUSTPSHDN_SAFETY_ENABLE",
+        "GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE"
+      ],
+      "bodyText": "{\n    const   Gp_EcuStpShdn_SatRunTimeType*   Rt_cptst = &Gp_EcuStpShdn_rtSatCont_lcatst[0U];\n    volatile    Gp_EcuStpShdn_MstLocalImplType* MstImpl_ptst = &Gp_EcuStpShdn_bufMstLocalImpl_ltst;\n    volatile    Gp_EcuStpShdn_SatLocalImplType* SatImpl_ptst = &Gp_EcuStpShdn_bufSatLocalImplCore0_ltst;\n    uint32  CoreId_u32 = 0U;\n    uint32  Cnt_u32 = 0U;\n    uint32  SbcInfo_u32 = 0U;\n    uint8   RstTypePlt_u8 = 0U;\n    uint8   RstTypeMcal_u8 = 0U;\n    uint8   RstId_u8 = 0U;\n    uint8   RstCoreId_u8 = 0U;\n\n    /*get core ID*/\n    CoreId_u32 = Gp_EcuStpShdn_CalloutGetCoreId();\n    /*get satellite runtime buffer address of current core to local address*/\n    Rt_cptst = &Gp_EcuStpShdn_rtSatCont_lcatst[CoreId_u32];\n    SatImpl_ptst = Rt_cptst->Impl_ptst;\n\n    /********\n    stage one\n    ********/\n    /*\n    ECU is init stage one.\n    master will complete necessary initialization\n    which will increase performance of subsequent process.\n    satellite will stay.\n    */\n    if (CoreId_u32 == GP_ECUSTPSHDN_CORE0_ID)\n    {\n        /*set initialization value for other driver init result*/\n        SatImpl_ptst->InitRsltAllBits_u32 = 0U;\n        for (Cnt_u32 = 0U; Cnt_u32 < (uint32)GP_ECUSTPSHDN_INIT_RSLT_REC_NUM; Cnt_u32++)\n        {\n            SatImpl_ptst->InitCheckRslt_t[Cnt_u32] = E_OK;\n        }\n\n        /*set initialization value*/\n        for (Cnt_u32 = 0U; Cnt_u32 < (uint32)GP_ECUSTPSHDN_MST_TIME_STAMP_NUM; Cnt_u32++)\n        {\n            MstImpl_ptst->TimeStamp_u32[Cnt_u32] = 0U;\n        }\n\n        MstImpl_ptst->McuPreTestRslt_u32 = 0U;\n        MstImpl_ptst->McuRunTestRslt_u32 = 0U;\n        MstImpl_ptst->SbcInfo_u32 = 0U;\n        MstImpl_ptst->StpStage_t = GP_ECUSTPSHDN_STPSTAGE_ONE;\n        MstImpl_ptst->McuSelfTest_t = GP_ECUSTPSHDN_SELFTEST_UNDEF;\n        MstImpl_ptst->SbcSelfTest_t = GP_ECUSTPSHDN_SELFTEST_UNDEF;\n\n        MstImpl_ptst->RstTypePlt_u8 = 0U;\n        MstImpl_ptst->RstTypeMcal_u8 = 0U;\n        MstImpl_ptst->RstId_u8 = 0U;\n        MstImpl_ptst->RstCoreId_u8 = 0U;\n\n        MstImpl_ptst->SafeState_b = FALSE;\n        MstImpl_ptst->TryPwrShdn_b = FALSE;\n\n        SatImpl_ptst->TimeStamp_u32 = 0U;\n\n        Gp_EcuStpShdn_CalloutInitStageOneCore0(SatImpl_ptst);\n\n                                                            \n        Gp_RstM_InitOne();\n                                                                    \n        /*master set ECU is init stage two*/\n        MstImpl_ptst->StpStage_t = GP_ECUSTPSHDN_STPSTAGE_TWO;\n    }\n    else\n    {\n        /*set initialization value for other driver init result*/\n        SatImpl_ptst->InitRsltAllBits_u32 = 0U;\n        for (Cnt_u32 = 0U; Cnt_u32 < (uint32)GP_ECUSTPSHDN_INIT_RSLT_REC_NUM; Cnt_u32++)\n        {\n            SatImpl_ptst->InitCheckRslt_t[Cnt_u32] = E_OK;\n        }\n\n        /*set initialization value*/\n        SatImpl_ptst->TimeStamp_u32 = 0U;\n        /*satellite is waiting for init stage two*/\n        while (MstImpl_ptst->StpStage_t != GP_ECUSTPSHDN_STPSTAGE_TWO)\n        {\n            GP_ECUSTPSHDN_NOP();\n        }\n    }\n\n    /********\n    stage two\n    ********/\n    /*\n    ECU is init stage two.\n    all cores perform SafeTpack init and pre_run phase test, if safety is enable.\n    and then master will invoke RstM init and get reset reason.\n    master will check try power down flag and enter safe state flag, perform corresponding program.\n    master will check MCU pre-run test and SBC test result, perform corresponding program.\n    satellite will stay.\n    */\n\n                                           \n    Gp_TstApp_PreRunInit();\n    Gp_TstApp_PreRunPhase();\n                                                   \n    /*record PreRunTest completion time stamp*/\n    MstImpl_ptst->TimeStamp_u32[GP_ECUSTPSHDN_MST_TIME_STAMP_PRERUN] = Gp_EcuStpShdn_CalloutGetSysTimeMs();\n\n    if (CoreId_u32 == GP_ECUSTPSHDN_CORE0_ID)\n    {\n                                                            \n        Gp_RstM_InitTwo();\n     \n        Gp_RstM_Init();\n                                                                    \n        Gp_RstM_GetLastRstTypeInfo\n        (\n            &RstTypePlt_u8,\n            &RstTypeMcal_u8,\n            &RstId_u8,\n            &RstCoreId_u8\n        );\n        MstImpl_ptst->RstTypePlt_u8 = RstTypePlt_u8;\n        MstImpl_ptst->RstTypeMcal_u8 = RstTypeMcal_u8;\n        MstImpl_ptst->RstId_u8 = RstId_u8;\n        MstImpl_ptst->RstCoreId_u8 = RstCoreId_u8;\n                                           \n                                                  \n        /*check if Gp_RstM set try power down flag*/\n        if (MstImpl_ptst->TryPwrShdn_b == TRUE)\n        {\n            Gp_EcuStpShdn_CalloutPwrShdnInStpPhase();\n            /*program will not run to here*/\n        }\n        else\n        {\n            /*check if Gp_RstM set enter safe state flag*/\n            if (MstImpl_ptst->SafeState_b == TRUE)\n            {\n                /*core0 init*/\n                Rt_cptst->StpStageTwo_pf(SatImpl_ptst);\n                Gp_EcuStpShdn_CalloutSbcInitInSafeState(&SbcInfo_u32);\n                MstImpl_ptst->SbcInfo_u32 = SbcInfo_u32;\n                Gp_EcuStpShdn_CalloutSafeState();\n            }\n            else\n                                                          \n                                                   \n            {\n                                           \n                Gp_EcuStpShdn_MstProcMcuPreRunTest();\n                                                   \n                /*core0 init*/\n                Rt_cptst->StpStageTwo_pf(SatImpl_ptst);\n                /*record master initialization completion time stamp*/\n                MstImpl_ptst->TimeStamp_u32[GP_ECUSTPSHDN_MST_TIME_STAMP_MST_INIT] =  \n                    Gp_EcuStpShdn_CalloutGetSysTimeMs();\n                                           \n                Gp_EcuStpShdn_MstPostInit();\n                                                   \n                Gp_EcuStpShdn_CalloutSbcInit(&SbcInfo_u32);\n                MstImpl_ptst->SbcInfo_u32 = SbcInfo_u32;\n                /*record master post initialization completion time stamp*/\n                MstImpl_ptst->TimeStamp_u32[GP_ECUSTPSHDN_MST_TIME_STAMP_MST_POST_INIT] =  \n                    Gp_EcuStpShdn_CalloutGetSysTimeMs();\n            }\n            /*master set ECU is init stage three*/\n            MstImpl_ptst->StpStage_t = GP_ECUSTPSHDN_STPSTAGE_THREE;\n                                           \n                                                  \n        }\n                                                          \n                                                   \n    }\n    else\n    {\n        /*satellite is waiting for init stage three*/\n        while (MstImpl_ptst->StpStage_t != GP_ECUSTPSHDN_STPSTAGE_THREE)\n        {\n            GP_ECUSTPSHDN_NOP();\n        }\n    }\n\n    /**********\n    stage three\n    **********/\n    /*\n    ECU is init stage three.\n    satellite will complete initialization\n    */\n    if (CoreId_u32 == GP_ECUSTPSHDN_CORE0_ID)\n    {\n        /*do nothing*/\n    }\n    else\n    {\n        Rt_cptst->StpStageTwo_pf(SatImpl_ptst);\n        /*record satellite initialization completion time stamp*/\n        SatImpl_ptst->TimeStamp_u32 = Gp_EcuStpShdn_CalloutGetSysTimeMs();\n                                           \n        /*program will check initialization result when it is not safe state*/\n        if (MstImpl_ptst->SafeState_b == FALSE)\n        {\n            /*check initialization result*/\n            Gp_EcuStpShdn_CheckInitRslt(SatImpl_ptst);\n            if (SatImpl_ptst->InitRsltAllBits_u32 != 0U)\n            {\n                                                  \n                Gp_EcuStpShdn_CalloutInitFailedHnd(SatImpl_ptst->InitRsltAllBits_u32);\n                                                          \n            }\n            else\n            {\n                /*do nothing*/\n            }\n        }\n        else\n        {\n            /*do nothing*/\n        }\n                                                   \n    }\n}",
+      "bodyTextWithPP": "{\n    const   Gp_EcuStpShdn_SatRunTimeType*   Rt_cptst = &Gp_EcuStpShdn_rtSatCont_lcatst[0U];\n    volatile    Gp_EcuStpShdn_MstLocalImplType* MstImpl_ptst = &Gp_EcuStpShdn_bufMstLocalImpl_ltst;\n    volatile    Gp_EcuStpShdn_SatLocalImplType* SatImpl_ptst = &Gp_EcuStpShdn_bufSatLocalImplCore0_ltst;\n    uint32  CoreId_u32 = 0U;\n    uint32  Cnt_u32 = 0U;\n    uint32  SbcInfo_u32 = 0U;\n    uint8   RstTypePlt_u8 = 0U;\n    uint8   RstTypeMcal_u8 = 0U;\n    uint8   RstId_u8 = 0U;\n    uint8   RstCoreId_u8 = 0U;\n\n    /*get core ID*/\n    CoreId_u32 = Gp_EcuStpShdn_CalloutGetCoreId();\n    /*get satellite runtime buffer address of current core to local address*/\n    Rt_cptst = &Gp_EcuStpShdn_rtSatCont_lcatst[CoreId_u32];\n    SatImpl_ptst = Rt_cptst->Impl_ptst;\n\n    /********\n    stage one\n    ********/\n    /*\n    ECU is init stage one.\n    master will complete necessary initialization\n    which will increase performance of subsequent process.\n    satellite will stay.\n    */\n    if (CoreId_u32 == GP_ECUSTPSHDN_CORE0_ID)\n    {\n        /*set initialization value for other driver init result*/\n        SatImpl_ptst->InitRsltAllBits_u32 = 0U;\n        for (Cnt_u32 = 0U; Cnt_u32 < (uint32)GP_ECUSTPSHDN_INIT_RSLT_REC_NUM; Cnt_u32++)\n        {\n            SatImpl_ptst->InitCheckRslt_t[Cnt_u32] = E_OK;\n        }\n\n        /*set initialization value*/\n        for (Cnt_u32 = 0U; Cnt_u32 < (uint32)GP_ECUSTPSHDN_MST_TIME_STAMP_NUM; Cnt_u32++)\n        {\n            MstImpl_ptst->TimeStamp_u32[Cnt_u32] = 0U;\n        }\n\n        MstImpl_ptst->McuPreTestRslt_u32 = 0U;\n        MstImpl_ptst->McuRunTestRslt_u32 = 0U;\n        MstImpl_ptst->SbcInfo_u32 = 0U;\n        MstImpl_ptst->StpStage_t = GP_ECUSTPSHDN_STPSTAGE_ONE;\n        MstImpl_ptst->McuSelfTest_t = GP_ECUSTPSHDN_SELFTEST_UNDEF;\n        MstImpl_ptst->SbcSelfTest_t = GP_ECUSTPSHDN_SELFTEST_UNDEF;\n\n        MstImpl_ptst->RstTypePlt_u8 = 0U;\n        MstImpl_ptst->RstTypeMcal_u8 = 0U;\n        MstImpl_ptst->RstId_u8 = 0U;\n        MstImpl_ptst->RstCoreId_u8 = 0U;\n\n        MstImpl_ptst->SafeState_b = FALSE;\n        MstImpl_ptst->TryPwrShdn_b = FALSE;\n\n        SatImpl_ptst->TimeStamp_u32 = 0U;\n\n        Gp_EcuStpShdn_CalloutInitStageOneCore0(SatImpl_ptst);\n\n#if (GP_RSTM_PROJ_TYPE_SEL == GP_RSTM_PROJ_TYPE_APP_NO_BOOT)\n        Gp_RstM_InitOne();\n#endif  /*(GP_RSTM_PROJ_TYPE_SEL == GP_RSTM_PROJ_TYPE_APP_NO_BOOT)*/\n        /*master set ECU is init stage two*/\n        MstImpl_ptst->StpStage_t = GP_ECUSTPSHDN_STPSTAGE_TWO;\n    }\n    else\n    {\n        /*set initialization value for other driver init result*/\n        SatImpl_ptst->InitRsltAllBits_u32 = 0U;\n        for (Cnt_u32 = 0U; Cnt_u32 < (uint32)GP_ECUSTPSHDN_INIT_RSLT_REC_NUM; Cnt_u32++)\n        {\n            SatImpl_ptst->InitCheckRslt_t[Cnt_u32] = E_OK;\n        }\n\n        /*set initialization value*/\n        SatImpl_ptst->TimeStamp_u32 = 0U;\n        /*satellite is waiting for init stage two*/\n        while (MstImpl_ptst->StpStage_t != GP_ECUSTPSHDN_STPSTAGE_TWO)\n        {\n            GP_ECUSTPSHDN_NOP();\n        }\n    }\n\n    /********\n    stage two\n    ********/\n    /*\n    ECU is init stage two.\n    all cores perform SafeTpack init and pre_run phase test, if safety is enable.\n    and then master will invoke RstM init and get reset reason.\n    master will check try power down flag and enter safe state flag, perform corresponding program.\n    master will check MCU pre-run test and SBC test result, perform corresponding program.\n    satellite will stay.\n    */\n\n#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)\n    Gp_TstApp_PreRunInit();\n    Gp_TstApp_PreRunPhase();\n#endif  /*(GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)*/\n    /*record PreRunTest completion time stamp*/\n    MstImpl_ptst->TimeStamp_u32[GP_ECUSTPSHDN_MST_TIME_STAMP_PRERUN] = Gp_EcuStpShdn_CalloutGetSysTimeMs();\n\n    if (CoreId_u32 == GP_ECUSTPSHDN_CORE0_ID)\n    {\n#if (GP_RSTM_PROJ_TYPE_SEL == GP_RSTM_PROJ_TYPE_APP_NO_BOOT)\n        Gp_RstM_InitTwo();\n#else\n        Gp_RstM_Init();\n#endif  /*(GP_RSTM_PROJ_TYPE_SEL == GP_RSTM_PROJ_TYPE_APP_NO_BOOT)*/\n        Gp_RstM_GetLastRstTypeInfo\n        (\n            &RstTypePlt_u8,\n            &RstTypeMcal_u8,\n            &RstId_u8,\n            &RstCoreId_u8\n        );\n        MstImpl_ptst->RstTypePlt_u8 = RstTypePlt_u8;\n        MstImpl_ptst->RstTypeMcal_u8 = RstTypeMcal_u8;\n        MstImpl_ptst->RstId_u8 = RstId_u8;\n        MstImpl_ptst->RstCoreId_u8 = RstCoreId_u8;\n#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)\n#if (GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE == STD_ON)\n        /*check if Gp_RstM set try power down flag*/\n        if (MstImpl_ptst->TryPwrShdn_b == TRUE)\n        {\n            Gp_EcuStpShdn_CalloutPwrShdnInStpPhase();\n            /*program will not run to here*/\n        }\n        else\n        {\n            /*check if Gp_RstM set enter safe state flag*/\n            if (MstImpl_ptst->SafeState_b == TRUE)\n            {\n                /*core0 init*/\n                Rt_cptst->StpStageTwo_pf(SatImpl_ptst);\n                Gp_EcuStpShdn_CalloutSbcInitInSafeState(&SbcInfo_u32);\n                MstImpl_ptst->SbcInfo_u32 = SbcInfo_u32;\n                Gp_EcuStpShdn_CalloutSafeState();\n            }\n            else\n#endif  /*(GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE == STD_ON)*/\n#endif  /*(GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)*/\n            {\n#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)\n                Gp_EcuStpShdn_MstProcMcuPreRunTest();\n#endif  /*(GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)*/\n                /*core0 init*/\n                Rt_cptst->StpStageTwo_pf(SatImpl_ptst);\n                /*record master initialization completion time stamp*/\n                MstImpl_ptst->TimeStamp_u32[GP_ECUSTPSHDN_MST_TIME_STAMP_MST_INIT] = \\\n                    Gp_EcuStpShdn_CalloutGetSysTimeMs();\n#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)\n                Gp_EcuStpShdn_MstPostInit();\n#endif  /*(GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)*/\n                Gp_EcuStpShdn_CalloutSbcInit(&SbcInfo_u32);\n                MstImpl_ptst->SbcInfo_u32 = SbcInfo_u32;\n                /*record master post initialization completion time stamp*/\n                MstImpl_ptst->TimeStamp_u32[GP_ECUSTPSHDN_MST_TIME_STAMP_MST_POST_INIT] = \\\n                    Gp_EcuStpShdn_CalloutGetSysTimeMs();\n            }\n            /*master set ECU is init stage three*/\n            MstImpl_ptst->StpStage_t = GP_ECUSTPSHDN_STPSTAGE_THREE;\n#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)\n#if (GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE == STD_ON)\n        }\n#endif  /*(GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE == STD_ON)*/\n#endif  /*(GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)*/\n    }\n    else\n    {\n        /*satellite is waiting for init stage three*/\n        while (MstImpl_ptst->StpStage_t != GP_ECUSTPSHDN_STPSTAGE_THREE)\n        {\n            GP_ECUSTPSHDN_NOP();\n        }\n    }\n\n    /**********\n    stage three\n    **********/\n    /*\n    ECU is init stage three.\n    satellite will complete initialization\n    */\n    if (CoreId_u32 == GP_ECUSTPSHDN_CORE0_ID)\n    {\n        /*do nothing*/\n    }\n    else\n    {\n        Rt_cptst->StpStageTwo_pf(SatImpl_ptst);\n        /*record satellite initialization completion time stamp*/\n        SatImpl_ptst->TimeStamp_u32 = Gp_EcuStpShdn_CalloutGetSysTimeMs();\n#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)\n        /*program will check initialization result when it is not safe state*/\n        if (MstImpl_ptst->SafeState_b == FALSE)\n        {\n            /*check initialization result*/\n            Gp_EcuStpShdn_CheckInitRslt(SatImpl_ptst);\n            if (SatImpl_ptst->InitRsltAllBits_u32 != 0U)\n            {\n#if (GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE == STD_ON)\n                Gp_EcuStpShdn_CalloutInitFailedHnd(SatImpl_ptst->InitRsltAllBits_u32);\n#endif  /*(GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE == STD_ON)*/\n            }\n            else\n            {\n                /*do nothing*/\n            }\n        }\n        else\n        {\n            /*do nothing*/\n        }\n#endif  /*(GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)*/\n    }\n}",
+      "bodyHash": "53d2849904946644",
+      "sigHash": "5392b5f3d2cbfb18",
+      "complexity": 13,
+      "infiniteLoop": false,
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.3.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_Startup",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 1703 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.167Z",
+        "flowchart": "flowchart TD\n    START([\"开始\"])\n    N0[\"CoreId_u32 = Gp_EcuStpShdn_CalloutGetCoreId()<br>Rt_cptst = &amp;Gp_EcuStpShdn_rtSatCont_lcatst[CoreId_u32]<br>SatImpl_ptst = Rt_cptst-&gt;Impl_ptst\"]\n    D0{\"CoreId_u32 == GP_ECUSTPSHDN_CORE0_ID\"}\n    N1[\"SatImpl_ptst-&gt;InitRsltAllBits_u32 = 0U\"]\n    N2[\"Cnt_u32 = 0U\"]\n    D1{\"Cnt_u32 &lt; (uint32)GP_ECUSTPSHDN_INIT_RSLT_REC_NUM\"}\n    N3[\"Cnt_u32++\"]\n    N4[\"SatImpl_ptst-&gt;InitCheckRslt_t[Cnt_u32] = E_OK\"]\n    N5[\"Cnt_u32 = 0U\"]\n    D2{\"Cnt_u32 &lt; (uint32)GP_ECUSTPSHDN_MST_TIME_STAMP_NUM\"}\n    N6[\"Cnt_u32++\"]\n    N7[\"MstImpl_ptst-&gt;TimeStamp_u32[Cnt_u32] = 0U\"]\n    N8[\"MstImpl_ptst-&gt;McuPreTestRslt_u32 = 0U<br>MstImpl_ptst-&gt;McuRunTestRslt_u32 = 0U<br>MstImpl_ptst-&gt;SbcInfo_u32 = 0U<br>MstImpl_ptst-&gt;StpStage_t = GP_ECUSTPSHDN_STPSTAGE_ONE<br>MstImpl_ptst-&gt;McuSelfTest_t = GP_ECUSTPSHDN_SELFTEST_UNDEF<br>MstImpl_ptst-&gt;SbcSelfTest_t = GP_ECUSTPSHDN_SELFTEST_UNDEF\"]\n    N9[\"MstImpl_ptst-&gt;RstTypePlt_u8 = 0U<br>MstImpl_ptst-&gt;RstTypeMcal_u8 = 0U\"]\n    N10[\"MstImpl_ptst-&gt;RstId_u8 = 0U<br>MstImpl_ptst-&gt;RstCoreId_u8 = 0U<br>MstImpl_ptst-&gt;SafeState_b = FALSE<br>MstImpl_ptst-&gt;TryPwrShdn_b = FALSE<br>SatImpl_ptst-&gt;TimeStamp_u32 = 0U<br>Gp_EcuStpShdn_CalloutInitStageOneCore0(SatImpl_ptst)\"]\n    subgraph SG0_0[\" \"]\n        SG0_0_NOTE[\"注：仅在 GP_RSTM_PROJ_TYPE_SEL 生效时参与编译\"]\n        SG0_0_NOTE ~~~ N11\n        N11[[\"Gp_RstM_InitOne()\"]]\n    end\n    N12[\"MstImpl_ptst-&gt;StpStage_t = GP_ECUSTPSHDN_STPSTAGE_TWO\"]\n    N13[\"SatImpl_ptst-&gt;InitRsltAllBits_u32 = 0U\"]\n    N14[\"Cnt_u32 = 0U\"]\n    D3{\"Cnt_u32 &lt; (uint32)GP_ECUSTPSHDN_INIT_RSLT_REC_NUM\"}\n    N15[\"Cnt_u32++\"]\n    N16[\"SatImpl_ptst-&gt;InitCheckRslt_t[Cnt_u32] = E_OK\"]\n    N17[\"SatImpl_ptst-&gt;TimeStamp_u32 = 0U\"]\n    D4{\"MstImpl_ptst-&gt;StpStage_t != GP_ECUSTPSHDN_STPSTAGE_TWO\"}\n    N18[[\"GP_ECUSTPSHDN_NOP()\"]]\n    subgraph SG1_0[\" \"]\n        SG1_0_NOTE[\"注：仅在 GP_ECUSTPSHDN_SAFETY_ENABLE 生效时参与编译\"]\n        SG1_0_NOTE ~~~ N19\n        N19[\"Gp_TstApp_PreRunInit()<br>Gp_TstApp_PreRunPhase()\"]\n        M0[\" \"]\n    end\n    N20[\"MstImpl_ptst-&gt;TimeStamp_u32[GP_ECUSTPSHDN_MST_TIME_STAMP_PRERUN] = Gp_EcuStpShdn_CalloutGetSysTimeMs()\"]\n    D5{\"CoreId_u32 == GP_ECUSTPSHDN_CORE0_ID\"}\n    subgraph SG2_0[\" \"]\n        SG2_0_NOTE[\"注：仅在 GP_RSTM_PROJ_TYPE_SEL 生效时参与编译\"]\n        SG2_0_NOTE ~~~ N21\n        N21[[\"Gp_RstM_InitTwo()\"]]\n    end\n    subgraph SG2_1[\" \"]\n        SG2_1_NOTE[\"注：仅在 GP_RSTM_PROJ_TYPE_SEL 未生效（#else 分支）时参与编译\"]\n        SG2_1_NOTE ~~~ N22\n        N22[[\"Gp_RstM_Init()\"]]\n    end\n    N23[[\"Gp_RstM_GetLastRstTypeInfo<br>(<br>&amp;RstTypePlt_u8,<br>&amp;RstTypeMcal_u8,<br>&amp;RstId_u8,<br>&amp;RstCoreId_u8<br>)\"]]\n    N24[\"MstImpl_ptst-&gt;RstTypePlt_u8 = RstTypePlt_u8<br>MstImpl_ptst-&gt;RstTypeMcal_u8 = RstTypeMcal_u8<br>MstImpl_ptst-&gt;RstId_u8 = RstId_u8<br>MstImpl_ptst-&gt;RstCoreId_u8 = RstCoreId_u8\"]\n    subgraph SG3_0[\" \"]\n        SG3_0_NOTE[\"注：仅在 GP_ECUSTPSHDN_SAFETY_ENABLE 生效时参与编译\"]\n        SG3_0_NOTE ~~~ D6\n        subgraph SG4_0[\" \"]\n            SG4_0_NOTE[\"注：仅在 GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE 生效时参与编译\"]\n            SG4_0_NOTE ~~~ D6\n            D6{\"MstImpl_ptst-&gt;TryPwrShdn_b == TRUE\"}\n            N25[[\"Gp_EcuStpShdn_CalloutPwrShdnInStpPhase()\"]]\n            D7{\"MstImpl_ptst-&gt;SafeState_b == TRUE\"}\n            N26[\"Rt_cptst-&gt;StpStageTwo_pf(SatImpl_ptst)<br>Gp_EcuStpShdn_CalloutSbcInitInSafeState(&amp;SbcInfo_u32)<br>MstImpl_ptst-&gt;SbcInfo_u32 = SbcInfo_u32<br>Gp_EcuStpShdn_CalloutSafeState()\"]\n        end\n    end\n    subgraph SG5_0[\" \"]\n        SG5_0_NOTE[\"注：仅在 GP_ECUSTPSHDN_SAFETY_ENABLE 生效时参与编译\"]\n        SG5_0_NOTE ~~~ N27\n        N27[[\"Gp_EcuStpShdn_MstProcMcuPreRunTest()\"]]\n    end\n    N28[[\"Rt_cptst-&gt;StpStageTwo_pf(SatImpl_ptst)\"]]\n    N29[\"MstImpl_ptst-&gt;TimeStamp_u32[GP_ECUSTPSHDN_MST_TIME_STAMP_MST_INIT] =<br>Gp_EcuStpShdn_CalloutGetSysTimeMs()\"]\n    subgraph SG6_0[\" \"]\n        SG6_0_NOTE[\"注：仅在 GP_ECUSTPSHDN_SAFETY_ENABLE 生效时参与编译\"]\n        SG6_0_NOTE ~~~ N30\n        N30[[\"Gp_EcuStpShdn_MstPostInit()\"]]\n    end\n    N31[\"Gp_EcuStpShdn_CalloutSbcInit(&amp;SbcInfo_u32)<br>MstImpl_ptst-&gt;SbcInfo_u32 = SbcInfo_u32\"]\n    N32[\"MstImpl_ptst-&gt;TimeStamp_u32[GP_ECUSTPSHDN_MST_TIME_STAMP_MST_POST_INIT] =<br>Gp_EcuStpShdn_CalloutGetSysTimeMs()\"]\n    N33[\"MstImpl_ptst-&gt;StpStage_t = GP_ECUSTPSHDN_STPSTAGE_THREE\"]\n    M1[\" \"]\n    D8{\"MstImpl_ptst-&gt;StpStage_t != GP_ECUSTPSHDN_STPSTAGE_THREE\"}\n    N34[[\"GP_ECUSTPSHDN_NOP()\"]]\n    D9{\"CoreId_u32 == GP_ECUSTPSHDN_CORE0_ID\"}\n    M2[\" \"]\n    M3[\" \"]\n    N35[\"Rt_cptst-&gt;StpStageTwo_pf(SatImpl_ptst)<br>SatImpl_ptst-&gt;TimeStamp_u32 = Gp_EcuStpShdn_CalloutGetSysTimeMs()\"]\n    subgraph SG9_0[\" \"]\n        SG9_0_NOTE[\"注：仅在 GP_ECUSTPSHDN_SAFETY_ENABLE 生效时参与编译\"]\n        SG9_0_NOTE ~~~ D10\n        D10{\"MstImpl_ptst-&gt;SafeState_b == FALSE\"}\n        M4[\" \"]\n        N36[[\"Gp_EcuStpShdn_CheckInitRslt(SatImpl_ptst)\"]]\n        D11{\"SatImpl_ptst-&gt;InitRsltAllBits_u32 != 0U\"}\n        M5[\" \"]\n        subgraph SG10_0[\" \"]\n            SG10_0_NOTE[\"注：仅在 GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE 生效时参与编译\"]\n            SG10_0_NOTE ~~~ N37\n            N37[[\"Gp_EcuStpShdn_CalloutInitFailedHnd(SatImpl_ptst-&gt;InitRsltAllBits_u32)\"]]\n        end\n    end\n    M6[\" \"]\n    END([\"结束\"])\n    N2 --> D1\n    D1 -- 是 --> N4\n    N4 --> N3\n    N3 --> D1\n    N1 --> N2\n    N5 --> D2\n    D2 -- 是 --> N7\n    N7 --> N6\n    N6 --> D2\n    D1 -- 否 --> N5\n    D2 -- 否 --> N8\n    N8 --> N9\n    N9 --> N10\n    N10 --> N11\n    N11 --> N12\n    N14 --> D3\n    D3 -- 是 --> N16\n    N16 --> N15\n    N15 --> D3\n    N13 --> N14\n    D3 -- 否 --> N17\n    D4 -- 是 --> N18\n    N18 --> D4\n    N17 --> D4\n    D0 -- 是 --> N1\n    D0 -- 否 --> N13\n    N0 --> D0\n    N12 --> M0\n    D4 -- 否 --> M0\n    M0 --> N19\n    N19 --> N20\n    N21 --> N22\n    N22 --> N23\n    N23 --> N24\n    N27 --> N28\n    N28 --> N29\n    N29 --> N30\n    N30 --> N31\n    N31 --> N32\n    D7 -- 是 --> N26\n    D7 -- 否 --> N27\n    N26 --> M1\n    N32 --> M1\n    M1 --> N33\n    D6 -- 是 --> N25\n    D6 -- 否 --> D7\n    N24 --> D6\n    D8 -- 是 --> N34\n    N34 --> D8\n    D5 -- 是 --> N21\n    D5 -- 否 --> D8\n    N20 --> D5\n    D11 -- 是 --> N37\n    D11 -- 否 --> M5\n    N36 --> D11\n    D10 -- 是 --> N36\n    D10 -- 否 --> M4\n    N35 --> D10\n    D9 -- 是 --> M2\n    D9 -- 否 --> N35\n    N25 --> M3\n    N33 --> M3\n    D8 -- 否 --> M3\n    M3 --> D9\n    START --> N0\n    M2 --> M6\n    N37 --> M6\n    M5 --> M6\n    M4 --> M6\n    M6 --> END\n    style M0 fill:transparent,stroke:transparent\n    style M1 fill:transparent,stroke:transparent\n    style M2 fill:transparent,stroke:transparent\n    style M3 fill:transparent,stroke:transparent\n    style M4 fill:transparent,stroke:transparent\n    style M5 fill:transparent,stroke:transparent\n    style M6 fill:transparent,stroke:transparent\n    style SG0_0 fill:transparent,stroke:#888888,stroke-dasharray:6 4\n    style SG1_0 fill:transparent,stroke:#888888,stroke-dasharray:6 4\n    style SG2_0 fill:transparent,stroke:#888888,stroke-dasharray:6 4\n    style SG2_1 fill:transparent,stroke:#888888,stroke-dasharray:6 4\n    style SG4_0 fill:transparent,stroke:#888888,stroke-dasharray:6 4\n    style SG3_0 fill:transparent,stroke:#888888,stroke-dasharray:6 4\n    style SG5_0 fill:transparent,stroke:#888888,stroke-dasharray:6 4\n    style SG6_0 fill:transparent,stroke:#888888,stroke-dasharray:6 4\n    style SG10_0 fill:transparent,stroke:#888888,stroke-dasharray:6 4\n    style SG9_0 fill:transparent,stroke:#888888,stroke-dasharray:6 4\n    classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700\n    class SG0_0_NOTE,SG1_0_NOTE,SG2_0_NOTE,SG2_1_NOTE,SG3_0_NOTE,SG4_0_NOTE,SG5_0_NOTE,SG6_0_NOTE,SG9_0_NOTE,SG10_0_NOTE condNote",
+        "flowchartFormat": "mermaid"
+      }
+    },
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_Mainfunction",
+      "name": "Gp_EcuStpShdn_Mainfunction",
+      "signature": "void Gp_EcuStpShdn_Mainfunction(void)",
+      "returnType": "void",
+      "parameters": [],
+      "isStatic": false,
+      "file": "Gp_EcuStpShdn.c",
+      "lineStart": 719,
+      "lineEnd": 778,
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_Mainfunction",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "void",
+        "description": "Gp_EcuStpShdn main function.\nthis function will invoke MCU Runtime test, and check the test result, and process test failed situation\nif program is not in safe state or try power shutdown state.\nthis function will calculate the last satellite time stamp by the master core.\nthis function should be invoke by the cores which need perform MCU runtime test."
+      },
+      "calls": [
+        "Gp_EcuStpShdn_CalloutGetCoreId",
+        "Gp_EcuStpShdn_GetLastSatTimeStamp",
+        "Gp_TstApp_RunTimePhase",
+        "Gp_EcuStpShdn_CalloutChkMcuRunTimeTest",
+        "Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd"
+      ],
+      "calledBy": [],
+      "globalsAccessed": [
+        "Gp_EcuStpShdn_bufMstLocalImpl_ltst"
+      ],
+      "conditionalFlags": [],
+      "innerCondFlags": [
+        "GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE",
+        "GP_ECUSTPSHDN_SAFETY_ENABLE"
+      ],
+      "bodyText": "{\n    volatile    Gp_EcuStpShdn_MstLocalImplType* MstImpl_ptst = &Gp_EcuStpShdn_bufMstLocalImpl_ltst;\n    uint32  CoreId_u32 = 0U;\n\n    /*get core ID*/\n    CoreId_u32 = Gp_EcuStpShdn_CalloutGetCoreId();\n\n    if (CoreId_u32 == GP_ECUSTPSHDN_CORE0_ID)\n    {\n        /*get last satellite initialization time stamp, it will be get only once by core0*/\n        if (MstImpl_ptst->TimeStamp_u32[GP_ECUSTPSHDN_MST_TIME_STAMP_LAST_SAT_INIT] == 0U)\n        {\n            MstImpl_ptst->TimeStamp_u32[GP_ECUSTPSHDN_MST_TIME_STAMP_LAST_SAT_INIT] =  \n                Gp_EcuStpShdn_GetLastSatTimeStamp();\n        }\n        else\n        {\n            /*do nothing*/\n        }\n    }\n    else\n    {\n        /*do nothing*/\n    }\n\n                                           \n    if ((MstImpl_ptst->TryPwrShdn_b == FALSE) && (MstImpl_ptst->SafeState_b == FALSE))\n    {\n        /*perform MCU runtime test*/\n        Gp_TstApp_RunTimePhase();\n        /*\n        ECU is runtime stage.\n        master will check MCU runtime test result, and perform corresponding program.\n        */\n        if (CoreId_u32 == GP_ECUSTPSHDN_CORE0_ID)\n        {\n            /*check if switch to run phase is failed*/\n            if (Gp_EcuStpShdn_CalloutChkMcuRunTimeTest() == FALSE)\n            {\n                                                  \n                Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd();\n                                                          \n            }\n            else\n            {\n                /*do nothing*/\n            }\n        }\n        else\n        {\n            /*do nothing*/\n        }\n    }\n    else\n    {\n        /*do nothing*/\n    }\n                                                   \n}",
+      "bodyTextWithPP": "{\n    volatile    Gp_EcuStpShdn_MstLocalImplType* MstImpl_ptst = &Gp_EcuStpShdn_bufMstLocalImpl_ltst;\n    uint32  CoreId_u32 = 0U;\n\n    /*get core ID*/\n    CoreId_u32 = Gp_EcuStpShdn_CalloutGetCoreId();\n\n    if (CoreId_u32 == GP_ECUSTPSHDN_CORE0_ID)\n    {\n        /*get last satellite initialization time stamp, it will be get only once by core0*/\n        if (MstImpl_ptst->TimeStamp_u32[GP_ECUSTPSHDN_MST_TIME_STAMP_LAST_SAT_INIT] == 0U)\n        {\n            MstImpl_ptst->TimeStamp_u32[GP_ECUSTPSHDN_MST_TIME_STAMP_LAST_SAT_INIT] = \\\n                Gp_EcuStpShdn_GetLastSatTimeStamp();\n        }\n        else\n        {\n            /*do nothing*/\n        }\n    }\n    else\n    {\n        /*do nothing*/\n    }\n\n#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)\n    if ((MstImpl_ptst->TryPwrShdn_b == FALSE) && (MstImpl_ptst->SafeState_b == FALSE))\n    {\n        /*perform MCU runtime test*/\n        Gp_TstApp_RunTimePhase();\n        /*\n        ECU is runtime stage.\n        master will check MCU runtime test result, and perform corresponding program.\n        */\n        if (CoreId_u32 == GP_ECUSTPSHDN_CORE0_ID)\n        {\n            /*check if switch to run phase is failed*/\n            if (Gp_EcuStpShdn_CalloutChkMcuRunTimeTest() == FALSE)\n            {\n#if (GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE == STD_ON)\n                Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd();\n#endif  /*(GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE == STD_ON)*/\n            }\n            else\n            {\n                /*do nothing*/\n            }\n        }\n        else\n        {\n            /*do nothing*/\n        }\n    }\n    else\n    {\n        /*do nothing*/\n    }\n#endif  /*(GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)*/\n}",
+      "bodyHash": "eccdafb5f930bb4c",
+      "sigHash": "13cda1b5a8925f33",
+      "complexity": 7,
+      "infiniteLoop": false,
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.3.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_Mainfunction",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 961 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.174Z",
+        "flowchart": "flowchart TD\n    START([\"开始\"])\n    N0[\"CoreId_u32 = Gp_EcuStpShdn_CalloutGetCoreId()\"]\n    D0{\"CoreId_u32 == GP_ECUSTPSHDN_CORE0_ID\"}\n    M0[\" \"]\n    D1{\"MstImpl_ptst-&gt;TimeStamp_u32[GP_ECUSTPSHDN_MST_TIME_STAMP_LAST_SAT_INIT] == 0U\"}\n    M1[\" \"]\n    N1[\"MstImpl_ptst-&gt;TimeStamp_u32[GP_ECUSTPSHDN_MST_TIME_STAMP_LAST_SAT_INIT] =<br>Gp_EcuStpShdn_GetLastSatTimeStamp()\"]\n    subgraph SG0_0[\" \"]\n        SG0_0_NOTE[\"注：仅在 GP_ECUSTPSHDN_SAFETY_ENABLE 生效时参与编译\"]\n        SG0_0_NOTE ~~~ D2\n        D2{\"(MstImpl_ptst-&gt;TryPwrShdn_b == FALSE) &amp;&amp; (MstImpl_ptst-&gt;SafeState_b == FALSE)\"}\n        M2[\" \"]\n        M3[\" \"]\n        N2[[\"Gp_TstApp_RunTimePhase()\"]]\n        D3{\"CoreId_u32 == GP_ECUSTPSHDN_CORE0_ID\"}\n        M4[\" \"]\n        D4{\"Gp_EcuStpShdn_CalloutChkMcuRunTimeTest() == FALSE\"}\n        M5[\" \"]\n        subgraph SG1_0[\" \"]\n            SG1_0_NOTE[\"注：仅在 GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE 生效时参与编译\"]\n            SG1_0_NOTE ~~~ N3\n            N3[[\"Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd()\"]]\n        end\n    end\n    M6[\" \"]\n    END([\"结束\"])\n    D1 -- 是 --> N1\n    D1 -- 否 --> M1\n    D0 -- 是 --> D1\n    D0 -- 否 --> M0\n    N0 --> D0\n    D4 -- 是 --> N3\n    D4 -- 否 --> M5\n    D3 -- 是 --> D4\n    D3 -- 否 --> M4\n    N2 --> D3\n    D2 -- 是 --> N2\n    D2 -- 否 --> M2\n    N1 --> M3\n    M1 --> M3\n    M0 --> M3\n    M3 --> D2\n    START --> N0\n    N3 --> M6\n    M5 --> M6\n    M4 --> M6\n    M2 --> M6\n    M6 --> END\n    style M0 fill:transparent,stroke:transparent\n    style M1 fill:transparent,stroke:transparent\n    style M2 fill:transparent,stroke:transparent\n    style M3 fill:transparent,stroke:transparent\n    style M4 fill:transparent,stroke:transparent\n    style M5 fill:transparent,stroke:transparent\n    style M6 fill:transparent,stroke:transparent\n    style SG1_0 fill:transparent,stroke:#888888,stroke-dasharray:6 4\n    style SG0_0 fill:transparent,stroke:#888888,stroke-dasharray:6 4\n    classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700\n    class SG0_0_NOTE,SG1_0_NOTE condNote",
+        "flowchartFormat": "mermaid"
+      }
+    }
+  ],
+  "internalFunctions": [
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_CheckInitRslt",
+      "name": "Gp_EcuStpShdn_CheckInitRslt",
+      "signature": "void Gp_EcuStpShdn_CheckInitRslt(Gp_EcuStpShdn_SatLocalImplType* Impl_ptst)",
+      "returnType": "void",
+      "parameters": [
+        {
+          "type": "Gp_EcuStpShdn_SatLocalImplType",
+          "name": "Impl_ptst",
+          "pointerDepth": 1
+        }
+      ],
+      "isStatic": true,
+      "file": "Gp_EcuStpShdn.c",
+      "lineStart": 210,
+      "lineEnd": 226,
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [
+          {
+            "raw": "volatile Gp_EcuStpShdn_SatLocalImplType* Impl_ptst - pointer to satellite local implement",
+            "description": "pointer to satellite local implement",
+            "name": "Impl_ptst",
+            "type": "volatile Gp_EcuStpShdn_SatLocalImplType*"
+          }
+        ],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_CheckInitRslt",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "void",
+        "description": "Gp_EcuStpShdn check initialization result"
+      },
+      "calls": [],
+      "calledBy": [
+        "Gp_EcuStpShdn_MstPostInit",
+        "Gp_EcuStpShdn_Startup"
+      ],
+      "globalsAccessed": [],
+      "conditionalFlags": [
+        "GP_ECUSTPSHDN_SAFETY_ENABLE"
+      ],
+      "bodyText": "{\n    uint32  Cnt_u32 = 0U;\n\n    for (Cnt_u32 = 0U; Cnt_u32 < (uint32)GP_ECUSTPSHDN_INIT_RSLT_REC_NUM; Cnt_u32++)\n    {\n        if (Impl_ptst->InitCheckRslt_t[Cnt_u32] == E_NOT_OK)\n        {\n            /*recored initialization failed in all result according to bit field*/\n            Impl_ptst->InitRsltAllBits_u32 |= (uint32)((uint32)1U << Cnt_u32);\n        }\n        else\n        {\n            /*do nothing*/\n        }\n    }\n}",
+      "bodyHash": "5ffa5f6fe0660a15",
+      "sigHash": "b0bc4c148e212fec",
+      "complexity": 3,
+      "infiniteLoop": false,
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.4.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CheckInitRslt",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 471 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.177Z",
+        "flowchart": "flowchart TD\n    subgraph SG_OUT[\" \"]\n        SG_OUT_NOTE[\"注：仅在 GP_ECUSTPSHDN_SAFETY_ENABLE 生效时参与编译\"]\n        SG_OUT_NOTE ~~~ START\n        START([\"开始\"])\n        N0[\"Cnt_u32 = 0U\"]\n        D0{\"Cnt_u32 &lt; (uint32)GP_ECUSTPSHDN_INIT_RSLT_REC_NUM\"}\n        N1[\"Cnt_u32++\"]\n        M0[\" \"]\n        D1{\"Impl_ptst-&gt;InitCheckRslt_t[Cnt_u32] == E_NOT_OK\"}\n        M1[\" \"]\n        N2[\"Impl_ptst-&gt;InitRsltAllBits_u32 |= (uint32)((uint32)1U &lt;&lt; Cnt_u32)\"]\n        END([\"结束\"])\n    end\n    N0 --> D0\n    D1 -- 是 --> N2\n    D1 -- 否 --> M1\n    D0 -- 是 --> D1\n    N2 --> M0\n    M1 --> M0\n    M0 --> N1\n    N1 --> D0\n    START --> N0\n    D0 -- 否 --> END\n    style M0 fill:transparent,stroke:transparent\n    style M1 fill:transparent,stroke:transparent\n    style SG_OUT fill:transparent,stroke:#888888,stroke-dasharray:6 4\n    classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700\n    class SG_OUT_NOTE condNote",
+        "flowchartFormat": "mermaid"
+      }
+    },
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_MstProcMcuPreRunTest",
+      "name": "Gp_EcuStpShdn_MstProcMcuPreRunTest",
+      "signature": "void Gp_EcuStpShdn_MstProcMcuPreRunTest(void)",
+      "returnType": "void",
+      "parameters": [],
+      "isStatic": true,
+      "file": "Gp_EcuStpShdn.c",
+      "lineStart": 239,
+      "lineEnd": 255,
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_MstProcMcuPreRunTest",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "void",
+        "description": "Gp_EcuStpShdn master process MCU PreRunTest"
+      },
+      "calls": [
+        "Gp_EcuStpShdn_CalloutChkMcuPreRunTest",
+        "Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd"
+      ],
+      "calledBy": [
+        "Gp_EcuStpShdn_Startup"
+      ],
+      "globalsAccessed": [
+        "Gp_EcuStpShdn_bufMstLocalImpl_ltst"
+      ],
+      "conditionalFlags": [
+        "GP_ECUSTPSHDN_SAFETY_ENABLE"
+      ],
+      "innerCondFlags": [
+        "GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE"
+      ],
+      "bodyText": "{\n    volatile    Gp_EcuStpShdn_MstLocalImplType* MstImpl_ptst = &Gp_EcuStpShdn_bufMstLocalImpl_ltst;\n\n    /*check if MCU PreRunTest is failed*/\n    if (Gp_EcuStpShdn_CalloutChkMcuPreRunTest() == FALSE)\n    {\n        MstImpl_ptst->McuSelfTest_t = GP_ECUSTPSHDN_SELFTEST_FAIL;\n                                                  \n        Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd();\n                                                          \n    }\n    else\n    {\n        MstImpl_ptst->McuSelfTest_t = GP_ECUSTPSHDN_SELFTEST_PASS;\n    }\n}",
+      "bodyTextWithPP": "{\n    volatile    Gp_EcuStpShdn_MstLocalImplType* MstImpl_ptst = &Gp_EcuStpShdn_bufMstLocalImpl_ltst;\n\n    /*check if MCU PreRunTest is failed*/\n    if (Gp_EcuStpShdn_CalloutChkMcuPreRunTest() == FALSE)\n    {\n        MstImpl_ptst->McuSelfTest_t = GP_ECUSTPSHDN_SELFTEST_FAIL;\n#if (GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE == STD_ON)\n        Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd();\n#endif  /*(GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE == STD_ON)*/\n    }\n    else\n    {\n        MstImpl_ptst->McuSelfTest_t = GP_ECUSTPSHDN_SELFTEST_PASS;\n    }\n}",
+      "bodyHash": "c51461914a356e3c",
+      "sigHash": "217054d52168c174",
+      "complexity": 2,
+      "infiniteLoop": false,
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.4.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_MstProcMcuPreRunTest",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 622 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.181Z",
+        "flowchart": "flowchart TD\n    subgraph SG_OUT[\" \"]\n        SG_OUT_NOTE[\"注：仅在 GP_ECUSTPSHDN_SAFETY_ENABLE 生效时参与编译\"]\n        SG_OUT_NOTE ~~~ START\n        START([\"开始\"])\n        D0{\"Gp_EcuStpShdn_CalloutChkMcuPreRunTest() == FALSE\"}\n        N0[\"MstImpl_ptst-&gt;McuSelfTest_t = GP_ECUSTPSHDN_SELFTEST_FAIL\"]\n        subgraph SG0_0[\" \"]\n            SG0_0_NOTE[\"注：仅在 GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE 生效时参与编译\"]\n            SG0_0_NOTE ~~~ N1\n            N1[[\"Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd()\"]]\n        end\n        N2[\"MstImpl_ptst-&gt;McuSelfTest_t = GP_ECUSTPSHDN_SELFTEST_PASS\"]\n        M0[\" \"]\n        END([\"结束\"])\n    end\n    N0 --> N1\n    D0 -- 是 --> N0\n    D0 -- 否 --> N2\n    START --> D0\n    N1 --> M0\n    N2 --> M0\n    M0 --> END\n    style M0 fill:transparent,stroke:transparent\n    style SG0_0 fill:transparent,stroke:#888888,stroke-dasharray:6 4\n    style SG_OUT fill:transparent,stroke:#888888,stroke-dasharray:6 4\n    classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700\n    class SG_OUT_NOTE,SG0_0_NOTE condNote",
+        "flowchartFormat": "mermaid"
+      }
+    },
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_MstPostInit",
+      "name": "Gp_EcuStpShdn_MstPostInit",
+      "signature": "void Gp_EcuStpShdn_MstPostInit(void)",
+      "returnType": "void",
+      "parameters": [],
+      "isStatic": true,
+      "file": "Gp_EcuStpShdn.c",
+      "lineStart": 268,
+      "lineEnd": 309,
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_MstPostInit",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "void",
+        "description": "Gp_EcuStpShdn master post initialization"
+      },
+      "calls": [
+        "Gp_EcuStpShdn_CheckInitRslt",
+        "Gp_EcuStpShdn_CalloutInitFailedHnd",
+        "Gp_TstApp_SwitchToRunPhase",
+        "Gp_EcuStpShdn_CalloutChkSwtToRun",
+        "Gp_EcuStpShdn_CalloutSwtToRunFailedHnd",
+        "Gp_EcuStpShdn_CalloutChkSbcTest",
+        "Gp_EcuStpShdn_CalloutSbcTestFailedHnd"
+      ],
+      "calledBy": [
+        "Gp_EcuStpShdn_Startup"
+      ],
+      "globalsAccessed": [
+        "Gp_EcuStpShdn_bufMstLocalImpl_ltst",
+        "Gp_EcuStpShdn_bufSatLocalImplCore0_ltst"
+      ],
+      "conditionalFlags": [
+        "GP_ECUSTPSHDN_SAFETY_ENABLE"
+      ],
+      "innerCondFlags": [
+        "GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE"
+      ],
+      "bodyText": "{\n    volatile    Gp_EcuStpShdn_MstLocalImplType* MstImpl_ptst = &Gp_EcuStpShdn_bufMstLocalImpl_ltst;\n    volatile    Gp_EcuStpShdn_SatLocalImplType* SatImpl_ptst = &Gp_EcuStpShdn_bufSatLocalImplCore0_ltst;\n\n    /*check initialization result*/\n    Gp_EcuStpShdn_CheckInitRslt(SatImpl_ptst);\n    if (SatImpl_ptst->InitRsltAllBits_u32 != 0U)\n    {\n                                                  \n        Gp_EcuStpShdn_CalloutInitFailedHnd(SatImpl_ptst->InitRsltAllBits_u32);\n                                                          \n    }\n    else\n    {\n        /*do nothing*/\n    }\n    Gp_TstApp_SwitchToRunPhase();\n    /*check if switch to run phase is failed*/\n    if (Gp_EcuStpShdn_CalloutChkSwtToRun() == FALSE)\n    {\n                                                  \n        Gp_EcuStpShdn_CalloutSwtToRunFailedHnd();\n                                                          \n    }\n    else\n    {\n        /*do nothing*/\n    }\n    /*check SBC self test result*/\n    if (Gp_EcuStpShdn_CalloutChkSbcTest() == FALSE)\n    {\n        MstImpl_ptst->SbcSelfTest_t = GP_ECUSTPSHDN_SELFTEST_FAIL;\n                                                  \n        Gp_EcuStpShdn_CalloutSbcTestFailedHnd();\n                                                          \n    }\n    else\n    {\n        MstImpl_ptst->SbcSelfTest_t = GP_ECUSTPSHDN_SELFTEST_PASS;\n    }\n}",
+      "bodyTextWithPP": "{\n    volatile    Gp_EcuStpShdn_MstLocalImplType* MstImpl_ptst = &Gp_EcuStpShdn_bufMstLocalImpl_ltst;\n    volatile    Gp_EcuStpShdn_SatLocalImplType* SatImpl_ptst = &Gp_EcuStpShdn_bufSatLocalImplCore0_ltst;\n\n    /*check initialization result*/\n    Gp_EcuStpShdn_CheckInitRslt(SatImpl_ptst);\n    if (SatImpl_ptst->InitRsltAllBits_u32 != 0U)\n    {\n#if (GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE == STD_ON)\n        Gp_EcuStpShdn_CalloutInitFailedHnd(SatImpl_ptst->InitRsltAllBits_u32);\n#endif  /*(GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE == STD_ON)*/\n    }\n    else\n    {\n        /*do nothing*/\n    }\n    Gp_TstApp_SwitchToRunPhase();\n    /*check if switch to run phase is failed*/\n    if (Gp_EcuStpShdn_CalloutChkSwtToRun() == FALSE)\n    {\n#if (GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE == STD_ON)\n        Gp_EcuStpShdn_CalloutSwtToRunFailedHnd();\n#endif  /*(GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE == STD_ON)*/\n    }\n    else\n    {\n        /*do nothing*/\n    }\n    /*check SBC self test result*/\n    if (Gp_EcuStpShdn_CalloutChkSbcTest() == FALSE)\n    {\n        MstImpl_ptst->SbcSelfTest_t = GP_ECUSTPSHDN_SELFTEST_FAIL;\n#if (GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE == STD_ON)\n        Gp_EcuStpShdn_CalloutSbcTestFailedHnd();\n#endif  /*(GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE == STD_ON)*/\n    }\n    else\n    {\n        MstImpl_ptst->SbcSelfTest_t = GP_ECUSTPSHDN_SELFTEST_PASS;\n    }\n}",
+      "bodyHash": "cd2eff8f25800b58",
+      "sigHash": "44d53b9e8301da58",
+      "complexity": 4,
+      "infiniteLoop": false,
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.4.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_MstPostInit",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 806 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.183Z",
+        "flowchart": "flowchart TD\n    subgraph SG_OUT[\" \"]\n        SG_OUT_NOTE[\"注：仅在 GP_ECUSTPSHDN_SAFETY_ENABLE 生效时参与编译\"]\n        SG_OUT_NOTE ~~~ START\n        START([\"开始\"])\n        N0[[\"Gp_EcuStpShdn_CheckInitRslt(SatImpl_ptst)\"]]\n        D0{\"SatImpl_ptst-&gt;InitRsltAllBits_u32 != 0U\"}\n        M0[\" \"]\n        subgraph SG0_0[\" \"]\n            SG0_0_NOTE[\"注：仅在 GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE 生效时参与编译\"]\n            SG0_0_NOTE ~~~ N1\n            N1[[\"Gp_EcuStpShdn_CalloutInitFailedHnd(SatImpl_ptst-&gt;InitRsltAllBits_u32)\"]]\n        end\n        N2[[\"Gp_TstApp_SwitchToRunPhase()\"]]\n        M1[\" \"]\n        D1{\"Gp_EcuStpShdn_CalloutChkSwtToRun() == FALSE\"}\n        M2[\" \"]\n        subgraph SG1_0[\" \"]\n            SG1_0_NOTE[\"注：仅在 GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE 生效时参与编译\"]\n            SG1_0_NOTE ~~~ N3\n            N3[[\"Gp_EcuStpShdn_CalloutSwtToRunFailedHnd()\"]]\n        end\n        D2{\"Gp_EcuStpShdn_CalloutChkSbcTest() == FALSE\"}\n        M3[\" \"]\n        N4[\"MstImpl_ptst-&gt;SbcSelfTest_t = GP_ECUSTPSHDN_SELFTEST_FAIL\"]\n        subgraph SG2_0[\" \"]\n            SG2_0_NOTE[\"注：仅在 GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE 生效时参与编译\"]\n            SG2_0_NOTE ~~~ N5\n            N5[[\"Gp_EcuStpShdn_CalloutSbcTestFailedHnd()\"]]\n        end\n        N6[\"MstImpl_ptst-&gt;SbcSelfTest_t = GP_ECUSTPSHDN_SELFTEST_PASS\"]\n        M4[\" \"]\n        END([\"结束\"])\n    end\n    D0 -- 是 --> N1\n    D0 -- 否 --> M0\n    N0 --> D0\n    N1 --> M1\n    M0 --> M1\n    M1 --> N2\n    D1 -- 是 --> N3\n    D1 -- 否 --> M2\n    N2 --> D1\n    N4 --> N5\n    D2 -- 是 --> N4\n    D2 -- 否 --> N6\n    N3 --> M3\n    M2 --> M3\n    M3 --> D2\n    START --> N0\n    N5 --> M4\n    N6 --> M4\n    M4 --> END\n    style M0 fill:transparent,stroke:transparent\n    style M1 fill:transparent,stroke:transparent\n    style M2 fill:transparent,stroke:transparent\n    style M3 fill:transparent,stroke:transparent\n    style M4 fill:transparent,stroke:transparent\n    style SG0_0 fill:transparent,stroke:#888888,stroke-dasharray:6 4\n    style SG1_0 fill:transparent,stroke:#888888,stroke-dasharray:6 4\n    style SG2_0 fill:transparent,stroke:#888888,stroke-dasharray:6 4\n    style SG_OUT fill:transparent,stroke:#888888,stroke-dasharray:6 4\n    classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700\n    class SG_OUT_NOTE,SG0_0_NOTE,SG1_0_NOTE,SG2_0_NOTE condNote",
+        "flowchartFormat": "mermaid"
+      }
+    },
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_GetLastSatTimeStamp",
+      "name": "Gp_EcuStpShdn_GetLastSatTimeStamp",
+      "signature": "uint32 Gp_EcuStpShdn_GetLastSatTimeStamp(void)",
+      "returnType": "uint32",
+      "parameters": [],
+      "isStatic": true,
+      "file": "Gp_EcuStpShdn.c",
+      "lineStart": 322,
+      "lineEnd": 364,
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_GetLastSatTimeStamp",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "uint32 - maximum time stamp",
+        "description": "Gp_EcuStpShdn get last satellite time stamp"
+      },
+      "calls": [],
+      "calledBy": [
+        "Gp_EcuStpShdn_Mainfunction"
+      ],
+      "globalsAccessed": [
+        "Gp_EcuStpShdn_bufSatLocalImplCore1_ltst",
+        "Gp_EcuStpShdn_bufSatLocalImplCore2_ltst",
+        "Gp_EcuStpShdn_bufSatLocalImplCore3_ltst",
+        "Gp_EcuStpShdn_bufSatLocalImplCore4_ltst",
+        "Gp_EcuStpShdn_bufSatLocalImplCore5_ltst"
+      ],
+      "conditionalFlags": [],
+      "innerCondFlags": [
+        "GP_ECUSTPSHDN_ACTIVE_CORE_NUM"
+      ],
+      "bodyText": "{\n    uint32  TimeStamp_u32[GP_ECUSTPSHDN_ACTIVE_CORE_NUM];\n    uint32  Cnt_u32 = 0U;\n    uint32  MaxTimeStamp_u32 = 0U;\n\n    /*master core time stamp is not record in satellite local implement buffer*/\n    TimeStamp_u32[0U] = 0U;\n                                        \n    TimeStamp_u32[1U] = Gp_EcuStpShdn_bufSatLocalImplCore1_ltst.TimeStamp_u32;\n                                                \n\n                                        \n    TimeStamp_u32[2U] = Gp_EcuStpShdn_bufSatLocalImplCore2_ltst.TimeStamp_u32;\n                                                \n\n                                        \n    TimeStamp_u32[3U] = Gp_EcuStpShdn_bufSatLocalImplCore3_ltst.TimeStamp_u32;\n                                                \n\n                                        \n    TimeStamp_u32[4U] = Gp_EcuStpShdn_bufSatLocalImplCore4_ltst.TimeStamp_u32;\n                                                \n\n                                        \n    TimeStamp_u32[5U] = Gp_EcuStpShdn_bufSatLocalImplCore5_ltst.TimeStamp_u32;\n                                                \n\n    /*get maximum satellite time stamp*/\n    for (Cnt_u32 = 0U; Cnt_u32 < (uint32)GP_ECUSTPSHDN_ACTIVE_CORE_NUM; Cnt_u32++)\n    {\n        if (MaxTimeStamp_u32 < TimeStamp_u32[Cnt_u32])\n        {\n            MaxTimeStamp_u32 = TimeStamp_u32[Cnt_u32];\n        }\n        else\n        {\n            /*do nothing*/\n        }\n    }\n\n    return (MaxTimeStamp_u32);\n}",
+      "bodyTextWithPP": "{\n    uint32  TimeStamp_u32[GP_ECUSTPSHDN_ACTIVE_CORE_NUM];\n    uint32  Cnt_u32 = 0U;\n    uint32  MaxTimeStamp_u32 = 0U;\n\n    /*master core time stamp is not record in satellite local implement buffer*/\n    TimeStamp_u32[0U] = 0U;\n#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 1U)\n    TimeStamp_u32[1U] = Gp_EcuStpShdn_bufSatLocalImplCore1_ltst.TimeStamp_u32;\n#endif  /*(GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 1U)*/\n\n#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 2U)\n    TimeStamp_u32[2U] = Gp_EcuStpShdn_bufSatLocalImplCore2_ltst.TimeStamp_u32;\n#endif  /*(GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 1U)*/\n\n#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 3U)\n    TimeStamp_u32[3U] = Gp_EcuStpShdn_bufSatLocalImplCore3_ltst.TimeStamp_u32;\n#endif  /*(GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 1U)*/\n\n#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 4U)\n    TimeStamp_u32[4U] = Gp_EcuStpShdn_bufSatLocalImplCore4_ltst.TimeStamp_u32;\n#endif  /*(GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 1U)*/\n\n#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 5U)\n    TimeStamp_u32[5U] = Gp_EcuStpShdn_bufSatLocalImplCore5_ltst.TimeStamp_u32;\n#endif  /*(GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 1U)*/\n\n    /*get maximum satellite time stamp*/\n    for (Cnt_u32 = 0U; Cnt_u32 < (uint32)GP_ECUSTPSHDN_ACTIVE_CORE_NUM; Cnt_u32++)\n    {\n        if (MaxTimeStamp_u32 < TimeStamp_u32[Cnt_u32])\n        {\n            MaxTimeStamp_u32 = TimeStamp_u32[Cnt_u32];\n        }\n        else\n        {\n            /*do nothing*/\n        }\n    }\n\n    return (MaxTimeStamp_u32);\n}",
+      "bodyHash": "1194ad2d443579a4",
+      "sigHash": "d56189aa80256c12",
+      "complexity": 3,
+      "infiniteLoop": false,
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.4.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_GetLastSatTimeStamp",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 644 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.186Z",
+        "flowchart": "flowchart TD\n    START([\"开始\"])\n    N0[\"TimeStamp_u32[0U] = 0U\"]\n    subgraph SG0_0[\" \"]\n        SG0_0_NOTE[\"注：仅在 GP_ECUSTPSHDN_ACTIVE_CORE_NUM 生效时参与编译\"]\n        SG0_0_NOTE ~~~ N1\n        N1[\"TimeStamp_u32[1U] = Gp_EcuStpShdn_bufSatLocalImplCore1_ltst.TimeStamp_u32\"]\n    end\n    subgraph SG1_0[\" \"]\n        SG1_0_NOTE[\"注：仅在 GP_ECUSTPSHDN_ACTIVE_CORE_NUM 生效时参与编译\"]\n        SG1_0_NOTE ~~~ N2\n        N2[\"TimeStamp_u32[2U] = Gp_EcuStpShdn_bufSatLocalImplCore2_ltst.TimeStamp_u32\"]\n    end\n    subgraph SG2_0[\" \"]\n        SG2_0_NOTE[\"注：仅在 GP_ECUSTPSHDN_ACTIVE_CORE_NUM 生效时参与编译\"]\n        SG2_0_NOTE ~~~ N3\n        N3[\"TimeStamp_u32[3U] = Gp_EcuStpShdn_bufSatLocalImplCore3_ltst.TimeStamp_u32\"]\n    end\n    subgraph SG3_0[\" \"]\n        SG3_0_NOTE[\"注：仅在 GP_ECUSTPSHDN_ACTIVE_CORE_NUM 生效时参与编译\"]\n        SG3_0_NOTE ~~~ N4\n        N4[\"TimeStamp_u32[4U] = Gp_EcuStpShdn_bufSatLocalImplCore4_ltst.TimeStamp_u32\"]\n    end\n    subgraph SG4_0[\" \"]\n        SG4_0_NOTE[\"注：仅在 GP_ECUSTPSHDN_ACTIVE_CORE_NUM 生效时参与编译\"]\n        SG4_0_NOTE ~~~ N5\n        N5[\"TimeStamp_u32[5U] = Gp_EcuStpShdn_bufSatLocalImplCore5_ltst.TimeStamp_u32\"]\n    end\n    N6[\"Cnt_u32 = 0U\"]\n    D0{\"Cnt_u32 &lt; (uint32)GP_ECUSTPSHDN_ACTIVE_CORE_NUM\"}\n    N7[\"Cnt_u32++\"]\n    M0[\" \"]\n    D1{\"MaxTimeStamp_u32 &lt; TimeStamp_u32[Cnt_u32]\"}\n    M1[\" \"]\n    N8[\"MaxTimeStamp_u32 = TimeStamp_u32[Cnt_u32]\"]\n    N9[\"return (MaxTimeStamp_u32)\"]\n    END([\"结束\"])\n    N0 --> N1\n    N1 --> N2\n    N2 --> N3\n    N3 --> N4\n    N4 --> N5\n    N6 --> D0\n    D1 -- 是 --> N8\n    D1 -- 否 --> M1\n    D0 -- 是 --> D1\n    N8 --> M0\n    M1 --> M0\n    M0 --> N7\n    N7 --> D0\n    N5 --> N6\n    N9 --> END\n    D0 -- 否 --> N9\n    START --> N0\n    style M0 fill:transparent,stroke:transparent\n    style M1 fill:transparent,stroke:transparent\n    style SG0_0 fill:transparent,stroke:#888888,stroke-dasharray:6 4\n    style SG1_0 fill:transparent,stroke:#888888,stroke-dasharray:6 4\n    style SG2_0 fill:transparent,stroke:#888888,stroke-dasharray:6 4\n    style SG3_0 fill:transparent,stroke:#888888,stroke-dasharray:6 4\n    style SG4_0 fill:transparent,stroke:#888888,stroke-dasharray:6 4\n    classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700\n    class SG0_0_NOTE,SG1_0_NOTE,SG2_0_NOTE,SG3_0_NOTE,SG4_0_NOTE condNote",
+        "flowchartFormat": "mermaid"
+      }
+    }
+  ],
+  "internalVariables": [
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_bufMstLocalImpl_ltst",
+      "name": "Gp_EcuStpShdn_bufMstLocalImpl_ltst",
+      "type": "static volatile Gp_EcuStpShdn_MstLocalImplType",
+      "isStatic": true,
+      "isConst": false,
+      "isVolatile": true,
+      "file": "Gp_EcuStpShdn.c",
+      "line": 45,
+      "comment": "master local implement runtime buffer",
+      "conditionalFlags": [],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.4.1",
+        "workItemKind": "variable",
+        "title": "Gp_EcuStpShdn_bufMstLocalImpl_ltst",
+        "workItemId": null
+      }
+    },
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_bufSatLocalImplCore0_ltst",
+      "name": "Gp_EcuStpShdn_bufSatLocalImplCore0_ltst",
+      "type": "static volatile Gp_EcuStpShdn_SatLocalImplType",
+      "isStatic": true,
+      "isConst": false,
+      "isVolatile": true,
+      "file": "Gp_EcuStpShdn.c",
+      "line": 53,
+      "comment": "satellite local implement runtime buffer core0",
+      "conditionalFlags": [],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.4.1",
+        "workItemKind": "variable",
+        "title": "Gp_EcuStpShdn_bufSatLocalImplCore0_ltst",
+        "workItemId": null
+      }
+    },
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_bufSatLocalImplCore1_ltst",
+      "name": "Gp_EcuStpShdn_bufSatLocalImplCore1_ltst",
+      "type": "static volatile Gp_EcuStpShdn_SatLocalImplType",
+      "isStatic": true,
+      "isConst": false,
+      "isVolatile": true,
+      "file": "Gp_EcuStpShdn.c",
+      "line": 62,
+      "comment": "satellite local implement runtime buffer core1",
+      "conditionalFlags": [
+        "GP_ECUSTPSHDN_ACTIVE_CORE_NUM"
+      ],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.4.1",
+        "workItemKind": "variable",
+        "title": "Gp_EcuStpShdn_bufSatLocalImplCore1_ltst",
+        "workItemId": null
+      }
+    },
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_bufSatLocalImplCore2_ltst",
+      "name": "Gp_EcuStpShdn_bufSatLocalImplCore2_ltst",
+      "type": "static volatile Gp_EcuStpShdn_SatLocalImplType",
+      "isStatic": true,
+      "isConst": false,
+      "isVolatile": true,
+      "file": "Gp_EcuStpShdn.c",
+      "line": 72,
+      "comment": "satellite local implement runtime buffer core2",
+      "conditionalFlags": [
+        "GP_ECUSTPSHDN_ACTIVE_CORE_NUM"
+      ],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.4.1",
+        "workItemKind": "variable",
+        "title": "Gp_EcuStpShdn_bufSatLocalImplCore2_ltst",
+        "workItemId": null
+      }
+    },
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_bufSatLocalImplCore3_ltst",
+      "name": "Gp_EcuStpShdn_bufSatLocalImplCore3_ltst",
+      "type": "static volatile Gp_EcuStpShdn_SatLocalImplType",
+      "isStatic": true,
+      "isConst": false,
+      "isVolatile": true,
+      "file": "Gp_EcuStpShdn.c",
+      "line": 82,
+      "comment": "satellite local implement runtime buffer core3",
+      "conditionalFlags": [
+        "GP_ECUSTPSHDN_ACTIVE_CORE_NUM"
+      ],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.4.1",
+        "workItemKind": "variable",
+        "title": "Gp_EcuStpShdn_bufSatLocalImplCore3_ltst",
+        "workItemId": null
+      }
+    },
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_bufSatLocalImplCore4_ltst",
+      "name": "Gp_EcuStpShdn_bufSatLocalImplCore4_ltst",
+      "type": "static volatile Gp_EcuStpShdn_SatLocalImplType",
+      "isStatic": true,
+      "isConst": false,
+      "isVolatile": true,
+      "file": "Gp_EcuStpShdn.c",
+      "line": 92,
+      "comment": "satellite local implement runtime buffer core4",
+      "conditionalFlags": [
+        "GP_ECUSTPSHDN_ACTIVE_CORE_NUM"
+      ],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.4.1",
+        "workItemKind": "variable",
+        "title": "Gp_EcuStpShdn_bufSatLocalImplCore4_ltst",
+        "workItemId": null
+      }
+    },
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_bufSatLocalImplCore5_ltst",
+      "name": "Gp_EcuStpShdn_bufSatLocalImplCore5_ltst",
+      "type": "static volatile Gp_EcuStpShdn_SatLocalImplType",
+      "isStatic": true,
+      "isConst": false,
+      "isVolatile": true,
+      "file": "Gp_EcuStpShdn.c",
+      "line": 102,
+      "comment": "satellite local implement runtime buffer core5",
+      "conditionalFlags": [
+        "GP_ECUSTPSHDN_ACTIVE_CORE_NUM"
+      ],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.4.1",
+        "workItemKind": "variable",
+        "title": "Gp_EcuStpShdn_bufSatLocalImplCore5_ltst",
+        "workItemId": null
+      }
+    },
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_rtSatCont_lcatst",
+      "name": "Gp_EcuStpShdn_rtSatCont_lcatst",
+      "type": "static const Gp_EcuStpShdn_SatRunTimeType",
+      "isStatic": true,
+      "isConst": true,
+      "isVolatile": false,
+      "file": "Gp_EcuStpShdn.c",
+      "line": 112,
+      "comment": "FC runtime buffer address container for satellite local implement variables",
+      "conditionalFlags": [],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.4.1",
+        "workItemKind": "variable",
+        "title": "Gp_EcuStpShdn_rtSatCont_lcatst",
+        "workItemId": null
+      }
+    }
+  ],
+  "providedVariables": [],
+  "calledExternalFunctions": [
+    {
+      "name": "Gp_EcuStpShdn_CalloutChkMcuPreRunTest",
+      "signature": "boolean Gp_EcuStpShdn_CalloutChkMcuPreRunTest(void)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_CalloutChkMcuPreRunTest",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "None",
+        "description": "Gp_EcuStpShdn callout function for check MCU PreRunTest result."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "Gp_EcuStpShdn_MstProcMcuPreRunTest"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutChkMcuPreRunTest",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 401 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.224Z"
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutChkMcuRunTimeTest",
+      "signature": "boolean Gp_EcuStpShdn_CalloutChkMcuRunTimeTest(void)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_CalloutChkMcuRunTimeTest",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "None",
+        "description": "Gp_EcuStpShdn callout function for check MCU RunTimeTest result."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "Gp_EcuStpShdn_Mainfunction"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutChkMcuRunTimeTest",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 395 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.225Z"
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutChkSbcTest",
+      "signature": "boolean Gp_EcuStpShdn_CalloutChkSbcTest(void)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_CalloutChkSbcTest",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "None",
+        "description": "Gp_EcuStpShdn callout function for check SBC test result."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "Gp_EcuStpShdn_MstPostInit"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutChkSbcTest",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 380 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.225Z"
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutChkSwtToRun",
+      "signature": "boolean Gp_EcuStpShdn_CalloutChkSwtToRun(void)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_CalloutChkSwtToRun",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "None",
+        "description": "Gp_EcuStpShdn callout function for check switch to run phase."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "Gp_EcuStpShdn_MstPostInit"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutChkSwtToRun",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 385 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.226Z"
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutGetCoreId",
+      "signature": "uint32 Gp_EcuStpShdn_CalloutGetCoreId(void)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_CalloutGetCoreId",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "uint32 - core ID",
+        "description": "get core ID callout function, the function should get core ID from lower driver,\nand make sure of core ID is available(core ID is valid and is enabled in configuration and is used as index 0~5)."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "Gp_EcuStpShdn_Startup",
+        "Gp_EcuStpShdn_Mainfunction"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutGetCoreId",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 563 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.227Z"
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutGetSysTimeMs",
+      "signature": "uint32 Gp_EcuStpShdn_CalloutGetSysTimeMs(void)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_CalloutGetSysTimeMs",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "uint32 - system time million second",
+        "description": "get system time million second callout function."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "Gp_EcuStpShdn_Startup"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutGetSysTimeMs",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 411 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.228Z"
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutInitFailedHnd",
+      "signature": "void Gp_EcuStpShdn_CalloutInitFailedHnd(uint32 InitRslt_u32)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [
+          {
+            "raw": "uint32 InitRslt_u32 - initialization result",
+            "description": "initialization result",
+            "name": "InitRslt_u32",
+            "type": "uint32"
+          }
+        ],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_CalloutInitFailedHnd",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "None",
+        "description": "Gp_EcuStpShdn callout function for handling of initialization failed."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "Gp_EcuStpShdn_MstPostInit",
+        "Gp_EcuStpShdn_Startup"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutInitFailedHnd",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 480 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.228Z"
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutInitStageOneCore0",
+      "signature": "void Gp_EcuStpShdn_CalloutInitStageOneCore0(Gp_EcuStpShdn_SatLocalImplType* Impl_ptst)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [
+          {
+            "raw": "volatile Gp_EcuStpShdn_SatLocalImplType* Impl_ptst - pointer to satellite local implement",
+            "description": "pointer to satellite local implement",
+            "name": "Impl_ptst",
+            "type": "volatile Gp_EcuStpShdn_SatLocalImplType*"
+          }
+        ],
+        "functionName": "Gp_EcuStpShdn_CalloutInitStageOneCore0",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "None",
+        "description": "Gp_EcuStpShdn callout function for initialization stage one of core0."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "Gp_EcuStpShdn_Startup"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutInitStageOneCore0",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 525 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.229Z"
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutInitStageTwoCore0",
+      "signature": "void Gp_EcuStpShdn_CalloutInitStageTwoCore0(Gp_EcuStpShdn_SatLocalImplType* Impl_ptst)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [
+          {
+            "raw": "volatile Gp_EcuStpShdn_SatLocalImplType* Impl_ptst - pointer to satellite local implement",
+            "description": "pointer to satellite local implement",
+            "name": "Impl_ptst",
+            "type": "volatile Gp_EcuStpShdn_SatLocalImplType*"
+          }
+        ],
+        "functionName": "Gp_EcuStpShdn_CalloutInitStageTwoCore0",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "None",
+        "description": "Gp_EcuStpShdn callout function for initialization stage two of core0."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "(rtSatCont 配置表函数指针引用)"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutInitStageTwoCore0",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 525 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.229Z"
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutInitStageTwoCore1",
+      "signature": "void Gp_EcuStpShdn_CalloutInitStageTwoCore1(Gp_EcuStpShdn_SatLocalImplType* Impl_ptst)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [
+          {
+            "raw": "volatile Gp_EcuStpShdn_SatLocalImplType* Impl_ptst - pointer to satellite local implement",
+            "description": "pointer to satellite local implement",
+            "name": "Impl_ptst",
+            "type": "volatile Gp_EcuStpShdn_SatLocalImplType*"
+          }
+        ],
+        "functionName": "Gp_EcuStpShdn_CalloutInitStageTwoCore1",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "None",
+        "description": "Gp_EcuStpShdn callout function for initialization stage two of core1."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "(rtSatCont 配置表函数指针引用)"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutInitStageTwoCore1",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 525 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.230Z"
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutInitStageTwoCore2",
+      "signature": "void Gp_EcuStpShdn_CalloutInitStageTwoCore2(Gp_EcuStpShdn_SatLocalImplType* Impl_ptst)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [
+          {
+            "raw": "volatile Gp_EcuStpShdn_SatLocalImplType* Impl_ptst - pointer to satellite local implement",
+            "description": "pointer to satellite local implement",
+            "name": "Impl_ptst",
+            "type": "volatile Gp_EcuStpShdn_SatLocalImplType*"
+          }
+        ],
+        "functionName": "Gp_EcuStpShdn_CalloutInitStageTwoCore2",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "None",
+        "description": "Gp_EcuStpShdn callout function for initialization stage two of core2."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "(rtSatCont 配置表函数指针引用)"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutInitStageTwoCore2",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 525 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.230Z"
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutInitStageTwoCore3",
+      "signature": "void Gp_EcuStpShdn_CalloutInitStageTwoCore3(Gp_EcuStpShdn_SatLocalImplType* Impl_ptst)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [
+          {
+            "raw": "volatile Gp_EcuStpShdn_SatLocalImplType* Impl_ptst - pointer to satellite local implement",
+            "description": "pointer to satellite local implement",
+            "name": "Impl_ptst",
+            "type": "volatile Gp_EcuStpShdn_SatLocalImplType*"
+          }
+        ],
+        "functionName": "Gp_EcuStpShdn_CalloutInitStageTwoCore3",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "None",
+        "description": "Gp_EcuStpShdn callout function for initialization stage two of core3."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "(rtSatCont 配置表函数指针引用)"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutInitStageTwoCore3",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 525 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.231Z"
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutInitStageTwoCore4",
+      "signature": "void Gp_EcuStpShdn_CalloutInitStageTwoCore4(Gp_EcuStpShdn_SatLocalImplType* Impl_ptst)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [
+          {
+            "raw": "volatile Gp_EcuStpShdn_SatLocalImplType* Impl_ptst - pointer to satellite local implement",
+            "description": "pointer to satellite local implement",
+            "name": "Impl_ptst",
+            "type": "volatile Gp_EcuStpShdn_SatLocalImplType*"
+          }
+        ],
+        "functionName": "Gp_EcuStpShdn_CalloutInitStageTwoCore4",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "None",
+        "description": "Gp_EcuStpShdn callout function for initialization stage two of core4."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "(rtSatCont 配置表函数指针引用)"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutInitStageTwoCore4",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 525 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.232Z"
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutInitStageTwoCore5",
+      "signature": "void Gp_EcuStpShdn_CalloutInitStageTwoCore5(Gp_EcuStpShdn_SatLocalImplType* Impl_ptst)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [
+          {
+            "raw": "volatile Gp_EcuStpShdn_SatLocalImplType* Impl_ptst - pointer to satellite local implement",
+            "description": "pointer to satellite local implement",
+            "name": "Impl_ptst",
+            "type": "volatile Gp_EcuStpShdn_SatLocalImplType*"
+          }
+        ],
+        "functionName": "Gp_EcuStpShdn_CalloutInitStageTwoCore5",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "None",
+        "description": "Gp_EcuStpShdn callout function for initialization stage two of core5."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "(rtSatCont 配置表函数指针引用)"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutInitStageTwoCore5",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 525 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.232Z"
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd",
+      "signature": "void Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd(void)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "None",
+        "description": "Gp_EcuStpShdn callout function for handling of MCU PreRunTest failed."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "Gp_EcuStpShdn_MstProcMcuPreRunTest"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 410 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.233Z"
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd",
+      "signature": "void Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd(void)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "None",
+        "description": "Gp_EcuStpShdn callout function for handling of MCU RunTimeTest failed."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "Gp_EcuStpShdn_Mainfunction"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 404 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.233Z"
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutOsErrRecov",
+      "signature": "void Gp_EcuStpShdn_CalloutOsErrRecov(uint8 OsStatus_u8)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [
+          {
+            "raw": "uint8 OsStatus_u8 - OS status",
+            "description": "OS status",
+            "name": "OsStatus_u8",
+            "type": "uint8"
+          }
+        ],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_CalloutOsErrRecov",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "None",
+        "description": "Gp_EcuStpShdn callout function for OS error recovery."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "Gp_EcuStpShdn_OsErrRecov"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutOsErrRecov",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 421 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.234Z"
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase",
+      "signature": "void Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase(void)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "None",
+        "description": "Gp_EcuStpShdn callout function for power shut down in shut down phase."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "Gp_EcuStpShdn_PwrShdnInShdnPhase"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 405 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.234Z"
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutPwrShdnInStpPhase",
+      "signature": "void Gp_EcuStpShdn_CalloutPwrShdnInStpPhase(void)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_CalloutPwrShdnInStpPhase",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "None",
+        "description": "Gp_EcuStpShdn callout function for power shut down in start up phase."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "Gp_EcuStpShdn_Startup"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutPwrShdnInStpPhase",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 392 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.235Z"
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutSafeState",
+      "signature": "void Gp_EcuStpShdn_CalloutSafeState(void)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_CalloutSafeState",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "None",
+        "description": "Gp_EcuStpShdn callout function for special handling of safe state."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "Gp_EcuStpShdn_Startup"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutSafeState",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 381 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.235Z"
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutSbcInit",
+      "signature": "void Gp_EcuStpShdn_CalloutSbcInit(uint32* SbcInfo_pu32)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [
+          {
+            "raw": "uint32* SbcInfo_pu32 - SBC information when system start up",
+            "description": "SBC information when system start up",
+            "name": "SbcInfo_pu32",
+            "type": "uint32*"
+          }
+        ],
+        "functionName": "Gp_EcuStpShdn_CalloutSbcInit",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "None",
+        "description": "Gp_EcuStpShdn callout function for SBC initialization."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "Gp_EcuStpShdn_Startup"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutSbcInit",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 449 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.236Z"
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutSbcInitInSafeState",
+      "signature": "void Gp_EcuStpShdn_CalloutSbcInitInSafeState(uint32* SbcInfo_pu32)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [
+          {
+            "raw": "uint32* SbcInfo_pu32 - SBC information when system start up",
+            "description": "SBC information when system start up",
+            "name": "SbcInfo_pu32",
+            "type": "uint32*"
+          }
+        ],
+        "functionName": "Gp_EcuStpShdn_CalloutSbcInitInSafeState",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "None",
+        "description": "Gp_EcuStpShdn callout function for SBC initialization in safe state."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "Gp_EcuStpShdn_Startup"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutSbcInitInSafeState",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 474 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.236Z"
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutSbcTestFailedHnd",
+      "signature": "void Gp_EcuStpShdn_CalloutSbcTestFailedHnd(void)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_CalloutSbcTestFailedHnd",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "None",
+        "description": "Gp_EcuStpShdn callout function for handling of SBC test failed."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "Gp_EcuStpShdn_MstPostInit"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutSbcTestFailedHnd",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 389 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.238Z"
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutSwtToRunFailedHnd",
+      "signature": "void Gp_EcuStpShdn_CalloutSwtToRunFailedHnd(void)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_CalloutSwtToRunFailedHnd",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "None",
+        "description": "Gp_EcuStpShdn callout function for handling of switch to run phase failed."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "Gp_EcuStpShdn_MstPostInit"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutSwtToRunFailedHnd",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 401 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.239Z"
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_CalloutTrapRecov",
+      "signature": "void Gp_EcuStpShdn_CalloutTrapRecov(uint8 OsStatus_u8)",
+      "group": "Callout",
+      "comment": {
+        "paramsIn": [
+          {
+            "raw": "uint8 OsStatus_u8 - OS status",
+            "description": "OS status",
+            "name": "OsStatus_u8",
+            "type": "uint8"
+          }
+        ],
+        "paramsInout": [],
+        "paramsOut": [],
+        "functionName": "Gp_EcuStpShdn_CalloutTrapRecov",
+        "serviceId": "None",
+        "syncAsync": "Synchronous",
+        "reentrancy": "Non_Reentrancy",
+        "returnValue": "None",
+        "description": "Gp_EcuStpShdn callout function for trap recovery."
+      },
+      "commentSource": "header",
+      "calledFrom": [
+        "Gp_EcuStpShdn_TrapRecov"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutTrapRecov",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 415 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.239Z"
+      }
+    },
+    {
+      "name": "Gp_RstM_GetLastRstTypeInfo",
+      "signature": "",
+      "group": "Gp_RstM",
+      "comment": null,
+      "calledFrom": [
+        "Gp_EcuStpShdn_Startup"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.2.2",
+        "workItemKind": "table",
+        "title": "Gp_RstM 接口函数",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 286 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.244Z"
+      }
+    },
+    {
+      "name": "Gp_RstM_Init",
+      "signature": "",
+      "group": "Gp_RstM",
+      "comment": null,
+      "calledFrom": [
+        "Gp_EcuStpShdn_Startup"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.2.2",
+        "workItemKind": "table",
+        "title": "Gp_RstM 接口函数",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 272 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.245Z"
+      }
+    },
+    {
+      "name": "Gp_RstM_InitOne",
+      "signature": "",
+      "group": "Gp_RstM",
+      "comment": null,
+      "calledFrom": [
+        "Gp_EcuStpShdn_Startup"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.2.2",
+        "workItemKind": "table",
+        "title": "Gp_RstM 接口函数",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 275 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.246Z"
+      }
+    },
+    {
+      "name": "Gp_RstM_InitTwo",
+      "signature": "",
+      "group": "Gp_RstM",
+      "comment": null,
+      "calledFrom": [
+        "Gp_EcuStpShdn_Startup"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.2.2",
+        "workItemKind": "table",
+        "title": "Gp_RstM 接口函数",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 275 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.246Z"
+      }
+    },
+    {
+      "name": "Gp_TstApp_PreRunInit",
+      "signature": "",
+      "group": "Gp_TstApp",
+      "comment": null,
+      "calledFrom": [
+        "Gp_EcuStpShdn_Startup"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.2.2",
+        "workItemKind": "table",
+        "title": "Gp_TstApp 接口函数",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 282 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.247Z"
+      }
+    },
+    {
+      "name": "Gp_TstApp_PreRunPhase",
+      "signature": "",
+      "group": "Gp_TstApp",
+      "comment": null,
+      "calledFrom": [
+        "Gp_EcuStpShdn_Startup"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.2.2",
+        "workItemKind": "table",
+        "title": "Gp_TstApp 接口函数",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 283 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.247Z"
+      }
+    },
+    {
+      "name": "Gp_TstApp_RunTimePhase",
+      "signature": "",
+      "group": "Gp_TstApp",
+      "comment": null,
+      "calledFrom": [
+        "Gp_EcuStpShdn_Mainfunction"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.2.2",
+        "workItemKind": "table",
+        "title": "Gp_TstApp 接口函数",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 289 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.248Z"
+      }
+    },
+    {
+      "name": "Gp_TstApp_SwitchToRunPhase",
+      "signature": "",
+      "group": "Gp_TstApp",
+      "comment": null,
+      "calledFrom": [
+        "Gp_EcuStpShdn_MstPostInit"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.2.2.2",
+        "workItemKind": "table",
+        "title": "Gp_TstApp 接口函数",
+        "workItemId": null
+      },
+      "generated": {
+        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 292 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.248Z"
+      }
+    }
+  ],
+  "types": [
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_StpStageType",
+      "name": "Gp_EcuStpShdn_StpStageType",
+      "kind": "typedef",
+      "underlyingType": "uint8",
+      "comment": "specifies the barrier status type",
+      "file": "Gp_EcuStpShdn_Types.h",
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.1.2",
+        "workItemKind": "type",
+        "title": "Gp_EcuStpShdn_StpStageType",
+        "workItemId": null
+      },
+      "relatedDefines": [
+        {
+          "name": "GP_ECUSTPSHDN_STPSTAGE_UNDEF",
+          "value": "((Gp_EcuStpShdn_StpStageType)0x00U)",
+          "isFunctionLike": false,
+          "comment": "undefined status",
+          "file": "Gp_EcuStpShdn_Types.h",
+          "kind": "general",
+          "usages": [],
+          "affects": [],
+          "polarion": {
+            "isWorkItem": false,
+            "chapter": "6.1",
+            "workItemKind": "config",
+            "title": "GP_ECUSTPSHDN_STPSTAGE_UNDEF",
+            "workItemId": null
+          }
+        },
+        {
+          "name": "GP_ECUSTPSHDN_STPSTAGE_ONE",
+          "value": "((Gp_EcuStpShdn_StpStageType)0x01U)",
+          "isFunctionLike": false,
+          "comment": "startup stage one",
+          "file": "Gp_EcuStpShdn_Types.h",
+          "kind": "general",
+          "usages": [],
+          "affects": [],
+          "polarion": {
+            "isWorkItem": false,
+            "chapter": "6.1",
+            "workItemKind": "config",
+            "title": "GP_ECUSTPSHDN_STPSTAGE_ONE",
+            "workItemId": null
+          }
+        },
+        {
+          "name": "GP_ECUSTPSHDN_STPSTAGE_TWO",
+          "value": "((Gp_EcuStpShdn_StpStageType)0x02U)",
+          "isFunctionLike": false,
+          "comment": "startup stage two",
+          "file": "Gp_EcuStpShdn_Types.h",
+          "kind": "general",
+          "usages": [],
+          "affects": [],
+          "polarion": {
+            "isWorkItem": false,
+            "chapter": "6.1",
+            "workItemKind": "config",
+            "title": "GP_ECUSTPSHDN_STPSTAGE_TWO",
+            "workItemId": null
+          }
+        },
+        {
+          "name": "GP_ECUSTPSHDN_STPSTAGE_THREE",
+          "value": "((Gp_EcuStpShdn_StpStageType)0x03U)",
+          "isFunctionLike": false,
+          "comment": "startup stage three",
+          "file": "Gp_EcuStpShdn_Types.h",
+          "kind": "general",
+          "usages": [],
+          "affects": [],
+          "polarion": {
+            "isWorkItem": false,
+            "chapter": "6.1",
+            "workItemKind": "config",
+            "title": "GP_ECUSTPSHDN_STPSTAGE_THREE",
+            "workItemId": null
+          }
+        }
+      ],
+      "generated": {
+        "comment": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 884 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.241Z"
+      }
+    },
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_SelfTestType",
+      "name": "Gp_EcuStpShdn_SelfTestType",
+      "kind": "typedef",
+      "underlyingType": "uint8",
+      "comment": "specifies the barrier status type",
+      "file": "Gp_EcuStpShdn_Types.h",
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.1.2",
+        "workItemKind": "type",
+        "title": "Gp_EcuStpShdn_SelfTestType",
+        "workItemId": null
+      },
+      "relatedDefines": [
+        {
+          "name": "GP_ECUSTPSHDN_SELFTEST_UNDEF",
+          "value": "((Gp_EcuStpShdn_SelfTestType)0x00U)",
+          "isFunctionLike": false,
+          "comment": "undefined status",
+          "file": "Gp_EcuStpShdn_Types.h",
+          "kind": "general",
+          "usages": [],
+          "affects": [],
+          "polarion": {
+            "isWorkItem": false,
+            "chapter": "6.1",
+            "workItemKind": "config",
+            "title": "GP_ECUSTPSHDN_SELFTEST_UNDEF",
+            "workItemId": null
+          }
+        },
+        {
+          "name": "GP_ECUSTPSHDN_SELFTEST_PASS",
+          "value": "((Gp_EcuStpShdn_SelfTestType)0x01U)",
+          "isFunctionLike": false,
+          "comment": "self test pass",
+          "file": "Gp_EcuStpShdn_Types.h",
+          "kind": "general",
+          "usages": [],
+          "affects": [],
+          "polarion": {
+            "isWorkItem": false,
+            "chapter": "6.1",
+            "workItemKind": "config",
+            "title": "GP_ECUSTPSHDN_SELFTEST_PASS",
+            "workItemId": null
+          }
+        },
+        {
+          "name": "GP_ECUSTPSHDN_SELFTEST_FAIL",
+          "value": "((Gp_EcuStpShdn_SelfTestType)0x02U)",
+          "isFunctionLike": false,
+          "comment": "self test fail",
+          "file": "Gp_EcuStpShdn_Types.h",
+          "kind": "general",
+          "usages": [],
+          "affects": [],
+          "polarion": {
+            "isWorkItem": false,
+            "chapter": "6.1",
+            "workItemKind": "config",
+            "title": "GP_ECUSTPSHDN_SELFTEST_FAIL",
+            "workItemId": null
+          }
+        }
+      ],
+      "generated": {
+        "comment": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 785 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.241Z"
+      }
+    },
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_MstLocalImplType",
+      "name": "Gp_EcuStpShdn_MstLocalImplType",
+      "kind": "struct",
+      "elements": [
+        {
+          "name": "TimeStamp_u32",
+          "type": "uint32[GP_ECUSTPSHDN_MST_TIME_STAMP_NUM]",
+          "comment": "master record startup time stamp"
+        },
+        {
+          "name": "McuPreTestRslt_u32",
+          "type": "uint32",
+          "comment": "brief of MCU PreRun test result"
+        },
+        {
+          "name": "McuRunTestRslt_u32",
+          "type": "uint32",
+          "comment": "brief of MCU Runtime test result"
+        },
+        {
+          "name": "SbcInfo_u32",
+          "type": "uint32",
+          "comment": "SBC information of startup"
+        },
+        {
+          "name": "StpStage_t",
+          "type": "Gp_EcuStpShdn_StpStageType",
+          "comment": "startup stage"
+        },
+        {
+          "name": "McuSelfTest_t",
+          "type": "Gp_EcuStpShdn_SelfTestType",
+          "comment": "MCU self test result"
+        },
+        {
+          "name": "SbcSelfTest_t",
+          "type": "Gp_EcuStpShdn_SelfTestType",
+          "comment": "SBC self test result"
+        },
+        {
+          "name": "RstTypePlt_u8",
+          "type": "uint8",
+          "comment": "platform reset type"
+        },
+        {
+          "name": "RstTypeMcal_u8",
+          "type": "uint8",
+          "comment": "MCAL reset type"
+        },
+        {
+          "name": "RstId_u8",
+          "type": "uint8",
+          "comment": "reset ID"
+        },
+        {
+          "name": "RstCoreId_u8",
+          "type": "uint8",
+          "comment": "reset core ID"
+        },
+        {
+          "name": "SafeState_b",
+          "type": "boolean",
+          "comment": "safe state flag"
+        },
+        {
+          "name": "TryPwrShdn_b",
+          "type": "boolean",
+          "comment": "try power shutdown flag"
+        }
+      ],
+      "comment": null,
+      "file": "Gp_EcuStpShdn_Types.h",
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.1.2",
+        "workItemKind": "type",
+        "title": "Gp_EcuStpShdn_MstLocalImplType",
+        "workItemId": null
+      },
+      "generated": {
+        "comment": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 1220 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.242Z"
+      }
+    },
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_SatLocalImplType",
+      "name": "Gp_EcuStpShdn_SatLocalImplType",
+      "kind": "struct",
+      "elements": [
+        {
+          "name": "TimeStamp_u32",
+          "type": "uint32",
+          "comment": "satellite record time stamp"
+        },
+        {
+          "name": "InitRsltAllBits_u32",
+          "type": "uint32",
+          "comment": "initialization result all bits"
+        },
+        {
+          "name": "InitCheckRslt_t",
+          "type": "Std_ReturnType[GP_ECUSTPSHDN_INIT_RSLT_REC_NUM]",
+          "comment": "initialization check result"
+        }
+      ],
+      "comment": null,
+      "file": "Gp_EcuStpShdn_Types.h",
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.1.2",
+        "workItemKind": "type",
+        "title": "Gp_EcuStpShdn_SatLocalImplType",
+        "workItemId": null
+      },
+      "generated": {
+        "comment": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 727 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.243Z"
+      }
+    },
+    {
+      "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_SatRunTimeType",
+      "name": "Gp_EcuStpShdn_SatRunTimeType",
+      "kind": "struct",
+      "elements": [
+        {
+          "name": "Impl_ptst",
+          "type": "volatile Gp_EcuStpShdn_SatLocalImplType *",
+          "comment": null
+        },
+        {
+          "name": "StpStageTwo_pf",
+          "type": "void (*)(volatile Gp_EcuStpShdn_SatLocalImplType* Impl_ptst)",
+          "comment": null
+        }
+      ],
+      "comment": null,
+      "file": "Gp_EcuStpShdn_Types.h",
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "5.2.1.2",
+        "workItemKind": "type",
+        "title": "Gp_EcuStpShdn_SatRunTimeType",
+        "workItemId": null
+      },
+      "generated": {
+        "comment": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 593 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.243Z"
+      }
+    }
+  ],
+  "configMacros": [
+    {
+      "name": "GP_ECUSTPSHDN_ACTIVE_CORE_NUM",
+      "value": "(2U)",
+      "isFunctionLike": false,
+      "comment": "define active core number",
+      "file": "ConfTemplate\\Gp_EcuStpShdn_Cfg.h",
+      "kind": "general",
+      "usages": [
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_EcuStpShdn_Callout.c",
+          "line": 152,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 1U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_EcuStpShdn_Callout.c",
+          "line": 171,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 2U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_EcuStpShdn_Callout.c",
+          "line": 190,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 3U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_EcuStpShdn_Callout.c",
+          "line": 209,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 4U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_EcuStpShdn_Callout.c",
+          "line": 228,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 5U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_EcuStpShdn_Callout.h",
+          "line": 92,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 1U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_EcuStpShdn_Callout.h",
+          "line": 107,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 2U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_EcuStpShdn_Callout.h",
+          "line": 122,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 3U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_EcuStpShdn_Callout.h",
+          "line": 137,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 4U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_EcuStpShdn_Callout.h",
+          "line": 152,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 5U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 58,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 1U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 68,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 2U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 78,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 3U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 88,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 4U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 98,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 5U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 122,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 1U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 132,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 2U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 142,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 3U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 152,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 4U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 162,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 5U)"
+        },
+        {
+          "kind": "arrayDim",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 324,
+          "context": "uint32  TimeStamp_u32[GP_ECUSTPSHDN_ACTIVE_CORE_NUM];"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 330,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 1U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 334,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 2U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 338,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 3U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 342,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 4U)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 346,
+          "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 5U)"
+        },
+        {
+          "kind": "loopBound",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 351,
+          "context": "for (Cnt_u32 = 0U; Cnt_u32 < (uint32)GP_ECUSTPSHDN_ACTIVE_CORE_NUM; Cnt_u32++)"
+        }
+      ],
+      "affects": [
+        "Gp_EcuStpShdn_bufSatLocalImplCore1_ltst",
+        "Gp_EcuStpShdn_bufSatLocalImplCore2_ltst",
+        "Gp_EcuStpShdn_bufSatLocalImplCore3_ltst",
+        "Gp_EcuStpShdn_bufSatLocalImplCore4_ltst",
+        "Gp_EcuStpShdn_bufSatLocalImplCore5_ltst"
+      ],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "6.1",
+        "workItemKind": "config",
+        "title": "GP_ECUSTPSHDN_ACTIVE_CORE_NUM",
+        "workItemId": null
+      },
+      "generated": {
+        "valueEffect": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 817 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.221Z"
+      }
+    },
+    {
+      "name": "GP_ECUSTPSHDN_NOP",
+      "value": "MCAL_NOP()",
+      "isFunctionLike": true,
+      "comment": "define NOP",
+      "file": "ConfTemplate\\Gp_EcuStpShdn_Cfg.h",
+      "kind": "alias",
+      "usages": [
+        {
+          "kind": "call",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 566,
+          "context": "GP_ECUSTPSHDN_NOP();"
+        },
+        {
+          "kind": "call",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 660,
+          "context": "GP_ECUSTPSHDN_NOP();"
+        }
+      ],
+      "affects": [],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "6",
+        "workItemKind": "config",
+        "title": "GP_ECUSTPSHDN_NOP",
+        "workItemId": null
+      }
+    },
+    {
+      "name": "GP_ECUSTPSHDN_SAFETY_ENABLE",
+      "value": "(STD_ON)",
+      "isFunctionLike": false,
+      "comment": "safety enable",
+      "file": "ConfTemplate\\Gp_EcuStpShdn_Cfg.h",
+      "kind": "functional",
+      "usages": [
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_EcuStpShdn_Callout.c",
+          "line": 247,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_EcuStpShdn_Callout.c",
+          "line": 313,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_EcuStpShdn_Callout.h",
+          "line": 232,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "ConfTemplate\\Gp_EcuStpShdn_Cfg.h",
+          "line": 52,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 181,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 198,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 582,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 607,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 630,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 638,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 649,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 680,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 745,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)"
+        }
+      ],
+      "affects": [
+        "Gp_EcuStpShdn_CheckInitRslt",
+        "Gp_EcuStpShdn_MstPostInit",
+        "Gp_EcuStpShdn_MstProcMcuPreRunTest"
+      ],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "6.2",
+        "workItemKind": "config",
+        "title": "GP_ECUSTPSHDN_SAFETY_ENABLE",
+        "workItemId": null
+      },
+      "generated": {
+        "valueEffect": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 515 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.222Z"
+      }
+    },
+    {
+      "name": "GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE",
+      "value": "(STD_ON)",
+      "isFunctionLike": false,
+      "comment": null,
+      "file": "ConfTemplate\\Gp_EcuStpShdn_Cfg.h",
+      "kind": "functional",
+      "usages": [
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 247,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 277,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 289,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 301,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 608,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 650,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 688,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE == STD_ON)"
+        },
+        {
+          "kind": "condCompile",
+          "file": "Gp_EcuStpShdn.c",
+          "line": 759,
+          "context": "#if (GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE == STD_ON)"
+        }
+      ],
+      "affects": [],
+      "polarion": {
+        "isWorkItem": false,
+        "chapter": "6.2",
+        "workItemKind": "config",
+        "title": "GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE",
+        "workItemId": null
+      },
+      "generated": {
+        "valueEffect": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 397 字符）。",
+        "llmModel": "mock",
+        "generatedAt": "2026-09-21T10:15:03.223Z"
+      }
+    }
+  ],
+  "interfaceOverview": {
+    "diagram": "%%{init: {\"flowchart\": {\"rankSpacing\": 10, \"nodeSpacing\": 16}}}%%\nflowchart LR\n    Caller([\"外部调用方<br/>（其他 FC / RTE / 集成代码）\"])\n    subgraph MOD[\" \"]\n        direction TB\n        MT[\"<b>Gp_EcuStpShdn</b><br/><b>提供的外部接口</b>（8 个）<br/>────────────\"]\n        MT ~~~ P0(\"Gp_EcuStpShdn_<br/>SetSafeState\") ~~~ P1(\"Gp_EcuStpShdn_<br/>SetTryPwrShdn\") ~~~ P2(\"Gp_EcuStpShdn_<br/>GetSafeState\") ~~~ P3(\"Gp_EcuStpShdn_<br/>TrapRecov\")\n        MT ~~~ P4(\"Gp_EcuStpShdn_<br/>OsErrRecov\") ~~~ P5(\"Gp_EcuStpShdn_<br/>PwrShdnInShdnPhase\") ~~~ P6(\"Gp_EcuStpShdn_<br/>Startup\") ~~~ P7(\"Gp_EcuStpShdn_<br/>Mainfunction\")\n    end\n    G0[\"<b>Gp_RstM</b>（4 个）<br/>──────────<br/>Gp_RstM_GetLastRstTypeInfo<br/>Gp_RstM_Init<br/>Gp_RstM_InitOne<br/>Gp_RstM_InitTwo\"]\n    G1[\"<b>Gp_TstApp</b>（4 个）<br/>──────────<br/>Gp_TstApp_PreRunInit<br/>Gp_TstApp_PreRunPhase<br/>Gp_TstApp_RunTimePhase<br/>Gp_TstApp_SwitchToRunPhase\"]\n    Caller -->|call| MOD\n    MOD -->|call| G0\n    MOD -->|call| G1\n    classDef caller fill:#eaeef2,stroke:#57606a,color:#1f2328\n    classDef provided fill:#b6e3ff,stroke:#0969da,color:#0a3069\n    classDef extgroup fill:#f6f8fa,stroke:#57606a,color:#1f2328\n    class Caller caller\n    class P0,P1,P2,P3,P4,P5,P6,P7 provided\n    class G0 extgroup\n    class G1 extgroup\n    style MOD fill:#fbfcfd,stroke:#d0d7de,stroke-width:1px\n    style MT fill:transparent,stroke:transparent,color:#1f2328",
+    "diagramFormat": "mermaid",
+    "polarion": {
+      "isWorkItem": true,
+      "chapter": "5.1",
+      "workItemKind": "diagram",
+      "title": "功能接口总图",
+      "workItemId": null
+    }
+  },
+  "callGraphs": [
+    {
+      "name": "Gp_EcuStpShdn_TrapRecov",
+      "diagram": "flowchart LR\n    N0[\"Gp_EcuStpShdn_TrapRecov\"]\n    N1[\"CalloutTrapRecov\"]\n    N0 -->|call| N1\n    classDef entry fill:#0a3069,stroke:#0a3069,color:#ffffff\n    classDef internal fill:#eaeef2,stroke:#57606a,color:#1f2328\n    classDef provided fill:#b6e3ff,stroke:#0969da,color:#0a3069\n    classDef callout fill:#ffe9a8,stroke:#bf8700,color:#1f2328\n    class N0 entry\n    class N1 callout",
+      "diagramFormat": "mermaid",
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.1",
+        "workItemKind": "diagram",
+        "title": "Gp_EcuStpShdn_TrapRecov 调用图",
+        "workItemId": null
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_OsErrRecov",
+      "diagram": "flowchart LR\n    N0[\"Gp_EcuStpShdn_OsErrRecov\"]\n    N1[\"CalloutOsErrRecov\"]\n    N0 -->|call| N1\n    classDef entry fill:#0a3069,stroke:#0a3069,color:#ffffff\n    classDef internal fill:#eaeef2,stroke:#57606a,color:#1f2328\n    classDef provided fill:#b6e3ff,stroke:#0969da,color:#0a3069\n    classDef callout fill:#ffe9a8,stroke:#bf8700,color:#1f2328\n    class N0 entry\n    class N1 callout",
+      "diagramFormat": "mermaid",
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.1",
+        "workItemKind": "diagram",
+        "title": "Gp_EcuStpShdn_OsErrRecov 调用图",
+        "workItemId": null
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_PwrShdnInShdnPhase",
+      "diagram": "flowchart LR\n    N0[\"Gp_EcuStpShdn_PwrShdnInShdnPhase\"]\n    N1[\"CalloutPwrShdnInShdnPhase\"]\n    N0 -->|call| N1\n    classDef entry fill:#0a3069,stroke:#0a3069,color:#ffffff\n    classDef internal fill:#eaeef2,stroke:#57606a,color:#1f2328\n    classDef provided fill:#b6e3ff,stroke:#0969da,color:#0a3069\n    classDef callout fill:#ffe9a8,stroke:#bf8700,color:#1f2328\n    class N0 entry\n    class N1 callout",
+      "diagramFormat": "mermaid",
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.1",
+        "workItemKind": "diagram",
+        "title": "Gp_EcuStpShdn_PwrShdnInShdnPhase 调用图",
+        "workItemId": null
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_Startup",
+      "diagram": "flowchart LR\n    N0[\"Gp_EcuStpShdn_Startup\"]\n    N1[\"CalloutGetCoreId\"]\n    N0 -->|call| N1\n    N2[\"CalloutInitStageOneCore0\"]\n    N0 -->|call| N2\n    N3[\"CalloutGetSysTimeMs\"]\n    N0 -->|call| N3\n    N4[\"CalloutPwrShdnInStpPhase\"]\n    N0 -->|call| N4\n    N5[\"CalloutSbcInitInSafeState\"]\n    N0 -->|call| N5\n    N6[\"CalloutSafeState\"]\n    N0 -->|call| N6\n    N7[\"CalloutSbcInit\"]\n    N0 -->|call| N7\n    N8[\"Gp_EcuStpShdn_CheckInitRslt\"]\n    N0 -->|call| N8\n    N9[\"CalloutInitFailedHnd\"]\n    N0 -->|call| N9\n    N10[\"Gp_EcuStpShdn_MstProcMcuPreRunTest\"]\n    N0 -->|call| N10\n    N11[\"CalloutChkMcuPreRunTest\"]\n    N10 -->|call| N11\n    N12[\"CalloutMcuPreRunTestFailedHnd\"]\n    N10 -->|call| N12\n    N13[\"Gp_EcuStpShdn_MstPostInit\"]\n    N0 -->|call| N13\n    N14[\"Gp_EcuStpShdn_CheckInitRslt\"]\n    N13 -->|call| N14\n    N15[\"CalloutInitFailedHnd\"]\n    N13 -->|call| N15\n    N16[\"CalloutChkSwtToRun\"]\n    N13 -->|call| N16\n    N17[\"CalloutSwtToRunFailedHnd\"]\n    N13 -->|call| N17\n    N18[\"CalloutChkSbcTest\"]\n    N13 -->|call| N18\n    N19[\"CalloutSbcTestFailedHnd\"]\n    N13 -->|call| N19\n    classDef entry fill:#0a3069,stroke:#0a3069,color:#ffffff\n    classDef internal fill:#eaeef2,stroke:#57606a,color:#1f2328\n    classDef provided fill:#b6e3ff,stroke:#0969da,color:#0a3069\n    classDef callout fill:#ffe9a8,stroke:#bf8700,color:#1f2328\n    class N0 entry\n    class N8,N10,N13,N14 internal\n    class N1,N2,N3,N4,N5,N6,N7,N9,N11,N12,N15,N16,N17,N18,N19 callout",
+      "diagramFormat": "mermaid",
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.1",
+        "workItemKind": "diagram",
+        "title": "Gp_EcuStpShdn_Startup 调用图",
+        "workItemId": null
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_Mainfunction",
+      "diagram": "flowchart LR\n    N0[\"Gp_EcuStpShdn_Mainfunction\"]\n    N1[\"CalloutGetCoreId\"]\n    N0 -->|call| N1\n    N2[\"Gp_EcuStpShdn_GetLastSatTimeStamp\"]\n    N0 -->|call| N2\n    N3[\"CalloutChkMcuRunTimeTest\"]\n    N0 -->|call| N3\n    N4[\"CalloutMcuRunTimeTestFailedHnd\"]\n    N0 -->|call| N4\n    classDef entry fill:#0a3069,stroke:#0a3069,color:#ffffff\n    classDef internal fill:#eaeef2,stroke:#57606a,color:#1f2328\n    classDef provided fill:#b6e3ff,stroke:#0969da,color:#0a3069\n    classDef callout fill:#ffe9a8,stroke:#bf8700,color:#1f2328\n    class N0 entry\n    class N2 internal\n    class N1,N3,N4 callout",
+      "diagramFormat": "mermaid",
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.1",
+        "workItemKind": "diagram",
+        "title": "Gp_EcuStpShdn_Mainfunction 调用图",
+        "workItemId": null
+      }
+    },
+    {
+      "name": "配置表函数指针引用",
+      "diagram": "flowchart LR\n    N_CfgTbl[\"配置表函数指针引用\"]\n    N_Gp_EcuStpShdn_CalloutInitStageTwoCore0[\"CalloutInitStageTwoCore0\"]\n    N_CfgTbl -->|call（函数指针间接调用）| N_Gp_EcuStpShdn_CalloutInitStageTwoCore0\n    N_Gp_EcuStpShdn_CalloutInitStageTwoCore1[\"CalloutInitStageTwoCore1\"]\n    N_CfgTbl -->|call（函数指针间接调用）| N_Gp_EcuStpShdn_CalloutInitStageTwoCore1\n    N_Gp_EcuStpShdn_CalloutInitStageTwoCore2[\"CalloutInitStageTwoCore2\"]\n    N_CfgTbl -->|call（函数指针间接调用）| N_Gp_EcuStpShdn_CalloutInitStageTwoCore2\n    N_Gp_EcuStpShdn_CalloutInitStageTwoCore3[\"CalloutInitStageTwoCore3\"]\n    N_CfgTbl -->|call（函数指针间接调用）| N_Gp_EcuStpShdn_CalloutInitStageTwoCore3\n    N_Gp_EcuStpShdn_CalloutInitStageTwoCore4[\"CalloutInitStageTwoCore4\"]\n    N_CfgTbl -->|call（函数指针间接调用）| N_Gp_EcuStpShdn_CalloutInitStageTwoCore4\n    N_Gp_EcuStpShdn_CalloutInitStageTwoCore5[\"CalloutInitStageTwoCore5\"]\n    N_CfgTbl -->|call（函数指针间接调用）| N_Gp_EcuStpShdn_CalloutInitStageTwoCore5\n    classDef entry fill:#0a3069,stroke:#0a3069,color:#ffffff\n    classDef internal fill:#eaeef2,stroke:#57606a,color:#1f2328\n    classDef provided fill:#b6e3ff,stroke:#0969da,color:#0a3069\n    classDef callout fill:#ffe9a8,stroke:#bf8700,color:#1f2328\n    class N_CfgTbl internal\n    class N_Gp_EcuStpShdn_CalloutInitStageTwoCore0,N_Gp_EcuStpShdn_CalloutInitStageTwoCore1,N_Gp_EcuStpShdn_CalloutInitStageTwoCore2,N_Gp_EcuStpShdn_CalloutInitStageTwoCore3,N_Gp_EcuStpShdn_CalloutInitStageTwoCore4,N_Gp_EcuStpShdn_CalloutInitStageTwoCore5 callout",
+      "diagramFormat": "mermaid",
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.1",
+        "workItemKind": "diagram",
+        "title": "配置表函数指针引用 调用图",
+        "workItemId": null
+      }
+    }
+  ],
+  "dynamicDesign": {
+    "stateMachine": {
+      "name": "Gp_EcuStpShdn 状态机（主核 Core0）",
+      "diagram": "stateDiagram-v2\n    [*] --> UNDEF : 上电复位\n    UNDEF --> ONE\n    ONE --> TWO : master set ECU is init stage two\n    TWO --> [*] : MstImpl_ptst->TryPwrShdn_b == TRUE\n    TWO --> THREE : !(MstImpl_ptst->TryPwrShdn_b == TRUE)\n    THREE --> [*]\n    ONE : ONE——执行 Gp_EcuStpShdn_CalloutInitStageOneCore0()、Gp_RstM_InitOne()\n    TWO : TWO——执行 Gp_TstApp_PreRunInit()、Gp_TstApp_PreRunPhase()、Gp_EcuStpShdn_CalloutGetSysTimeMs()、Gp_RstM_InitTwo()……等 12 项",
+      "diagramFormat": "mermaid",
+      "states": [
+        {
+          "name": "GP_ECUSTPSHDN_STPSTAGE_UNDEF",
+          "description": "undefined status"
+        },
+        {
+          "name": "GP_ECUSTPSHDN_STPSTAGE_ONE",
+          "description": "startup stage one"
+        },
+        {
+          "name": "GP_ECUSTPSHDN_STPSTAGE_TWO",
+          "description": "startup stage two"
+        },
+        {
+          "name": "GP_ECUSTPSHDN_STPSTAGE_THREE",
+          "description": "startup stage three"
+        }
+      ],
+      "transitions": [
+        {
+          "from": "[*]",
+          "to": "UNDEF",
+          "trigger": "上电复位",
+          "description": ""
+        },
+        {
+          "from": "UNDEF",
+          "to": "ONE",
+          "trigger": "",
+          "description": ""
+        },
+        {
+          "from": "ONE",
+          "to": "TWO",
+          "trigger": "master set ECU is init stage two",
+          "description": ""
+        },
+        {
+          "from": "TWO",
+          "to": "[*]",
+          "trigger": "MstImpl_ptst->TryPwrShdn_b == TRUE",
+          "description": ""
+        },
+        {
+          "from": "TWO",
+          "to": "THREE",
+          "trigger": "!(MstImpl_ptst->TryPwrShdn_b == TRUE)",
+          "description": ""
+        },
+        {
+          "from": "THREE",
+          "to": "[*]",
+          "trigger": "",
+          "description": ""
+        }
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.3.1",
+        "workItemKind": "statemachine",
+        "title": "Gp_EcuStpShdn 状态机（主核 Core0）",
+        "workItemId": null
+      }
+    },
+    "stateMachines": [
+      {
+        "name": "Gp_EcuStpShdn 状态机（主核 Core0）",
+        "diagram": "stateDiagram-v2\n    [*] --> UNDEF : 上电复位\n    UNDEF --> ONE\n    ONE --> TWO : master set ECU is init stage two\n    TWO --> [*] : MstImpl_ptst->TryPwrShdn_b == TRUE\n    TWO --> THREE : !(MstImpl_ptst->TryPwrShdn_b == TRUE)\n    THREE --> [*]\n    ONE : ONE——执行 Gp_EcuStpShdn_CalloutInitStageOneCore0()、Gp_RstM_InitOne()\n    TWO : TWO——执行 Gp_TstApp_PreRunInit()、Gp_TstApp_PreRunPhase()、Gp_EcuStpShdn_CalloutGetSysTimeMs()、Gp_RstM_InitTwo()……等 12 项",
+        "diagramFormat": "mermaid",
+        "states": [
+          {
+            "name": "GP_ECUSTPSHDN_STPSTAGE_UNDEF",
+            "description": "undefined status"
+          },
+          {
+            "name": "GP_ECUSTPSHDN_STPSTAGE_ONE",
+            "description": "startup stage one"
+          },
+          {
+            "name": "GP_ECUSTPSHDN_STPSTAGE_TWO",
+            "description": "startup stage two"
+          },
+          {
+            "name": "GP_ECUSTPSHDN_STPSTAGE_THREE",
+            "description": "startup stage three"
+          }
+        ],
+        "transitions": [
+          {
+            "from": "[*]",
+            "to": "UNDEF",
+            "trigger": "上电复位",
+            "description": ""
+          },
+          {
+            "from": "UNDEF",
+            "to": "ONE",
+            "trigger": "",
+            "description": ""
+          },
+          {
+            "from": "ONE",
+            "to": "TWO",
+            "trigger": "master set ECU is init stage two",
+            "description": ""
+          },
+          {
+            "from": "TWO",
+            "to": "[*]",
+            "trigger": "MstImpl_ptst->TryPwrShdn_b == TRUE",
+            "description": ""
+          },
+          {
+            "from": "TWO",
+            "to": "THREE",
+            "trigger": "!(MstImpl_ptst->TryPwrShdn_b == TRUE)",
+            "description": ""
+          },
+          {
+            "from": "THREE",
+            "to": "[*]",
+            "trigger": "",
+            "description": ""
+          }
+        ],
+        "polarion": {
+          "isWorkItem": true,
+          "chapter": "5.3.1",
+          "workItemKind": "statemachine",
+          "title": "Gp_EcuStpShdn 状态机（主核 Core0）",
+          "workItemId": null
+        }
+      },
+      {
+        "name": "Gp_EcuStpShdn 状态机（从核 satellite）",
+        "diagram": "stateDiagram-v2\n    [*] --> UNDEF : 上电复位\n    UNDEF --> TWO : StpStage_t == GP_ECUSTPSHDN_STPSTAGE_TWO（自旋等待退出）\n    TWO --> THREE : StpStage_t == GP_ECUSTPSHDN_STPSTAGE_THREE（自旋等待退出）\n    THREE --> [*]\n    TWO : TWO——执行 Gp_TstApp_PreRunInit()、Gp_TstApp_PreRunPhase()、Gp_EcuStpShdn_CalloutGetSysTimeMs()\n    THREE : THREE——执行 StpStageTwo_pf()、Gp_EcuStpShdn_CalloutGetSysTimeMs()、Gp_EcuStpShdn_CheckInitRslt()、Gp_EcuStpShdn_CalloutInitFailedHnd()",
+        "diagramFormat": "mermaid",
+        "states": [
+          {
+            "name": "GP_ECUSTPSHDN_STPSTAGE_UNDEF",
+            "description": "undefined status"
+          },
+          {
+            "name": "GP_ECUSTPSHDN_STPSTAGE_ONE",
+            "description": "startup stage one"
+          },
+          {
+            "name": "GP_ECUSTPSHDN_STPSTAGE_TWO",
+            "description": "startup stage two"
+          },
+          {
+            "name": "GP_ECUSTPSHDN_STPSTAGE_THREE",
+            "description": "startup stage three"
+          }
+        ],
+        "transitions": [
+          {
+            "from": "[*]",
+            "to": "UNDEF",
+            "trigger": "上电复位",
+            "description": ""
+          },
+          {
+            "from": "UNDEF",
+            "to": "TWO",
+            "trigger": "StpStage_t == GP_ECUSTPSHDN_STPSTAGE_TWO（自旋等待退出）",
+            "description": ""
+          },
+          {
+            "from": "TWO",
+            "to": "THREE",
+            "trigger": "StpStage_t == GP_ECUSTPSHDN_STPSTAGE_THREE（自旋等待退出）",
+            "description": ""
+          },
+          {
+            "from": "THREE",
+            "to": "[*]",
+            "trigger": "",
+            "description": ""
+          }
+        ],
+        "polarion": {
+          "isWorkItem": true,
+          "chapter": "5.3.1",
+          "workItemKind": "statemachine",
+          "title": "Gp_EcuStpShdn 状态机（从核 satellite）",
+          "workItemId": null
+        }
+      }
+    ],
+    "sequences": [
+      {
+        "name": "Initialization（主核 Core0）",
+        "diagram": "sequenceDiagram\n    participant OS as OS\n    participant EcuStpShdn as Gp_EcuStpShdn\n    participant RstM as Gp_RstM\n    participant TstApp as Gp_TstApp\n\n    OS->>EcuStpShdn: Gp_EcuStpShdn_Startup()\n    EcuStpShdn->>EcuStpShdn: Gp_EcuStpShdn_CalloutGetCoreId()\n    EcuStpShdn->>EcuStpShdn: Gp_EcuStpShdn_CalloutInitStageOneCore0()\n    opt GP_RSTM_PROJ_TYPE_SEL 生效时\n        EcuStpShdn->>RstM: Gp_RstM_InitOne()\n    end\n    opt GP_ECUSTPSHDN_SAFETY_ENABLE 生效时\n        EcuStpShdn->>TstApp: Gp_TstApp_PreRunInit()\n        EcuStpShdn->>TstApp: Gp_TstApp_PreRunPhase()\n    end\n    EcuStpShdn->>EcuStpShdn: Gp_EcuStpShdn_CalloutGetSysTimeMs()\n    alt GP_RSTM_PROJ_TYPE_SEL 生效时\n        EcuStpShdn->>RstM: Gp_RstM_InitTwo()\n    else 未生效时\n        EcuStpShdn->>RstM: Gp_RstM_Init()\n    end\n    alt MstImpl_ptst->TryPwrShdn_b == TRUE\n        opt GP_ECUSTPSHDN_SAFETY_ENABLE 生效时\n            opt GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE 生效时\n                EcuStpShdn->>EcuStpShdn: Gp_EcuStpShdn_CalloutPwrShdnInStpPhase()\n            end\n        end\n    else MstImpl_ptst->SafeState_b == TRUE\n        opt GP_ECUSTPSHDN_SAFETY_ENABLE 生效时\n            opt GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE 生效时\n                EcuStpShdn->>EcuStpShdn: StpStageTwo_pf()\n                EcuStpShdn->>EcuStpShdn: Gp_EcuStpShdn_CalloutSbcInitInSafeState()\n                EcuStpShdn->>EcuStpShdn: Gp_EcuStpShdn_CalloutSafeState()\n            end\n        end\n    else\n        opt GP_ECUSTPSHDN_SAFETY_ENABLE 生效时\n            EcuStpShdn->>EcuStpShdn: Gp_EcuStpShdn_MstProcMcuPreRunTest()\n        end\n        EcuStpShdn->>EcuStpShdn: StpStageTwo_pf()\n        EcuStpShdn->>EcuStpShdn: Gp_EcuStpShdn_CalloutGetSysTimeMs()\n        opt GP_ECUSTPSHDN_SAFETY_ENABLE 生效时\n            EcuStpShdn->>EcuStpShdn: Gp_EcuStpShdn_MstPostInit()\n        end\n        EcuStpShdn->>EcuStpShdn: Gp_EcuStpShdn_CalloutSbcInit()\n        EcuStpShdn->>EcuStpShdn: Gp_EcuStpShdn_CalloutGetSysTimeMs()\n    end",
+        "diagramFormat": "mermaid",
+        "description": "本图描述 Gp_EcuStpShdn 模块 Gp_EcuStpShdn_Startup() 在初始化场景（主核 Core0）下的函数调用顺序与交互关系。\nOS 触发入口函数后共发出 18 条调用消息，涉及外部模块 Gp_RstM、Gp_TstApp。\n控制结构包含2 处条件分支（alt）、8 处条件执行（opt）。",
+        "polarion": {
+          "isWorkItem": true,
+          "chapter": "5.3.2",
+          "workItemKind": "sequence",
+          "title": "Gp_EcuStpShdn Initialization 序列图（主核 Core0）",
+          "workItemId": null
+        }
+      },
+      {
+        "name": "Initialization（从核 satellite）",
+        "diagram": "sequenceDiagram\n    participant OS as OS\n    participant EcuStpShdn as Gp_EcuStpShdn\n    participant TstApp as Gp_TstApp\n\n    OS->>EcuStpShdn: Gp_EcuStpShdn_Startup()\n    EcuStpShdn->>EcuStpShdn: Gp_EcuStpShdn_CalloutGetCoreId()\n    loop MstImpl_ptst->StpStage_t != GP_ECUSTPSHDN_STPSTAGE_TWO\n        EcuStpShdn->>EcuStpShdn: GP_ECUSTPSHDN_NOP()\n    end\n    opt GP_ECUSTPSHDN_SAFETY_ENABLE 生效时\n        EcuStpShdn->>TstApp: Gp_TstApp_PreRunInit()\n        EcuStpShdn->>TstApp: Gp_TstApp_PreRunPhase()\n    end\n    EcuStpShdn->>EcuStpShdn: Gp_EcuStpShdn_CalloutGetSysTimeMs()\n    loop MstImpl_ptst->StpStage_t != GP_ECUSTPSHDN_STPSTAGE_THREE\n        EcuStpShdn->>EcuStpShdn: GP_ECUSTPSHDN_NOP()\n    end\n    EcuStpShdn->>EcuStpShdn: StpStageTwo_pf()\n    EcuStpShdn->>EcuStpShdn: Gp_EcuStpShdn_CalloutGetSysTimeMs()\n    opt GP_ECUSTPSHDN_SAFETY_ENABLE 生效时\n        opt MstImpl_ptst->SafeState_b == FALSE\n            EcuStpShdn->>EcuStpShdn: Gp_EcuStpShdn_CheckInitRslt()\n            opt SatImpl_ptst->InitRsltAllBits_u32 != 0U\n                opt GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE 生效时\n                    EcuStpShdn->>EcuStpShdn: Gp_EcuStpShdn_CalloutInitFailedHnd()\n                end\n            end\n        end\n    end",
+        "diagramFormat": "mermaid",
+        "description": "本图描述 Gp_EcuStpShdn 模块 Gp_EcuStpShdn_Startup() 在初始化场景（从核 satellite）下的函数调用顺序与交互关系。\nOS 触发入口函数后共发出 10 条调用消息，涉及外部模块 Gp_TstApp。\n控制结构包含5 处条件执行（opt）、2 处循环（loop）。",
+        "polarion": {
+          "isWorkItem": true,
+          "chapter": "5.3.2",
+          "workItemKind": "sequence",
+          "title": "Gp_EcuStpShdn Initialization 序列图（从核 satellite）",
+          "workItemId": null
+        }
+      },
+      {
+        "name": "Runtime（主核 Core0）",
+        "diagram": "sequenceDiagram\n    participant OS as OS\n    participant EcuStpShdn as Gp_EcuStpShdn\n    participant TstApp as Gp_TstApp\n\n    OS->>EcuStpShdn: Gp_EcuStpShdn_Mainfunction()\n    EcuStpShdn->>EcuStpShdn: Gp_EcuStpShdn_CalloutGetCoreId()\n    opt MstImpl_ptst->TimeStamp_u32[GP_ECUSTPSHDN_MST_TIME_STAMP_LAST_SAT_INIT] == 0U\n        EcuStpShdn->>EcuStpShdn: Gp_EcuStpShdn_GetLastSatTimeStamp()\n    end\n    opt GP_ECUSTPSHDN_SAFETY_ENABLE 生效时\n        opt (MstImpl_ptst->TryPwrShdn_b == FALSE) && (MstImpl_ptst->SafeState_b == FALSE)\n            EcuStpShdn->>TstApp: Gp_TstApp_RunTimePhase()\n            EcuStpShdn->>EcuStpShdn: Gp_EcuStpShdn_CalloutChkMcuRunTimeTest()\n            opt Gp_EcuStpShdn_CalloutChkMcuRunTimeTest() == FALSE\n                opt GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE 生效时\n                    EcuStpShdn->>EcuStpShdn: Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd()\n                end\n            end\n        end\n    end",
+        "diagramFormat": "mermaid",
+        "description": "本图描述 Gp_EcuStpShdn 模块 Gp_EcuStpShdn_Mainfunction() 在周期运行场景（主核 Core0）下的函数调用顺序与交互关系。\nOS 触发入口函数后共发出 5 条调用消息，涉及外部模块 Gp_TstApp。\n控制结构包含5 处条件执行（opt）。",
+        "polarion": {
+          "isWorkItem": true,
+          "chapter": "5.3.2",
+          "workItemKind": "sequence",
+          "title": "Gp_EcuStpShdn Runtime 序列图（主核 Core0）",
+          "workItemId": null
+        }
+      },
+      {
+        "name": "Runtime（从核 satellite）",
+        "diagram": "sequenceDiagram\n    participant OS as OS\n    participant EcuStpShdn as Gp_EcuStpShdn\n    participant TstApp as Gp_TstApp\n\n    OS->>EcuStpShdn: Gp_EcuStpShdn_Mainfunction()\n    EcuStpShdn->>EcuStpShdn: Gp_EcuStpShdn_CalloutGetCoreId()\n    opt GP_ECUSTPSHDN_SAFETY_ENABLE 生效时\n        opt (MstImpl_ptst->TryPwrShdn_b == FALSE) && (MstImpl_ptst->SafeState_b == FALSE)\n            EcuStpShdn->>TstApp: Gp_TstApp_RunTimePhase()\n        end\n    end",
+        "diagramFormat": "mermaid",
+        "description": "本图描述 Gp_EcuStpShdn 模块 Gp_EcuStpShdn_Mainfunction() 在周期运行场景（从核 satellite）下的函数调用顺序与交互关系。\nOS 触发入口函数后共发出 2 条调用消息，涉及外部模块 Gp_TstApp。\n控制结构包含2 处条件执行（opt）。",
+        "polarion": {
+          "isWorkItem": true,
+          "chapter": "5.3.2",
+          "workItemKind": "sequence",
+          "title": "Gp_EcuStpShdn Runtime 序列图（从核 satellite）",
+          "workItemId": null
+        }
+      }
+    ]
+  },
+  "functionalDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 1012 字符）。"
+}

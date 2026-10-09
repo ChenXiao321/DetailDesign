@@ -8,7 +8,9 @@
   ],
   "scripts": {
     "build": "npm run build -w packages/core && npm run build -w packages/cli",
-    "analyze": "npm run analyze -w packages/cli"
+    "analyze": "npm run analyze -w packages/cli",
+    "test": "node tests/run-all.js",
+    "test:gate": "node tests/run-all.js --gate"
   },
   "engines": {
     "node": ">=18"

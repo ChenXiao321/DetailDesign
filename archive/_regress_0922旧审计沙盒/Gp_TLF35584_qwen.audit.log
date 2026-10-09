@@ -1,0 +1,26 @@
+⚠ 序列图检查: Initialization 全图无组合片段，但函数 Gp_TLF35584_Init 源码含分支/循环，疑似平铺（需重生成 dynamic）
+⚠ 序列图检查: Runtime 全图无组合片段，但函数 Gp_TLF35584_MainFunction 源码含分支/循环，疑似平铺（需重生成 dynamic）
+无头浏览器预渲染中（msedge.exe）…
+
+================ 渲染质量验收 ================
+SVG 图数: 62（ORTHO 已处理 62）
+mermaid 语法错误图: 0
+流程图边: 直角 1063 / 斜线 9 / 共 1072
+  斜线边: L_SPI_OK_SET_ERR_PATH2_23, L_INC_LOOP3_COND_LOOP3_26, L_CHECK_TIME_READ_REG1_7, L_SET_OK_LOOP_CHECK_20, L_SET_ERR2_LOOP_CHECK_24, L_P3_D0_39, L_E7_D0_40, L_E6_D0_41, L_E5_D0_42
+交叉/穿盒审计: 见下
+  svg#11 穿盒/越界/贴缘:
+    L_END_ERR_END_59#seg0 贴 END_DEF 底边
+  svg#31 穿盒/越界/贴缘:
+    L_CALL_WWD_WDI_1_END_10#seg0 贴 CALL_WWD_SPI_1 底边
+  svg#38 穿盒/越界/贴缘:
+    L_SET_QUC_END_16#seg0 贴 SET_ENA 底边
+  svg#48 穿盒/越界/贴缘:
+    L_ERR10_END_28#seg0 贴 ERR9 底边
+箭头朝向审计:
+  svg#23 L_CHECK_FLAG_CLEAR_ERR_19 横进但箭尖未贴左/右边 dx=79.8
+  svg#48 L_CHECK1_ERR9_11 横进但箭尖未贴左/右边 dx=59.0
+  svg#51 L_CHECK_SELECT_SET_ERR1_22 竖进但箭尖未贴顶/底边 dy=3.4
+  svg#51 L_CHECK_CTRL_SET_ERR0_23 竖进但箭尖未贴顶/底边 dy=3.4
+=============================================
+验收结论: 有上述待评审项（贴缘/轻微箭头项目检可接受的除外；斜线为 dagre 兜底的设计内行为时需人工确认）
+预渲染报告（SVG 成品，浏览器直接打开）: D:\Z-Personal\Chenfenqin\详细设计文档生成\内网测试\Gp_TLF35584_qwen\lld_report.html

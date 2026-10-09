@@ -207,9 +207,14 @@ packages/            # 产品代码
 │       ├── llm/          # LLM Provider（OpenAI兼容/Mock）+ prompt
 │       └── generator/    # 生成编排（描述增强、动态设计、重试校验）
 ├── cli/             # 命令行入口
+tests/               # 验证体系：12 测试套件 + 夹具 + 双字节门禁 + run-all 入口（npm test）
+archive/             # 历史归档：一次性调图/补丁脚本、过程截图、旧补丁 zip（不删，留追溯）
 samples/             # 示例生成内容（LLM 离线内容源）
 模板/                # G-B035-005 软件详细设计规范（Code）.docx
 参考文件/            # 既有 AI 生成 LLD 参考（1231-2_convert.docx）
 测试模块/            # 测试输入：Gp_EcuStpStdn/ 试点模块源码（只放 .c/.h）
 测试产出/            # 测试产出：Gp_EcuStpStdn/ 下 lld_model.json / lld_design.json / lld_report.html
+内网测试/            # 内网各轮验证产物（含 qwen 系列基线）
+modu-迁移包.zip      # 内网部署整包（_zip_rewrite.py 整包重写+字节核验）
+lld-run.bat          # 一键全流程包装（run 子命令）
 ```

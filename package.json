@@ -1,7 +1,7 @@
 {
   "name": "modu",
   "private": true,
-  "version": "0.4.0",
+  "version": "0.4.2",
   "description": "Modu 软件单元全生命周期开发平台 · 第一阶段 Modu.LLD：C 代码 → ASPICE SWE.3 详细设计 HTML 评审报告",
   "workspaces": [
     "packages/*"

@@ -42,6 +42,12 @@ for root in ['packages/core/src', 'packages/core/dist', 'packages/cli/src', 'pac
 for e in extra:
     print('++ 新文件补入:', e)
 
+# 根级工具脚本显式清单（不在扫描根内）：一键全流程 bat 包装（2026-10-09 起）
+for f in ['lld-run.bat']:
+    if os.path.isfile(f) and f not in old_set and f not in extra:
+        extra.append(f)
+        print('++ 新文件补入:', f)
+
 all_names = names + extra
 new = zipfile.ZipFile(TMP, 'w', zipfile.ZIP_DEFLATED)
 bad = 0

@@ -107,7 +107,7 @@ async function cmdAnalyze(dir: string, outDir: string): Promise<void> {
   console.log(`\n中间模型已写入: ${output}`);
 }
 
-async function cmdGen(dir: string, outDir: string, mock: boolean, only?: string[], resume?: boolean): Promise<void> {
+async function cmdGen(dir: string, outDir: string, mock: boolean, only?: string[], resume?: boolean): Promise<{ schemaProblems: string[]; failures: string[] }> {
   const modelPath = path.join(outDir, 'lld_model.json');
   const designPath = path.join(outDir, 'lld_design.json');
   // --resume：优先加载已有的 design json（含已生成内容），跳过已完成条目
@@ -172,6 +172,37 @@ async function cmdGen(dir: string, outDir: string, mock: boolean, only?: string[
     for (const seq of model.dynamicDesign.sequences) console.log(`  序列图: ${seq.name}`);
   }
   console.log(`已写入: ${designPath}`);
+  return { schemaProblems, failures };
+}
+
+/** 一键全流程（工具集成入口）：analyze → gen（增量续跑）→ report → audit。
+ *  退出码：0=全绿；1=任一步骤异常或 gen 结构自检未过（残缺 json 不产出报告）；
+ *  2=流程走完但有个别条目生成失败（报告已产出，可 --resume 续跑补齐）。
+ *  审计项（斜线/贴缘等设计内行为）不影响退出码，以 audit 打印的中文验收报告为准。 */
+async function cmdRun(dir: string, outDir: string, mock: boolean, withImages: boolean, skipAudit: boolean): Promise<void> {
+  console.log('===== [1/4] 静态分析 =====');
+  await cmdAnalyze(dir, outDir);
+  console.log('\n===== [2/4] LLM 生成设计内容 =====');
+  const { schemaProblems, failures } = await cmdGen(dir, outDir, mock, undefined, true);
+  if (schemaProblems.length > 0) {
+    console.error('\n✗ 结构完整性自检未过，中止：残缺 json 不产出报告（修复后可原命令重跑，增量续跑）');
+    process.exit(1);
+  }
+  if (withImages) {
+    console.log('\n===== 图 PNG 物化 =====');
+    await cmdImages(outDir, true);
+  }
+  console.log('\n===== [3/4] 生成 HTML 评审报告 =====');
+  await cmdReport(outDir);
+  if (!skipAudit) {
+    console.log('\n===== [4/4] 渲染质量验收 =====');
+    await cmdAudit(outDir);
+  }
+  if (failures.length > 0) {
+    console.error(`\n⚠ ${failures.length} 个条目生成失败，报告已产出但内容不全；原命令重跑即可增量补齐`);
+    process.exit(2);
+  }
+  console.log(`\n一键全流程完成 ✓ 产物目录: ${outDir}`);
 }
 
 async function cmdReport(outDir: string): Promise<void> {
@@ -266,9 +297,17 @@ async function main(): Promise<void> {
       if (!dir) break;
       await cmdAudit(outDir);
       return;
+    case 'run':
+      if (!dir) break;
+      await cmdRun(dir, outDir, mock, args.includes('--images'), args.includes('--skip-audit'));
+      return;
   }
 
   console.error(`用法:
+  lld run <模块目录> [--out 产物目录] [--mock] [--images] [--skip-audit]
+                                        一键全流程（工具集成入口）：analyze → gen（增量续跑）→ report → audit；
+                                        退出码 0=全绿 / 1=异常或结构自检未过（不出报告）/ 2=个别条目失败（报告已出，重跑补齐）；
+                                        --images 追加图 PNG 物化（归档用，需 Edge）；--skip-audit 跳过渲染验收
   lld ping                              LLM 连通性自检（/models + 最小 chat 调用）
   lld analyze <模块目录> [--out 产物目录]   静态分析，产出 lld_model.json
   lld gen <模块目录> [--out 产物目录] [--mock] [--resume] [--only 函数名,dynamic,configs,callouts,flowcharts,types,externals,description,document,images]

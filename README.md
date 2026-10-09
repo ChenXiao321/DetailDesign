@@ -16,6 +16,21 @@
 约定：模块源码放 `测试模块/<模块名>/`，产物统一输出到 `测试产出/<模块名>/`（用 `--out` 指定；
 不带 `--out` 时产物写在模块目录内）。下文以试点模块 Gp_EcuStpStdn 为例。
 
+### 一键全流程（工具集成入口，推荐）
+
+```bash
+node packages/cli/dist/index.js run 测试模块/Gp_EcuStpStdn --out 测试产出/Gp_EcuStpStdn
+# Windows 也可用包装脚本：lld-run.bat 测试模块\Gp_EcuStpStdn 测试产出\Gp_EcuStpStdn
+```
+
+一条命令串联 analyze → gen（增量续跑）→ report → audit，适合被外部工具 shell 调用：
+- 退出码：`0`=全绿；`1`=异常或结构完整性自检未过（残缺 json 不产出报告）；`2`=个别条目生成失败（报告已产出，原命令重跑即增量补齐）
+- 审计项（斜线/贴缘等设计内行为）不影响退出码，以 audit 打印的中文验收报告为准
+- 选项：`--mock` 离线预览；`--images` 追加图 PNG 物化（归档用，需 Edge）；`--skip-audit` 跳过渲染验收
+- LLM 配置照旧：环境变量 `LLD_LLM_BASE_URL` 等，或当前目录 `lld.config.json`
+
+### 分步执行（调试/精细控制用）
+
 ### 第 1 步：静态分析（离线，不依赖 LLM）
 
 ```bash

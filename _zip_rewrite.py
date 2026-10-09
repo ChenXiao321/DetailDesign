@@ -4,8 +4,8 @@
 import zipfile, io, sys, os, hashlib
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
-ZIP = 'lld-agent-迁移包.zip'
-TMP = 'lld-agent-迁移包.zip.tmp'
+ZIP = 'modu-迁移包.zip'
+TMP = 'modu-迁移包.zip.tmp'
 
 old = zipfile.ZipFile(ZIP)
 names = old.namelist()

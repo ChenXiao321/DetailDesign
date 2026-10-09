@@ -1,6 +1,16 @@
-# LLD Agent 操作指南
+# Modu —— 软件单元全生命周期开发平台
 
-详细设计生成 agent：C 代码 → ASPICE SWE.3 详细设计 HTML 评审报告。
+**Modu**（MOdule Development Unit）：面向汽车嵌入式软件单元的「需求 · 设计 · 代码 · 测试」一体化开发平台。
+
+本仓库当前为平台第一阶段 **Modu.LLD**（已完成 ✅）：C 代码 → ASPICE SWE.3 详细设计 HTML 评审报告（反向文档化）。
+
+```
+Modu 平台规划
+├─ Modu.LLD    详细设计（第一阶段：代码 → SWE.3 详细设计，已完成）
+├─ Modu.Req    需求管理/生成（规划）
+├─ Modu.Code   代码生成（规划）
+└─ Modu.Test   单元测试（规划）
+```
 
 ## 环境准备
 
@@ -175,6 +185,10 @@ node packages/cli/dist/index.js gen <模块目录> --out <产物目录> --only i
 mermaid 实时渲染），PNG 为归档/导出用途。
 
 ## 当前状态
+
+**第一阶段 Modu.LLD 已完成 ✅**（2026-10-09，tag v0.4.0）：一键全流程（run 子命令/lld-run.bat）、
+结构冻结 v1（schemaVersion=1 + 产出管线嵌入 lint）、全章节物化、图 PNG 物化、
+类型卡片 Polarion 工作项样式、迁移包整包 994 条目。
 
 | 阶段 | 状态 |
 |------|------|

@@ -27,6 +27,17 @@ HTML 评审报告。包内已包含全部 npm 依赖（node_modules）和已构�
   4. LLM 连通性自检：
        node packages/cli/dist/index.js ping
 
+■ 两个 bat 包装脚本的分工
+  - 【lld-run.bat】干活的一键流程（自动化/工具集成入口）：非交互，带参数
+    跑完 analyze→gen→report→audit 即退出，退出码 0/1/2 原样透传。
+    前提：node 已在 PATH——它自己【不会】去找便携版 Node。
+  - 【启动命令行.bat】给人用的环境准备（机器没装全局 Node 时）：无参数，
+    双击打开一个已临时配好便携 Node PATH 的 cmd 窗口，窗口内手动敲命令。
+  - 无全局 Node 的机器上典型组合：先双击【启动命令行.bat】开好窗口，
+    再在该窗口里调 lld-run.bat；外部工具直接 shell 调 lld-run.bat 时，
+    需由调用方保证 PATH 里有 node（或用 node.exe 完整路径调 CLI，
+    绕开 bat）。
+
 ■ 一键全流程（推荐，工具集成入口）
   node packages/cli/dist/index.js run 测试模块/<模块名> --out <产物目录>
   Windows 包装脚本（可被外部工具直接 shell 调用，退出码原样透传）：

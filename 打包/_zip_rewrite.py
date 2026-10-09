@@ -45,7 +45,7 @@ def src_of(zip_name):
     return SRC_MAP.get(zip_name, zip_name)
 
 old = zipfile.ZipFile(BASE)
-names = old.namelist()
+names = [n for n in old.namelist() if n != '版本.txt']   # 版本.txt 每次构建重新生成
 old_set = set(names)
 # 元信息先全部取出并关闭句柄，否则 Windows 下 os.replace 被占用（WinError 32）
 old_info = {n: (old.getinfo(n).date_time, old.getinfo(n).external_attr) for n in names}
@@ -96,8 +96,7 @@ extra = [e for e in extra if not droppable(e)]
 for e in extra:
     print('++ 新文件补入:', e)
 
-# 版本.txt 每次构建重新生成（旧条目剔除）
-names = [n for n in names if n != '版本.txt']
+# 版本.txt 每次构建重新生成（旧条目已在读取清单时剔除）
 all_names = names + extra
 GENERATED = {
     '版本.txt': (

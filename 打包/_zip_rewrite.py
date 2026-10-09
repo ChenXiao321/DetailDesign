@@ -11,8 +11,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))   # 打包/
 ROOT = os.path.dirname(HERE)                        # 仓库根
 
 def git(*args):
-    return subprocess.run(['git'] + list(args), cwd=ROOT,
-                          capture_output=True, text=True).stdout.strip()
+    r = subprocess.run(['git'] + list(args), cwd=ROOT, capture_output=True,
+                       text=True, encoding='utf-8', errors='replace')
+    return (r.stdout or '').strip()
 
 # ---- 版本信息 ----
 ver = json.load(io.open(os.path.join(ROOT, 'package.json'), encoding='utf-8')).get('version', '0.0.0')

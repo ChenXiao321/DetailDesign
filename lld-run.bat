@@ -1,7 +1,7 @@
 @echo off
 rem LLD one-shot pipeline: analyze -> gen(resume) -> report -> audit
 rem Usage: lld-run.bat <module-dir> [out-dir]
-rem   e.g. lld-run.bat 测试模块\Gp_EcuStpStdn 测试产出\Gp_EcuStpStdn
+rem   e.g. lld-run.bat modules\Gp_EcuStpStdn out\Gp_EcuStpStdn
 rem Exit code: 0=all green / 1=error or schema check failed / 2=partial LLM failures (report still produced)
 rem LLM config: env LLD_LLM_BASE_URL / LLD_LLM_API_KEY / LLD_LLM_MODEL, or lld.config.json beside this bat
 setlocal

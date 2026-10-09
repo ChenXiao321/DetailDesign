@@ -4,7 +4,8 @@ import * as path from 'node:path';
 import {
   analyzeModule, generateDesign, generateHtmlReport, resolveConfig, normalizeBaseUrl,
   OpenAICompatibleProvider, MockProvider, lintModelSchema,
-  type InputFile, type ModuleModel, type LLMProvider,
+  diffModules, applyModuleDiff,
+  type InputFile, type ModuleModel, type LLMProvider, type ModuleDiff,
 } from '@lld/core';
 import { cmdAudit } from './audit.js';
 import { cmdImages } from './images.js';
@@ -89,7 +90,7 @@ async function cmdPing(): Promise<void> {
   }
 }
 
-async function cmdAnalyze(dir: string, outDir: string): Promise<void> {
+async function cmdAnalyze(dir: string, outDir: string): Promise<ModuleModel> {
   const files: InputFile[] = [];
   collectCFiles(dir, dir, files);
   console.error(`扫描到 ${files.length} 个源文件`);
@@ -105,6 +106,51 @@ async function cmdAnalyze(dir: string, outDir: string): Promise<void> {
   console.log(`外部调用 (5.2.2.2): ${model.calledExternalFunctions.length}`);
   console.log(`配置宏 (6): ${model.configMacros.length}`);
   console.log(`\n中间模型已写入: ${output}`);
+  return model;
+}
+
+/** 模块版本更新比对：analyze 新代码 → 与既有 design json 按哈希锚点比对 →
+ *  产出四类清单（未变/变更/新增/删除）+ 合并 design json（新模型打底，
+ *  未变条目回挂已生成内容，变更/新增条目待 gen --resume 重生）。
+ *  落盘：lld_model.json（新）、lld_design.json（合并）、lld_diff.json（清单，报告附录 A 用）。 */
+async function cmdDiff(dir: string, outDir: string): Promise<ModuleDiff> {
+  const designPath = path.join(outDir, 'lld_design.json');
+  if (!fs.existsSync(designPath)) {
+    console.error(`未找到既有产物 ${designPath}——首次生成请用 run/gen，diff/update 用于版本更新场景`);
+    process.exit(1);
+  }
+  const oldDesign = JSON.parse(fs.readFileSync(designPath, 'utf-8')) as ModuleModel;
+  const newModel = await cmdAnalyze(dir, outDir);
+
+  const diff = diffModules(oldDesign, newModel);
+  const merged = applyModuleDiff(newModel, oldDesign, diff);
+  fs.writeFileSync(designPath, JSON.stringify(merged, null, 2), 'utf-8');
+  const diffPath = path.join(outDir, 'lld_diff.json');
+  fs.writeFileSync(diffPath, JSON.stringify(diff, null, 2), 'utf-8');
+
+  console.log('\n===== 版本差异清单 =====');
+  const f = diff.functions;
+  console.log(`函数: 未变 ${f.unchanged.length} / 变更 ${f.changed.length} / 新增 ${f.added.length} / 删除 ${f.removed.length}`);
+  for (const c of f.changed) console.log(`  变更[${c.kind === 'sig' ? '签名' : '实现'}]: ${c.name}`);
+  for (const n of f.added) console.log(`  新增: ${n}`);
+  for (const n of f.removed) console.log(`  删除: ${n}`);
+  const misc = (label: string, c: { changed: string[]; added: string[]; removed: string[] }): void => {
+    const n = c.changed.length + c.added.length + c.removed.length;
+    if (n > 0) console.log(`${label}: 变更 ${c.changed.length} / 新增 ${c.added.length} / 删除 ${c.removed.length}（${[...c.changed, ...c.added, ...c.removed].join(', ')}）`);
+  };
+  misc('类型', diff.types);
+  misc('外部接口', diff.externals);
+  misc('配置宏', diff.configs);
+  if (!diff.hasChanges) {
+    console.log('无差异（代码未变）——gen --resume 将只重物化 document 节');
+  } else {
+    console.log(`失效待重生: ${f.changed.length + f.added.length} 个函数条目`
+      + `${diff.dynamicInvalidated ? '、动态设计（状态机+序列图）' : ''}`
+      + `${diff.descriptionInvalidated ? '、5.1 功能描述' : ''}、document 节`);
+  }
+  console.log(`\n差异清单已写入: ${diffPath}`);
+  console.log('继续：gen --resume 增量重生失效条目（未变内容含人工修订全部保留）');
+  return diff;
 }
 
 async function cmdGen(dir: string, outDir: string, mock: boolean, only?: string[], resume?: boolean): Promise<{ schemaProblems: string[]; failures: string[] }> {
@@ -182,6 +228,19 @@ async function cmdGen(dir: string, outDir: string, mock: boolean, only?: string[
 async function cmdRun(dir: string, outDir: string, mock: boolean, withImages: boolean, skipAudit: boolean): Promise<void> {
   console.log('===== [1/4] 静态分析 =====');
   await cmdAnalyze(dir, outDir);
+  await finishPipeline(dir, outDir, mock, withImages, skipAudit);
+}
+
+/** 版本更新一键流程：diff（analyze+比对+失效合并）→ gen --resume（只重生失效条目）→ report → audit。
+ *  退出码同 run。 */
+async function cmdUpdate(dir: string, outDir: string, mock: boolean, withImages: boolean, skipAudit: boolean): Promise<void> {
+  console.log('===== [1/4] 版本差异比对 =====');
+  await cmdDiff(dir, outDir);
+  await finishPipeline(dir, outDir, mock, withImages, skipAudit);
+}
+
+/** run/update 共用后半段：gen --resume → （可选 images）→ report → audit */
+async function finishPipeline(dir: string, outDir: string, mock: boolean, withImages: boolean, skipAudit: boolean): Promise<void> {
   console.log('\n===== [2/4] LLM 生成设计内容 =====');
   const { schemaProblems, failures } = await cmdGen(dir, outDir, mock, undefined, true);
   if (schemaProblems.length > 0) {
@@ -239,6 +298,11 @@ async function cmdReport(outDir: string): Promise<void> {
     mermaidJs,
     ...abbrOpts,
     onAbbreviationGaps: abbrGapLogger,
+    // 版本更新差异清单（update/diff 产物）→ 报告附录 A；无存量的产物不渲染该节
+    diff: (() => {
+      const p = path.join(outDir, 'lld_diff.json');
+      return fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, 'utf-8')) as ModuleDiff : undefined;
+    })(),
   });
   const output = path.join(outDir, 'lld_report.html');
   fs.writeFileSync(output, html, 'utf-8');
@@ -301,6 +365,14 @@ async function main(): Promise<void> {
       if (!dir) break;
       await cmdRun(dir, outDir, mock, args.includes('--images'), args.includes('--skip-audit'));
       return;
+    case 'diff':
+      if (!dir) break;
+      await cmdDiff(dir, outDir);
+      return;
+    case 'update':
+      if (!dir) break;
+      await cmdUpdate(dir, outDir, mock, args.includes('--images'), args.includes('--skip-audit'));
+      return;
   }
 
   console.error(`用法:
@@ -308,6 +380,12 @@ async function main(): Promise<void> {
                                         一键全流程（工具集成入口）：analyze → gen（增量续跑）→ report → audit；
                                         退出码 0=全绿 / 1=异常或结构自检未过（不出报告）/ 2=个别条目失败（报告已出，重跑补齐）；
                                         --images 追加图 PNG 物化（归档用，需 Edge）；--skip-audit 跳过渲染验收
+  lld update <模块目录> [--out 产物目录] [--mock] [--images] [--skip-audit]
+                                        模块版本更新一键流程（需既有产物）：diff 比对 → gen --resume
+                                        只重生变更/新增条目（未变内容含人工修订全部保留）→ report → audit；
+                                        退出码同 run；差异清单落盘 lld_diff.json 并进报告附录 A
+  lld diff <模块目录> [--out 产物目录]    只做版本比对：analyze 新代码 → 与既有 design json 按哈希锚点
+                                        比对出四类清单（未变/变更/新增/删除）+ 合并 design json（失效待重生）
   lld ping                              LLM 连通性自检（/models + 最小 chat 调用）
   lld analyze <模块目录> [--out 产物目录]   静态分析，产出 lld_model.json
   lld gen <模块目录> [--out 产物目录] [--mock] [--resume] [--only 函数名,dynamic,configs,callouts,flowcharts,types,externals,description,document,images]

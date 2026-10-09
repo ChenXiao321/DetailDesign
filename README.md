@@ -39,6 +39,22 @@ node packages/cli/dist/index.js run 测试模块/Gp_EcuStpStdn --out 测试产�
 - 选项：`--mock` 离线预览；`--images` 追加图 PNG 物化（归档用，需 Edge）；`--skip-audit` 跳过渲染验收
 - LLM 配置照旧：环境变量 `LLD_LLM_BASE_URL` 等，或当前目录 `lld.config.json`
 
+### 模块版本更新（代码改版后增量重生，推荐）
+
+```bash
+node packages/cli/dist/index.js update <模块目录> --out <产物目录>   # diff + 增量重生一键完成
+node packages/cli/dist/index.js diff  <模块目录> --out <产物目录>   # 只看差异清单，不动产物
+```
+
+模块代码出新版本后不必全量重生成：`update` 按哈希锚点（签名/函数体，行号移动与注释改动不算变更）
+比对新旧模型，输出四类清单（未变/变更/新增/删除）写入 `lld_diff.json`：
+
+- 未变条目的已生成内容（含人工修订）原样保留，不重复消耗 LLM
+- 变更/新增条目清空重生；函数级变更同时重生状态机/序列图与 5.1 功能描述；document 节恒重物化
+- 图 PNG：图源码一致的直接回挂，不一致的随 gen 重渲
+- 报告附录 A 记录本次变更清单，评审可追溯
+- 要求产物目录已有首版 `lld_design.json`（首版用 `run`/`gen` 生成）
+
 ### 分步执行（调试/精细控制用）
 
 ### 第 1 步：静态分析（离线，不依赖 LLM）
@@ -207,7 +223,7 @@ packages/            # 产品代码
 │       ├── llm/          # LLM Provider（OpenAI兼容/Mock）+ prompt
 │       └── generator/    # 生成编排（描述增强、动态设计、重试校验）
 ├── cli/             # 命令行入口
-tests/               # 验证体系：12 测试套件 + 夹具 + 双字节门禁 + run-all 入口（npm test）
+tests/               # 验证体系：13 测试套件 + 夹具 + 双字节门禁 + run-all 入口（npm test）
 archive/             # 历史归档：一次性调图/补丁脚本、过程截图、旧补丁 zip（不删，留追溯）
 samples/             # 示例生成内容（LLM 离线内容源）
 模板/                # G-B035-005 软件详细设计规范（Code）.docx

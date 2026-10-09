@@ -7,6 +7,7 @@ import { wrapFlowchartLabels, pinEndNodeToBottom, lintMermaidSource, lintFlowcha
 import { mermaidRenderScript } from './renderScript.js';
 import { buildDocumentContent } from '../generator/staticDocument.js';
 import { buildIncludeGraph } from './includeGraph.js';
+import type { ModuleDiff } from '../generator/modelDiff.js';
 
 /** 4.1 文件说明表物化前（存量 json 无 document.fileTable）的现算实现，已搬入 staticDocument.ts；
  *  两条路径同一实现，产物逐字节一致 */
@@ -75,6 +76,8 @@ export function generateHtmlReport(model: ModuleModel, opts?: {
   abbreviationSource?: string;
   definitions?: [string, string][];
   onAbbreviationGaps?: (missing: string[]) => void;
+  /** 版本更新差异清单（update/diff 命令产出 lld_diff.json 后由 CLI 传入；缺省不渲染附录） */
+  diff?: ModuleDiff;
 }): string {
   const fnCount = model.providedFunctions.length + model.internalFunctions.length;
   const generatedCount = [...model.providedFunctions, ...model.internalFunctions].filter(f => f.generated).length;
@@ -335,6 +338,30 @@ ${doc.supportFiles.map(([no, name, code]) =>
 </table>
 <p class="muted">${doc.supportNote}</p>`;
 
+  // ---- 附录 A 变更记录（版本更新场景；opts.diff 缺省时整节不渲染） ----
+  const diffSection = opts?.diff ? (() => {
+    const d = opts.diff;
+    const fnRows = [
+      ...d.functions.changed.map(c => `<tr><td>变更（${c.kind === 'sig' ? '签名' : '实现'}）</td><td><code>${esc(c.name)}</code></td></tr>`),
+      ...d.functions.added.map(n => `<tr><td>新增</td><td><code>${esc(n)}</code></td></tr>`),
+      ...d.functions.removed.map(n => `<tr><td>删除</td><td><code>${esc(n)}</code></td></tr>`),
+    ];
+    const miscRows = (label: string, c: { changed: string[]; added: string[]; removed: string[] }) => [
+      ...c.changed.map(n => `<tr><td>${label}·变更</td><td><code>${esc(n)}</code></td></tr>`),
+      ...c.added.map(n => `<tr><td>${label}·新增</td><td><code>${esc(n)}</code></td></tr>`),
+      ...c.removed.map(n => `<tr><td>${label}·删除</td><td><code>${esc(n)}</code></td></tr>`),
+    ];
+    const allRows = [...fnRows, ...miscRows('类型', d.types), ...miscRows('外部接口', d.externals), ...miscRows('配置宏', d.configs)];
+    return `
+<h2 id="sA">附录 A 变更记录</h2>
+<p class="muted">本次更新相对上一版分析（${esc(d.oldAnalyzedAt)} → ${esc(d.newAnalyzedAt)}）的差异清单；未变更条目内容沿用上版（共 ${d.functions.unchanged.length} 个函数未变）。</p>
+${allRows.length > 0
+  ? `<table class="simple"><tr><th>变更类型</th><th>名称</th></tr>\n${allRows.join('\n')}\n</table>`
+  : '<p class="muted">无差异（代码未变，仅重新分析）。</p>'}`;
+  })() : '';
+  // 无 diff 时零字节差异（附录节自带前置换行，不污染模板行结构）
+  const diffBlock = diffSection ? `\n${diffSection}` : '';
+
   // ---- 文件清单（4.1，物化自 doc.fileTable；0929 前的物化 json 缺该字段时现算补齐，同实现字节一致） ----
   const fileRows = (doc.fileTable ?? buildDocumentContent(model).fileTable!)
     .map(([name, desc]) => `<tr><td><code>${esc(name)}</code></td><td>${esc(desc)}</td></tr>`).join('');
@@ -433,7 +460,7 @@ ${functionalCfgSection}
 ${calloutCfgSection}
 ${aliasCfgNote}
 ${evalSection}
-${supportSection}
+${supportSection}${diffBlock}
 </main>
 ${opts?.mermaidJs ? `<script>${opts.mermaidJs}</script>
 ${mermaidRenderScript()}` : ''}

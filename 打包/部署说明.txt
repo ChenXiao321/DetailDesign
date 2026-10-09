@@ -55,6 +55,18 @@ HTML 评审报告。包内已包含全部 npm 依赖（node_modules）和已构�
   - audit 需机器装有 Edge 或 Chrome 之一；不跑验收可用 node 命令加
     --skip-audit；--images 可在 report 前追加图 PNG 物化（见下文）
 
+■ 模块版本更新（代码改版后增量重生）
+  # 一键完成：比对差异 → 重生失效条目 → 出报告 → 验收
+  node packages/cli/dist/index.js update <模块目录> --out <产物目录>
+  # 只看差异清单（不改产物）
+  node packages/cli/dist/index.js diff <模块目录> --out <产物目录>
+  - 前提：产物目录已有首版 lld_design.json（首版用上面的 run 生成）
+  - 按哈希锚点比对：行号移动、注释改动不算变更；签名变更与实现变更分开报告
+  - 未变条目的已生成内容（含人工修订）原样保留，不重复消耗 LLM；
+    变更/新增条目自动重生；函数级变更联动重生状态机/序列图与 5.1 功能描述
+  - 差异清单写入产物目录 lld_diff.json，并记入报告附录 A 变更记录
+  - 退出码与 run 相同（0 全绿 / 1 异常 / 2 个别条目失败可重跑）
+
 ■ 分步执行（调试/精细控制用）
   # 静态分析（离线，不需要 apiKey）
   node packages/cli/dist/index.js analyze 测试模块/<模块名> --out <产物目录>

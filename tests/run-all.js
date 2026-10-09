@@ -4,7 +4,7 @@ const { spawnSync } = require('child_process');
 const path = require('path');
 
 const SUITES = [
-  '_test_abbrdocx.js', '_test_cfggen.js', '_test_condlint.js', '_test_doccontent.js',
+  '_test_abbrdocx.js', '_test_cfggen.js', '_test_condlint.js', '_test_diff.js', '_test_doccontent.js',
   '_test_dynamic_skip.js', '_test_fclint.js', '_test_glossary.js', '_test_imgbatch.js',
   '_test_schemalint.js', '_test_seqgen.js', '_test_seqlint.js', '_test_smsgen.js',
 ];

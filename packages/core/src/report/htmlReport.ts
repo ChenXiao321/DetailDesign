@@ -35,6 +35,7 @@ h5 { margin-top:20px; font-size:13px; color:#24292f; }
 .wi-table td { border-top:1px solid var(--border); padding:8px 16px; vertical-align:top; }
 .wi-table td.label { width:170px; background:var(--label-bg); font-weight:600; font-size:13px; }
 .wi-table .desc { line-height:1.7; }
+.wi-table.type-merged td { border:1px solid var(--border); }
 .wi-footer { background:var(--label-bg); padding:6px 16px; font-size:11px; color:#57606a; display:flex; gap:24px; flex-wrap:wrap; }
 table.simple { border-collapse:collapse; width:100%; font-size:14px; margin:12px 0; }
 table.simple th { background:var(--label-bg); border:1px solid var(--border); padding:8px 12px; text-align:left; }
@@ -109,32 +110,30 @@ export function generateHtmlReport(model: ModuleModel, opts?: {
   const importedTypeRows = (doc.importedTypes ?? buildDocumentContent(model).importedTypes!)
     .map(([mod, types]) => `<tr><td><code>${esc(mod)}</code></td><td><code>${types.map(esc).join('<br>')}</code></td></tr>`);
 
-  // ---- 5.2.1.2 数据类型（属性|值 格式，参照模板与既有文档） ----
+  // ---- 5.2.1.2 数据类型（单表：Name/Type/[Range]/Elements|Constants/Description，参照 Polarion 工作项样式） ----
   const numOf = (v: string) => v.match(/0x[0-9A-Fa-f]+|\d+/)?.[0] ?? '';
   const typesSection = model.types.map(t => {
-    const attrRows: string[] = [
-      `<tr><td class="label">Name</td><td><code>${esc(t.name)}</code></td></tr>`,
-      `<tr><td class="label">Type</td><td><code>${esc(t.kind === 'struct' ? 'struct' : t.underlyingType ?? '')}</code></td></tr>`,
+    const rows: string[] = [
+      `<tr><td class="label">Name</td><td colspan="3"><code>${esc(t.name)}</code></td></tr>`,
+      `<tr><td class="label">Type</td><td colspan="3"><code>${esc(t.kind === 'struct' ? 'struct' : t.underlyingType ?? '')}</code></td></tr>`,
     ];
     if (t.kind === 'typedef' && (t.relatedDefines?.length ?? 0) > 0) {
       const defs = t.relatedDefines!;
-      attrRows.push(`<tr><td class="label">Range</td><td><code>${esc(numOf(defs[0].value))} - ${esc(numOf(defs[defs.length - 1].value))}</code></td></tr>`);
+      rows.push(`<tr><td class="label">Range</td><td colspan="3"><code>${esc(numOf(defs[0].value))} - ${esc(numOf(defs[defs.length - 1].value))}</code></td></tr>`);
+      defs.forEach((d, i) => {
+        const label = i === 0 ? `<td class="label" rowspan="${defs.length}">Constants</td>` : '';
+        rows.push(`<tr>${label}<td><code>${esc(d.name)}</code></td><td><code>${esc(d.value)}</code></td><td>${esc(t.generated?.defines?.[d.name] ?? d.comment)}</td></tr>`);
+      });
+    } else if (t.kind === 'struct' && (t.elements?.length ?? 0) > 0) {
+      const els = t.elements!;
+      els.forEach((e, i) => {
+        const label = i === 0 ? `<td class="label" rowspan="${els.length}">Elements</td>` : '';
+        rows.push(`<tr>${label}<td><code>${esc(e.name)}</code></td><td><code>${esc(e.type)}</code></td><td>${esc(t.generated?.elements?.[e.name] ?? e.comment)}</td></tr>`);
+      });
     }
-    attrRows.push(`<tr><td class="label">Description</td><td>${esc(t.generated?.comment || t.comment) || '<span class="todo">（待补充）</span>'}</td></tr>`);
-
-    let detailTable = '';
-    if (t.kind === 'typedef' && (t.relatedDefines?.length ?? 0) > 0) {
-      const rows = t.relatedDefines!.map(d =>
-        `<tr><td><code>${esc(d.name)}</code></td><td><code>${esc(d.value)}</code></td><td>${esc(t.generated?.defines?.[d.name] ?? d.comment)}</td></tr>`).join('');
-      detailTable = `<table class="simple"><tr><th>常量名称</th><th>值</th><th>说明</th></tr>${rows}</table>`;
-    } else if (t.kind === 'struct') {
-      const rows = (t.elements ?? []).map(e =>
-        `<tr><td><code>${esc(e.name)}</code></td><td><code>${esc(e.type)}</code></td><td>${esc(t.generated?.elements?.[e.name] ?? e.comment)}</td></tr>`).join('');
-      detailTable = `<table class="simple"><tr><th>元素名称</th><th>数据类型</th><th>说明</th></tr>${rows}</table>`;
-    }
+    rows.push(`<tr><td class="label">Description</td><td colspan="3">${esc(t.generated?.comment || t.comment) || '<span class="todo">（待补充）</span>'}</td></tr>`);
     return `<h3>${esc(t.name)} <span class="badge">工作项 · 5.2.1.2</span></h3>
-<table class="wi-table"><tr><th style="width:170px;text-align:left;padding:8px 16px;background:var(--label-bg)">属性</th><th style="text-align:left;padding:8px 16px;background:var(--label-bg)">值</th></tr>${attrRows.join('')}</table>
-${detailTable}`;
+<table class="wi-table type-merged">${rows.join('')}</table>`;
   }).join('\n');
 
   // ---- 5.2.2 调用的外部接口（按组） ----

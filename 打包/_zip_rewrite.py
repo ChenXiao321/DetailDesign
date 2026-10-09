@@ -26,12 +26,28 @@ old_set = set(names)
 old_info = {n: (old.getinfo(n).date_time, old.getinfo(n).external_attr) for n in names}
 old.close()
 
-# 已删除功能：Polarion 同步层（2026-09-22 起下线）——相关条目整包剔除
-DROP = [n for n in names if '/polarion/' in n or n.endswith('/pandoc.ts')
-        or '/pandoc.' in n]
+# 剔除规则（2026-10-09 起瘦身）：
+#  ① 已下线的 Polarion/pandoc 条目
+#  ② 测试模块示例源码（部署用不到，命令里的模块目录换成实际源码路径即可）
+#  ③ 开发期依赖：typescript 编译器/@types 类型定义/.bin（产物已预编译进 dist）
+#  ④ tree-sitter-wasms 里除 C 以外的 35 种语言语法包（工具只解析 C）
+def droppable(n):
+    if '/polarion/' in n or n.endswith('/pandoc.ts') or '/pandoc.' in n:
+        return True
+    if n.startswith('测试模块/'):
+        return True
+    if n.startswith(('node_modules/@typescript/', 'node_modules/typescript/',
+                     'node_modules/@types/', 'node_modules/undici-types/',
+                     'node_modules/.bin/')):
+        return True
+    if n.startswith('node_modules/tree-sitter-wasms/out/') and n.endswith('.wasm') \
+            and not n.endswith('/tree-sitter-c.wasm'):
+        return True
+    return False
+
+DROP = [n for n in names if droppable(n)]
 if DROP:
-    print('-- 剔除已下线条目:')
-    for d in DROP: print('  ', d)
+    print(f'-- 剔除条目: {len(DROP)} 条（下线功能/示例模块/开发依赖/非C语言wasm）')
     names = [n for n in names if n not in set(DROP)]
     old_set = set(names)
 
@@ -44,14 +60,14 @@ if missing:
 # 扫描应同步目录里的新文件（node_modules/@lld/* 是 junction，os.walk 不自动跟随，须显式列根）
 extra = []
 for root in ['packages/core/src', 'packages/core/dist', 'packages/cli/src', 'packages/cli/dist', 'packages/cli/assets',
-             'node_modules/@lld/core/src', 'node_modules/@lld/core/dist', 'node_modules/@lld/cli/src', 'node_modules/@lld/cli/dist',
-             '测试模块']:
+             'node_modules/@lld/core/src', 'node_modules/@lld/core/dist', 'node_modules/@lld/cli/src', 'node_modules/@lld/cli/dist']:
     for dirpath, _dirs, files in os.walk(os.path.join(ROOT, root)):
         for f in files:
             p = os.path.join(dirpath, f).replace(os.sep, '/')
             rel = os.path.relpath(p, ROOT).replace(os.sep, '/')
             if rel not in old_set:
                 extra.append(rel)
+extra = [e for e in extra if not droppable(e)]
 for e in extra:
     print('++ 新文件补入:', e)
 

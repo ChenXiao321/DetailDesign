@@ -1,21 +1,24 @@
-﻿详细设计生成 Agent —— 离线迁移包（Qwen 实测用）
+Modu.LLD 详细设计生成工具 —— 离线迁移包（内网部署用）
 ================================================
 
-包内已包含全部 npm 依赖（node_modules）和已构建产物（packages/*/dist），
-目标机器【不需要】 npm install、不需要上外网。
+Modu 平台（MOdule Development Unit）第一阶段：C 代码 → ASPICE SWE.3 详细设计
+HTML 评审报告。包内已包含全部 npm 依赖（node_modules）和已构建产物
+（packages/*/dist），目标机器【不需要】 npm install、不需要上外网。
 
-■ Node.js 运行时（已随包附带 node-v22.20.0-win-x64.zip）
-  1. 解压 node-v22.20.0-win-x64.zip 到迁移包同一目录
-  2. 不能配全局环境变量时，两种用法二选一：
-     a) 双击【启动命令行.bat】——打开一个已临时配好 PATH 的命令行窗口，
-        窗口内直接用 node 命令即可（关掉窗口不影响系统）
-     b) 或用 node.exe 完整路径调用，例如：
-        <解压目录>\node-v22.20.0-win-x64\node.exe packages\cli\dist\index.js ping
-  3. 自检：node -v  应显示 v22.20.0
-  （注意：不要用 Node v25.2.1，其 V8 正则引擎有 bug）
+■ Node.js 运行时（不随包附带，需自备）
+  迁移包不含 Node 运行时（体积原因），目标机器二选一：
+  a) 机器已装 Node ≥ 18：直接使用（推荐 v22 LTS；
+     注意：不要用 Node v25.2.1，其 V8 正则引擎有 bug）
+  b) 不能装全局 Node：自行下载 Node 官网 Windows 免安装包
+     node-v22.20.0-win-x64.zip，解压到迁移包同一目录，然后两种用法二选一：
+     - 双击【启动命令行.bat】——打开一个已临时配好 PATH 的命令行窗口，
+       窗口内直接用 node 命令即可（关掉窗口不影响系统）
+     - 或用 node.exe 完整路径调用，例如：
+       <解压目录>\node-v22.20.0-win-x64\node.exe packages\cli\dist\index.js ping
+  自检：node -v  应显示 v22.20.0（或 ≥18 的其他版本）
 
 ■ 部署步骤
-  1. 把 lld-agent-迁移包.zip 解压到目标机器任意目录（路径含中文/空格均可）
+  1. 把 modu-迁移包.zip 解压到目标机器任意目录（路径含中文/空格均可）
   2. 编辑 lld.config.json：把 apiKey 的 REPLACE_WITH_REAL_KEY 改成真实 key
      （服务器开了 401 认证，key 向部署方索取；其余字段已配好：
       baseUrl http://10.0.75.130:4000，model qwen3.8-27b）
@@ -24,23 +27,46 @@
   4. LLM 连通性自检：
        node packages/cli/dist/index.js ping
 
-■ 实测步骤（详细说明见 README.md「迁移到目标环境运行」一节）
-  # 静态分析（离线）
-  node packages/cli/dist/index.js analyze 测试模块/Gp_EcuStpStdn --out 测试产出/Gp_EcuStpStdn_qwen
+■ 一键全流程（推荐，工具集成入口）
+  node packages/cli/dist/index.js run 测试模块/<模块名> --out <产物目录>
+  Windows 包装脚本（可被外部工具直接 shell 调用，退出码原样透传）：
+    lld-run.bat <模块目录> <产物目录>
+  一条命令串联 analyze → gen（增量续跑）→ report → audit：
+  - 退出码：0=全绿；1=异常或结构完整性自检未过（残缺 json 不产出报告）；
+    2=个别条目生成失败（报告已产出，原命令重跑即增量补齐）
+  - 审计项（斜线/贴缘等设计内行为）不影响退出码，以 audit 打印的中文
+    验收报告为准
+  - 中断或退出码 2 后续跑：同一条命令原样重跑即可（gen 增量跳过已生成条目）
+  - audit 需机器装有 Edge 或 Chrome 之一；不跑验收可用 node 命令加
+    --skip-audit；--images 可在 report 前追加图 PNG 物化（见下文）
 
-  # 先单点试一个函数，确认 Qwen 输出格式兼容
-  node packages/cli/dist/index.js gen 测试模块/Gp_EcuStpStdn --out 测试产出/Gp_EcuStpStdn_qwen --only Gp_EcuStpShdn_Startup
-
-  # 全量跑（约 55 次 LLM 调用；中断后加 --resume 续跑）
-  node packages/cli/dist/index.js gen 测试模块/Gp_EcuStpStdn --out 测试产出/Gp_EcuStpStdn_qwen
-
-  产物 lld_design.json 拷回开发机后即可离线出报告：
-  node packages/cli/dist/index.js report 测试模块/Gp_EcuStpStdn --out 测试产出/Gp_EcuStpStdn_qwen
-
-  # 渲染质量验收（内网可直接跑，需机器装有 Edge 或 Chrome 之一）：
-  # 预渲染出 SVG 成品版 lld_report.html + 斜线计数/交叉穿盒/箭头朝向审计，打印中文量化报告
-  node packages/cli/dist/index.js audit 测试模块/Gp_EcuStpStdn --out 测试产出/Gp_EcuStpStdn_qwen
+■ 分步执行（调试/精细控制用）
+  # 静态分析（离线，不需要 apiKey）
+  node packages/cli/dist/index.js analyze 测试模块/<模块名> --out <产物目录>
+  # LLM 生成设计内容（增量落盘 lld_design.json，中断后原命令或加 --resume 续跑）
+  node packages/cli/dist/index.js gen 测试模块/<模块名> --out <产物目录>
+  # 出 HTML 评审报告（离线，不需要 apiKey）
+  node packages/cli/dist/index.js report 测试模块/<模块名> --out <产物目录>
+  # 渲染质量验收（离线；预渲染 SVG 成品版 lld_report.html + 斜线计数/交叉穿盒/
+  # 箭头朝向审计，打印中文量化报告；需 Edge 或 Chrome）
+  node packages/cli/dist/index.js audit 测试模块/<模块名> --out <产物目录>
   # 浏览器装在非默认路径时：set LLD_EDGE_PATH=<msedge.exe 或 chrome.exe 完整路径>
+
+■ 报告骨架物化（document 节，2026-09-23 起）
+  1/2/3/7/8 章正文、各章引导句、3.1/3.2 缩写定义表在 gen 期物化进
+  lld_design.json 的 document 节，report/audit 纯渲染只读 json：
+  - 缩写表 docx/JSON 更新后须重刷才反映到报告（确定性零 LLM，秒级）：
+      node packages/cli/dist/index.js gen 测试模块/<模块名> --out <产物目录> --only document --resume
+  - 存量 design json 无 document 节时 report/audit 回退旧行为（report 期现读
+    配置，产物一致）并打印提示。
+
+■ 图 PNG 物化（2026-09-23 起，归档/导出用，可选）
+  把全部六类图（函数流程图/功能接口总图/内部函数调用图/状态机/序列图/
+  4.2 包含关系图）渲染成 PNG（2x）以 base64 存回 lld_design.json：
+      node packages/cli/dist/index.js gen 测试模块/<模块名> --out <产物目录> --only images --resume
+  渲染走与报告完全一致的管线（内嵌 mermaid.js + 正交化后处理 + Edge 无头），
+  免 LLM、需 Edge；--resume 跳过已有 PNG 的图，单图失败不中断可续跑补齐。
+  HTML 报告渲染不变（仍由浏览器端 mermaid 实时渲染），PNG 为归档用途。
 
 ■ 流程图静态生成（2026-09-16 起，免 LLM）
   gen 的【流程图】步骤已不再调用 LLM——工具按 C 代码结构（tree-sitter AST →
@@ -49,76 +75,29 @@
   兜底，不再出现「有描述无流程图」；校验不过的图会按「CFG生成器缺陷」记入
   失败清单并自动用兜底图，不会静默缺图。
   - 只刷流程图完全离线、不需要 apiKey：
-      node packages/cli/dist/index.js gen 测试模块/Gp_EcuStpStdn --out <产物目录> --only flowcharts
-    （已有产物目录上加 --resume 可只补缺的图；描述/动态设计/配置说明等文字
-     内容仍需 LLM，那些模式照常要 key）
+      node packages/cli/dist/index.js gen 测试模块/<模块名> --out <产物目录> --only flowcharts --resume
   - 存量已验收的 LLM 流程图不受影响，只有重跑 gen --only flowcharts 的函数
     会被替换成静态生成图。
-  - 生成后照常用 report + audit 出报告与渲染验收。
 
-■ 流程图质量修订 + 状态机分图（2026-09-17 起）
-  ① 条件编译虚线框归属修复：if/else 被 #endif 夹断的写法（else 体在 #if 区外），
-     条件菱形现在正确画进所属虚线框（此前会漏到框外）。
-  ② 局部变量定义不再进流程图（int x = 0 之类定义无流程语义），流程图只画
-     赋值/调用/控制流等真实操作；for 循环初始化器不受影响照常显示。
-  ③ 状态机图：多核模块按核角色分别绘制（主核 master/Core0 一张、从核
-     satellite 一张，各成一个工作项，对齐序列图分图惯例）；触发条件改用
-     语义化中文描述（不再只写裸函数名）。单核模块仍只画一张，无变化。
-     ※ 09-17 晚补强（内网 v6 反馈「分了图但内容没变」后修复）：
-     - 状态机 prompt 现在附带迁移驱动函数【完整源码】（此前只喂函数简介，
-       模型看不到 satellite 自旋等待语句，画不出角色差异）；
-     - 生成期新增内容硬校验：触发条件/note 必须含中文、多角色分图不得
-       内容雷同，不合格自动打回重试（重试耗尽记入失败清单，不静默放行）。
-  - 内网刷新既有产物的方法：
-    a) 流程图（免 LLM）：
-         node packages/cli/dist/index.js gen 测试模块/<模块> --out <产物目录> --only flowcharts --resume
-    b) 状态机分图（需 LLM）：用文本编辑器打开产物目录的 lld_design.json，
-       删掉 "stateMachine": {...} 整个字段（及 "stateMachines" 若有），然后：
-         node packages/cli/dist/index.js gen 测试模块/<模块> --out <产物目录> --only dynamic --resume
-       （--resume 会保留已有序列图，只重生状态机；触发条件裸函数名/英文、
-        两角色图雷同等不合格内容会被硬校验自动打回重试，重试耗尽记入失败
-        清单——生成后看失败清单里有没有 dynamic 条目即可，无需逐张目检）
-    c) 照常 report + audit 出报告与验收。
+■ 状态机（静态生成 + LLM 仅润色标签，2026-09-20 起）
+  状态机图结构由 CFG 抽象解释确定性生成；LLM 只润色触发条件/状态描述
+  （5.3.1.1 状态描述表 + 5.3.1.2 迁移说明，≤40 字中文，与标签润色同一次
+  调用，不增加调用次数）。多核模块按核角色分图（主核/从核各一张）。
+  LLM 不可用时自动保持原文不中断；图结构永远确定性、LLM 碰不到。
+  - 内网刷新既有产物：用文本编辑器打开 lld_design.json，删掉
+    "stateMachine": {...}（及 "stateMachines" 若有）整个字段，然后：
+      node packages/cli/dist/index.js gen 测试模块/<模块名> --out <产物目录> --only dynamic --resume
 
 ■ 序列图静态生成（2026-09-21 起，免 LLM）
-  gen 的【序列图】步骤已不再调用 LLM——与流程图同一套确定性路径（tree-sitter
-  AST → 控制流图 → mermaid sequenceDiagram）：if/else→alt、else-if 链拉平、
-  if 无 else→opt、while/for/自旋等待→loop、编译期 #if 区域→「宏 生效时/
-  未生效时」opt/alt 包裹，消息=源码出现顺序的调用，标签一律代码原文
-  （条件守卫是条件表达式原文，不再做中文润色）。
-  - 多核角色分支（GetCoreId 返回值紧邻比较）自动分主核/从核两张图；
-    两图内容无差异自动并回单图（如 IoM 的 GetCoreId 索引用法）。
-  - 只画直接调用：跨模块被调函数在它自己的图里展开（与 v6 基准同口径）；
-    空操作宏（NOP 类）除自旋等待体内外不画；条件里的调用（如
-    if (CalloutChk() == FALSE)）会先发一条调用消息再进片段。
-  - 任意函数必出图：控制流分析失败自动降级为按调用顺序的平铺图，不再
-    出现序列图缺失或重试。
-  - 序列图描述段（图上方文字）为工具确定性生成的中文说明（入口函数、
-    调用消息数、涉及外部模块、控制结构计数），不再引用英文源码头注释。
-  - 内网刷新既有产物：用文本编辑器打开 lld_design.json，删掉
-    "sequences": [...] 整个字段（改为 "sequences": []），然后：
-      node packages/cli/dist/index.js gen 测试模块/<模块> --out <产物目录> --only dynamic --resume
-    完全离线、不需要 apiKey（同一命令若同时缺状态机，状态机边标签润色
-    仍会尝试调 LLM，Qwen 不可用时自动保持原文不中断）。
-  - 存量已验收的 LLM 序列图（含 v6 手修基准）不受影响，只有删 sequences
-    重跑的条目会被替换成静态生成图。
-
-■ Polarion 功能已下线（2026-09-22 起）
-  本期不涉及 Polarion 对接：CLI 无 polarion 子命令，lld.config.json 不需要
-  polarion 节。旧迁移包/旧补丁内若残留 polarion 相关文件，属无害残留，
-  不会被任何命令调用，可忽略或手工删除。
-
-■ 状态机描述中文化（2026-09-22 起）
-  5.3.1.1 状态描述表与 5.3.1.2 状态迁移表的【说明列】并入状态机标签润色的
-  同一次 LLM 调用（不增加调用次数）：
-  - 5.3.1.1 状态描述：原来是宏注释英文原文或全空，现由 LLM 按状态全名+代码
-    注释+存续期间执行的函数生成一句中文描述（≤40 字）。
-  - 5.3.1.2 迁移说明：原恒空，现由 LLM 按「从/到/触发条件+发生函数」写一句
-    该迁移做什么（≤40 字）。
-  - 与标签润色同一防线：失败/回显/超长/含图语法符一律保持原文（英文注释或
-    空），不中断生成；图结构永远确定性、LLM 碰不到。
-  - 内网刷新既有产物：删 lld_design.json 的 "stateMachine"（及 "stateMachines"）
-    字段后 --only dynamic --resume（与 0921 序列图刷新同一条命令，可合并跑）。
+  gen 的【序列图】步骤已不再调用 LLM——与流程图同一套确定性路径：if/else→alt、
+  else-if 链拉平、if 无 else→opt、while/for/自旋等待→loop、编译期 #if 区域→
+  「宏 生效时/未生效时」opt/alt 包裹，消息=源码出现顺序的调用，标签一律
+  代码原文。多核角色分支（GetCoreId 返回值紧邻比较）自动分主核/从核两张图，
+  两图无差异自动并回单图；任意函数必出图（控制流分析失败降级为平铺图）。
+  - 内网刷新既有产物：把 lld_design.json 的 "sequences": [...] 改为
+    "sequences": []，然后：
+      node packages/cli/dist/index.js gen 测试模块/<模块名> --out <产物目录> --only dynamic --resume
+    完全离线、不需要 apiKey。
 
 ■ 缩写表定制（可选，两种提供方式）
   ① 外部人员提供 Word 缩写表：lld.config.json 加 "abbreviationsDoc": "项目缩写表.docx"
@@ -127,6 +106,8 @@
      字样自动识别，无表头按前两列取，多表自动合并；路径相对运行目录）。
      配置后 3.1/3.2 以外部表为唯一来源（内建词典不兜底），report/audit 会打印
      「正文出现但外部表未定义」的缺口名单——把名单反馈维护方补 docx 即可。
+     ※ 缩写表在 gen 期物化定型：更新 docx 后须重跑 --only document --resume
+       （见上文「报告骨架物化」）才反映到报告。
   ② 模块特有/临时补充：lld.config.json 加
      "abbreviations": {"WWD": "Window Watchdog 窗口看门狗", ...}。
      两者同时在场：JSON 同名覆盖 docx 条目、新增补入；不配 docx 时 JSON 与内建
@@ -134,6 +115,11 @@
      外部定义同时注入 gen：描述类生成（函数描述/配置说明/类型注释/外部接口说明/5.1）
      的 prompt 按出现过滤附带术语表（Spi_Setup 这类标识符分段也算 SPI 出现），
      术语口径与外部定义一致；流程图/序列图等结构生成不注入。
+
+■ Polarion 功能已下线（2026-09-22 起）
+  本期不涉及 Polarion 对接：CLI 无 polarion 子命令，lld.config.json 不需要
+  polarion 节。旧迁移包/旧补丁内若残留 polarion 相关文件，属无害残留，
+  不会被任何命令调用，可忽略或手工删除。
 
 ■ 常见问题
   - ping 报 401：apiKey 没改或不对。用 curl 独立验证 key：

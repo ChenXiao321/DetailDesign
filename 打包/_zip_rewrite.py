@@ -1,11 +1,23 @@
 # -*- coding: utf-8 -*-
 # 迁移包整包重写：以 zip 内现有清单为基准，逐条从工作区读取最新内容重写，逐条字节核验。
 # 另扫描 packages/{core,cli}/{src,dist} 与 测试模块 下 zip 未收的新文件，一并补入。
-import zipfile, io, sys, os, hashlib
+# 本脚本位于 打包/ 目录：仓库根为工作区基准；打包自有的 4 个文件（本目录内）映射到 zip 根。
+import zipfile, io, sys, os
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
-ZIP = 'modu-迁移包.zip'
-TMP = 'modu-迁移包.zip.tmp'
+HERE = os.path.dirname(os.path.abspath(__file__))   # 打包/
+ROOT = os.path.dirname(HERE)                        # 仓库根
+ZIP = os.path.join(HERE, 'modu-迁移包.zip')
+TMP = ZIP + '.tmp'
+
+# 打包自有文件：zip 根条目名 → 工作区实际路径（相对仓库根）
+SRC_MAP = {
+    '部署说明.txt': '打包/部署说明.txt',
+    '启动命令行.bat': '打包/启动命令行.bat',
+    'lld-run.bat': '打包/lld-run.bat',
+}
+def src_of(zip_name):
+    return SRC_MAP.get(zip_name, zip_name)
 
 old = zipfile.ZipFile(ZIP)
 names = old.namelist()
@@ -23,10 +35,10 @@ if DROP:
     names = [n for n in names if n not in set(DROP)]
     old_set = set(names)
 
-missing = [n for n in names if not os.path.isfile(n)]
+missing = [n for n in names if not os.path.isfile(os.path.join(ROOT, src_of(n)))]
 if missing:
     print('!! zip 条目在工作区缺失:')
-    for m in missing: print('  ', m)
+    for m in missing: print('  ', m, '->', src_of(m))
     sys.exit(1)
 
 # 扫描应同步目录里的新文件（node_modules/@lld/* 是 junction，os.walk 不自动跟随，须显式列根）
@@ -34,25 +46,19 @@ extra = []
 for root in ['packages/core/src', 'packages/core/dist', 'packages/cli/src', 'packages/cli/dist', 'packages/cli/assets',
              'node_modules/@lld/core/src', 'node_modules/@lld/core/dist', 'node_modules/@lld/cli/src', 'node_modules/@lld/cli/dist',
              '测试模块']:
-    for dirpath, _dirs, files in os.walk(root):
+    for dirpath, _dirs, files in os.walk(os.path.join(ROOT, root)):
         for f in files:
             p = os.path.join(dirpath, f).replace(os.sep, '/')
-            if p not in old_set:
-                extra.append(p)
+            rel = os.path.relpath(p, ROOT).replace(os.sep, '/')
+            if rel not in old_set:
+                extra.append(rel)
 for e in extra:
     print('++ 新文件补入:', e)
 
-# 根级工具脚本显式清单（不在扫描根内）：一键全流程 bat 包装（2026-10-09 起）
-for f in ['lld-run.bat']:
-    if os.path.isfile(f) and f not in old_set and f not in extra:
-        extra.append(f)
-        print('++ 新文件补入:', f)
-
 all_names = names + extra
 new = zipfile.ZipFile(TMP, 'w', zipfile.ZIP_DEFLATED)
-bad = 0
-for i, n in enumerate(all_names):
-    with open(n, 'rb') as fh:
+for n in all_names:
+    with open(os.path.join(ROOT, src_of(n)), 'rb') as fh:
         data = fh.read()
     # 保留原压缩类型/外部属性
     dt, attr = old_info.get(n, ((2026, 9, 8, 12, 0, 0), 0o644 << 16))
@@ -60,7 +66,6 @@ for i, n in enumerate(all_names):
     zi.compress_type = zipfile.ZIP_DEFLATED
     zi.external_attr = attr
     new.writestr(zi, data)
-    bad = bad
 new.close()
 
 # 整包回读核验
@@ -69,7 +74,7 @@ errs = chk.testzip()
 assert errs is None, f'zip 完整性失败: {errs}'
 mismatch = []
 for n in all_names:
-    disk = open(n, 'rb').read()
+    disk = open(os.path.join(ROOT, src_of(n)), 'rb').read()
     if chk.read(n) != disk:
         mismatch.append(n)
 if mismatch:

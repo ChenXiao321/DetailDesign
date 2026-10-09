@@ -30,7 +30,7 @@ Modu 平台规划
 
 ```bash
 node packages/cli/dist/index.js run 测试模块/Gp_EcuStpStdn --out 测试产出/Gp_EcuStpStdn
-# Windows 也可用包装脚本：lld-run.bat 测试模块\Gp_EcuStpStdn 测试产出\Gp_EcuStpStdn
+# Windows 也可用包装脚本：打包\lld-run.bat 测试模块\Gp_EcuStpStdn 测试产出\Gp_EcuStpStdn
 ```
 
 一条命令串联 analyze → gen（增量续跑）→ report → audit，适合被外部工具 shell 调用：
@@ -215,6 +215,6 @@ samples/             # 示例生成内容（LLM 离线内容源）
 测试模块/            # 测试输入：Gp_EcuStpStdn/ 试点模块源码（只放 .c/.h）
 测试产出/            # 测试产出：Gp_EcuStpStdn/ 下 lld_model.json / lld_design.json / lld_report.html
 内网测试/            # 内网各轮验证产物（含 qwen 系列基线）
-modu-迁移包.zip      # 内网部署整包（_zip_rewrite.py 整包重写+字节核验）
-lld-run.bat          # 一键全流程包装（run 子命令）
+打包/                # 内网部署相关：modu-迁移包.zip、部署说明.txt、lld-run.bat、启动命令行.bat、_zip_rewrite.py（整包重写+字节核验）
+临时/                # 测试/门禁临时目录（gitignore，每次运行自动重建）
 ```

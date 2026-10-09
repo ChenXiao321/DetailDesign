@@ -11,13 +11,11 @@ lld.config.json
 
 ~$*.docx
 
-# 本地 Node 运行时压缩包（体积大，迁移包内已含运行说明）
-node-v22.20.0-win-x64.zip
+# 本地 Node 运行时压缩包（体积大，打包用；迁移包内已含运行说明）
+打包/node-v22.20.0-win-x64.zip
 
 # 测试/门禁临时目录（每次运行自动重建）
-_regress_tmp/
-_regress_doc_tmp/
-_run_e2e/
+临时/
 
 # 内网历史验证预览（体积大、已被基线覆盖，保留本地不入库）
 内网测试/Gp_EcuStpStdn_0922/

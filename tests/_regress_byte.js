@@ -10,7 +10,7 @@ const products = [
   '内网测试/Gp_IoMcuAdc_qwen',
   '内网测试/Gp_TLF35584_qwen',
 ];
-const tmp = '_regress_tmp';
+const tmp = '临时/_regress_tmp';
 fs.rmSync(tmp, { recursive: true, force: true });
 let bad = 0;
 for (const p of products) {

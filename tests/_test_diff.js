@@ -156,4 +156,37 @@ const model = (over = {}) => ({
   ok(!d.hasChanges && d.functions.unchanged.join() === 'A', 'S5 行号/bodyText 变化但哈希同 → 未变');
 }
 
+// ================= 场景 6：仅注释差异不算变更 + 富化注释回挂 =================
+// （旧产物注释被管线富化/推断过——工具版本升级后重分析得到原始注释，不应误报变更）
+{
+  const oldT = typ('T1', 'uint8', true);
+  oldT.comment = '定义 ECU 启动阶段的枚举类型（富化中文）';
+  oldT.relatedDefines = [{ name: 'D1', value: '0x00U', comment: '阶段未定义（富化）' }];
+  const oldE = ext('E1', 'void E1(void)', true);
+  oldE.comment = { description: '复位管理器初始化（推断）' };
+  oldE.commentSource = 'inferred';
+  const old = model({ types: [oldT], calledExternalFunctions: [oldE], configMacros: [cfg('C1', '1', true)] });
+
+  const newT = typ('T1', 'uint8');
+  newT.comment = 'specifies the barrier status type';   // 原始 Doxygen 注释
+  newT.relatedDefines = [{ name: 'D1', value: '0x00U', comment: null }];
+  const newE = ext('E1', 'void E1(void)');
+  newE.comment = null; delete newE.commentSource;        // 新分析器不带推断
+  const newC = cfg('C1', '1'); newC.comment = '原始宏注释';
+  const nw = model({ types: [newT], calledExternalFunctions: [newE], configMacros: [newC] });
+
+  const d = diffModules(old, nw);
+  ok(!d.hasChanges, 'S6 仅注释差异：hasChanges=false');
+  ok(d.types.unchanged.join() === 'T1' && d.externals.unchanged.join() === 'E1' && d.configs.unchanged.join() === 'C1',
+    'S6 三类条目全判未变');
+
+  const m = applyModuleDiff(nw, old, d);
+  ok(m.types[0].comment === '定义 ECU 启动阶段的枚举类型（富化中文）', 'S6 类型富化注释回挂');
+  ok(m.types[0].relatedDefines[0].comment === '阶段未定义（富化）', 'S6 关联宏子注释回挂');
+  ok(m.calledExternalFunctions[0].comment.description.includes('复位管理器初始化'), 'S6 外部接口推断注释回挂');
+  ok(m.calledExternalFunctions[0].commentSource === 'inferred', 'S6 commentSource 回挂');
+  ok(m.types[0].generated && m.calledExternalFunctions[0].generated && m.configMacros[0].generated,
+    'S6 未变条目 generated 全保留');
+}
+
 console.log(`\nmodelDiff 测试全部通过（${n} 项断言）`);

@@ -9,7 +9,9 @@
  * 锚点口径：
  *  - 函数：sigHash（签名归一哈希）+ bodyHash（注释剥离+空白归一函数体哈希）——
  *    行号移动/注释改动不算变更；签名变优先报 sig，否则 body。
- *  - 类型/外部接口/配置宏：模型侧字段稳定 JSON 比对（剔除 generated/polarion/行号等噪声字段）。
+ *  - 类型/外部接口/配置宏：模型侧字段稳定 JSON 比对（剔除 generated/polarion/行号等噪声字段，
+ *    并深剥 comment/commentSource——注释不是代码语义，且旧产物注释可能被管线富化过，参与比对
+ *    会在工具版本升级后造成全量误报；未变条目的旧注释在合并时回挂，防报告显示回退）。
  *
  * 失效规则：
  *  - 函数级变更（provided/internal 任一 changed/added/removed）→ dynamicDesign（状态机+序列图）
@@ -60,6 +62,24 @@ function stable(v: unknown): string {
   });
 }
 
+/**
+ * 深剥注释类字段（comment/commentSource）——注释不是代码语义（与 bodyHash 剥离注释同口径），
+ * 且旧产物里的注释可能被管线富化/推断过，参与比对会造成工具版本升级后的全量误报。
+ * （当前三个键构造函数均已按语义字段白名单取值，本函数备用。）
+ */
+function stripComments<T>(v: T): T {
+  if (Array.isArray(v)) return v.map(stripComments) as T;
+  if (v && typeof v === 'object') {
+    const o: Record<string, unknown> = {};
+    for (const [k, val] of Object.entries(v as Record<string, unknown>)) {
+      if (k !== 'comment' && k !== 'commentSource') o[k] = stripComments(val);
+    }
+    return o as T;
+  }
+  return v;
+}
+void stripComments;
+
 function diffByName<T extends { name: string }>(
   oldList: T[], newList: T[], keyOf: (x: T) => string,
 ): NameChanges {
@@ -78,12 +98,19 @@ function diffByName<T extends { name: string }>(
 }
 
 const fnKey = (f: FunctionUnit): string => `${f.sigHash}|${f.bodyHash}`;
+// 类型语义键：枚举元素/关联宏只取代码语义字段（名/型/值），
+// 剔除 file/polarion/kind/usages/affects 等工具版本元数据（旧产物缺字段或章节号不同会误报）
 const typeKey = (t: TypeUnit): string =>
-  stable({ kind: t.kind, underlyingType: t.underlyingType, elements: t.elements, relatedDefines: t.relatedDefines, comment: t.comment });
+  stable({
+    kind: t.kind,
+    underlyingType: t.underlyingType,
+    elements: (t.elements ?? []).map(e => ({ name: e.name, type: e.type })),
+    relatedDefines: (t.relatedDefines ?? []).map(d => ({ name: d.name, value: d.value })),
+  });
 const extKey = (e: ExternalInterface): string =>
-  stable({ signature: e.signature, group: e.group, comment: e.comment, commentSource: e.commentSource });
+  stable({ signature: e.signature, group: e.group });
 const cfgKey = (c: ConfigMacro): string =>
-  stable({ value: c.value, isFunctionLike: c.isFunctionLike, kind: c.kind, comment: c.comment });
+  stable({ value: c.value, isFunctionLike: c.isFunctionLike, kind: c.kind });
 
 export function diffModules(oldDesign: ModuleModel, newModel: ModuleModel): ModuleDiff {
   const oldFns = [...oldDesign.providedFunctions, ...oldDesign.internalFunctions];
@@ -121,13 +148,18 @@ export function diffModules(oldDesign: ModuleModel, newModel: ModuleModel): Modu
 export function applyModuleDiff(newModel: ModuleModel, oldDesign: ModuleModel, diff: ModuleDiff): ModuleModel {
   const merged = JSON.parse(JSON.stringify(newModel)) as ModuleModel;
 
-  const carry = <T extends { name: string; generated?: unknown }>(
+  const carry = <T extends { name: string; generated?: unknown; comment?: unknown; commentSource?: unknown }>(
     newList: T[], oldList: T[], keep: Set<string>,
   ): void => {
     const oldMap = new Map(oldList.map(x => [x.name, x]));
     for (const item of newList) {
       const old = oldMap.get(item.name);
-      if (old && keep.has(item.name) && old.generated) item.generated = old.generated;
+      if (old && keep.has(item.name)) {
+        if (old.generated) item.generated = old.generated;
+        // 条目语义未变 → 旧注释（可能被管线富化/推断过）仍然准确，回挂防显示回退
+        if (old.comment !== undefined && old.comment !== null) item.comment = old.comment;
+        if (old.commentSource !== undefined) item.commentSource = old.commentSource;
+      }
     }
   };
 
@@ -135,6 +167,18 @@ export function applyModuleDiff(newModel: ModuleModel, oldDesign: ModuleModel, d
   carry(merged.providedFunctions, oldDesign.providedFunctions, fnKeep);
   carry(merged.internalFunctions, oldDesign.internalFunctions, fnKeep);
   carry(merged.types, oldDesign.types, new Set(diff.types.unchanged));
+  // 未变类型的枚举元素/关联宏整体回挂（子注释可能富化过，语义未变则旧值仍准确）
+  {
+    const oldMap = new Map(oldDesign.types.map(t => [t.name, t]));
+    const keep = new Set(diff.types.unchanged);
+    for (const t of merged.types) {
+      const old = oldMap.get(t.name);
+      if (old && keep.has(t.name)) {
+        if (old.elements) t.elements = old.elements;
+        if (old.relatedDefines) t.relatedDefines = old.relatedDefines;
+      }
+    }
+  }
   carry(merged.calledExternalFunctions, oldDesign.calledExternalFunctions, new Set(diff.externals.unchanged));
   carry(merged.configMacros, oldDesign.configMacros, new Set(diff.configs.unchanged));
 

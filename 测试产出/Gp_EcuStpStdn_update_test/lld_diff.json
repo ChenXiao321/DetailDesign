@@ -1,0 +1,91 @@
+{
+  "module": "Gp_EcuStpShdn",
+  "oldAnalyzedAt": "2026-08-12T09:42:09.066Z",
+  "newAnalyzedAt": "2026-10-10T02:14:08.925Z",
+  "functions": {
+    "unchanged": [
+      "Gp_EcuStpShdn_SetSafeState",
+      "Gp_EcuStpShdn_SetTryPwrShdn",
+      "Gp_EcuStpShdn_GetSafeState",
+      "Gp_EcuStpShdn_TrapRecov",
+      "Gp_EcuStpShdn_OsErrRecov",
+      "Gp_EcuStpShdn_PwrShdnInShdnPhase",
+      "Gp_EcuStpShdn_Startup",
+      "Gp_EcuStpShdn_Mainfunction",
+      "Gp_EcuStpShdn_CheckInitRslt",
+      "Gp_EcuStpShdn_MstProcMcuPreRunTest",
+      "Gp_EcuStpShdn_MstPostInit",
+      "Gp_EcuStpShdn_GetLastSatTimeStamp"
+    ],
+    "changed": [],
+    "added": [],
+    "removed": []
+  },
+  "types": {
+    "unchanged": [],
+    "changed": [
+      "Gp_EcuStpShdn_StpStageType",
+      "Gp_EcuStpShdn_SelfTestType",
+      "Gp_EcuStpShdn_MstLocalImplType",
+      "Gp_EcuStpShdn_SatLocalImplType",
+      "Gp_EcuStpShdn_SatRunTimeType"
+    ],
+    "added": [],
+    "removed": []
+  },
+  "externals": {
+    "unchanged": [
+      "Gp_EcuStpShdn_CalloutChkMcuPreRunTest",
+      "Gp_EcuStpShdn_CalloutChkMcuRunTimeTest",
+      "Gp_EcuStpShdn_CalloutChkSbcTest",
+      "Gp_EcuStpShdn_CalloutChkSwtToRun",
+      "Gp_EcuStpShdn_CalloutGetCoreId",
+      "Gp_EcuStpShdn_CalloutGetSysTimeMs",
+      "Gp_EcuStpShdn_CalloutInitFailedHnd",
+      "Gp_EcuStpShdn_CalloutInitStageOneCore0",
+      "Gp_EcuStpShdn_CalloutInitStageTwoCore0",
+      "Gp_EcuStpShdn_CalloutInitStageTwoCore1",
+      "Gp_EcuStpShdn_CalloutInitStageTwoCore2",
+      "Gp_EcuStpShdn_CalloutInitStageTwoCore3",
+      "Gp_EcuStpShdn_CalloutInitStageTwoCore4",
+      "Gp_EcuStpShdn_CalloutInitStageTwoCore5",
+      "Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd",
+      "Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd",
+      "Gp_EcuStpShdn_CalloutOsErrRecov",
+      "Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase",
+      "Gp_EcuStpShdn_CalloutPwrShdnInStpPhase",
+      "Gp_EcuStpShdn_CalloutSafeState",
+      "Gp_EcuStpShdn_CalloutSbcInit",
+      "Gp_EcuStpShdn_CalloutSbcInitInSafeState",
+      "Gp_EcuStpShdn_CalloutSbcTestFailedHnd",
+      "Gp_EcuStpShdn_CalloutSwtToRunFailedHnd",
+      "Gp_EcuStpShdn_CalloutTrapRecov"
+    ],
+    "changed": [
+      "Gp_RstM_GetLastRstTypeInfo",
+      "Gp_RstM_Init",
+      "Gp_RstM_InitOne",
+      "Gp_RstM_InitTwo",
+      "Gp_TstApp_PreRunInit",
+      "Gp_TstApp_PreRunPhase",
+      "Gp_TstApp_RunTimePhase",
+      "Gp_TstApp_SwitchToRunPhase"
+    ],
+    "added": [],
+    "removed": []
+  },
+  "configs": {
+    "unchanged": [
+      "GP_ECUSTPSHDN_ACTIVE_CORE_NUM",
+      "GP_ECUSTPSHDN_NOP",
+      "GP_ECUSTPSHDN_SAFETY_ENABLE",
+      "GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE"
+    ],
+    "changed": [],
+    "added": [],
+    "removed": []
+  },
+  "dynamicInvalidated": false,
+  "descriptionInvalidated": true,
+  "hasChanges": true
+}

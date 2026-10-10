@@ -1,0 +1,36 @@
+{
+  "module": "Gp_EcuStpShdn",
+  "oldAnalyzedAt": "2026-08-12T09:42:09.066Z",
+  "newAnalyzedAt": "2026-10-10T03:30:57.589Z",
+  "operations": [
+    {
+      "action": "rename",
+      "kind": "external",
+      "chapter": "5.2.2.2",
+      "title": "Gp_EcuStpShdn_CalloutOsErrRecov1",
+      "from": "Gp_EcuStpShdn_CalloutOsErrRecov",
+      "detail": "疑似改名：建议直接改原工作项 title+内容，保留历史与追溯链接（勿删了重建）"
+    },
+    {
+      "action": "update",
+      "kind": "function",
+      "chapter": "5.2.3.2",
+      "title": "Gp_EcuStpShdn_Mainfunction",
+      "detail": "实现变更：更新工作项内容"
+    },
+    {
+      "action": "rename",
+      "kind": "function",
+      "chapter": "5.2.3.2",
+      "title": "Gp_EcuStpShdn_OsErrRecov1",
+      "from": "Gp_EcuStpShdn_OsErrRecov",
+      "detail": "疑似改名：建议直接改原工作项 title+内容，保留历史与追溯链接（勿删了重建）"
+    }
+  ],
+  "untouched": {
+    "functions": 10,
+    "types": 5,
+    "externals": 32,
+    "configs": 4
+  }
+}

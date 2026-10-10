@@ -224,4 +224,52 @@ const model = (over = {}) => ({
   ok(!sync.operations.some(o => o.title === 'Keep' || o.title === 'C1'), 'S7 未变条目不出现在操作单');
 }
 
+// ================= 场景 8：章节级更新推导（工作项之外的联动内容） =================
+{
+  // 8a：函数级变更 + 文件清单变 + 总图变 + 调用图变 → 5.1/5.3.1/5.3.2/7/4.1/4.2×2/3.1 全列
+  const old = model({
+    providedFunctions: [fn('A', 's1', 'b1', true)],
+    files: [{ path: 'a.c', role: 'source' }],
+    interfaceOverview: { diagram: 'flowchart TD\nOLD', diagramFormat: 'mermaid', polarion: {} },
+    callGraphs: [{ name: 'A', diagram: 'gA', diagramFormat: 'mermaid', polarion: {} }, { name: 'B', diagram: 'gB', diagramFormat: 'mermaid', polarion: {} }],
+  });
+  const nw = model({
+    providedFunctions: [fn('A', 's1', 'b1x'), fn('C', 's2', 'b2')],
+    files: [{ path: 'a.c', role: 'source' }, { path: 'b.c', role: 'source' }],
+    interfaceOverview: { diagram: 'flowchart TD\nNEW', diagramFormat: 'mermaid', polarion: {} },
+    callGraphs: [{ name: 'A', diagram: 'gA2', diagramFormat: 'mermaid', polarion: {} }, { name: 'C', diagram: 'gC', diagramFormat: 'mermaid', polarion: {} }],
+  });
+  const sync = buildPolarionSync(diffModules(old, nw), old, nw);
+  const chapters = sync.chapterUpdates.map(c => c.chapter);
+  for (const ch of ['5.1', '5.3.1', '5.3.2', '7', '4.1', '3.1/3.2']) {
+    ok(chapters.includes(ch), `S8a 章节级更新含 ${ch}`);
+  }
+  ok(sync.chapterUpdates.filter(c => c.chapter === '4.2').length === 2, 'S8a 4.2 总图+调用图各一条');
+  ok(sync.chapterUpdates.find(c => c.title === '调用图').reason.includes('A'), 'S8a 调用图变化点名');
+
+  // 8b：无变更 → 章节级更新为空
+  const old2 = model({
+    providedFunctions: [fn('A', 's1', 'b1', true)],
+    files: [{ path: 'a.c', role: 'source' }],
+    interfaceOverview: { diagram: 'same', diagramFormat: 'mermaid', polarion: {} },
+    callGraphs: [{ name: 'A', diagram: 'gA', diagramFormat: 'mermaid', polarion: {} }],
+  });
+  const nw2 = model({
+    providedFunctions: [fn('A', 's1', 'b1')],
+    files: [{ path: 'a.c', role: 'source' }],
+    interfaceOverview: { diagram: 'same', diagramFormat: 'mermaid', polarion: {} },
+    callGraphs: [{ name: 'A', diagram: 'gA', diagramFormat: 'mermaid', polarion: {} }],
+  });
+  const sync2 = buildPolarionSync(diffModules(old2, nw2), old2, nw2);
+  ok(sync2.chapterUpdates.length === 0 && sync2.operations.length === 0, 'S8b 无变更：操作单与章节级更新全空');
+
+  // 8c：仅类型变更（无函数变更）→ 5.1+3.1 列出，5.3/7 不列
+  const old3 = model({ providedFunctions: [fn('A', 's1', 'b1', true)], types: [typ('T1', 'uint8', true)] });
+  const nw3 = model({ providedFunctions: [fn('A', 's1', 'b1')], types: [typ('T1', 'uint32')] });
+  const sync3 = buildPolarionSync(diffModules(old3, nw3), old3, nw3);
+  const ch3 = sync3.chapterUpdates.map(c => c.chapter);
+  ok(ch3.includes('5.1') && ch3.includes('3.1/3.2'), 'S8c 类型变更：5.1+缩写提示列出');
+  ok(!ch3.includes('5.3.1') && !ch3.includes('7'), 'S8c 无函数变更：状态机/评估表不列');
+}
+
 console.log(`\nmodelDiff 测试全部通过（${n} 项断言）`);

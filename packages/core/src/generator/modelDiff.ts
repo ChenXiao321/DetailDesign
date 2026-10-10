@@ -234,6 +234,8 @@ export interface PolarionSync {
   oldAnalyzedAt: string;
   newAnalyzedAt: string;
   operations: SyncOperation[];
+  /** 章节级更新（非工作项粒度：5.1 描述/5.3 图/4.x 总图/7 评估表等，由失效标志与图源比对推导） */
+  chapterUpdates: { chapter: string; title: string; reason: string }[];
   /** 未变条目数（Polarion 侧零操作） */
   untouched: { functions: number; types: number; externals: number; configs: number };
 }
@@ -338,11 +340,42 @@ export function buildPolarionSync(diff: ModuleDiff, oldDesign: ModuleModel, newM
   const order: Record<SyncAction, number> = { delete: 0, update: 1, create: 2, rename: 3 };
   operations.sort((x, y) => x.chapter.localeCompare(y.chapter, undefined, { numeric: true }) || order[x.action] - order[y.action]);
 
+  // 章节级更新推导（工作项清单之外，文档其余可能波及的内容）
+  const chapterUpdates: PolarionSync['chapterUpdates'] = [];
+  if (diff.descriptionInvalidated) {
+    chapterUpdates.push({ chapter: '5.1', title: '模块功能描述', reason: '任何变更都会重生 5.1 描述' });
+  }
+  if (diff.dynamicInvalidated) {
+    chapterUpdates.push({ chapter: '5.3.1', title: '状态机', reason: '函数级变更 → 状态机整图重生' });
+    chapterUpdates.push({ chapter: '5.3.2', title: '序列图', reason: '函数级变更 → 序列图整组重生' });
+    chapterUpdates.push({ chapter: '7', title: '评估与圈复杂度表', reason: '函数集合变化 → 统计表行变化' });
+  }
+  // 4.1 文件清单：源文件集合变化
+  const oldFiles = (oldDesign.files ?? []).map(f => f.path).join('\n');
+  const newFiles = (newModel.files ?? []).map(f => f.path).join('\n');
+  if (oldFiles !== newFiles) {
+    chapterUpdates.push({ chapter: '4.1', title: '文件清单', reason: '源文件集合变化' });
+  }
+  // 4.2 接口总图/调用图：图源码比对
+  if ((oldDesign.interfaceOverview?.diagram ?? '') !== (newModel.interfaceOverview?.diagram ?? '')) {
+    chapterUpdates.push({ chapter: '4.2', title: '接口总图', reason: '接口总图图源变化' });
+  }
+  const oldCg = new Map((oldDesign.callGraphs ?? []).map(g => [g.name, g.diagram]));
+  const changedCg = (newModel.callGraphs ?? []).filter(g => oldCg.get(g.name) !== g.diagram).map(g => g.name);
+  const removedCg = [...oldCg.keys()].filter(n => !(newModel.callGraphs ?? []).some(g => g.name === n));
+  if (changedCg.length + removedCg.length > 0) {
+    chapterUpdates.push({ chapter: '4.2', title: '调用图', reason: `调用图变化：${[...changedCg, ...removedCg].join('、')}` });
+  }
+  if (diff.hasChanges) {
+    chapterUpdates.push({ chapter: '3.1/3.2', title: '缩写表/定义表', reason: '新生成的描述可能引入新缩写——以 report 打印的缺口名单为准，有则反馈维护方补表' });
+  }
+
   return {
     module: diff.module,
     oldAnalyzedAt: diff.oldAnalyzedAt,
     newAnalyzedAt: diff.newAnalyzedAt,
     operations,
+    chapterUpdates,
     untouched: {
       functions: diff.functions.unchanged.length,
       types: diff.types.unchanged.length,

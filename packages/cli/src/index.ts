@@ -162,6 +162,12 @@ async function cmdDiff(dir: string, outDir: string): Promise<ModuleDiff> {
     console.log(`未变条目零操作: 函数 ${sync.untouched.functions} / 类型 ${sync.untouched.types} / 外部接口 ${sync.untouched.externals} / 配置宏 ${sync.untouched.configs}`);
     console.log(`同步操作单已写入: ${syncPath}`);
   }
+  if (sync.chapterUpdates.length > 0) {
+    console.log('\n===== 章节级内容更新（工作项之外） =====');
+    for (const cu of sync.chapterUpdates) {
+      console.log(`  [更新] ${cu.chapter} ${cu.title}——${cu.reason}`);
+    }
+  }
   console.log('继续：gen --resume 增量重生失效条目（未变内容含人工修订全部保留）');
   return diff;
 }

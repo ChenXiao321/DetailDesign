@@ -1,7 +1,7 @@
 {
   "module": "Gp_EcuStpShdn",
   "schemaVersion": 1,
-  "analyzedAt": "2026-10-10T02:36:59.432Z",
+  "analyzedAt": "2026-10-10T03:30:57.589Z",
   "files": [
     {
       "path": "ConfTemplate\\Gp_EcuStpShdn_Callout.c",
@@ -335,7 +335,7 @@
       "generated": {
         "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 374 字符）。",
         "llmModel": "mock",
-        "generatedAt": "2026-10-10T02:36:59.477Z",
+        "generatedAt": "2026-10-10T03:30:57.636Z",
         "flowchart": "flowchart TD\n    START([\"开始\"])\n    N0[[\"Gp_EcuStpShdn_CalloutOsErrRecov1(OsStatus_u8)\"]]\n    END([\"结束\"])\n    START --> N0\n    N0 --> END",
         "flowchartFormat": "mermaid"
       }
@@ -517,7 +517,7 @@
       "generated": {
         "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 961 字符）。",
         "llmModel": "mock",
-        "generatedAt": "2026-10-10T02:36:59.496Z",
+        "generatedAt": "2026-10-10T03:30:57.656Z",
         "flowchart": "flowchart TD\n    START([\"开始\"])\n    N0[\"CoreId_u32 = Gp_EcuStpShdn_CalloutGetCoreId()\"]\n    D0{\"CoreId_u32 == GP_ECUSTPSHDN_CORE0_ID\"}\n    M0[\" \"]\n    D1{\"MstImpl_ptst-&gt;TimeStamp_u32[GP_ECUSTPSHDN_MST_TIME_STAMP_LAST_SAT_INIT] == 0U\"}\n    N1[\"MstImpl_ptst-&gt;TimeStamp_u32[GP_ECUSTPSHDN_MST_TIME_STAMP_LAST_SAT_INIT] =<br>Gp_EcuStpShdn_GetLastSatTimeStamp()\"]\n    N2[\"MstImpl_ptst-&gt;TimeStamp_u32[GP_ECUSTPSHDN_MST_TIME_STAMP_LAST_SAT_INIT] = 0U\"]\n    subgraph SG0_0[\" \"]\n        SG0_0_NOTE[\"注：仅在 GP_ECUSTPSHDN_SAFETY_ENABLE 生效时参与编译\"]\n        SG0_0_NOTE ~~~ D2\n        D2{\"(MstImpl_ptst-&gt;TryPwrShdn_b == FALSE) &amp;&amp; (MstImpl_ptst-&gt;SafeState_b == FALSE)\"}\n        M1[\" \"]\n        M2[\" \"]\n        N3[[\"Gp_TstApp_RunTimePhase()\"]]\n        D3{\"CoreId_u32 == GP_ECUSTPSHDN_CORE0_ID\"}\n        M3[\" \"]\n        D4{\"Gp_EcuStpShdn_CalloutChkMcuRunTimeTest() == FALSE\"}\n        M4[\" \"]\n        subgraph SG1_0[\" \"]\n            SG1_0_NOTE[\"注：仅在 GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE 生效时参与编译\"]\n            SG1_0_NOTE ~~~ N4\n            N4[[\"Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd()\"]]\n        end\n    end\n    M5[\" \"]\n    END([\"结束\"])\n    D1 -- 是 --> N1\n    D1 -- 否 --> N2\n    D0 -- 是 --> D1\n    D0 -- 否 --> M0\n    N0 --> D0\n    D4 -- 是 --> N4\n    D4 -- 否 --> M4\n    D3 -- 是 --> D4\n    D3 -- 否 --> M3\n    N3 --> D3\n    D2 -- 是 --> N3\n    D2 -- 否 --> M1\n    N1 --> M2\n    N2 --> M2\n    M0 --> M2\n    M2 --> D2\n    START --> N0\n    N4 --> M5\n    M4 --> M5\n    M3 --> M5\n    M1 --> M5\n    M5 --> END\n    style M0 fill:transparent,stroke:transparent\n    style M1 fill:transparent,stroke:transparent\n    style M2 fill:transparent,stroke:transparent\n    style M3 fill:transparent,stroke:transparent\n    style M4 fill:transparent,stroke:transparent\n    style M5 fill:transparent,stroke:transparent\n    style SG1_0 fill:transparent,stroke:#888888,stroke-dasharray:6 4\n    style SG0_0 fill:transparent,stroke:#888888,stroke-dasharray:6 4\n    classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700\n    class SG0_0_NOTE,SG1_0_NOTE condNote",
         "flowchartFormat": "mermaid"
       }
@@ -1802,7 +1802,7 @@
       "generated": {
         "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 302 字符）。",
         "llmModel": "mock",
-        "generatedAt": "2026-10-10T02:36:59.726Z"
+        "generatedAt": "2026-10-10T03:30:57.896Z"
       }
     },
     {
@@ -1826,7 +1826,7 @@
       "generated": {
         "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 323 字符）。",
         "llmModel": "mock",
-        "generatedAt": "2026-10-10T02:36:59.731Z"
+        "generatedAt": "2026-10-10T03:30:57.901Z"
       }
     },
     {
@@ -1850,7 +1850,7 @@
       "generated": {
         "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 290 字符）。",
         "llmModel": "mock",
-        "generatedAt": "2026-10-10T02:36:59.736Z"
+        "generatedAt": "2026-10-10T03:30:57.906Z"
       }
     },
     {
@@ -1874,7 +1874,7 @@
       "generated": {
         "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 297 字符）。",
         "llmModel": "mock",
-        "generatedAt": "2026-10-10T02:36:59.740Z"
+        "generatedAt": "2026-10-10T03:30:57.910Z"
       }
     },
     {
@@ -1898,7 +1898,7 @@
       "generated": {
         "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 297 字符）。",
         "llmModel": "mock",
-        "generatedAt": "2026-10-10T02:36:59.744Z"
+        "generatedAt": "2026-10-10T03:30:57.915Z"
       }
     },
     {
@@ -1922,7 +1922,7 @@
       "generated": {
         "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 308 字符）。",
         "llmModel": "mock",
-        "generatedAt": "2026-10-10T02:36:59.749Z"
+        "generatedAt": "2026-10-10T03:30:57.920Z"
       }
     },
     {
@@ -1946,7 +1946,7 @@
       "generated": {
         "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 310 字符）。",
         "llmModel": "mock",
-        "generatedAt": "2026-10-10T02:36:59.754Z"
+        "generatedAt": "2026-10-10T03:30:57.925Z"
       }
     },
     {
@@ -1970,7 +1970,7 @@
       "generated": {
         "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 316 字符）。",
         "llmModel": "mock",
-        "generatedAt": "2026-10-10T02:36:59.758Z"
+        "generatedAt": "2026-10-10T03:30:57.929Z"
       }
     },
     {
@@ -1994,7 +1994,7 @@
       "generated": {
         "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 315 字符）。",
         "llmModel": "mock",
-        "generatedAt": "2026-10-10T02:36:59.762Z"
+        "generatedAt": "2026-10-10T03:30:57.933Z"
       }
     }
   ],
@@ -2074,7 +2074,7 @@
       "generated": {
         "comment": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 857 字符）。",
         "llmModel": "mock",
-        "generatedAt": "2026-10-10T02:36:59.703Z"
+        "generatedAt": "2026-10-10T03:30:57.870Z"
       }
     },
     {
@@ -2138,7 +2138,7 @@
       "generated": {
         "comment": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 734 字符）。",
         "llmModel": "mock",
-        "generatedAt": "2026-10-10T02:36:59.707Z"
+        "generatedAt": "2026-10-10T03:30:57.875Z"
       }
     },
     {
@@ -2224,7 +2224,7 @@
       "generated": {
         "comment": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 1113 字符）。",
         "llmModel": "mock",
-        "generatedAt": "2026-10-10T02:36:59.713Z"
+        "generatedAt": "2026-10-10T03:30:57.880Z"
       }
     },
     {
@@ -2260,7 +2260,7 @@
       "generated": {
         "comment": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 724 字符）。",
         "llmModel": "mock",
-        "generatedAt": "2026-10-10T02:36:59.717Z"
+        "generatedAt": "2026-10-10T03:30:57.885Z"
       }
     },
     {
@@ -2291,7 +2291,7 @@
       "generated": {
         "comment": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 680 字符）。",
         "llmModel": "mock",
-        "generatedAt": "2026-10-10T02:36:59.722Z"
+        "generatedAt": "2026-10-10T03:30:57.891Z"
       }
     }
   ],

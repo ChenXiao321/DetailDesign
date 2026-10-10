@@ -362,12 +362,17 @@ ${doc.supportFiles.map(([no, name, code]) =>
 <table class="simple"><tr><th>章节</th><th>操作</th><th>工作项 title</th><th>说明</th></tr>
 ${opts.sync.operations.map(op => `<tr><td>${esc(op.chapter)}</td><td>${syncLabel[op.action]}</td><td><code>${esc(op.title)}</code>${op.from ? `<br><span class="muted">原 ${esc(op.from)}</span>` : ''}</td><td>${esc(op.detail)}</td></tr>`).join('\n')}
 </table>` : '';
+    const chapterTable = opts?.sync && opts.sync.chapterUpdates.length > 0 ? `
+<h3>A.2 章节级内容更新（工作项之外）</h3>
+<table class="simple"><tr><th>章节</th><th>内容</th><th>原因</th></tr>
+${opts.sync.chapterUpdates.map(cu => `<tr><td>${esc(cu.chapter)}</td><td>${esc(cu.title)}</td><td>${esc(cu.reason)}</td></tr>`).join('\n')}
+</table>` : '';
     return `
 <h2 id="sA">附录 A 变更记录</h2>
 <p class="muted">本次更新相对上一版分析（${esc(d.oldAnalyzedAt)} → ${esc(d.newAnalyzedAt)}）的差异清单；未变更条目内容沿用上版（共 ${d.functions.unchanged.length} 个函数未变）。</p>
 ${allRows.length > 0
   ? `<table class="simple"><tr><th>变更类型</th><th>名称</th></tr>\n${allRows.join('\n')}\n</table>`
-  : '<p class="muted">无差异（代码未变，仅重新分析）。</p>'}${syncTable}`;
+  : '<p class="muted">无差异（代码未变，仅重新分析）。</p>'}${syncTable}${chapterTable}`;
   })() : '';
   // 无 diff 时零字节差异（附录节自带前置换行，不污染模板行结构）
   const diffBlock = diffSection ? `\n${diffSection}` : '';

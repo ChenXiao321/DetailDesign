@@ -4,8 +4,8 @@ import * as path from 'node:path';
 import {
   analyzeModule, generateDesign, generateHtmlReport, resolveConfig, normalizeBaseUrl,
   OpenAICompatibleProvider, MockProvider, lintModelSchema,
-  diffModules, applyModuleDiff,
-  type InputFile, type ModuleModel, type LLMProvider, type ModuleDiff,
+  diffModules, applyModuleDiff, buildPolarionSync,
+  type InputFile, type ModuleModel, type LLMProvider, type ModuleDiff, type PolarionSync,
 } from '@lld/core';
 import { cmdAudit } from './audit.js';
 import { cmdImages } from './images.js';
@@ -127,6 +127,10 @@ async function cmdDiff(dir: string, outDir: string): Promise<ModuleDiff> {
   fs.writeFileSync(designPath, JSON.stringify(merged, null, 2), 'utf-8');
   const diffPath = path.join(outDir, 'lld_diff.json');
   fs.writeFileSync(diffPath, JSON.stringify(diff, null, 2), 'utf-8');
+  // Polarion 同步操作单（新建/更新/删除/疑似改名配对，按章节排序）
+  const sync = buildPolarionSync(diff, oldDesign, newModel);
+  const syncPath = path.join(outDir, 'lld_polarion_sync.json');
+  fs.writeFileSync(syncPath, JSON.stringify(sync, null, 2), 'utf-8');
 
   console.log('\n===== 版本差异清单 =====');
   const f = diff.functions;
@@ -149,6 +153,15 @@ async function cmdDiff(dir: string, outDir: string): Promise<ModuleDiff> {
       + `${diff.descriptionInvalidated ? '、5.1 功能描述' : ''}、document 节`);
   }
   console.log(`\n差异清单已写入: ${diffPath}`);
+  const syncActionLabel: Record<string, string> = { delete: '删除', update: '更新', create: '新建', rename: '改名' };
+  if (sync.operations.length > 0) {
+    console.log('\n===== Polarion 同步操作单 =====');
+    for (const op of sync.operations) {
+      console.log(`  [${syncActionLabel[op.action]}] ${op.chapter} ${op.title}${op.from ? `（原 ${op.from}）` : ''}——${op.detail}`);
+    }
+    console.log(`未变条目零操作: 函数 ${sync.untouched.functions} / 类型 ${sync.untouched.types} / 外部接口 ${sync.untouched.externals} / 配置宏 ${sync.untouched.configs}`);
+    console.log(`同步操作单已写入: ${syncPath}`);
+  }
   console.log('继续：gen --resume 增量重生失效条目（未变内容含人工修订全部保留）');
   return diff;
 }
@@ -302,6 +315,11 @@ async function cmdReport(outDir: string): Promise<void> {
     diff: (() => {
       const p = path.join(outDir, 'lld_diff.json');
       return fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, 'utf-8')) as ModuleDiff : undefined;
+    })(),
+    // Polarion 同步操作单（diff 产物）→ 附录 A 操作表；无存量不渲染
+    sync: (() => {
+      const p = path.join(outDir, 'lld_polarion_sync.json');
+      return fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, 'utf-8')) as PolarionSync : undefined;
     })(),
   });
   const output = path.join(outDir, 'lld_report.html');

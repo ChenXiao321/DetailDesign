@@ -1,6 +1,6 @@
 // 版本更新差异比对 + 失效合并测试（modelDiff 纯逻辑）
 const assert = require('assert');
-const { diffModules, applyModuleDiff } = require('../packages/core/dist/index.js');
+const { diffModules, applyModuleDiff, buildPolarionSync } = require('../packages/core/dist/index.js');
 
 let n = 0;
 const ok = (cond, name) => { n++; assert(cond, name); console.log(`  ✓ ${name}`); };
@@ -187,6 +187,41 @@ const model = (over = {}) => ({
   ok(m.calledExternalFunctions[0].commentSource === 'inferred', 'S6 commentSource 回挂');
   ok(m.types[0].generated && m.calledExternalFunctions[0].generated && m.configMacros[0].generated,
     'S6 未变条目 generated 全保留');
+}
+
+// ================= 场景 7：Polarion 同步清单（操作翻译 + 疑似改名配对） =================
+{
+  const old = model({
+    providedFunctions: [fn('Keep', 's1', 'b1', true), fn('ChgSig', 's2', 'b2', true), fn('OsErrRecov', 'sR', 'bR', true), fn('Del', 's3', 'b3', true)],
+    internalFunctions: [fn('InnerChg', 's4', 'b4', true)],
+    types: [typ('T1', 'uint8', true), typ('OldType', 'uint16', true)],
+    configMacros: [cfg('C1', '1', true)],
+  });
+  const nw = model({
+    providedFunctions: [fn('Keep', 's1', 'b1'), fn('ChgSig', 's2x', 'b2'), fn('OsErrRecov1', 'sR', 'bR'), fn('BrandNew', 's5', 'b5')],
+    internalFunctions: [fn('InnerChg', 's4', 'b4x')],
+    types: [typ('T1', 'uint32'), typ('OldTypeV2', 'uint16')],
+    configMacros: [cfg('C1', '1')],
+  });
+  const d = diffModules(old, nw);
+  const sync = buildPolarionSync(d, old, nw);
+  const find = (title) => sync.operations.find(o => o.title === title);
+
+  ok(find('OsErrRecov1')?.action === 'rename' && find('OsErrRecov1')?.from === 'OsErrRecov',
+    'S7 函数疑似改名配对（OsErrRecov→OsErrRecov1，签名一致加权）');
+  ok(!sync.operations.some(o => o.title === 'OsErrRecov'), 'S7 被配对删除项不再单列删除操作');
+  ok(find('OldTypeV2')?.action === 'rename' && find('OldTypeV2')?.from === 'OldType' && find('OldTypeV2')?.chapter === '5.2.1.2',
+    'S7 类型名称相似配对（OldType→OldTypeV2）');
+  ok(find('Del')?.action === 'delete' && find('Del')?.chapter === '5.2.3.2', 'S7 孤立删除→delete 且章节按旧模型归属');
+  ok(find('BrandNew')?.action === 'create', 'S7 孤立新增→create');
+  ok(find('ChgSig')?.action === 'update' && find('ChgSig')?.detail.includes('签名变更'), 'S7 签名变更→update 带签名提示');
+  ok(find('InnerChg')?.action === 'update' && find('InnerChg')?.chapter === '5.2.4.2', 'S7 内部函数章节 5.2.4.2');
+  ok(find('T1')?.action === 'update' && find('T1')?.chapter === '5.2.1.2', 'S7 类型变更→update 章节 5.2.1.2');
+  ok(sync.untouched.functions === 1 && sync.untouched.types === 0, 'S7 未变计数正确');
+  const chapters = sync.operations.map(o => o.chapter);
+  ok([...chapters].sort((a, b) => a.localeCompare(b, undefined, { numeric: true })).join() === chapters.join(),
+    'S7 操作单按章节号升序');
+  ok(!sync.operations.some(o => o.title === 'Keep' || o.title === 'C1'), 'S7 未变条目不出现在操作单');
 }
 
 console.log(`\nmodelDiff 测试全部通过（${n} 项断言）`);

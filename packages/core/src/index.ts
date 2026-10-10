@@ -18,7 +18,7 @@ export {
 export { buildStaticStateMachine, parseSmTransitions, polishSmLabels } from './generator/staticStateMachine.js';
 export { buildStaticSequence } from './generator/staticSequence.js';
 export { buildDocumentContent, type AbbrTableInput } from './generator/staticDocument.js';
-export { diffModules, applyModuleDiff, type ModuleDiff, type NameChanges, type FunctionChange } from './generator/modelDiff.js';
+export { diffModules, applyModuleDiff, buildPolarionSync, type ModuleDiff, type NameChanges, type FunctionChange, type PolarionSync, type SyncOperation } from './generator/modelDiff.js';
 export {
   collectDiagrams, buildBatchPage, extractDiagramSvgs, svgNaturalSize, pickShotParams,
   wrapSvgShotPage, hasDiagramPng, applyDiagramPng, syncSmAliasPng, type DiagramEntry,

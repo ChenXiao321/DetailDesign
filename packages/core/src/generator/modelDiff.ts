@@ -211,3 +211,143 @@ export function applyModuleDiff(newModel: ModuleModel, oldDesign: ModuleModel, d
   }
   return merged;
 }
+
+/* ================= Polarion 同步清单 =================
+ * 把 diff 四类清单翻译成 Polarion 操作单：新增→新建工作项、变更→更新内容、删除→移除，
+ * 并对「删除+新增」做疑似改名配对（名称 LCS 相似度，语义键相同加权）——
+ * 改名建议改原工作项 title+内容，保留历史与追溯链接，而非删了重建。
+ */
+
+export type SyncAction = 'create' | 'update' | 'delete' | 'rename';
+
+export interface SyncOperation {
+  action: SyncAction;
+  kind: 'function' | 'type' | 'external' | 'config';
+  chapter: string;            // 报告章节号=Polarion 文档定位锚点
+  title: string;              // 工作项 title（rename 时为新名）
+  from?: string;              // rename 时的旧名
+  detail: string;             // 中文操作建议
+}
+
+export interface PolarionSync {
+  module: string;
+  oldAnalyzedAt: string;
+  newAnalyzedAt: string;
+  operations: SyncOperation[];
+  /** 未变条目数（Polarion 侧零操作） */
+  untouched: { functions: number; types: number; externals: number; configs: number };
+}
+
+/** LCS 相似度（Dice 口径 2·LCS/(m+n)：一方含另一方时得分高；名字短，O(n·m) 够用） */
+function lcsRatio(a: string, b: string): number {
+  if (a === b) return 1;
+  const m = a.length, n = b.length;
+  if (!m || !n) return 0;
+  let prev = new Array<number>(n + 1).fill(0);
+  for (let i = 1; i <= m; i++) {
+    const cur = new Array<number>(n + 1).fill(0);
+    for (let j = 1; j <= n; j++) {
+      cur[j] = a[i - 1] === b[j - 1] ? prev[j - 1] + 1 : Math.max(prev[j], cur[j - 1]);
+    }
+    prev = cur;
+  }
+  return (2 * prev[n]) / (m + n);
+}
+
+/** 疑似改名配对：removed × added 贪心取相似度最高对，≥0.8 或语义键相同（加权 0.95） */
+function pairRenames(
+  removed: string[], added: string[], semKeyOf: (name: string, isOld: boolean) => string | undefined,
+): { pairs: [string, string][]; loneRemoved: string[]; loneAdded: string[] } {
+  const cands: { r: string; a: string; score: number }[] = [];
+  for (const r of removed) {
+    for (const a of added) {
+      let score = lcsRatio(r, a);
+      const kr = semKeyOf(r, true), ka = semKeyOf(a, false);
+      if (kr !== undefined && kr === ka) score = Math.max(score, 0.95);
+      if (score >= 0.8) cands.push({ r, a, score });
+    }
+  }
+  cands.sort((x, y) => y.score - x.score);
+  const usedR = new Set<string>(), usedA = new Set<string>();
+  const pairs: [string, string][] = [];
+  for (const c of cands) {
+    if (!usedR.has(c.r) && !usedA.has(c.a)) {
+      usedR.add(c.r); usedA.add(c.a); pairs.push([c.r, c.a]);
+    }
+  }
+  return {
+    pairs,
+    loneRemoved: removed.filter(r => !usedR.has(r)),
+    loneAdded: added.filter(a => !usedA.has(a)),
+  };
+}
+
+const RENAME_DETAIL = '疑似改名：建议直接改原工作项 title+内容，保留历史与追溯链接（勿删了重建）';
+
+export function buildPolarionSync(diff: ModuleDiff, oldDesign: ModuleModel, newModel: ModuleModel): PolarionSync {
+  const operations: SyncOperation[] = [];
+
+  // 函数：章节按新旧模型中 provided/internal 归属判定
+  const newProvided = new Set(newModel.providedFunctions.map(f => f.name));
+  const oldProvided = new Set(oldDesign.providedFunctions.map(f => f.name));
+  const fnChapter = (name: string, isOld: boolean): string =>
+    (isOld ? oldProvided : newProvided).has(name) ? '5.2.3.2' : '5.2.4.2';
+  const oldFnSig = new Map([...oldDesign.providedFunctions, ...oldDesign.internalFunctions].map(f => [f.name, f.sigHash]));
+  const newFnSig = new Map([...newModel.providedFunctions, ...newModel.internalFunctions].map(f => [f.name, f.sigHash]));
+  const fnPair = pairRenames(diff.functions.removed, diff.functions.added,
+    (name, isOld) => (isOld ? oldFnSig : newFnSig).get(name));
+  for (const [from, to] of fnPair.pairs) {
+    operations.push({ action: 'rename', kind: 'function', chapter: fnChapter(to, false), title: to, from, detail: RENAME_DETAIL });
+  }
+  for (const name of fnPair.loneAdded) {
+    operations.push({ action: 'create', kind: 'function', chapter: fnChapter(name, false), title: name, detail: '新建工作项，插入对应章节' });
+  }
+  for (const name of fnPair.loneRemoved) {
+    operations.push({ action: 'delete', kind: 'function', chapter: fnChapter(name, true), title: name, detail: '从文档移除该工作项' });
+  }
+  for (const c of diff.functions.changed) {
+    operations.push({
+      action: 'update', kind: 'function', chapter: fnChapter(c.name, false), title: c.name,
+      detail: c.kind === 'sig' ? '签名变更：更新工作项内容（接口变化，评审重点关注）' : '实现变更：更新工作项内容',
+    });
+  }
+
+  // 类型/外部接口/配置宏：名称相似度配对（无语义键加权——字段变即 changed 不会落到删+增）
+  const misc = (
+    kind: 'type' | 'external' | 'config', chapter: string, c: NameChanges,
+  ): void => {
+    const p = pairRenames(c.removed, c.added, () => undefined);
+    for (const [from, to] of p.pairs) {
+      operations.push({ action: 'rename', kind, chapter, title: to, from, detail: RENAME_DETAIL });
+    }
+    for (const name of p.loneAdded) {
+      operations.push({ action: 'create', kind, chapter, title: name, detail: '新建工作项，插入对应章节' });
+    }
+    for (const name of p.loneRemoved) {
+      operations.push({ action: 'delete', kind, chapter, title: name, detail: '从文档移除该工作项' });
+    }
+    for (const name of c.changed) {
+      operations.push({ action: 'update', kind, chapter, title: name, detail: '内容变更：更新工作项内容' });
+    }
+  };
+  misc('type', '5.2.1.2', diff.types);
+  misc('external', '5.2.2.2', diff.externals);
+  misc('config', '6', diff.configs);
+
+  // 章节号升序、同章按 删→改→建→改名 排序，照着单子从上到下干活即可
+  const order: Record<SyncAction, number> = { delete: 0, update: 1, create: 2, rename: 3 };
+  operations.sort((x, y) => x.chapter.localeCompare(y.chapter, undefined, { numeric: true }) || order[x.action] - order[y.action]);
+
+  return {
+    module: diff.module,
+    oldAnalyzedAt: diff.oldAnalyzedAt,
+    newAnalyzedAt: diff.newAnalyzedAt,
+    operations,
+    untouched: {
+      functions: diff.functions.unchanged.length,
+      types: diff.types.unchanged.length,
+      externals: diff.externals.unchanged.length,
+      configs: diff.configs.unchanged.length,
+    },
+  };
+}

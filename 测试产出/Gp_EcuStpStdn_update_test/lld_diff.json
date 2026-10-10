@@ -1,35 +1,42 @@
 {
   "module": "Gp_EcuStpShdn",
   "oldAnalyzedAt": "2026-08-12T09:42:09.066Z",
-  "newAnalyzedAt": "2026-10-10T02:14:08.925Z",
+  "newAnalyzedAt": "2026-10-10T02:36:59.432Z",
   "functions": {
     "unchanged": [
       "Gp_EcuStpShdn_SetSafeState",
       "Gp_EcuStpShdn_SetTryPwrShdn",
       "Gp_EcuStpShdn_GetSafeState",
       "Gp_EcuStpShdn_TrapRecov",
-      "Gp_EcuStpShdn_OsErrRecov",
       "Gp_EcuStpShdn_PwrShdnInShdnPhase",
       "Gp_EcuStpShdn_Startup",
-      "Gp_EcuStpShdn_Mainfunction",
       "Gp_EcuStpShdn_CheckInitRslt",
       "Gp_EcuStpShdn_MstProcMcuPreRunTest",
       "Gp_EcuStpShdn_MstPostInit",
       "Gp_EcuStpShdn_GetLastSatTimeStamp"
     ],
-    "changed": [],
-    "added": [],
-    "removed": []
+    "changed": [
+      {
+        "name": "Gp_EcuStpShdn_Mainfunction",
+        "kind": "body"
+      }
+    ],
+    "added": [
+      "Gp_EcuStpShdn_OsErrRecov1"
+    ],
+    "removed": [
+      "Gp_EcuStpShdn_OsErrRecov"
+    ]
   },
   "types": {
-    "unchanged": [],
-    "changed": [
+    "unchanged": [
       "Gp_EcuStpShdn_StpStageType",
       "Gp_EcuStpShdn_SelfTestType",
       "Gp_EcuStpShdn_MstLocalImplType",
       "Gp_EcuStpShdn_SatLocalImplType",
       "Gp_EcuStpShdn_SatRunTimeType"
     ],
+    "changed": [],
     "added": [],
     "removed": []
   },
@@ -51,7 +58,6 @@
       "Gp_EcuStpShdn_CalloutInitStageTwoCore5",
       "Gp_EcuStpShdn_CalloutMcuPreRunTestFailedHnd",
       "Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd",
-      "Gp_EcuStpShdn_CalloutOsErrRecov",
       "Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase",
       "Gp_EcuStpShdn_CalloutPwrShdnInStpPhase",
       "Gp_EcuStpShdn_CalloutSafeState",
@@ -59,9 +65,7 @@
       "Gp_EcuStpShdn_CalloutSbcInitInSafeState",
       "Gp_EcuStpShdn_CalloutSbcTestFailedHnd",
       "Gp_EcuStpShdn_CalloutSwtToRunFailedHnd",
-      "Gp_EcuStpShdn_CalloutTrapRecov"
-    ],
-    "changed": [
+      "Gp_EcuStpShdn_CalloutTrapRecov",
       "Gp_RstM_GetLastRstTypeInfo",
       "Gp_RstM_Init",
       "Gp_RstM_InitOne",
@@ -71,8 +75,13 @@
       "Gp_TstApp_RunTimePhase",
       "Gp_TstApp_SwitchToRunPhase"
     ],
-    "added": [],
-    "removed": []
+    "changed": [],
+    "added": [
+      "Gp_EcuStpShdn_CalloutOsErrRecov1"
+    ],
+    "removed": [
+      "Gp_EcuStpShdn_CalloutOsErrRecov"
+    ]
   },
   "configs": {
     "unchanged": [
@@ -85,7 +94,7 @@
     "added": [],
     "removed": []
   },
-  "dynamicInvalidated": false,
+  "dynamicInvalidated": true,
   "descriptionInvalidated": true,
   "hasChanges": true
 }

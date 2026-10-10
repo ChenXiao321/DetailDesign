@@ -1,7 +1,7 @@
 {
   "module": "Gp_EcuStpShdn",
   "oldAnalyzedAt": "2026-08-12T09:42:09.066Z",
-  "newAnalyzedAt": "2026-10-10T03:30:57.589Z",
+  "newAnalyzedAt": "2026-10-10T05:25:32.007Z",
   "operations": [
     {
       "action": "rename",
@@ -25,6 +25,43 @@
       "title": "Gp_EcuStpShdn_OsErrRecov1",
       "from": "Gp_EcuStpShdn_OsErrRecov",
       "detail": "疑似改名：建议直接改原工作项 title+内容，保留历史与追溯链接（勿删了重建）"
+    }
+  ],
+  "chapterUpdates": [
+    {
+      "chapter": "5.1",
+      "title": "模块功能描述",
+      "reason": "任何变更都会重生 5.1 描述"
+    },
+    {
+      "chapter": "5.3.1",
+      "title": "状态机",
+      "reason": "函数级变更 → 状态机整图重生"
+    },
+    {
+      "chapter": "5.3.2",
+      "title": "序列图",
+      "reason": "函数级变更 → 序列图整组重生"
+    },
+    {
+      "chapter": "7",
+      "title": "评估与圈复杂度表",
+      "reason": "函数集合变化 → 统计表行变化"
+    },
+    {
+      "chapter": "4.2",
+      "title": "接口总图",
+      "reason": "接口总图图源变化"
+    },
+    {
+      "chapter": "4.2",
+      "title": "调用图",
+      "reason": "调用图变化：Gp_EcuStpShdn_OsErrRecov"
+    },
+    {
+      "chapter": "3.1/3.2",
+      "title": "缩写表/定义表",
+      "reason": "新生成的描述可能引入新缩写——以 report 打印的缺口名单为准，有则反馈维护方补表"
     }
   ],
   "untouched": {

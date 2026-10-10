@@ -354,6 +354,34 @@ ${doc.supportFiles.map(([no, name, code]) =>
       ...c.removed.map(n => `<tr><td>${label}·删除</td><td><code>${esc(n)}</code></td></tr>`),
     ];
     const allRows = [...fnRows, ...miscRows('类型', d.types), ...miscRows('外部接口', d.externals), ...miscRows('配置宏', d.configs)];
+    // ---- 变更总览（确定性汇总段：统计+接口影响判定+疑似改名+文档联动） ----
+    const f = d.functions;
+    const sigChg = f.changed.filter(c => c.kind === 'sig');
+    const bodyChg = f.changed.filter(c => c.kind === 'body');
+    const totalChanged = f.changed.length + f.added.length + f.removed.length
+      + d.types.changed.length + d.types.added.length + d.types.removed.length
+      + d.externals.changed.length + d.externals.added.length + d.externals.removed.length
+      + d.configs.changed.length + d.configs.added.length + d.configs.removed.length;
+    // 接口面影响：签名变更/新增/删除的函数（有 sync 时按章节区分内外部，5.2.4.2 内部函数不算接口面）
+    const syncFnChapters = new Map((opts?.sync?.operations ?? []).filter(o => o.kind === 'function').map(o => [o.title, o.chapter]));
+    const isIface = (n: string): boolean => syncFnChapters.size === 0 || syncFnChapters.get(n) !== '5.2.4.2';
+    const ifaceImpact = [...sigChg.map(c => c.name), ...f.added, ...f.removed].filter(isIface);
+    const renamePairs = (opts?.sync?.operations ?? []).filter(o => o.action === 'rename');
+    // 改名对的 from/to 已在下方单列，接口影响名单剔除避免重复点名
+    const renameNames = new Set(renamePairs.flatMap(o => [o.from ?? '', o.title]));
+    const ifaceImpactNet = ifaceImpact.filter(n => !renameNames.has(n));
+    const chapterList = [...new Set((opts?.sync?.chapterUpdates ?? []).map(cu => cu.chapter))];
+    const overviewBlock = `
+<h3>A.0 变更总览</h3>
+${d.hasChanges ? `<p>本次更新共 ${totalChanged} 处条目变化：函数 ${f.changed.length + f.added.length + f.removed.length} 项（签名变更 ${sigChg.length}、实现变更 ${bodyChg.length}、新增 ${f.added.length}、删除 ${f.removed.length}）、类型 ${d.types.changed.length + d.types.added.length + d.types.removed.length} 项、外部接口 ${d.externals.changed.length + d.externals.added.length + d.externals.removed.length} 项、配置宏 ${d.configs.changed.length + d.configs.added.length + d.configs.removed.length} 项；其余条目未变，内容沿用上版。</p>
+<p>${ifaceImpactNet.length > 0
+  ? `<strong>接口面有变化</strong>（影响调用方，评审重点）：${ifaceImpactNet.map(n => `<code>${esc(n)}</code>`).join('、')}。`
+  : renamePairs.length > 0
+    ? '<strong>接口面变化均来自下方改名对</strong>（函数名变化，调用方需同步改名）。'
+    : '<strong>接口面无变化</strong>，改动限于模块内部实现。'}</p>
+${renamePairs.length > 0 ? `<p>疑似改名 ${renamePairs.length} 对（建议改原工作项，保留历史与追溯链接）：${renamePairs.map(o => `<code>${esc(o.from ?? '')}</code> → <code>${esc(o.title)}</code>`).join('、')}。</p>` : ''}
+${chapterList.length > 0 ? `<p>文档联动更新：${chapterList.map(c => esc(c)).join('、')}（详见 A.2）。</p>` : ''}`
+  : '<p>本次更新无差异（代码未变，仅重新分析），文档内容全部沿用上版。</p>'}`;
     // Polarion 同步操作单（opts.sync 缺省时零字节——操作表独立小节，不影响存量字节门禁）
     const syncLabel: Record<string, string> = { delete: '删除', update: '更新', create: '新建', rename: '改名' };
     const syncTable = opts?.sync && opts.sync.operations.length > 0 ? `
@@ -368,7 +396,7 @@ ${opts.sync.operations.map(op => `<tr><td>${esc(op.chapter)}</td><td>${syncLabel
 ${opts.sync.chapterUpdates.map(cu => `<tr><td>${esc(cu.chapter)}</td><td>${esc(cu.title)}</td><td>${esc(cu.reason)}</td></tr>`).join('\n')}
 </table>` : '';
     return `
-<h2 id="sA">附录 A 变更记录</h2>
+<h2 id="sA">附录 A 变更记录</h2>${overviewBlock}
 <p class="muted">本次更新相对上一版分析（${esc(d.oldAnalyzedAt)} → ${esc(d.newAnalyzedAt)}）的差异清单；未变更条目内容沿用上版（共 ${d.functions.unchanged.length} 个函数未变）。</p>
 ${allRows.length > 0
   ? `<table class="simple"><tr><th>变更类型</th><th>名称</th></tr>\n${allRows.join('\n')}\n</table>`

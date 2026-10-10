@@ -227,6 +227,8 @@ export interface SyncOperation {
   title: string;              // 工作项 title（rename 时为新名）
   from?: string;              // rename 时的旧名
   detail: string;             // 中文操作建议
+  jsonPath?: string;          // 条目在（合并后的新）lld_design.json 中的节点路径，如 $.providedFunctions[2]；delete 不存在于新 json
+  oldJsonPath?: string;       // 条目在旧 lld_design.json（diff 前）中的节点路径；create 不存在于旧 json
 }
 
 export interface PolarionSync {
@@ -289,6 +291,18 @@ const RENAME_DETAIL = '疑似改名：建议直接改原工作项 title+内容�
 export function buildPolarionSync(diff: ModuleDiff, oldDesign: ModuleModel, newModel: ModuleModel): PolarionSync {
   const operations: SyncOperation[] = [];
 
+  // 节点路径：差异条目在 lld_design.json 中的定位（$.list[index] 索引路径）——
+  // newModel 与写盘的合并 json 数组顺序一致（applyModuleDiff 深拷贝回挂不重排），索引直接可用。
+  const idxPath = (list: { name: string }[], base: string, name: string): string | undefined => {
+    const i = list.findIndex(x => x.name === name);
+    return i >= 0 ? `${base}[${i}]` : undefined;
+  };
+  const fnPath = (m: ModuleModel, name: string): string | undefined =>
+    idxPath(m.providedFunctions, '$.providedFunctions', name)
+    ?? idxPath(m.internalFunctions, '$.internalFunctions', name);
+  const oldFnPath = (name: string) => fnPath(oldDesign, name);
+  const newFnPath = (name: string) => fnPath(newModel, name);
+
   // 函数：章节按新旧模型中 provided/internal 归属判定
   const newProvided = new Set(newModel.providedFunctions.map(f => f.name));
   const oldProvided = new Set(oldDesign.providedFunctions.map(f => f.name));
@@ -299,42 +313,44 @@ export function buildPolarionSync(diff: ModuleDiff, oldDesign: ModuleModel, newM
   const fnPair = pairRenames(diff.functions.removed, diff.functions.added,
     (name, isOld) => (isOld ? oldFnSig : newFnSig).get(name));
   for (const [from, to] of fnPair.pairs) {
-    operations.push({ action: 'rename', kind: 'function', chapter: fnChapter(to, false), title: to, from, detail: RENAME_DETAIL });
+    operations.push({ action: 'rename', kind: 'function', chapter: fnChapter(to, false), title: to, from, detail: RENAME_DETAIL, jsonPath: newFnPath(to), oldJsonPath: oldFnPath(from) });
   }
   for (const name of fnPair.loneAdded) {
-    operations.push({ action: 'create', kind: 'function', chapter: fnChapter(name, false), title: name, detail: '新建工作项，插入对应章节' });
+    operations.push({ action: 'create', kind: 'function', chapter: fnChapter(name, false), title: name, detail: '新建工作项，插入对应章节', jsonPath: newFnPath(name) });
   }
   for (const name of fnPair.loneRemoved) {
-    operations.push({ action: 'delete', kind: 'function', chapter: fnChapter(name, true), title: name, detail: '从文档移除该工作项' });
+    operations.push({ action: 'delete', kind: 'function', chapter: fnChapter(name, true), title: name, detail: '从文档移除该工作项', oldJsonPath: oldFnPath(name) });
   }
   for (const c of diff.functions.changed) {
     operations.push({
       action: 'update', kind: 'function', chapter: fnChapter(c.name, false), title: c.name,
       detail: c.kind === 'sig' ? '签名变更：更新工作项内容（接口变化，评审重点关注）' : '实现变更：更新工作项内容',
+      jsonPath: newFnPath(c.name), oldJsonPath: oldFnPath(c.name),
     });
   }
 
   // 类型/外部接口/配置宏：名称相似度配对（无语义键加权——字段变即 changed 不会落到删+增）
   const misc = (
     kind: 'type' | 'external' | 'config', chapter: string, c: NameChanges,
+    base: string, oldList: { name: string }[], newList: { name: string }[],
   ): void => {
     const p = pairRenames(c.removed, c.added, () => undefined);
     for (const [from, to] of p.pairs) {
-      operations.push({ action: 'rename', kind, chapter, title: to, from, detail: RENAME_DETAIL });
+      operations.push({ action: 'rename', kind, chapter, title: to, from, detail: RENAME_DETAIL, jsonPath: idxPath(newList, base, to), oldJsonPath: idxPath(oldList, base, from) });
     }
     for (const name of p.loneAdded) {
-      operations.push({ action: 'create', kind, chapter, title: name, detail: '新建工作项，插入对应章节' });
+      operations.push({ action: 'create', kind, chapter, title: name, detail: '新建工作项，插入对应章节', jsonPath: idxPath(newList, base, name) });
     }
     for (const name of p.loneRemoved) {
-      operations.push({ action: 'delete', kind, chapter, title: name, detail: '从文档移除该工作项' });
+      operations.push({ action: 'delete', kind, chapter, title: name, detail: '从文档移除该工作项', oldJsonPath: idxPath(oldList, base, name) });
     }
     for (const name of c.changed) {
-      operations.push({ action: 'update', kind, chapter, title: name, detail: '内容变更：更新工作项内容' });
+      operations.push({ action: 'update', kind, chapter, title: name, detail: '内容变更：更新工作项内容', jsonPath: idxPath(newList, base, name), oldJsonPath: idxPath(oldList, base, name) });
     }
   };
-  misc('type', '5.2.1.2', diff.types);
-  misc('external', '5.2.2.2', diff.externals);
-  misc('config', '6', diff.configs);
+  misc('type', '5.2.1.2', diff.types, '$.types', oldDesign.types, newModel.types);
+  misc('external', '5.2.2.2', diff.externals, '$.calledExternalFunctions', oldDesign.calledExternalFunctions, newModel.calledExternalFunctions);
+  misc('config', '6', diff.configs, '$.configMacros', oldDesign.configMacros, newModel.configMacros);
 
   // 章节号升序、同章按 删→改→建→改名 排序，照着单子从上到下干活即可
   const order: Record<SyncAction, number> = { delete: 0, update: 1, create: 2, rename: 3 };

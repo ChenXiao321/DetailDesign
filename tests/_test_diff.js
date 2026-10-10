@@ -222,6 +222,22 @@ const model = (over = {}) => ({
   ok([...chapters].sort((a, b) => a.localeCompare(b, undefined, { numeric: true })).join() === chapters.join(),
     'S7 操作单按章节号升序');
   ok(!sync.operations.some(o => o.title === 'Keep' || o.title === 'C1'), 'S7 未变条目不出现在操作单');
+
+  // 节点路径：差异条目在 lld_design.json 中的定位
+  // 旧 provided=[Keep,ChgSig,OsErrRecov,Del] 新 provided=[Keep,ChgSig,OsErrRecov1,BrandNew]
+  // 旧 types=[T1,OldType] 新 types=[T1,OldTypeV2]；internal 两侧均 [InnerChg]
+  ok(find('OsErrRecov1')?.jsonPath === '$.providedFunctions[2]' && find('OsErrRecov1')?.oldJsonPath === '$.providedFunctions[2]',
+    'S7 改名操作带新旧两侧节点路径');
+  ok(find('Del')?.jsonPath === undefined && find('Del')?.oldJsonPath === '$.providedFunctions[3]',
+    'S7 删除操作只有旧路径');
+  ok(find('BrandNew')?.jsonPath === '$.providedFunctions[3]' && find('BrandNew')?.oldJsonPath === undefined,
+    'S7 新增操作只有新路径');
+  ok(find('ChgSig')?.jsonPath === '$.providedFunctions[1]' && find('ChgSig')?.oldJsonPath === '$.providedFunctions[1]',
+    'S7 变更操作带双侧路径');
+  ok(find('InnerChg')?.jsonPath === '$.internalFunctions[0]' && find('InnerChg')?.oldJsonPath === '$.internalFunctions[0]',
+    'S7 内部函数路径落到 internalFunctions');
+  ok(find('T1')?.jsonPath === '$.types[0]' && find('T1')?.oldJsonPath === '$.types[0]', 'S7 类型路径');
+  ok(find('OldTypeV2')?.jsonPath === '$.types[1]' && find('OldTypeV2')?.oldJsonPath === '$.types[1]', 'S7 类型改名路径');
 }
 
 // ================= 场景 8：章节级更新推导（工作项之外的联动内容） =================

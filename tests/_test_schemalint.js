@@ -98,5 +98,30 @@ check('自愈幂等', syncSmAliasPng(m14) === false);
 const m15 = mkModel();
 check('单图模块无需自愈', syncSmAliasPng(m15) === false);
 
+// ⑧ 工作项 title 唯一性（Polarion 映射键=(章节,title)）
+const wi = (chapter, title, kind) => ({ isWorkItem: true, chapter, title, workItemKind: kind, workItemId: null });
+const m16 = mkModel();
+m16.internalFunctions.push(
+  { name: 'Init', file: 'a.c', polarion: wi('5.2.4.2', 'Init', 'function') },
+  { name: 'Init', file: 'b.c', polarion: wi('5.2.4.2', 'Init', 'function') },
+);
+check('同章节工作项 title 重名报（同名 static 函数）',
+  lintModelSchema(m16).some(p => p.includes('工作项 title 重名') && p.includes('Init') && p.includes('a.c') && p.includes('b.c')),
+  JSON.stringify(lintModelSchema(m16)));
+const m17 = mkModel();
+m17.calledExternalFunctions.push(
+  { name: 'Spi_A', polarion: wi('5.2.2.2', 'Spi 接口函数', 'table') },
+  { name: 'Spi_B', polarion: wi('5.2.2.2', 'Spi 接口函数', 'table') },
+);
+check('组表工作项同 title 共享不报（设计本意）', lintModelSchema(m17).length === 0, JSON.stringify(lintModelSchema(m17)));
+const m18 = mkModel();
+m18.providedFunctions.push({ name: 'X', file: 'a.c', polarion: wi('5.2.3.2', 'X', 'function') });
+m18.calledExternalFunctions.push({ name: 'X', polarion: wi('6.2', 'X', 'function') });
+check('跨章节同 title 不报（映射键含章节号）', lintModelSchema(m18).length === 0, JSON.stringify(lintModelSchema(m18)));
+const m19 = mkModel();
+m19.callGraphs.push({ name: 'G2', diagramPng: 'png', polarion: wi('5.1', 'A 调用图', 'diagram') });
+m19.callGraphs.push({ name: 'G3', diagramPng: 'png', polarion: wi('5.1', 'A 调用图', 'diagram') });
+check('调用图工作项 title 重名报', lintModelSchema(m19, FULL).some(p => p.includes('工作项 title 重名') && p.includes('A 调用图')));
+
 console.log(`\n${pass} pass, ${fail} fail`);
 process.exit(fail ? 1 : 0);

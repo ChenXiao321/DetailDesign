@@ -238,6 +238,16 @@ const model = (over = {}) => ({
     'S7 内部函数路径落到 internalFunctions');
   ok(find('T1')?.jsonPath === '$.types[0]' && find('T1')?.oldJsonPath === '$.types[0]', 'S7 类型路径');
   ok(find('OldTypeV2')?.jsonPath === '$.types[1]' && find('OldTypeV2')?.oldJsonPath === '$.types[1]', 'S7 类型改名路径');
+
+  // 节点原文内嵌：拿着 sync.json 即可直接更新，无需回 design json 索引
+  ok(find('BrandNew')?.content?.sigHash === 's5' && find('BrandNew')?.content?.name === 'BrandNew',
+    'S7 新增操作内嵌新模型节点原文');
+  ok(find('ChgSig')?.content?.sigHash === 's2x', 'S7 变更操作 content 取新模型值（非旧 s2）');
+  ok(find('OsErrRecov1')?.content?.name === 'OsErrRecov1', 'S7 改名操作 content 为新名节点');
+  ok(find('Del')?.content === undefined, 'S7 删除操作无新内容不携带 content');
+  ok(find('OldTypeV2')?.content?.underlyingType === 'uint16' && find('OldTypeV2')?.content?.kind === 'typedef',
+    'S7 类型节点原文内嵌');
+  ok(find('ChgSig')?.content !== nw.providedFunctions[1], 'S7 content 深拷贝与模型脱钩');
 }
 
 // ================= 场景 8：章节级更新推导（工作项之外的联动内容） =================
@@ -263,6 +273,17 @@ const model = (over = {}) => ({
   ok(sync.chapterUpdates.filter(c => c.chapter === '4.2').length === 2, 'S8a 4.2 总图+调用图各一条');
   ok(sync.chapterUpdates.find(c => c.title === '调用图').reason.includes('A'), 'S8a 调用图变化点名');
 
+  // 章节级更新带新内容原文：分析期确定性内容 diff 阶段即在场，gen 产物待 update 刷新补入
+  const cu8 = (ch, t) => sync.chapterUpdates.find(c => c.chapter === ch && c.title === t);
+  ok(cu8('4.1', '文件清单')?.content?.length === 2 && cu8('4.1', '文件清单').content[1].path === 'b.c',
+    'S8a 4.1 文件清单 content=新文件表');
+  ok(cu8('4.2', '接口总图')?.content?.diagram === 'flowchart TD\nNEW', 'S8a 4.2 总图 content=新图源');
+  const cg8 = cu8('4.2', '调用图')?.content;
+  ok(cg8?.changed?.[0]?.name === 'A' && cg8?.changed?.[0]?.diagram === 'gA2' && cg8?.removed?.join() === 'B',
+    'S8a 4.2 调用图 content 点名变化图（新图+移除名单）');
+  ok(cu8('5.1', '模块功能描述')?.content === undefined && cu8('7', '评估与圈复杂度表')?.content === undefined,
+    'S8a gen 产物（5.1 描述/7 评估表）diff 阶段无 content（update gen 后刷新补入）');
+
   // 8b：无变更 → 章节级更新为空
   const old2 = model({
     providedFunctions: [fn('A', 's1', 'b1', true)],
@@ -286,6 +307,48 @@ const model = (over = {}) => ({
   const ch3 = sync3.chapterUpdates.map(c => c.chapter);
   ok(ch3.includes('5.1') && ch3.includes('3.1/3.2'), 'S8c 类型变更：5.1+缩写提示列出');
   ok(!ch3.includes('5.3.1') && !ch3.includes('7'), 'S8c 无函数变更：状态机/评估表不列');
+}
+
+// ================= 场景 9：外部接口按 Polarion 工作项粒度出操作 =================
+// Callout=单条工作项（6.2，title=函数名）；组表=「<组名> 接口函数」整表（5.2.2.2）
+{
+  const grp = (name, signature, group) => ({
+    name, signature, group, comment: null, calledFrom: ['A'],
+    polarion: { isWorkItem: true, chapter: '5.2.2.2', workItemKind: 'table', title: `${group} 接口函数`, workItemId: null },
+  });
+  const co = (name, signature) => ({
+    name, signature, group: 'Callout', comment: null, calledFrom: ['A'],
+    polarion: { isWorkItem: true, chapter: '6.2', workItemKind: 'function', title: name, workItemId: null },
+  });
+  const old = model({ calledExternalFunctions: [
+    grp('Spi_Send', 's1', 'Spi'), grp('Spi_Recv', 's2', 'Spi'), grp('Adc_Read', 's3', 'Adc'), co('Gp_Co', 'sC'),
+  ] });
+  const nw = model({ calledExternalFunctions: [
+    grp('Spi_Send', 's1x', 'Spi'), grp('Spi_Write', 's4', 'Spi'), grp('Pwm_Set', 's5', 'Pwm'), co('Gp_CoV2', 'sC'),
+  ] });
+  const sync = buildPolarionSync(diffModules(old, nw), old, nw);
+  const find = (title) => sync.operations.find(o => o.title === title);
+
+  const spi = find('Spi 接口函数');
+  ok(spi?.action === 'update' && spi.chapter === '5.2.2.2', 'S9 组表：成员变化→update 整表（章节 5.2.2.2）');
+  ok(spi.detail.includes('新增 Spi_Write') && spi.detail.includes('删除 Spi_Recv') && spi.detail.includes('签名变更 Spi_Send'),
+    'S9 组表 detail 点名成员级变化');
+  ok(Array.isArray(spi.content) && spi.content.length === 2 && spi.content[0].name === 'Spi_Send' && spi.content[1].name === 'Spi_Write',
+    'S9 组表 content=新成员节点全量数组（整表重写用）');
+  ok(spi.members.length === 3 && spi.members.find(m => m.name === 'Spi_Recv').change === 'removed'
+    && spi.members.find(m => m.name === 'Spi_Write').change === 'added'
+    && spi.members.find(m => m.name === 'Spi_Send').change === 'changed',
+    'S9 组表 members 明细三类变化齐');
+  ok(spi.members.find(m => m.name === 'Spi_Send').jsonPath === '$.calledExternalFunctions[0]'
+    && spi.members.find(m => m.name === 'Spi_Recv').oldJsonPath === '$.calledExternalFunctions[1]',
+    'S9 members 带节点路径');
+  ok(find('Adc 接口函数')?.action === 'delete', 'S9 整组移除→delete 组表');
+  const pwm = find('Pwm 接口函数');
+  ok(pwm?.action === 'create' && Array.isArray(pwm.content) && pwm.content[0].name === 'Pwm_Set', 'S9 新组→create 组表');
+  ok(!sync.operations.some(o => ['Spi_Send', 'Spi_Recv', 'Spi_Write', 'Adc_Read', 'Pwm_Set'].includes(o.title)),
+    'S9 组表成员不再按单条出操作');
+  ok(find('Gp_CoV2')?.action === 'rename' && find('Gp_CoV2')?.from === 'Gp_Co' && find('Gp_CoV2')?.chapter === '6.2',
+    'S9 Callout 单条工作项（章节 6.2）保留疑似改名配对');
 }
 
 console.log(`\nmodelDiff 测试全部通过（${n} 项断言）`);

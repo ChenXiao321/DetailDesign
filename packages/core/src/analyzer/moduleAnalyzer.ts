@@ -488,6 +488,10 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
         let group: string;
         if (proto && /Callout/.test(proto.file)) {
           group = 'Callout';
+        } else if (!proto && /Callout/.test(callee)) {
+          // 声明缺失（如改版只改了调用点、声明没同步改名）：按 Callout 命名约定兜底，
+          // 避免掉进前缀归组的 5.2.2.2 组表（Callout 属 6.2 单条工作项）
+          group = 'Callout';
         } else if (proto) {
           group = proto.file.split(/[\\/]/).pop()!;
         } else {

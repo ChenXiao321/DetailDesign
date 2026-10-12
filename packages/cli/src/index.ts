@@ -112,8 +112,10 @@ async function cmdAnalyze(dir: string, outDir: string): Promise<ModuleModel> {
 /** 模块版本更新比对：analyze 新代码 → 与既有 design json 按哈希锚点比对 →
  *  产出四类清单（未变/变更/新增/删除）+ 合并 design json（新模型打底，
  *  未变条目回挂已生成内容，变更/新增条目待 gen --resume 重生）。
- *  落盘：lld_model.json（新）、lld_design.json（合并）、lld_diff.json（清单，报告附录 A 用）。 */
-async function cmdDiff(dir: string, outDir: string): Promise<ModuleDiff> {
+ *  落盘：lld_model.json（新）、lld_design.json（合并）、lld_diff.json（清单，报告附录 A 用）、
+ *  lld_polarion_sync.json（同步操作单，content 内嵌节点原文——此时为分析态、无生成内容，
+ *  update 流程在 gen 完成后由 refreshSyncAfterGen 刷新为含生成内容的版本）。 */
+async function cmdDiff(dir: string, outDir: string): Promise<{ diff: ModuleDiff; oldDesign: ModuleModel }> {
   const designPath = path.join(outDir, 'lld_design.json');
   if (!fs.existsSync(designPath)) {
     console.error(`未找到既有产物 ${designPath}——首次生成请用 run/gen，diff/update 用于版本更新场景`);
@@ -169,7 +171,19 @@ async function cmdDiff(dir: string, outDir: string): Promise<ModuleDiff> {
     }
   }
   console.log('继续：gen --resume 增量重生失效条目（未变内容含人工修订全部保留）');
-  return diff;
+  return { diff, oldDesign };
+}
+
+/** update 流程 gen 完成后刷新同步操作单：content 从分析态节点换成含新生成内容的节点原文
+ *  （diff 阶段写盘时变更/新增条目的 generated 尚未生成）。数组序不变，jsonPath 不受影响。 */
+function refreshSyncAfterGen(outDir: string, diff: ModuleDiff, oldDesign: ModuleModel): void {
+  const designPath = path.join(outDir, 'lld_design.json');
+  const syncPath = path.join(outDir, 'lld_polarion_sync.json');
+  if (!fs.existsSync(syncPath)) return;
+  const design = JSON.parse(fs.readFileSync(designPath, 'utf-8')) as ModuleModel;
+  const sync = buildPolarionSync(diff, oldDesign, design);
+  fs.writeFileSync(syncPath, JSON.stringify(sync, null, 2), 'utf-8');
+  console.log('Polarion 同步操作单已刷新：content 已换为生成后的节点原文');
 }
 
 async function cmdGen(dir: string, outDir: string, mock: boolean, only?: string[], resume?: boolean): Promise<{ schemaProblems: string[]; failures: string[] }> {
@@ -251,21 +265,23 @@ async function cmdRun(dir: string, outDir: string, mock: boolean, withImages: bo
 }
 
 /** 版本更新一键流程：diff（analyze+比对+失效合并）→ gen --resume（只重生失效条目）→ report → audit。
- *  退出码同 run。 */
+ *  退出码同 run。gen 完成后刷新同步操作单 content 为生成后节点原文。 */
 async function cmdUpdate(dir: string, outDir: string, mock: boolean, withImages: boolean, skipAudit: boolean): Promise<void> {
   console.log('===== [1/4] 版本差异比对 =====');
-  await cmdDiff(dir, outDir);
-  await finishPipeline(dir, outDir, mock, withImages, skipAudit);
+  const { diff, oldDesign } = await cmdDiff(dir, outDir);
+  await finishPipeline(dir, outDir, mock, withImages, skipAudit,
+    () => { refreshSyncAfterGen(outDir, diff, oldDesign); });
 }
 
 /** run/update 共用后半段：gen --resume → （可选 images）→ report → audit */
-async function finishPipeline(dir: string, outDir: string, mock: boolean, withImages: boolean, skipAudit: boolean): Promise<void> {
+async function finishPipeline(dir: string, outDir: string, mock: boolean, withImages: boolean, skipAudit: boolean, afterGen?: () => void): Promise<void> {
   console.log('\n===== [2/4] LLM 生成设计内容 =====');
   const { schemaProblems, failures } = await cmdGen(dir, outDir, mock, undefined, true);
   if (schemaProblems.length > 0) {
     console.error('\n✗ 结构完整性自检未过，中止：残缺 json 不产出报告（修复后可原命令重跑，增量续跑）');
     process.exit(1);
   }
+  afterGen?.();
   if (withImages) {
     console.log('\n===== 图 PNG 物化 =====');
     await cmdImages(outDir, true);

@@ -6,7 +6,7 @@
  * 堵 0929 盲区：gen --only document 整节替换曾冲掉 includeGraphPng，
  * 双字节门禁只验 report 输出不验 json 字段，静默逃逸。
  */
-import { SCHEMA_VERSION, listStateMachines, type ModuleModel } from './types.js';
+import { SCHEMA_VERSION, listStateMachines, type ModuleModel, type PolarionMarker } from './types.js';
 
 /** 顶层必备键（analyze 即产出；document/dynamicDesign/functionalDescription 由 gen 阶段产出，单独按阶段要求） */
 export const TOP_KEYS = ['module', 'schemaVersion', 'analyzedAt', 'files', 'providedFunctions',
@@ -80,6 +80,36 @@ export function lintModelSchema(model: ModuleModel, opts: SchemaLintOptions = {}
     }
     for (const [label, v] of pngs) {
       if (typeof v !== 'string' || v.length === 0) problems.push(`PNG 缺失: ${label}`);
+    }
+  }
+  // ---------- 工作项 title 唯一性（Polarion 映射键=(章节,title)，重名则同步歧义） ----------
+  // 例外：表格类组表工作项（workItemKind='table'）——同组多条外部接口共享一个
+  // (5.2.2.2,「<组名> 接口函数」) 属设计本意（一整张表=一个工作项），不算撞名。
+  // 状态机只扫 listStateMachines（多核分图），不扫别名 stateMachine（恒为第一张，同对象重报）。
+  {
+    const wi: { chapter: string; title: string; label: string }[] = [];
+    const pushWi = (p: PolarionMarker | undefined, label: string): void => {
+      if (!p?.isWorkItem || p.workItemKind === 'table') return;
+      wi.push({ chapter: p.chapter, title: p.title, label });
+    };
+    for (const f of model.providedFunctions ?? []) pushWi(f.polarion, `提供函数 ${f.name}`);
+    for (const f of model.internalFunctions ?? []) pushWi(f.polarion, `内部函数 ${f.name}（${f.file}）`);
+    for (const e of model.calledExternalFunctions ?? []) pushWi(e.polarion, `外部接口 ${e.name}`);
+    for (const t of model.types ?? []) pushWi(t.polarion, `类型 ${t.name}`);
+    for (const c of model.configMacros ?? []) pushWi(c.polarion, `配置宏 ${c.name}`);
+    for (const v of [...(model.internalVariables ?? []), ...(model.providedVariables ?? [])]) {
+      pushWi(v.polarion, `变量 ${v.name}`);
+    }
+    pushWi(model.interfaceOverview?.polarion, '功能接口总图');
+    for (const g of model.callGraphs ?? []) pushWi(g.polarion, `调用图 ${g.name}`);
+    for (const sm of listStateMachines(model.dynamicDesign)) pushWi(sm.polarion, `状态机 ${sm.name}`);
+    for (const s of model.dynamicDesign?.sequences ?? []) pushWi(s.polarion, `序列图 ${s.name}`);
+    const seen = new Map<string, string>();
+    for (const w of wi) {
+      const key = `${w.chapter}|${w.title}`;
+      const prev = seen.get(key);
+      if (prev) problems.push(`工作项 title 重名: [${w.chapter}] "${w.title}"（${prev} 与 ${w.label}）`);
+      else seen.set(key, w.label);
     }
   }
   return problems;

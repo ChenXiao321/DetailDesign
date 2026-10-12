@@ -30,7 +30,7 @@ Modu 平台规划
 
 ```bash
 node packages/cli/dist/index.js run 测试模块/Gp_EcuStpStdn --out 测试产出/Gp_EcuStpStdn
-# Windows 也可用包装脚本：打包\lld-run.bat 测试模块\Gp_EcuStpStdn 测试产出\Gp_EcuStpStdn
+# Windows 也可用包装脚本（自带 --images，需 Edge/Chrome）：打包\lld-run.bat 测试模块\Gp_EcuStpStdn 测试产出\Gp_EcuStpStdn
 ```
 
 一条命令串联 analyze → gen（增量续跑）→ report → audit，适合被外部工具 shell 调用：

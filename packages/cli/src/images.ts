@@ -86,7 +86,7 @@ export async function cmdImages(outDir: string, resume: boolean): Promise<void> 
     if (!svg) continue;
     try {
       const size = svgNaturalSize(svg);
-      if (!size) throw new Error('SVG 无 viewBox/尺寸');
+      if (!size) throw new Error('SVG 无 viewBox/尺寸: ' + svg.slice(0, 200).replace(/\s+/g, ' '));
       const { scale, winW, winH } = pickShotParams(size.w, size.h);
       fs.writeFileSync(shotHtml, wrapSvgShotPage(svg), 'utf-8');
       edgeScreenshot(edge, shotHtml, shotPng, winW, winH, scale);
@@ -107,8 +107,13 @@ export async function cmdImages(outDir: string, resume: boolean): Promise<void> 
   // 结构完整性自检（0930 冻结 v1）：images 是成品前最后一站，要求全字段+全 PNG 在场
   lintOrFail(model);
 
-  // 清理临时文件
-  for (const p of [batchPath, shotHtml, shotPng]) { try { fs.unlinkSync(p); } catch { /* 忽略 */ } }
+  // 清理临时文件；有失败时保留批量页供排查（浏览器打开可人工检查渲染结果）
+  if (failures.length === 0) {
+    for (const p of [batchPath, shotHtml, shotPng]) { try { fs.unlinkSync(p); } catch { /* 忽略 */ } }
+  } else {
+    for (const p of [shotHtml, shotPng]) { try { fs.unlinkSync(p); } catch { /* 忽略 */ } }
+    console.log(`批量页已保留排查: ${batchPath}`);
+  }
 
   console.log(`\nPNG 物化完成: ${done}/${todo.length} 张（共 ${(doneBytes / 1024 / 1024).toFixed(1)}MB base64 前）`);
   if (failures.length > 0) {

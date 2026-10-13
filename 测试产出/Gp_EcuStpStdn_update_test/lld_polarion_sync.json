@@ -1,22 +1,67 @@
 {
   "module": "Gp_EcuStpShdn",
   "oldAnalyzedAt": "2026-08-12T09:42:09.066Z",
-  "newAnalyzedAt": "2026-10-10T05:25:32.007Z",
+  "newAnalyzedAt": "2026-10-12T07:07:00.612Z",
   "operations": [
-    {
-      "action": "rename",
-      "kind": "external",
-      "chapter": "5.2.2.2",
-      "title": "Gp_EcuStpShdn_CalloutOsErrRecov1",
-      "from": "Gp_EcuStpShdn_CalloutOsErrRecov",
-      "detail": "疑似改名：建议直接改原工作项 title+内容，保留历史与追溯链接（勿删了重建）"
-    },
     {
       "action": "update",
       "kind": "function",
       "chapter": "5.2.3.2",
       "title": "Gp_EcuStpShdn_Mainfunction",
-      "detail": "实现变更：更新工作项内容"
+      "detail": "实现变更：更新工作项内容",
+      "jsonPath": "$.providedFunctions[7]",
+      "oldJsonPath": "$.providedFunctions[7]",
+      "content": {
+        "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_Mainfunction",
+        "name": "Gp_EcuStpShdn_Mainfunction",
+        "signature": "void Gp_EcuStpShdn_Mainfunction(void)",
+        "returnType": "void",
+        "parameters": [],
+        "isStatic": false,
+        "file": "Gp_EcuStpShdn.c",
+        "lineStart": 720,
+        "lineEnd": 781,
+        "comment": {
+          "paramsIn": [],
+          "paramsInout": [],
+          "paramsOut": [],
+          "functionName": "Gp_EcuStpShdn_Mainfunction",
+          "serviceId": "None",
+          "syncAsync": "Synchronous",
+          "reentrancy": "Non_Reentrancy",
+          "returnValue": "void",
+          "description": "Gp_EcuStpShdn main function.\nthis function will invoke MCU Runtime test, and check the test result, and process test failed situation\nif program is not in safe state or try power shutdown state.\nthis function will calculate the last satellite time stamp by the master core.\nthis function should be invoke by the cores which need perform MCU runtime test."
+        },
+        "calls": [
+          "Gp_EcuStpShdn_CalloutGetCoreId",
+          "Gp_EcuStpShdn_GetLastSatTimeStamp",
+          "Gp_TstApp_RunTimePhase",
+          "Gp_EcuStpShdn_CalloutChkMcuRunTimeTest",
+          "Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd"
+        ],
+        "calledBy": [],
+        "globalsAccessed": [
+          "Gp_EcuStpShdn_bufMstLocalImpl_ltst"
+        ],
+        "conditionalFlags": [],
+        "innerCondFlags": [
+          "GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE",
+          "GP_ECUSTPSHDN_SAFETY_ENABLE"
+        ],
+        "bodyText": "{\n    volatile    Gp_EcuStpShdn_MstLocalImplType* MstImpl_ptst = &Gp_EcuStpShdn_bufMstLocalImpl_ltst;\n    uint32  CoreId_u32 = 0U;\n\n    /*get core ID*/\n    CoreId_u32 = Gp_EcuStpShdn_CalloutGetCoreId();\n\n    if (CoreId_u32 == GP_ECUSTPSHDN_CORE0_ID)\n    {\n        /*get last satellite initialization time stamp, it will be get only once by core0*/\n        if (MstImpl_ptst->TimeStamp_u32[GP_ECUSTPSHDN_MST_TIME_STAMP_LAST_SAT_INIT] == 0U)\n        {\n            MstImpl_ptst->TimeStamp_u32[GP_ECUSTPSHDN_MST_TIME_STAMP_LAST_SAT_INIT] =  \n                Gp_EcuStpShdn_GetLastSatTimeStamp();\n        }\n        else\n        {\n            /* 测试新增 */\n            MstImpl_ptst->TimeStamp_u32[GP_ECUSTPSHDN_MST_TIME_STAMP_LAST_SAT_INIT] = 0U\n            /*do nothing*/\n        }\n    }\n    else\n    {\n        /*do nothing*/\n    }\n\n                                           \n    if ((MstImpl_ptst->TryPwrShdn_b == FALSE) && (MstImpl_ptst->SafeState_b == FALSE))\n    {\n        /*perform MCU runtime test*/\n        Gp_TstApp_RunTimePhase();\n        /*\n        ECU is runtime stage.\n        master will check MCU runtime test result, and perform corresponding program.\n        */\n        if (CoreId_u32 == GP_ECUSTPSHDN_CORE0_ID)\n        {\n            /*check if switch to run phase is failed*/\n            if (Gp_EcuStpShdn_CalloutChkMcuRunTimeTest() == FALSE)\n            {\n                                                  \n                Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd();\n                                                          \n            }\n            else\n            {\n                /*do nothing*/\n            }\n        }\n        else\n        {\n            /*do nothing*/\n        }\n    }\n    else\n    {\n        /*do nothing*/\n    }\n                                                   \n}",
+        "bodyTextWithPP": "{\n    volatile    Gp_EcuStpShdn_MstLocalImplType* MstImpl_ptst = &Gp_EcuStpShdn_bufMstLocalImpl_ltst;\n    uint32  CoreId_u32 = 0U;\n\n    /*get core ID*/\n    CoreId_u32 = Gp_EcuStpShdn_CalloutGetCoreId();\n\n    if (CoreId_u32 == GP_ECUSTPSHDN_CORE0_ID)\n    {\n        /*get last satellite initialization time stamp, it will be get only once by core0*/\n        if (MstImpl_ptst->TimeStamp_u32[GP_ECUSTPSHDN_MST_TIME_STAMP_LAST_SAT_INIT] == 0U)\n        {\n            MstImpl_ptst->TimeStamp_u32[GP_ECUSTPSHDN_MST_TIME_STAMP_LAST_SAT_INIT] = \\\n                Gp_EcuStpShdn_GetLastSatTimeStamp();\n        }\n        else\n        {\n            /* 测试新增 */\n            MstImpl_ptst->TimeStamp_u32[GP_ECUSTPSHDN_MST_TIME_STAMP_LAST_SAT_INIT] = 0U\n            /*do nothing*/\n        }\n    }\n    else\n    {\n        /*do nothing*/\n    }\n\n#if (GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)\n    if ((MstImpl_ptst->TryPwrShdn_b == FALSE) && (MstImpl_ptst->SafeState_b == FALSE))\n    {\n        /*perform MCU runtime test*/\n        Gp_TstApp_RunTimePhase();\n        /*\n        ECU is runtime stage.\n        master will check MCU runtime test result, and perform corresponding program.\n        */\n        if (CoreId_u32 == GP_ECUSTPSHDN_CORE0_ID)\n        {\n            /*check if switch to run phase is failed*/\n            if (Gp_EcuStpShdn_CalloutChkMcuRunTimeTest() == FALSE)\n            {\n#if (GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE == STD_ON)\n                Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd();\n#endif  /*(GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE == STD_ON)*/\n            }\n            else\n            {\n                /*do nothing*/\n            }\n        }\n        else\n        {\n            /*do nothing*/\n        }\n    }\n    else\n    {\n        /*do nothing*/\n    }\n#endif  /*(GP_ECUSTPSHDN_SAFETY_ENABLE == STD_ON)*/\n}",
+        "bodyHash": "fd26f5aa3bfa3921",
+        "sigHash": "13cda1b5a8925f33",
+        "complexity": 7,
+        "infiniteLoop": false,
+        "polarion": {
+          "isWorkItem": true,
+          "chapter": "5.2.3.2",
+          "workItemKind": "function",
+          "title": "Gp_EcuStpShdn_Mainfunction",
+          "workItemId": null
+        }
+      }
     },
     {
       "action": "rename",
@@ -24,7 +69,88 @@
       "chapter": "5.2.3.2",
       "title": "Gp_EcuStpShdn_OsErrRecov1",
       "from": "Gp_EcuStpShdn_OsErrRecov",
-      "detail": "疑似改名：建议直接改原工作项 title+内容，保留历史与追溯链接（勿删了重建）"
+      "detail": "疑似改名：建议直接改原工作项 title+内容，保留历史与追溯链接（勿删了重建）",
+      "jsonPath": "$.providedFunctions[4]",
+      "oldJsonPath": "$.providedFunctions[4]",
+      "content": {
+        "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_OsErrRecov1",
+        "name": "Gp_EcuStpShdn_OsErrRecov1",
+        "signature": "void Gp_EcuStpShdn_OsErrRecov1(uint8 OsStatus_u8)",
+        "returnType": "void",
+        "parameters": [
+          {
+            "type": "uint8",
+            "name": "OsStatus_u8",
+            "pointerDepth": 0
+          }
+        ],
+        "isStatic": false,
+        "file": "Gp_EcuStpShdn.c",
+        "lineStart": 444,
+        "lineEnd": 448,
+        "comment": {
+          "paramsIn": [
+            {
+              "raw": "uint8 OsStatus_u8 - OS status",
+              "description": "OS status",
+              "name": "OsStatus_u8",
+              "type": "uint8"
+            }
+          ],
+          "paramsInout": [],
+          "paramsOut": [],
+          "functionName": "Gp_EcuStpShdn_OsErrRecov1",
+          "serviceId": "None",
+          "syncAsync": "Synchronous",
+          "reentrancy": "Non_Reentrancy",
+          "returnValue": "void",
+          "description": "Gp_EcuStpShdn OS error recovery."
+        },
+        "calls": [
+          "Gp_EcuStpShdn_CalloutOsErrRecov1"
+        ],
+        "calledBy": [],
+        "globalsAccessed": [],
+        "conditionalFlags": [],
+        "bodyText": "{\n    /* 测试更改*/\n    Gp_EcuStpShdn_CalloutOsErrRecov1(OsStatus_u8);\n}",
+        "bodyHash": "5b951354c9f2f0c3",
+        "sigHash": "07c7dd666dbfd63f",
+        "complexity": 1,
+        "infiniteLoop": false,
+        "polarion": {
+          "isWorkItem": true,
+          "chapter": "5.2.3.2",
+          "workItemKind": "function",
+          "title": "Gp_EcuStpShdn_OsErrRecov1",
+          "workItemId": null
+        }
+      }
+    },
+    {
+      "action": "rename",
+      "kind": "external",
+      "chapter": "6.2",
+      "title": "Gp_EcuStpShdn_CalloutOsErrRecov1",
+      "from": "Gp_EcuStpShdn_CalloutOsErrRecov",
+      "detail": "疑似改名：建议直接改原工作项 title+内容，保留历史与追溯链接（勿删了重建）",
+      "jsonPath": "$.calledExternalFunctions[16]",
+      "oldJsonPath": "$.calledExternalFunctions[16]",
+      "content": {
+        "name": "Gp_EcuStpShdn_CalloutOsErrRecov1",
+        "signature": "",
+        "group": "Callout",
+        "comment": null,
+        "calledFrom": [
+          "Gp_EcuStpShdn_OsErrRecov1"
+        ],
+        "polarion": {
+          "isWorkItem": true,
+          "chapter": "6.2",
+          "workItemKind": "function",
+          "title": "Gp_EcuStpShdn_CalloutOsErrRecov1",
+          "workItemId": null
+        }
+      }
     }
   ],
   "chapterUpdates": [
@@ -51,12 +177,42 @@
     {
       "chapter": "4.2",
       "title": "接口总图",
-      "reason": "接口总图图源变化"
+      "reason": "接口总图图源变化",
+      "content": {
+        "diagram": "%%{init: {\"flowchart\": {\"rankSpacing\": 10, \"nodeSpacing\": 16}}}%%\nflowchart LR\n    Caller([\"外部调用方<br/>（其他 FC / RTE / 集成代码）\"])\n    subgraph MOD[\" \"]\n        direction TB\n        MT[\"<b>Gp_EcuStpShdn</b><br/><b>提供的外部接口</b>（8 个）<br/>────────────\"]\n        MT ~~~ P0(\"Gp_EcuStpShdn_<br/>SetSafeState\") ~~~ P1(\"Gp_EcuStpShdn_<br/>SetTryPwrShdn\") ~~~ P2(\"Gp_EcuStpShdn_<br/>GetSafeState\") ~~~ P3(\"Gp_EcuStpShdn_<br/>TrapRecov\")\n        MT ~~~ P4(\"Gp_EcuStpShdn_<br/>OsErrRecov1\") ~~~ P5(\"Gp_EcuStpShdn_<br/>PwrShdnInShdnPhase\") ~~~ P6(\"Gp_EcuStpShdn_<br/>Startup\") ~~~ P7(\"Gp_EcuStpShdn_<br/>Mainfunction\")\n    end\n    G0[\"<b>Gp_RstM</b>（4 个）<br/>──────────<br/>Gp_RstM_GetLastRstTypeInfo<br/>Gp_RstM_Init<br/>Gp_RstM_InitOne<br/>Gp_RstM_InitTwo\"]\n    G1[\"<b>Gp_TstApp</b>（4 个）<br/>──────────<br/>Gp_TstApp_PreRunInit<br/>Gp_TstApp_PreRunPhase<br/>Gp_TstApp_RunTimePhase<br/>Gp_TstApp_SwitchToRunPhase\"]\n    Caller -->|call| MOD\n    MOD -->|call| G0\n    MOD -->|call| G1\n    classDef caller fill:#eaeef2,stroke:#57606a,color:#1f2328\n    classDef provided fill:#b6e3ff,stroke:#0969da,color:#0a3069\n    classDef extgroup fill:#f6f8fa,stroke:#57606a,color:#1f2328\n    class Caller caller\n    class P0,P1,P2,P3,P4,P5,P6,P7 provided\n    class G0 extgroup\n    class G1 extgroup\n    style MOD fill:#fbfcfd,stroke:#d0d7de,stroke-width:1px\n    style MT fill:transparent,stroke:transparent,color:#1f2328",
+        "diagramFormat": "mermaid",
+        "polarion": {
+          "isWorkItem": true,
+          "chapter": "5.1",
+          "workItemKind": "diagram",
+          "title": "功能接口总图",
+          "workItemId": null
+        }
+      }
     },
     {
       "chapter": "4.2",
       "title": "调用图",
-      "reason": "调用图变化：Gp_EcuStpShdn_OsErrRecov"
+      "reason": "调用图变化：Gp_EcuStpShdn_OsErrRecov1、Gp_EcuStpShdn_OsErrRecov",
+      "content": {
+        "changed": [
+          {
+            "name": "Gp_EcuStpShdn_OsErrRecov1",
+            "diagram": "flowchart LR\n    N0[\"Gp_EcuStpShdn_OsErrRecov1\"]\n    N1[\"CalloutOsErrRecov1\"]\n    N0 -->|call| N1\n    classDef entry fill:#0a3069,stroke:#0a3069,color:#ffffff\n    classDef internal fill:#eaeef2,stroke:#57606a,color:#1f2328\n    classDef provided fill:#b6e3ff,stroke:#0969da,color:#0a3069\n    classDef callout fill:#ffe9a8,stroke:#bf8700,color:#1f2328\n    class N0 entry\n    class N1 callout",
+            "diagramFormat": "mermaid",
+            "polarion": {
+              "isWorkItem": true,
+              "chapter": "5.1",
+              "workItemKind": "diagram",
+              "title": "Gp_EcuStpShdn_OsErrRecov1 调用图",
+              "workItemId": null
+            }
+          }
+        ],
+        "removed": [
+          "Gp_EcuStpShdn_OsErrRecov"
+        ]
+      }
     },
     {
       "chapter": "3.1/3.2",

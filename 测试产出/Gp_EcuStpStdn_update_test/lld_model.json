@@ -1,7 +1,7 @@
 {
   "module": "Gp_EcuStpShdn",
   "schemaVersion": 1,
-  "analyzedAt": "2026-10-10T05:25:32.007Z",
+  "analyzedAt": "2026-10-12T07:07:00.612Z",
   "files": [
     {
       "path": "ConfTemplate\\Gp_EcuStpShdn_Callout.c",
@@ -1334,6 +1334,22 @@
       }
     },
     {
+      "name": "Gp_EcuStpShdn_CalloutOsErrRecov1",
+      "signature": "",
+      "group": "Callout",
+      "comment": null,
+      "calledFrom": [
+        "Gp_EcuStpShdn_OsErrRecov1"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutOsErrRecov1",
+        "workItemId": null
+      }
+    },
+    {
       "name": "Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase",
       "signature": "void Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase(void)",
       "group": "Callout",
@@ -1567,22 +1583,6 @@
         "chapter": "6.2",
         "workItemKind": "function",
         "title": "Gp_EcuStpShdn_CalloutTrapRecov",
-        "workItemId": null
-      }
-    },
-    {
-      "name": "Gp_EcuStpShdn_CalloutOsErrRecov1",
-      "signature": "",
-      "group": "Gp_EcuStpShdn",
-      "comment": null,
-      "calledFrom": [
-        "Gp_EcuStpShdn_OsErrRecov1"
-      ],
-      "polarion": {
-        "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Gp_EcuStpShdn 接口函数",
         "workItemId": null
       }
     },
@@ -2393,7 +2393,7 @@
     }
   ],
   "interfaceOverview": {
-    "diagram": "%%{init: {\"flowchart\": {\"rankSpacing\": 10, \"nodeSpacing\": 16}}}%%\nflowchart LR\n    Caller([\"外部调用方<br/>（其他 FC / RTE / 集成代码）\"])\n    subgraph MOD[\" \"]\n        direction TB\n        MT[\"<b>Gp_EcuStpShdn</b><br/><b>提供的外部接口</b>（8 个）<br/>────────────\"]\n        MT ~~~ P0(\"Gp_EcuStpShdn_<br/>SetSafeState\") ~~~ P1(\"Gp_EcuStpShdn_<br/>SetTryPwrShdn\") ~~~ P2(\"Gp_EcuStpShdn_<br/>GetSafeState\") ~~~ P3(\"Gp_EcuStpShdn_<br/>TrapRecov\")\n        MT ~~~ P4(\"Gp_EcuStpShdn_<br/>OsErrRecov1\") ~~~ P5(\"Gp_EcuStpShdn_<br/>PwrShdnInShdnPhase\") ~~~ P6(\"Gp_EcuStpShdn_<br/>Startup\") ~~~ P7(\"Gp_EcuStpShdn_<br/>Mainfunction\")\n    end\n    G0[\"<b>Gp_EcuStpShdn</b>（1 个）<br/>──────────<br/>CalloutOsErrRecov1\"]\n    G1[\"<b>Gp_RstM</b>（4 个）<br/>──────────<br/>Gp_RstM_GetLastRstTypeInfo<br/>Gp_RstM_Init<br/>Gp_RstM_InitOne<br/>Gp_RstM_InitTwo\"]\n    G2[\"<b>Gp_TstApp</b>（4 个）<br/>──────────<br/>Gp_TstApp_PreRunInit<br/>Gp_TstApp_PreRunPhase<br/>Gp_TstApp_RunTimePhase<br/>Gp_TstApp_SwitchToRunPhase\"]\n    Caller -->|call| MOD\n    MOD -->|call| G0\n    MOD -->|call| G1\n    MOD -->|call| G2\n    classDef caller fill:#eaeef2,stroke:#57606a,color:#1f2328\n    classDef provided fill:#b6e3ff,stroke:#0969da,color:#0a3069\n    classDef extgroup fill:#f6f8fa,stroke:#57606a,color:#1f2328\n    class Caller caller\n    class P0,P1,P2,P3,P4,P5,P6,P7 provided\n    class G0 extgroup\n    class G1 extgroup\n    class G2 extgroup\n    style MOD fill:#fbfcfd,stroke:#d0d7de,stroke-width:1px\n    style MT fill:transparent,stroke:transparent,color:#1f2328",
+    "diagram": "%%{init: {\"flowchart\": {\"rankSpacing\": 10, \"nodeSpacing\": 16}}}%%\nflowchart LR\n    Caller([\"外部调用方<br/>（其他 FC / RTE / 集成代码）\"])\n    subgraph MOD[\" \"]\n        direction TB\n        MT[\"<b>Gp_EcuStpShdn</b><br/><b>提供的外部接口</b>（8 个）<br/>────────────\"]\n        MT ~~~ P0(\"Gp_EcuStpShdn_<br/>SetSafeState\") ~~~ P1(\"Gp_EcuStpShdn_<br/>SetTryPwrShdn\") ~~~ P2(\"Gp_EcuStpShdn_<br/>GetSafeState\") ~~~ P3(\"Gp_EcuStpShdn_<br/>TrapRecov\")\n        MT ~~~ P4(\"Gp_EcuStpShdn_<br/>OsErrRecov1\") ~~~ P5(\"Gp_EcuStpShdn_<br/>PwrShdnInShdnPhase\") ~~~ P6(\"Gp_EcuStpShdn_<br/>Startup\") ~~~ P7(\"Gp_EcuStpShdn_<br/>Mainfunction\")\n    end\n    G0[\"<b>Gp_RstM</b>（4 个）<br/>──────────<br/>Gp_RstM_GetLastRstTypeInfo<br/>Gp_RstM_Init<br/>Gp_RstM_InitOne<br/>Gp_RstM_InitTwo\"]\n    G1[\"<b>Gp_TstApp</b>（4 个）<br/>──────────<br/>Gp_TstApp_PreRunInit<br/>Gp_TstApp_PreRunPhase<br/>Gp_TstApp_RunTimePhase<br/>Gp_TstApp_SwitchToRunPhase\"]\n    Caller -->|call| MOD\n    MOD -->|call| G0\n    MOD -->|call| G1\n    classDef caller fill:#eaeef2,stroke:#57606a,color:#1f2328\n    classDef provided fill:#b6e3ff,stroke:#0969da,color:#0a3069\n    classDef extgroup fill:#f6f8fa,stroke:#57606a,color:#1f2328\n    class Caller caller\n    class P0,P1,P2,P3,P4,P5,P6,P7 provided\n    class G0 extgroup\n    class G1 extgroup\n    style MOD fill:#fbfcfd,stroke:#d0d7de,stroke-width:1px\n    style MT fill:transparent,stroke:transparent,color:#1f2328",
     "diagramFormat": "mermaid",
     "polarion": {
       "isWorkItem": true,
@@ -2413,6 +2413,18 @@
         "chapter": "5.1",
         "workItemKind": "diagram",
         "title": "Gp_EcuStpShdn_TrapRecov 调用图",
+        "workItemId": null
+      }
+    },
+    {
+      "name": "Gp_EcuStpShdn_OsErrRecov1",
+      "diagram": "flowchart LR\n    N0[\"Gp_EcuStpShdn_OsErrRecov1\"]\n    N1[\"CalloutOsErrRecov1\"]\n    N0 -->|call| N1\n    classDef entry fill:#0a3069,stroke:#0a3069,color:#ffffff\n    classDef internal fill:#eaeef2,stroke:#57606a,color:#1f2328\n    classDef provided fill:#b6e3ff,stroke:#0969da,color:#0a3069\n    classDef callout fill:#ffe9a8,stroke:#bf8700,color:#1f2328\n    class N0 entry\n    class N1 callout",
+      "diagramFormat": "mermaid",
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.1",
+        "workItemKind": "diagram",
+        "title": "Gp_EcuStpShdn_OsErrRecov1 调用图",
         "workItemId": null
       }
     },

@@ -1,7 +1,7 @@
 {
   "module": "Gp_EcuStpShdn",
   "schemaVersion": 1,
-  "analyzedAt": "2026-10-10T05:25:32.007Z",
+  "analyzedAt": "2026-10-12T07:07:00.612Z",
   "files": [
     {
       "path": "ConfTemplate\\Gp_EcuStpShdn_Callout.c",
@@ -331,13 +331,6 @@
         "workItemKind": "function",
         "title": "Gp_EcuStpShdn_OsErrRecov1",
         "workItemId": null
-      },
-      "generated": {
-        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 374 字符）。",
-        "llmModel": "mock",
-        "generatedAt": "2026-10-10T05:25:32.053Z",
-        "flowchart": "flowchart TD\n    START([\"开始\"])\n    N0[[\"Gp_EcuStpShdn_CalloutOsErrRecov1(OsStatus_u8)\"]]\n    END([\"结束\"])\n    START --> N0\n    N0 --> END",
-        "flowchartFormat": "mermaid"
       }
     },
     {
@@ -513,13 +506,6 @@
         "workItemKind": "function",
         "title": "Gp_EcuStpShdn_Mainfunction",
         "workItemId": null
-      },
-      "generated": {
-        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 961 字符）。",
-        "llmModel": "mock",
-        "generatedAt": "2026-10-10T05:25:32.074Z",
-        "flowchart": "flowchart TD\n    START([\"开始\"])\n    N0[\"CoreId_u32 = Gp_EcuStpShdn_CalloutGetCoreId()\"]\n    D0{\"CoreId_u32 == GP_ECUSTPSHDN_CORE0_ID\"}\n    M0[\" \"]\n    D1{\"MstImpl_ptst-&gt;TimeStamp_u32[GP_ECUSTPSHDN_MST_TIME_STAMP_LAST_SAT_INIT] == 0U\"}\n    N1[\"MstImpl_ptst-&gt;TimeStamp_u32[GP_ECUSTPSHDN_MST_TIME_STAMP_LAST_SAT_INIT] =<br>Gp_EcuStpShdn_GetLastSatTimeStamp()\"]\n    N2[\"MstImpl_ptst-&gt;TimeStamp_u32[GP_ECUSTPSHDN_MST_TIME_STAMP_LAST_SAT_INIT] = 0U\"]\n    subgraph SG0_0[\" \"]\n        SG0_0_NOTE[\"注：仅在 GP_ECUSTPSHDN_SAFETY_ENABLE 生效时参与编译\"]\n        SG0_0_NOTE ~~~ D2\n        D2{\"(MstImpl_ptst-&gt;TryPwrShdn_b == FALSE) &amp;&amp; (MstImpl_ptst-&gt;SafeState_b == FALSE)\"}\n        M1[\" \"]\n        M2[\" \"]\n        N3[[\"Gp_TstApp_RunTimePhase()\"]]\n        D3{\"CoreId_u32 == GP_ECUSTPSHDN_CORE0_ID\"}\n        M3[\" \"]\n        D4{\"Gp_EcuStpShdn_CalloutChkMcuRunTimeTest() == FALSE\"}\n        M4[\" \"]\n        subgraph SG1_0[\" \"]\n            SG1_0_NOTE[\"注：仅在 GP_ECUSTPSHDN_SAFETY_ACTION_ENABLE 生效时参与编译\"]\n            SG1_0_NOTE ~~~ N4\n            N4[[\"Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd()\"]]\n        end\n    end\n    M5[\" \"]\n    END([\"结束\"])\n    D1 -- 是 --> N1\n    D1 -- 否 --> N2\n    D0 -- 是 --> D1\n    D0 -- 否 --> M0\n    N0 --> D0\n    D4 -- 是 --> N4\n    D4 -- 否 --> M4\n    D3 -- 是 --> D4\n    D3 -- 否 --> M3\n    N3 --> D3\n    D2 -- 是 --> N3\n    D2 -- 否 --> M1\n    N1 --> M2\n    N2 --> M2\n    M0 --> M2\n    M2 --> D2\n    START --> N0\n    N4 --> M5\n    M4 --> M5\n    M3 --> M5\n    M1 --> M5\n    M5 --> END\n    style M0 fill:transparent,stroke:transparent\n    style M1 fill:transparent,stroke:transparent\n    style M2 fill:transparent,stroke:transparent\n    style M3 fill:transparent,stroke:transparent\n    style M4 fill:transparent,stroke:transparent\n    style M5 fill:transparent,stroke:transparent\n    style SG1_0 fill:transparent,stroke:#888888,stroke-dasharray:6 4\n    style SG0_0 fill:transparent,stroke:#888888,stroke-dasharray:6 4\n    classDef condNote fill:#fff8c5,stroke:#eac54f,color:#9a6700\n    class SG0_0_NOTE,SG1_0_NOTE condNote",
-        "flowchartFormat": "mermaid"
       }
     }
   ],
@@ -1508,6 +1494,22 @@
       }
     },
     {
+      "name": "Gp_EcuStpShdn_CalloutOsErrRecov1",
+      "signature": "",
+      "group": "Callout",
+      "comment": null,
+      "calledFrom": [
+        "Gp_EcuStpShdn_OsErrRecov1"
+      ],
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "6.2",
+        "workItemKind": "function",
+        "title": "Gp_EcuStpShdn_CalloutOsErrRecov1",
+        "workItemId": null
+      }
+    },
+    {
       "name": "Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase",
       "signature": "void Gp_EcuStpShdn_CalloutPwrShdnInShdnPhase(void)",
       "group": "Callout",
@@ -1785,27 +1787,6 @@
       }
     },
     {
-      "name": "Gp_EcuStpShdn_CalloutOsErrRecov1",
-      "signature": "",
-      "group": "Gp_EcuStpShdn",
-      "comment": null,
-      "calledFrom": [
-        "Gp_EcuStpShdn_OsErrRecov1"
-      ],
-      "polarion": {
-        "isWorkItem": true,
-        "chapter": "5.2.2.2",
-        "workItemKind": "table",
-        "title": "Gp_EcuStpShdn 接口函数",
-        "workItemId": null
-      },
-      "generated": {
-        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 302 字符）。",
-        "llmModel": "mock",
-        "generatedAt": "2026-10-10T05:25:32.317Z"
-      }
-    },
-    {
       "name": "Gp_RstM_GetLastRstTypeInfo",
       "signature": "",
       "group": "Gp_RstM",
@@ -1822,12 +1803,7 @@
         "title": "Gp_RstM 接口函数",
         "workItemId": null
       },
-      "commentSource": "inferred",
-      "generated": {
-        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 323 字符）。",
-        "llmModel": "mock",
-        "generatedAt": "2026-10-10T05:25:32.322Z"
-      }
+      "commentSource": "inferred"
     },
     {
       "name": "Gp_RstM_Init",
@@ -1846,12 +1822,7 @@
         "title": "Gp_RstM 接口函数",
         "workItemId": null
       },
-      "commentSource": "inferred",
-      "generated": {
-        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 290 字符）。",
-        "llmModel": "mock",
-        "generatedAt": "2026-10-10T05:25:32.327Z"
-      }
+      "commentSource": "inferred"
     },
     {
       "name": "Gp_RstM_InitOne",
@@ -1870,12 +1841,7 @@
         "title": "Gp_RstM 接口函数",
         "workItemId": null
       },
-      "commentSource": "inferred",
-      "generated": {
-        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 297 字符）。",
-        "llmModel": "mock",
-        "generatedAt": "2026-10-10T05:25:32.331Z"
-      }
+      "commentSource": "inferred"
     },
     {
       "name": "Gp_RstM_InitTwo",
@@ -1894,12 +1860,7 @@
         "title": "Gp_RstM 接口函数",
         "workItemId": null
       },
-      "commentSource": "inferred",
-      "generated": {
-        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 297 字符）。",
-        "llmModel": "mock",
-        "generatedAt": "2026-10-10T05:25:32.335Z"
-      }
+      "commentSource": "inferred"
     },
     {
       "name": "Gp_TstApp_PreRunInit",
@@ -1918,12 +1879,7 @@
         "title": "Gp_TstApp 接口函数",
         "workItemId": null
       },
-      "commentSource": "inferred",
-      "generated": {
-        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 308 字符）。",
-        "llmModel": "mock",
-        "generatedAt": "2026-10-10T05:25:32.340Z"
-      }
+      "commentSource": "inferred"
     },
     {
       "name": "Gp_TstApp_PreRunPhase",
@@ -1942,12 +1898,7 @@
         "title": "Gp_TstApp 接口函数",
         "workItemId": null
       },
-      "commentSource": "inferred",
-      "generated": {
-        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 310 字符）。",
-        "llmModel": "mock",
-        "generatedAt": "2026-10-10T05:25:32.345Z"
-      }
+      "commentSource": "inferred"
     },
     {
       "name": "Gp_TstApp_RunTimePhase",
@@ -1966,12 +1917,7 @@
         "title": "Gp_TstApp 接口函数",
         "workItemId": null
       },
-      "commentSource": "inferred",
-      "generated": {
-        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 316 字符）。",
-        "llmModel": "mock",
-        "generatedAt": "2026-10-10T05:25:32.350Z"
-      }
+      "commentSource": "inferred"
     },
     {
       "name": "Gp_TstApp_SwitchToRunPhase",
@@ -1990,12 +1936,7 @@
         "title": "Gp_TstApp 接口函数",
         "workItemId": null
       },
-      "commentSource": "inferred",
-      "generated": {
-        "detailedDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 315 字符）。",
-        "llmModel": "mock",
-        "generatedAt": "2026-10-10T05:25:32.354Z"
-      }
+      "commentSource": "inferred"
     }
   ],
   "types": [
@@ -2070,12 +2011,7 @@
             "workItemId": null
           }
         }
-      ],
-      "generated": {
-        "comment": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 857 字符）。",
-        "llmModel": "mock",
-        "generatedAt": "2026-10-10T05:25:32.293Z"
-      }
+      ]
     },
     {
       "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_SelfTestType",
@@ -2134,12 +2070,7 @@
             "workItemId": null
           }
         }
-      ],
-      "generated": {
-        "comment": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 734 字符）。",
-        "llmModel": "mock",
-        "generatedAt": "2026-10-10T05:25:32.297Z"
-      }
+      ]
     },
     {
       "id": "Gp_EcuStpShdn::Gp_EcuStpShdn_MstLocalImplType",
@@ -2220,11 +2151,6 @@
         "workItemKind": "type",
         "title": "Gp_EcuStpShdn_MstLocalImplType",
         "workItemId": null
-      },
-      "generated": {
-        "comment": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 1113 字符）。",
-        "llmModel": "mock",
-        "generatedAt": "2026-10-10T05:25:32.303Z"
       }
     },
     {
@@ -2256,11 +2182,6 @@
         "workItemKind": "type",
         "title": "Gp_EcuStpShdn_SatLocalImplType",
         "workItemId": null
-      },
-      "generated": {
-        "comment": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 724 字符）。",
-        "llmModel": "mock",
-        "generatedAt": "2026-10-10T05:25:32.308Z"
       }
     },
     {
@@ -2287,11 +2208,6 @@
         "workItemKind": "type",
         "title": "Gp_EcuStpShdn_SatRunTimeType",
         "workItemId": null
-      },
-      "generated": {
-        "comment": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 680 字符）。",
-        "llmModel": "mock",
-        "generatedAt": "2026-10-10T05:25:32.312Z"
       }
     }
   ],
@@ -2695,7 +2611,7 @@
     }
   ],
   "interfaceOverview": {
-    "diagram": "%%{init: {\"flowchart\": {\"rankSpacing\": 10, \"nodeSpacing\": 16}}}%%\nflowchart LR\n    Caller([\"外部调用方<br/>（其他 FC / RTE / 集成代码）\"])\n    subgraph MOD[\" \"]\n        direction TB\n        MT[\"<b>Gp_EcuStpShdn</b><br/><b>提供的外部接口</b>（8 个）<br/>────────────\"]\n        MT ~~~ P0(\"Gp_EcuStpShdn_<br/>SetSafeState\") ~~~ P1(\"Gp_EcuStpShdn_<br/>SetTryPwrShdn\") ~~~ P2(\"Gp_EcuStpShdn_<br/>GetSafeState\") ~~~ P3(\"Gp_EcuStpShdn_<br/>TrapRecov\")\n        MT ~~~ P4(\"Gp_EcuStpShdn_<br/>OsErrRecov1\") ~~~ P5(\"Gp_EcuStpShdn_<br/>PwrShdnInShdnPhase\") ~~~ P6(\"Gp_EcuStpShdn_<br/>Startup\") ~~~ P7(\"Gp_EcuStpShdn_<br/>Mainfunction\")\n    end\n    G0[\"<b>Gp_EcuStpShdn</b>（1 个）<br/>──────────<br/>CalloutOsErrRecov1\"]\n    G1[\"<b>Gp_RstM</b>（4 个）<br/>──────────<br/>Gp_RstM_GetLastRstTypeInfo<br/>Gp_RstM_Init<br/>Gp_RstM_InitOne<br/>Gp_RstM_InitTwo\"]\n    G2[\"<b>Gp_TstApp</b>（4 个）<br/>──────────<br/>Gp_TstApp_PreRunInit<br/>Gp_TstApp_PreRunPhase<br/>Gp_TstApp_RunTimePhase<br/>Gp_TstApp_SwitchToRunPhase\"]\n    Caller -->|call| MOD\n    MOD -->|call| G0\n    MOD -->|call| G1\n    MOD -->|call| G2\n    classDef caller fill:#eaeef2,stroke:#57606a,color:#1f2328\n    classDef provided fill:#b6e3ff,stroke:#0969da,color:#0a3069\n    classDef extgroup fill:#f6f8fa,stroke:#57606a,color:#1f2328\n    class Caller caller\n    class P0,P1,P2,P3,P4,P5,P6,P7 provided\n    class G0 extgroup\n    class G1 extgroup\n    class G2 extgroup\n    style MOD fill:#fbfcfd,stroke:#d0d7de,stroke-width:1px\n    style MT fill:transparent,stroke:transparent,color:#1f2328",
+    "diagram": "%%{init: {\"flowchart\": {\"rankSpacing\": 10, \"nodeSpacing\": 16}}}%%\nflowchart LR\n    Caller([\"外部调用方<br/>（其他 FC / RTE / 集成代码）\"])\n    subgraph MOD[\" \"]\n        direction TB\n        MT[\"<b>Gp_EcuStpShdn</b><br/><b>提供的外部接口</b>（8 个）<br/>────────────\"]\n        MT ~~~ P0(\"Gp_EcuStpShdn_<br/>SetSafeState\") ~~~ P1(\"Gp_EcuStpShdn_<br/>SetTryPwrShdn\") ~~~ P2(\"Gp_EcuStpShdn_<br/>GetSafeState\") ~~~ P3(\"Gp_EcuStpShdn_<br/>TrapRecov\")\n        MT ~~~ P4(\"Gp_EcuStpShdn_<br/>OsErrRecov1\") ~~~ P5(\"Gp_EcuStpShdn_<br/>PwrShdnInShdnPhase\") ~~~ P6(\"Gp_EcuStpShdn_<br/>Startup\") ~~~ P7(\"Gp_EcuStpShdn_<br/>Mainfunction\")\n    end\n    G0[\"<b>Gp_RstM</b>（4 个）<br/>──────────<br/>Gp_RstM_GetLastRstTypeInfo<br/>Gp_RstM_Init<br/>Gp_RstM_InitOne<br/>Gp_RstM_InitTwo\"]\n    G1[\"<b>Gp_TstApp</b>（4 个）<br/>──────────<br/>Gp_TstApp_PreRunInit<br/>Gp_TstApp_PreRunPhase<br/>Gp_TstApp_RunTimePhase<br/>Gp_TstApp_SwitchToRunPhase\"]\n    Caller -->|call| MOD\n    MOD -->|call| G0\n    MOD -->|call| G1\n    classDef caller fill:#eaeef2,stroke:#57606a,color:#1f2328\n    classDef provided fill:#b6e3ff,stroke:#0969da,color:#0a3069\n    classDef extgroup fill:#f6f8fa,stroke:#57606a,color:#1f2328\n    class Caller caller\n    class P0,P1,P2,P3,P4,P5,P6,P7 provided\n    class G0 extgroup\n    class G1 extgroup\n    style MOD fill:#fbfcfd,stroke:#d0d7de,stroke-width:1px\n    style MT fill:transparent,stroke:transparent,color:#1f2328",
     "diagramFormat": "mermaid",
     "polarion": {
       "isWorkItem": true,
@@ -2718,6 +2634,18 @@
         "workItemId": null
       },
       "diagramPng": "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"
+    },
+    {
+      "name": "Gp_EcuStpShdn_OsErrRecov1",
+      "diagram": "flowchart LR\n    N0[\"Gp_EcuStpShdn_OsErrRecov1\"]\n    N1[\"CalloutOsErrRecov1\"]\n    N0 -->|call| N1\n    classDef entry fill:#0a3069,stroke:#0a3069,color:#ffffff\n    classDef internal fill:#eaeef2,stroke:#57606a,color:#1f2328\n    classDef provided fill:#b6e3ff,stroke:#0969da,color:#0a3069\n    classDef callout fill:#ffe9a8,stroke:#bf8700,color:#1f2328\n    class N0 entry\n    class N1 callout",
+      "diagramFormat": "mermaid",
+      "polarion": {
+        "isWorkItem": true,
+        "chapter": "5.1",
+        "workItemKind": "diagram",
+        "title": "Gp_EcuStpShdn_OsErrRecov1 调用图",
+        "workItemId": null
+      }
     },
     {
       "name": "Gp_EcuStpShdn_PwrShdnInShdnPhase",
@@ -3022,7 +2950,6 @@
       }
     ]
   },
-  "functionalDescription": "[MOCK] 这是基于静态分析信息生成的功能描述占位文本。函数签名与调用上下文已注入 prompt（长度 1034 字符）。",
   "document": {
     "purpose": "本文档描述 Gp_EcuStpShdn 软件单元的详细设计，作为该单元编码实现、设计评审与单元测试的依据。",
     "scope": "本文档适用于 Gp_EcuStpShdn 软件单元的开发、评审与维护。",
@@ -3053,11 +2980,11 @@
       ],
       [
         "Gp_EcuStpShdn_Callout.h",
-        "Callout 声明头文件（配置代码）：声明 24 个由集成方实现的 Callout 函数"
+        "Callout 声明头文件（配置代码）：声明 25 个由集成方实现的 Callout 函数"
       ],
       [
         "Gp_EcuStpShdn_Callout.c",
-        "Callout 实现文件（配置代码）：由集成方实现 24 个 Callout 函数的具体策略"
+        "Callout 实现文件（配置代码）：由集成方实现 25 个 Callout 函数的具体策略"
       ],
       [
         "Gp_EcuStpShdn_Memmap.h",
@@ -3238,7 +3165,7 @@
         "dim": "互操作性/交互",
         "no": 1,
         "content": "对软件单元的接口一致性进行分析",
-        "fact": "本模块提供 8 个接口函数（5.2.3.2），调用外部接口 33 个（Callout、Gp_EcuStpShdn、Gp_RstM、Gp_TstApp），签名与调用点均已由静态分析提取；与软件架构接口的一致性需对照架构文档确认。<span class=\"todo\">结论待人工确认</span>"
+        "fact": "本模块提供 8 个接口函数（5.2.3.2），调用外部接口 33 个（Callout、Gp_RstM、Gp_TstApp），签名与调用点均已由静态分析提取；与软件架构接口的一致性需对照架构文档确认。<span class=\"todo\">结论待人工确认</span>"
       },
       {
         "dim": "互操作性/交互",
@@ -3262,7 +3189,7 @@
         "dim": "关键性",
         "no": 5,
         "content": "分析与其他单元/组件的依赖关系",
-        "fact": "外部依赖模块：Gp_EcuStpShdn、Gp_RstM、Gp_TstApp（接口明细见 5.2.2）；Callout 函数 24 个由集成方在配置代码中实现（见 6.2）。<span class=\"todo\">结论待人工确认</span>"
+        "fact": "外部依赖模块：Gp_RstM、Gp_TstApp（接口明细见 5.2.2）；Callout 函数 25 个由集成方在配置代码中实现（见 6.2）。<span class=\"todo\">结论待人工确认</span>"
       },
       {
         "dim": "关键性",
@@ -3298,7 +3225,7 @@
         "dim": "可复用性",
         "no": 11,
         "content": "分析详细设计单元是否能够被本系统或其他系统使用的可能性",
-        "fact": "本模块含 24 个 Callout 项目适配点与 3 个配置宏，平台化/复用策略需人工评估。<span class=\"todo\">结论待人工确认</span>"
+        "fact": "本模块含 25 个 Callout 项目适配点与 3 个配置宏，平台化/复用策略需人工评估。<span class=\"todo\">结论待人工确认</span>"
       },
       {
         "dim": "安全性",
@@ -3322,7 +3249,7 @@
     "complexityNote": "判定节点计数法：1 + if / for / while / case / &amp;&amp; / || / ?: 数量。阈值 10 为常见评审参考值，最终以项目规范为准。",
     "evaluationSummary": [
       "互操作性/交互：接口与全局变量的定义、调用关系详见 5.2；通讯协议不涉及。<span class=\"todo\">待人工确认</span>",
-      "关键性：外部依赖（Gp_EcuStpShdn、Gp_RstM、Gp_TstApp）与任务调度考虑。<span class=\"todo\">待人工确认</span>",
+      "关键性：外部依赖（Gp_RstM、Gp_TstApp）与任务调度考虑。<span class=\"todo\">待人工确认</span>",
       "技术复杂性：圈复杂度最大 13，1 个函数超过 10。<span class=\"todo\">待人工确认</span>",
       "可实现性：按项目时间安排与既往经验评估。<span class=\"todo\">待人工补充</span>",
       "可测试性：函数输入输出及范围均已列出，圈复杂度已控制。<span class=\"todo\">待人工确认</span>",
@@ -3343,12 +3270,12 @@
     ],
     "supportNote": "注：项目级相关文件（软件架构设计、需求规格等）请人工补充。",
     "notes": {
-      "overview": "本模块对外提供 8 个接口函数（左侧为调用方），并调用 9 个外部接口（右侧按来源模块归组）；箭头方向为调用方向。Callout 函数属本模块配置点，不在本图展示，其调用关系见下方内部函数调用图与 6.2；各接口的模块内调用者见内部函数调用图与 5.2.2 表。",
+      "overview": "本模块对外提供 8 个接口函数（左侧为调用方），并调用 8 个外部接口（右侧按来源模块归组）；箭头方向为调用方向。Callout 函数属本模块配置点，不在本图展示，其调用关系见下方内部函数调用图与 6.2；各接口的模块内调用者见内部函数调用图与 5.2.2 表。",
       "callGraph": "按对外接口函数分别绘制其模块内调用树（深蓝=入口函数，灰=内部函数，蓝=被内部调用的对外接口，黄=Callout 函数（配置代码））；同一函数被多处调用时按调用路径重复出现，保证布局无交叉。经配置表函数指针间接引用的 Callout 单独成图。无模块内调用的平凡函数不出图，其余跨模块调用（Gp_RstM / Gp_TstApp 等）见功能接口总图与 5.2.2 表。",
       "include": "模块内部文件间的包含关系如下图所示。注：箭头指向被包含的头文件（模板约定：箭头指向被调用的元素）。MemMap.h 为内存映射包装文件，默认被本模块各文件包含，图中不再画出；外部模块头文件（Gp_RstM.h、Gp_TstApp.h、McalLib.h）不在图中展示，标准类型头文件 Std_Types.h 除外。",
       "providedVarsEmpty": "注：本模块未提供外部链接的全局变量（即非 static 的文件作用域变量），模块数据均通过函数接口访问。",
       "externalVars": "注：本模块未引用外部模块的全局变量，跨模块数据交互均通过函数接口完成。",
-      "externalFnsCallout": "注：Callout 函数（24 个）属于本模块配置代码（ConfTemplate），由集成方实现，不属于外部接口，未列入本节；其作为功能配置点见 6.2.3 Callout function，声明见 4.1 文件说明，调用关系见各接口函数卡片的「调用」行。",
+      "externalFnsCallout": "注：Callout 函数（25 个）属于本模块配置代码（ConfTemplate），由集成方实现，不属于外部接口，未列入本节；其作为功能配置点见 6.2.3 Callout function，声明见 4.1 文件说明，调用关系见各接口函数卡片的「调用」行。",
       "internalVars": "注：以下为本模块的静态全局变量/常量（<code>static</code> 声明，内部链接，仅本模块内可见，外部模块不可直接访问）；其中 <code>const</code> 修饰的为只读常量，<code>volatile</code> 修饰的为易变变量。",
       "configGeneral": "通用配置项适用于所有项目，控制模块基础行为。",
       "configFunctional": "功能配置项根据项目需求裁剪模块特性。",

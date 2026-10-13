@@ -104,7 +104,7 @@ HTML 评审报告。包内已包含全部 npm 依赖（node_modules）和已构�
   # 渲染质量验收（离线；预渲染 SVG 成品版 lld_report.html + 斜线计数/交叉穿盒/
   # 箭头朝向审计，打印中文量化报告；需 Edge 或 Chrome）
   node packages/cli/dist/index.js audit 测试模块/<模块名> --out <产物目录>
-  # 浏览器装在非默认路径时：set LLD_EDGE_PATH=<msedge.exe 或 chrome.exe 完整路径>
+  # 浏览器指定/探测顺序见下文「浏览器探测与 LLD_EDGE_PATH」节
 
 ■ 报告骨架物化（document 节，2026-09-23 起）
   1/2/3/7/8 章正文、各章引导句、3.1/3.2 缩写定义表在 gen 期物化进
@@ -175,6 +175,21 @@ HTML 评审报告。包内已包含全部 npm 依赖（node_modules）和已构�
   本期不涉及 Polarion 对接：CLI 无 polarion 子命令，lld.config.json 不需要
   polarion 节。旧迁移包/旧补丁内若残留 polarion 相关文件，属无害残留，
   不会被任何命令调用，可忽略或手工删除。
+
+■ 浏览器探测与 LLD_EDGE_PATH（images 物化 / audit 都依赖无头浏览器）
+  探测顺序（第一个存在的直接用，不查版本、渲染失败也不会自动换下一个）：
+    1. 环境变量 LLD_EDGE_PATH 指向的完整路径（最高优先，指谁用谁）
+    2. C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe
+    3. C:\Program Files\Microsoft\Edge\Application\msedge.exe
+    4. C:\Program Files\Google\Chrome\Application\chrome.exe
+    5. C:\Program Files (x86)\Google\Chrome\Application\chrome.exe
+  注意：Edge 优先于 Chrome。机器上同时有 Edge 和 Chrome 时默认用 Edge；
+  若 Edge 版本太老（如 86，2020 年版，渲出的 SVG 无尺寸，物化会全部报
+  「SVG 无 viewBox/尺寸」），装了新版 Chrome 也不会被自动选中——需设
+  环境变量强制指到 Chrome：
+    set LLD_EDGE_PATH=C:\Program Files\Google\Chrome\Application\chrome.exe
+  Chrome 装在用户目录（C:\Users\<用户名>\AppData\Local\Google\Chrome\...）
+  时自动探测查不到（只查 Program Files），也必须用本变量指完整路径。
 
 ■ 常见问题
   - ping 报 401：apiKey 没改或不对。用 curl 独立验证 key：

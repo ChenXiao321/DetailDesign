@@ -8,7 +8,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { generateHtmlReport, type ModuleModel } from '@lld/core';
-import { findEdge, edgeDump } from './edge.js';
+import { findEdge, describeEdge, edgeDump } from './edge.js';
 import { loadConfigFile, resolveAbbreviations, abbrGapLogger } from './config.js';
 
 /** 斜线计数：flowchart 边路径逐段判斜（|dx|>0.6 且 |dy|>0.6），含曲线命令即非直角 */
@@ -300,6 +300,7 @@ export async function cmdAudit(outDir: string): Promise<void> {
     process.exit(1);
   }
   const edge = findEdge();
+  console.error('  使用浏览器: ' + describeEdge(edge));
   const model = JSON.parse(fs.readFileSync(sourcePath, 'utf-8')) as ModuleModel;
   const mermaidPath = new URL('../assets/mermaid.min.js', import.meta.url);
   const mermaidJs = fs.readFileSync(mermaidPath, 'utf-8');

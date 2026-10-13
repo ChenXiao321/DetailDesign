@@ -24,6 +24,19 @@ export function findEdge(): string {
   throw new Error('未找到 Edge/Chrome 浏览器。请安装其一，或设置环境变量 LLD_EDGE_PATH 指向 msedge.exe/chrome.exe 完整路径');
 }
 
+/** 描述实际选中的浏览器（路径+版本号），日志用——排查「到底用了哪个浏览器」时不再靠猜。
+ *  版本号经 PowerShell 读 exe 文件属性（GUI 程序的 --version 在 Windows 上打不到 stdout），失败降级为只给路径 */
+export function describeEdge(edge: string): string {
+  try {
+    const v = execFileSync('powershell', ['-NoProfile', '-Command',
+      `(Get-Item -LiteralPath '${edge.replace(/'/g, "''")}').VersionInfo.ProductVersion`],
+      { timeout: 10_000, stdio: ['ignore', 'pipe', 'ignore'] }).toString('utf-8').trim();
+    return v ? `${edge}（版本 ${v}）` : edge;
+  } catch {
+    return edge;
+  }
+}
+
 /** file:// URL 编码（中文路径必须逐段 encodeURIComponent，照抄 _render.js） */
 export function toFileUrl(p: string): string {
   return 'file:///' + p.replace(/\\/g, '/').replace(/#/g, '%23')

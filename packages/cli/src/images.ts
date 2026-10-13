@@ -15,7 +15,7 @@ import {
   wrapSvgShotPage, hasDiagramPng, applyDiagramPng, syncSmAliasPng, lintModelSchema,
   type ModuleModel,
 } from '@lld/core';
-import { findEdge, edgeDump, edgeScreenshot } from './edge.js';
+import { findEdge, describeEdge, edgeDump, edgeScreenshot } from './edge.js';
 
 /** 成品口径结构自检（0930 冻结 v1）：全字段+全 PNG 在场，缺陷即非零退出 */
 function lintOrFail(model: ModuleModel): void {
@@ -47,6 +47,7 @@ export async function cmdImages(outDir: string, resume: boolean): Promise<void> 
   }
   const mermaidJs = fs.readFileSync(mermaidPath, 'utf-8');
   const edge = findEdge();
+  console.error('  使用浏览器: ' + describeEdge(edge));
 
   const all = collectDiagrams(model);
   const todo = resume ? all.filter(e => !hasDiagramPng(model, e.key)) : all;

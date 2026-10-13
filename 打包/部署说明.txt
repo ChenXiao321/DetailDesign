@@ -45,16 +45,16 @@ HTML 评审报告。包内已包含全部 npm 依赖（node_modules）和已构�
 
 ■ 一键全流程（推荐，工具集成入口）
   node packages/cli/dist/index.js run 测试模块/<模块名> --out <产物目录>
-  Windows 包装脚本（可被外部工具直接 shell 调用，退出码原样透传；自带 --images）：
+  Windows 包装脚本（可被外部工具直接 shell 调用，退出码原样透传）：
     lld-run.bat <模块目录> <产物目录>
-  一条命令串联 analyze → gen（增量续跑）→ report → audit：
+  一条命令串联 analyze → gen（增量续跑）→ images（图 PNG 物化）→ report → audit：
   - 退出码：0=全绿；1=异常或结构完整性自检未过（残缺 json 不产出报告）；
     2=个别条目生成失败（报告已产出，原命令重跑即增量补齐）
   - 审计项（斜线/贴缘等设计内行为）不影响退出码，以 audit 打印的中文
     验收报告为准
   - 中断或退出码 2 后续跑：同一条命令原样重跑即可（gen 增量跳过已生成条目）
-  - audit 需机器装有 Edge 或 Chrome 之一；不跑验收可用 node 命令加
-    --skip-audit；--images 可在 report 前追加图 PNG 物化（见下文）
+  - audit 与 images 需机器装有 Edge 或 Chrome 之一；不跑验收用 --skip-audit；
+    图 PNG 物化默认开启（见下文），不物化用 --skip-images
 
 ■ 模块版本更新（代码改版后增量重生）
   # 一键完成：比对差异 → 重生失效条目 → 出报告 → 验收
@@ -106,9 +106,10 @@ HTML 评审报告。包内已包含全部 npm 依赖（node_modules）和已构�
   - 存量 design json 无 document 节时 report/audit 回退旧行为（report 期现读
     配置，产物一致）并打印提示。
 
-■ 图 PNG 物化（2026-09-23 起，归档/导出用，可选）
+■ 图 PNG 物化（run/update 一键流程默认包含，--skip-images 关闭；存量产物可单独补）
   把全部六类图（函数流程图/功能接口总图/内部函数调用图/状态机/序列图/
-  4.2 包含关系图）渲染成 PNG（2x）以 base64 存回 lld_design.json：
+  4.2 包含关系图）渲染成 PNG（2x）以 base64 存回 lld_design.json。
+  存量产物单独补物化：
       node packages/cli/dist/index.js gen 测试模块/<模块名> --out <产物目录> --only images --resume
   渲染走与报告完全一致的管线（内嵌 mermaid.js + 正交化后处理 + Edge 无头），
   免 LLM、需 Edge；--resume 跳过已有 PNG 的图，单图失败不中断可续跑补齐。

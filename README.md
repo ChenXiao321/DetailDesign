@@ -30,13 +30,13 @@ Modu 平台规划
 
 ```bash
 node packages/cli/dist/index.js run 测试模块/Gp_EcuStpStdn --out 测试产出/Gp_EcuStpStdn
-# Windows 也可用包装脚本（自带 --images，需 Edge/Chrome）：打包\lld-run.bat 测试模块\Gp_EcuStpStdn 测试产出\Gp_EcuStpStdn
+# Windows 也可用包装脚本：打包\lld-run.bat 测试模块\Gp_EcuStpStdn 测试产出\Gp_EcuStpStdn
 ```
 
-一条命令串联 analyze → gen（增量续跑）→ report → audit，适合被外部工具 shell 调用：
+一条命令串联 analyze → gen（增量续跑）→ images（图 PNG 物化）→ report → audit，适合被外部工具 shell 调用：
 - 退出码：`0`=全绿；`1`=异常或结构完整性自检未过（残缺 json 不产出报告）；`2`=个别条目生成失败（报告已产出，原命令重跑即增量补齐）
 - 审计项（斜线/贴缘等设计内行为）不影响退出码，以 audit 打印的中文验收报告为准
-- 选项：`--mock` 离线预览；`--images` 追加图 PNG 物化（归档用，需 Edge）；`--skip-audit` 跳过渲染验收
+- 选项：`--mock` 离线预览；PNG 物化默认开启（需 Edge/Chrome），`--skip-images` 关闭；`--skip-audit` 跳过渲染验收
 - LLM 配置照旧：环境变量 `LLD_LLM_BASE_URL` 等，或当前目录 `lld.config.json`
 
 ### 模块版本更新（代码改版后增量重生，推荐）
@@ -198,8 +198,10 @@ node packages/cli/dist/index.js audit 测试模块/Gp_EcuStpStdn --out 测试产
 （确定性零 LLM，秒级）才反映到报告；描述类内容重生成后同样需重刷 document（3.1 按文档实际出现过滤）。
 存量 design json 无 document 节时 report/audit 回退旧行为（report 期现读配置，产物一致）并打印提示。
 
-图 PNG 物化（2026-09-23 起）：除 mermaid 源码外，可把全部六类图（函数流程图/功能接口总图/
-内部函数调用图/状态机/序列图/4.2 包含关系图）渲染成 PNG（2x）以 base64 存回 lld_design.json：
+图 PNG 物化（2026-09-23 起；2026-10-13 起 `run`/`update` 默认包含，可用 `--skip-images` 关闭）：
+除 mermaid 源码外，可把全部六类图（函数流程图/功能接口总图/
+内部函数调用图/状态机/序列图/4.2 包含关系图）渲染成 PNG（2x）以 base64 存回 lld_design.json。
+存量产物单独补物化（免 LLM，需 Edge）：
 ```bash
 node packages/cli/dist/index.js gen <模块目录> --out <产物目录> --only images --resume
 ```

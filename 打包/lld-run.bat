@@ -1,5 +1,5 @@
 @echo off
-rem LLD one-shot pipeline: analyze -> gen(resume) -> images(PNG materialization) -> report -> audit
+rem LLD one-shot pipeline: analyze -> gen(resume) -> images(PNG materialization, on by default) -> report -> audit
 rem Usage: lld-run.bat <module-dir> [out-dir]
 rem   e.g. lld-run.bat modules\Gp_EcuStpStdn out\Gp_EcuStpStdn
 rem Exit code: 0=all green / 1=error or schema check failed / 2=partial LLM failures (report still produced)
@@ -27,7 +27,7 @@ rem resolve to absolute paths before pushd (caller-relative paths must survive c
 for %%I in ("%~1") do set "MOD=%%~fI"
 if "%~2"=="" (set "OUT=%MOD%") else (for %%I in ("%~2") do set "OUT=%%~fI")
 pushd "%~dp0"
-node "packages\cli\dist\index.js" run "%MOD%" --out "%OUT%" --images
+node "packages\cli\dist\index.js" run "%MOD%" --out "%OUT%"
 set "RC=%ERRORLEVEL%"
 popd
 exit /b %RC%

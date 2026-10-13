@@ -403,7 +403,7 @@ async function main(): Promise<void> {
       return;
     case 'run':
       if (!dir) break;
-      await cmdRun(dir, outDir, mock, args.includes('--images'), args.includes('--skip-audit'));
+      await cmdRun(dir, outDir, mock, !args.includes('--skip-images'), args.includes('--skip-audit'));
       return;
     case 'diff':
       if (!dir) break;
@@ -411,19 +411,20 @@ async function main(): Promise<void> {
       return;
     case 'update':
       if (!dir) break;
-      await cmdUpdate(dir, outDir, mock, args.includes('--images'), args.includes('--skip-audit'));
+      await cmdUpdate(dir, outDir, mock, !args.includes('--skip-images'), args.includes('--skip-audit'));
       return;
   }
 
   console.error(`用法:
-  lld run <模块目录> [--out 产物目录] [--mock] [--images] [--skip-audit]
-                                        一键全流程（工具集成入口）：analyze → gen（增量续跑）→ report → audit；
+  lld run <模块目录> [--out 产物目录] [--mock] [--skip-images] [--skip-audit]
+                                        一键全流程（工具集成入口）：analyze → gen（增量续跑）→ images（图 PNG 物化）→ report → audit；
                                         退出码 0=全绿 / 1=异常或结构自检未过（不出报告）/ 2=个别条目失败（报告已出，重跑补齐）；
-                                        --images 追加图 PNG 物化（归档用，需 Edge）；--skip-audit 跳过渲染验收
-  lld update <模块目录> [--out 产物目录] [--mock] [--images] [--skip-audit]
+                                        PNG 物化默认开启（需 Edge），--skip-images 关闭（--images 旧写法兼容等价默认）；
+                                        --skip-audit 跳过渲染验收
+  lld update <模块目录> [--out 产物目录] [--mock] [--skip-images] [--skip-audit]
                                         模块版本更新一键流程（需既有产物）：diff 比对 → gen --resume
-                                        只重生变更/新增条目（未变内容含人工修订全部保留）→ report → audit；
-                                        退出码同 run；差异清单落盘 lld_diff.json 并进报告附录 A
+                                        只重生变更/新增条目（未变内容含人工修订全部保留）→ images → report → audit；
+                                        退出码与开关同 run；差异清单落盘 lld_diff.json 并进报告附录 A
   lld diff <模块目录> [--out 产物目录]    只做版本比对：analyze 新代码 → 与既有 design json 按哈希锚点
                                         比对出四类清单（未变/变更/新增/删除）+ 合并 design json（失效待重生）
   lld ping                              LLM 连通性自检（/models + 最小 chat 调用）

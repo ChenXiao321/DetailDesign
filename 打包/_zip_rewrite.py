@@ -98,6 +98,7 @@ for e in extra:
 
 # 版本.txt 每次构建重新生成（旧条目已在读取清单时剔除）
 all_names = names + extra
+NOW = datetime.datetime.now()
 GENERATED = {
     '版本.txt': (
         'Modu.LLD 迁移包\n'
@@ -111,15 +112,23 @@ GENERATED = {
 }
 all_names = all_names + list(GENERATED)
 
+def mtime_tuple(path):
+    # 源文件真实修改时间（zip 条目时间戳须 >= 1980）
+    dt = datetime.datetime.fromtimestamp(os.path.getmtime(path))
+    return (dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second)
+
+NOW_T = (NOW.year, NOW.month, NOW.day, NOW.hour, NOW.minute, NOW.second)
+
 new = zipfile.ZipFile(TMP, 'w', zipfile.ZIP_DEFLATED)
 for n in all_names:
     if n in GENERATED:
         data = GENERATED[n]
+        dt = NOW_T                      # 生成文件（版本.txt）用构建时间
     else:
         with open(os.path.join(ROOT, src_of(n)), 'rb') as fh:
             data = fh.read()
-    # 保留原压缩类型/外部属性
-    dt, attr = old_info.get(n, ((2026, 9, 8, 12, 0, 0), 0o644 << 16))
+        dt = mtime_tuple(os.path.join(ROOT, src_of(n)))   # 条目时间戳 = 源文件 mtime
+    _dt, attr = old_info.get(n, (NOW_T, 0o644 << 16))     # 外部属性沿用基准包，新条目 644
     zi = zipfile.ZipInfo(n, date_time=dt)
     zi.compress_type = zipfile.ZIP_DEFLATED
     zi.external_attr = attr

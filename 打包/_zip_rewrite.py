@@ -40,6 +40,7 @@ SRC_MAP = {
     '部署说明.txt': '打包/部署说明.txt',
     '启动命令行.bat': '打包/启动命令行.bat',
     'lld-run.bat': '打包/lld-run.bat',
+    'lld-update.bat': '打包/lld-update.bat',
 }
 def src_of(zip_name):
     return SRC_MAP.get(zip_name, zip_name)
@@ -95,6 +96,13 @@ for root in ['packages/core/src', 'packages/core/dist', 'packages/cli/src', 'pac
 extra = [e for e in extra if not droppable(e)]
 for e in extra:
     print('++ 新文件补入:', e)
+
+# 打包自有文件（SRC_MAP）确保在包内：extra 扫描只覆盖 packages/node_modules，
+# 根级新增的 bat（如 lld-update.bat）不扫会漏
+for zip_name in SRC_MAP:
+    if zip_name not in old_set and zip_name not in extra:
+        extra.append(zip_name)
+        print('++ 新文件补入:', zip_name)
 
 # 版本.txt 每次构建重新生成（旧条目已在读取清单时剔除）
 all_names = names + extra

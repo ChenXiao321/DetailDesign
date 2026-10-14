@@ -33,13 +33,18 @@ node packages/cli/dist/index.js run 测试模块/Gp_EcuStpStdn --out 测试产�
 # Windows 也可用包装脚本：打包\lld-run.bat 测试模块\Gp_EcuStpStdn 测试产出\Gp_EcuStpStdn
 ```
 
-一条命令串联 analyze → gen（增量续跑）→ images（图 PNG 物化）→ report → audit，适合被外部工具 shell 调用：
+**首版与改版同一条命令**：产物目录已有 `lld_design.json` 时 `run` 自动转版本更新流程
+（diff 比对 → gen 只重生变更/新增条目），没有则全量生成；随后统一 images（图 PNG 物化）→ report → audit，
+适合被外部工具 shell 调用：
 - 退出码：`0`=全绿；`1`=异常或结构完整性自检未过（残缺 json 不产出报告）；`2`=个别条目生成失败（报告已产出，原命令重跑即增量补齐）
 - 审计项（斜线/贴缘等设计内行为）不影响退出码，以 audit 打印的中文验收报告为准
-- 选项：`--mock` 离线预览；PNG 物化默认开启（需 Edge/Chrome），`--skip-images` 关闭；`--skip-audit` 跳过渲染验收
+- 选项：`--mock` 离线预览；PNG 物化默认开启（需 Edge/Chrome），`--skip-images` 关闭；`--skip-audit` 跳过渲染验收；
+  `--fresh` 强制全量重生成（清除旧 design/diff/sync 产物，已生成内容含人工修订不保留）
 - LLM 配置照旧：环境变量 `LLD_LLM_BASE_URL` 等，或当前目录 `lld.config.json`
 
-### 模块版本更新（代码改版后增量重生，推荐）
+### 模块版本更新（代码改版后增量重生）
+
+`run` 已自动识别改版场景（见上），`update` 为显式入口（无基线即报错，适合脚本里明确表达意图）：
 
 ```bash
 node packages/cli/dist/index.js update <模块目录> --out <产物目录>   # diff + 增量重生一键完成

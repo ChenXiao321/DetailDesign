@@ -254,17 +254,34 @@ async function cmdGen(dir: string, outDir: string, mock: boolean, only?: string[
   return { schemaProblems, failures };
 }
 
-/** 一键全流程（工具集成入口）：analyze → gen（增量续跑）→ report → audit。
+/** 一键全流程（工具集成入口）：产物目录有 lld_design.json 则自动转版本更新流程
+ *  （diff 比对 → gen --resume 只重生失效条目），否则全量生成（analyze → gen）。
+ *  --fresh 强制全量：清除旧 design/diff/sync 产物再跑（人工修订不保留）。
  *  退出码：0=全绿；1=任一步骤异常或 gen 结构自检未过（残缺 json 不产出报告）；
  *  2=流程走完但有个别条目生成失败（报告已产出，可 --resume 续跑补齐）。
  *  审计项（斜线/贴缘等设计内行为）不影响退出码，以 audit 打印的中文验收报告为准。 */
-async function cmdRun(dir: string, outDir: string, mock: boolean, withImages: boolean, skipAudit: boolean): Promise<void> {
+async function cmdRun(dir: string, outDir: string, mock: boolean, withImages: boolean, skipAudit: boolean, fresh: boolean): Promise<void> {
+  const designPath = path.join(outDir, 'lld_design.json');
+  if (!fresh && fs.existsSync(designPath)) {
+    console.log('检测到既有产物 lld_design.json → 版本更新流程（全量重生成加 --fresh）');
+    await cmdUpdate(dir, outDir, mock, withImages, skipAudit);
+    return;
+  }
+  if (fresh && fs.existsSync(designPath)) {
+    console.log('--fresh：清除既有产物全量重生成（旧生成内容含人工修订不保留）');
+    fs.rmSync(designPath, { force: true });
+  }
+  // 清理残留的差异清单/同步操作单：全量生成场景报告不应渲染旧版本的附录 A
+  for (const name of ['lld_diff.json', 'lld_polarion_sync.json']) {
+    fs.rmSync(path.join(outDir, name), { force: true });
+  }
   console.log('===== [1/4] 静态分析 =====');
   await cmdAnalyze(dir, outDir);
   await finishPipeline(dir, outDir, mock, withImages, skipAudit);
 }
 
-/** 版本更新一键流程：diff（analyze+比对+失效合并）→ gen --resume（只重生失效条目）→ report → audit。
+/** 版本更新一键流程（run 自动探测到既有产物时走此路径，也可显式 update 调用）：
+ *  diff（analyze+比对+失效合并）→ gen --resume（只重生失效条目）→ report → audit。
  *  退出码同 run。gen 完成后刷新同步操作单 content 为生成后节点原文。 */
 async function cmdUpdate(dir: string, outDir: string, mock: boolean, withImages: boolean, skipAudit: boolean): Promise<void> {
   console.log('===== [1/4] 版本差异比对 =====');
@@ -403,7 +420,7 @@ async function main(): Promise<void> {
       return;
     case 'run':
       if (!dir) break;
-      await cmdRun(dir, outDir, mock, !args.includes('--skip-images'), args.includes('--skip-audit'));
+      await cmdRun(dir, outDir, mock, !args.includes('--skip-images'), args.includes('--skip-audit'), args.includes('--fresh'));
       return;
     case 'diff':
       if (!dir) break;
@@ -416,14 +433,18 @@ async function main(): Promise<void> {
   }
 
   console.error(`用法:
-  lld run <模块目录> [--out 产物目录] [--mock] [--skip-images] [--skip-audit]
-                                        一键全流程（工具集成入口）：analyze → gen（增量续跑）→ images（图 PNG 物化）→ report → audit；
+  lld run <模块目录> [--out 产物目录] [--mock] [--skip-images] [--skip-audit] [--fresh]
+                                        一键全流程（工具集成入口，首版/改版同一条命令）：
+                                        产物目录已有 lld_design.json → 自动走版本更新（diff 比对 →
+                                        gen --resume 只重生变更/新增条目，未变内容含人工修订全部保留）；
+                                        无 → 全量生成（analyze → gen）；随后 images（图 PNG 物化）→ report → audit；
+                                        --fresh 强制全量重生成（清除旧 design/diff/sync 产物，人工修订不保留）；
                                         退出码 0=全绿 / 1=异常或结构自检未过（不出报告）/ 2=个别条目失败（报告已出，重跑补齐）；
                                         PNG 物化默认开启（需 Edge），--skip-images 关闭（--images 旧写法兼容等价默认）；
                                         --skip-audit 跳过渲染验收
   lld update <模块目录> [--out 产物目录] [--mock] [--skip-images] [--skip-audit]
-                                        模块版本更新一键流程（需既有产物）：diff 比对 → gen --resume
-                                        只重生变更/新增条目（未变内容含人工修订全部保留）→ images → report → audit；
+                                        显式版本更新一键流程（同 run 检测到既有产物时的路径，无基线即报错）：
+                                        diff 比对 → gen --resume 只重生变更/新增条目 → images → report → audit；
                                         退出码与开关同 run；差异清单落盘 lld_diff.json 并进报告附录 A
   lld diff <模块目录> [--out 产物目录]    只做版本比对：analyze 新代码 → 与既有 design json 按哈希锚点
                                         比对出四类清单（未变/变更/新增/删除）+ 合并 design json（失效待重生）

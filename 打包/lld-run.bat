@@ -1,5 +1,7 @@
 @echo off
-rem LLD one-shot pipeline: analyze -> gen(resume) -> images(PNG materialization, on by default) -> report -> audit
+rem LLD one-shot pipeline (first release AND version update, auto-detected):
+rem   out-dir has lld_design.json -> diff -> gen(resume, changed/added only) ; otherwise -> analyze -> gen(full)
+rem   then images(PNG materialization, on by default) -> report -> audit
 rem Usage: lld-run.bat <module-dir> [out-dir]
 rem   e.g. lld-run.bat modules\Gp_EcuStpStdn out\Gp_EcuStpStdn
 rem Exit code: 0=all green / 1=error or schema check failed / 2=partial LLM failures (report still produced)

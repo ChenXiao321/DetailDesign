@@ -1,5 +1,7 @@
 @echo off
 rem LLD one-shot version-update pipeline: diff -> gen(resume, changed/added only) -> images(PNG, on by default) -> report -> audit
+rem Note: lld-run.bat now auto-detects (existing lld_design.json in out-dir -> this same update flow), so a single
+rem       lld-run.bat covers both first release and version update; this bat stays for explicit update-only invocation.
 rem Usage: lld-update.bat <module-dir> [out-dir]
 rem   e.g. lld-update.bat modules\Gp_EcuStpStdn out\Gp_EcuStpStdn
 rem Prerequisite: out-dir must already contain lld_design.json of the previous version (baseline for diff).

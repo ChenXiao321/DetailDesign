@@ -14,6 +14,7 @@ import { buildStaticFlowchart, buildFallbackFlowchart } from './staticFlowchart.
 import { buildStaticStateMachine, polishSmLabels } from './staticStateMachine.js';
 import { buildStaticSequence } from './staticSequence.js';
 import { buildDocumentContent, type AbbrTableInput } from './staticDocument.js';
+import { stampContentHash } from './contentHash.js';
 
 /** 流程图断言网（纯函数，导出供静态生成器自检与测试直喂恶意图）：
  *  词法 lint + 结构 lint + 条件编译虚线框存在性 + 编译期宏禁入菱形；返回中文问题清单（空 = 通过） */
@@ -189,6 +190,7 @@ async function genFlowchart(
   };
   fn.generated.flowchart = diagram;
   fn.generated.flowchartFormat = 'mermaid';
+  stampContentHash(fn.generated);   // 生成时刻指纹：描述（enrichFunction 先赋）+流程图齐后打
   return { warnings, degraded, defect };
 }
 
@@ -411,6 +413,7 @@ export async function generateDesign(
           llmModel: provider.name,
           generatedAt: new Date().toISOString(),
         };
+        stampContentHash(macro.generated);
       } catch (err) {
         log(`  ⚠ 失败（已跳过，可 --resume 重试）: ${macro.name} — ${(err as Error).message.replace(/\n/g, '\n      ')}`);
         opts?.failures?.push(`${macro.name}: ${(err as Error).message.replace(/\n/g, '\n      ')}`);
@@ -437,6 +440,7 @@ export async function generateDesign(
           llmModel: provider.name,
           generatedAt: new Date().toISOString(),
         };
+        stampContentHash(ext.generated);
       } catch (err) {
         log(`  ⚠ 失败（已跳过，可 --resume 重试）: ${ext.name} — ${(err as Error).message.replace(/\n/g, '\n      ')}`);
         opts?.failures?.push(`${ext.name}: ${(err as Error).message.replace(/\n/g, '\n      ')}`);
@@ -459,6 +463,7 @@ export async function generateDesign(
           llmModel: provider.name,
           generatedAt: new Date().toISOString(),
         };
+        stampContentHash(t.generated);
       } catch (err) {
         log(`  ⚠ 失败（已跳过，可 --resume 重试）: ${t.name} — ${(err as Error).message.replace(/\n/g, '\n      ')}`);
         opts?.failures?.push(`${t.name}: ${(err as Error).message.replace(/\n/g, '\n      ')}`);
@@ -485,6 +490,7 @@ export async function generateDesign(
           llmModel: provider.name,
           generatedAt: new Date().toISOString(),
         };
+        stampContentHash(ext.generated);
       } catch (err) {
         log(`  ⚠ 失败（已跳过，可 --resume 重试）: ${ext.name} — ${(err as Error).message.replace(/\n/g, '\n      ')}`);
         opts?.failures?.push(`${ext.name}: ${(err as Error).message.replace(/\n/g, '\n      ')}`);
@@ -510,6 +516,22 @@ export async function generateDesign(
         opts?.failures?.push(`description: ${(err as Error).message.replace(/\n/g, '\n      ')}`);
       }
     }
+  }
+
+  // 内容指纹回填（2026-10-16 人工修订检出）：存量条目 generated 无 contentHash 的补基线指纹。
+  // 注意：若条目此前已被手改，此处以当前内容为基线（无法区分）——指纹自首跑新版本工具起生效
+  if (!only || only.some(o => !['document', 'flowcharts', 'images'].includes(o))) {
+    let stamped = 0;
+    const gens = [
+      ...[...model.providedFunctions, ...model.internalFunctions].map(f => f.generated),
+      ...model.types.map(t => t.generated),
+      ...model.calledExternalFunctions.map(e => e.generated),
+      ...model.configMacros.map(c => c.generated),
+    ];
+    for (const g of gens) {
+      if (g && !g.contentHash) { stampContentHash(g); stamped++; }
+    }
+    if (stamped > 0) log(`内容指纹回填: ${stamped} 条存量 generated 补基线 contentHash`);
   }
 
   // 末尾统一物化报告骨架内容（全量 gen 或 --only 含 document 且混杂 LLM 阶段时在此落地）

@@ -147,6 +147,7 @@ async function cmdDiff(dir: string, outDir: string): Promise<{ diff: ModuleDiff;
   misc('类型', diff.types);
   misc('外部接口', diff.externals);
   misc('配置宏', diff.configs);
+  misc('变量', diff.variables);
   if (!diff.hasChanges) {
     console.log('无差异（代码未变）——gen --resume 将只重物化 document 节');
   } else {
@@ -156,12 +157,13 @@ async function cmdDiff(dir: string, outDir: string): Promise<{ diff: ModuleDiff;
   }
   console.log(`\n差异清单已写入: ${diffPath}`);
   const syncActionLabel: Record<string, string> = { delete: '删除', update: '更新', create: '新建', rename: '改名' };
+  const vmLabel: Record<string, string> = { test: '测试', review: '评审', 'test&review': '测试和评审' };
   if (sync.operations.length > 0) {
     console.log('\n===== Polarion 同步操作单 =====');
     for (const op of sync.operations) {
-      console.log(`  [${syncActionLabel[op.action]}] ${op.chapter} ${op.title}${op.from ? `（原 ${op.from}）` : ''}——${op.detail}`);
+      console.log(`  [${syncActionLabel[op.action]}] ${op.chapter} ${op.title}${op.wiType ? `（类型 ${op.wiType}${op.verifyMethod ? `/验证 ${vmLabel[op.verifyMethod] ?? op.verifyMethod}` : ''}）` : ''}${op.from ? `（原 ${op.from}）` : ''}${op.signatureChanged ? '（签名变更）' : ''}——${op.detail}${op.changedFields?.length ? `｜变更字段: ${op.changedFields.join('、')}` : ''}`);
     }
-    console.log(`未变条目零操作: 函数 ${sync.untouched.functions} / 类型 ${sync.untouched.types} / 外部接口 ${sync.untouched.externals} / 配置宏 ${sync.untouched.configs}`);
+    console.log(`未变条目零操作: 函数 ${sync.untouched.functions} / 类型 ${sync.untouched.types} / 外部接口 ${sync.untouched.externals} / 配置宏 ${sync.untouched.configs} / 变量 ${sync.untouched.variables ?? 0}`);
     console.log(`同步操作单已写入: ${syncPath}`);
   }
   if (sync.chapterUpdates.length > 0) {

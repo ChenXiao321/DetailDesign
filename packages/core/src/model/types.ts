@@ -77,6 +77,8 @@ export interface GeneratedFunctionContent {
   /** 生成来源与状态，便于评审追溯 */
   llmModel: string;
   generatedAt: string;
+  /** 生成时刻内容指纹（sha256 截断，剔 llmModel/generatedAt/*Png）：diff 期重算不符=人工修订过 */
+  contentHash?: string;
 }
 
 /** 5.3.1 状态机 */
@@ -146,6 +148,7 @@ export interface TypeUnit {
     elements?: Record<string, string>;      // struct 各成员说明（元素表说明列，键=成员名）
     llmModel: string;
     generatedAt: string;
+    contentHash?: string;                   // 生成时刻内容指纹（人工修订检出用）
   };
   polarion: PolarionMarker;
 }
@@ -186,6 +189,7 @@ export interface ConfigMacro {
     valueEffect: string;        // 取值影响说明（LLM 生成）
     llmModel: string;
     generatedAt: string;
+    contentHash?: string;       // 生成时刻内容指纹（人工修订检出用）
   };
   polarion: PolarionMarker;
 }

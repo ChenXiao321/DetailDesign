@@ -351,4 +351,196 @@ const model = (over = {}) => ({
     'S9 Callout 单条工作项（章节 6.2）保留疑似改名配对');
 }
 
+// ================= 场景 10：wiType 工作项类型枚举 ID 映射（2026-10-16 用户定） =================
+{
+  const old = model({ providedFunctions: [fn('A', 's1', 'b1')] });
+  const nw = model({
+    providedFunctions: [fn('A', 's1', 'b1'), fn('NewProvided', 's9', 'b9')],
+    internalFunctions: [fn('NewInner', 's8', 'b8')],
+    types: [
+      { ...typ('StNew', undefined), kind: 'struct', elements: [{ name: 'm', type: 'uint8', comment: null }] },
+      { ...typ('EnumNew', 'uint8'), relatedDefines: [{ name: 'EN_A', value: '0', comment: null }] },
+      typ('BasicNew', 'uint16'),
+    ],
+    calledExternalFunctions: [
+      { ...ext('Gp_CoNew', 'void Gp_CoNew(void)'), polarion: { workItemId: null, chapter: '6.2' } },
+      ext('Spi_Send', 'void Spi_Send(void)'),
+    ],
+    configMacros: [cfg('C_NEW', '1')],
+  });
+  const sync = buildPolarionSync(diffModules(old, nw), old, nw);
+  const find = (title) => sync.operations.find(o => o.title === title);
+
+  ok(find('NewProvided')?.wiType === 'IF', 'S10 对外接口函数→IF');
+  ok(find('NewInner')?.wiType === 'LF', 'S10 内部函数→LF');
+  ok(find('StNew')?.wiType === 'TDST', 'S10 struct→TDST');
+  ok(find('EnumNew')?.wiType === 'TDE', 'S10 枚举式 typedef（带 relatedDefines）→TDE');
+  ok(find('BasicNew')?.wiType === 'TDB', 'S10 普通 typedef→TDB');
+  ok(find('Gp_CoNew')?.wiType === 'Design', 'S10 Callout→Design');
+  ok(find('Ext 接口函数')?.wiType === 'Design', 'S10 外部接口组表→Design');
+  ok(find('C_NEW')?.wiType === 'Design', 'S10 配置宏→Design');
+  ok(sync.operations.every(o => typeof o.wiType === 'string' && o.wiType.length > 0), 'S10 操作单 wiType 全覆盖');
+  ok(sync.chapterUpdates.length > 0 && sync.chapterUpdates.every(cu => cu.wiType === 'Design'),
+    'S10 章节级更新 wiType 全为 Design');
+
+  // 验证方法（2026-10-16 用户定）：function/Callout/组表/config=test；type/chapterUpdates=review
+  ok(find('NewProvided')?.verifyMethod === 'test' && find('NewInner')?.verifyMethod === 'test', 'S10 函数验证方法=test');
+  ok(find('StNew')?.verifyMethod === 'review' && find('EnumNew')?.verifyMethod === 'review' && find('BasicNew')?.verifyMethod === 'review',
+    'S10 类型验证方法=review');
+  ok(find('Gp_CoNew')?.verifyMethod === 'test' && find('Ext 接口函数')?.verifyMethod === 'test', 'S10 外部接口（Callout/组表）验证方法=test');
+  ok(find('C_NEW')?.verifyMethod === 'test', 'S10 配置宏验证方法=test');
+  ok(sync.chapterUpdates.every(cu => cu.verifyMethod === 'review'), 'S10 章节级更新验证方法全为 review');
+}
+
+// ================= 场景 11：变量纳入 diff+同步（GV/LV，2026-10-16） =================
+{
+  const vr = (name, type, over = {}) => ({
+    id: `V::${name}`, name, type, isStatic: false, isConst: false, isVolatile: false,
+    file: 'm.c', line: 1, comment: null, conditionalFlags: [], polarion: { workItemId: null }, ...over,
+  });
+  const old = model({
+    providedFunctions: [fn('A', 's1', 'b1', true)],
+    providedVariables: [vr('VKeep', 'uint8', { comment: '富化后的旧注释' }), vr('VChg', 'uint8'), vr('VDel', 'uint8'), vr('VRen', 'uint8')],
+    internalVariables: [vr('VInKeep', 'uint16')],
+  });
+  const nw = model({
+    providedFunctions: [fn('A', 's1', 'b1')],
+    providedVariables: [vr('VKeep', 'uint8', { comment: null }), vr('VChg', 'uint32'), vr('VRen2', 'uint8'), vr('VNewG', 'uint8')],
+    internalVariables: [vr('VInKeep', 'uint16'), vr('VNewL', 'uint8', { isStatic: true })],
+  });
+  const d = diffModules(old, nw);
+  ok(d.hasChanges && d.variables.changed.join() === 'VChg' && d.variables.added.join() === 'VRen2,VNewG,VNewL'
+    && d.variables.removed.join() === 'VDel,VRen', 'S11 变量四类清单正确（改名对被配对前=删+增）');
+  ok(d.variables.unchanged.join() === 'VKeep,VInKeep', 'S11 变量未变名单（注释差异不算变更）');
+  ok(!d.dynamicInvalidated, 'S11 纯变量变更不联动动态设计');
+
+  const m = applyModuleDiff(nw, old, d);
+  ok(m.providedVariables[0].comment === '富化后的旧注释', 'S11 未变变量回挂旧注释（富化保留）');
+
+  const sync = buildPolarionSync(d, old, nw);
+  const find = (t) => sync.operations.find(o => o.title === t);
+  ok(find('VChg')?.action === 'update' && find('VChg')?.chapter === '5.2.3.1' && find('VChg')?.wiType === 'GV'
+    && find('VChg')?.verifyMethod === 'review', 'S11 对外变量变更→update 5.2.3.1 GV/评审');
+  ok(find('VNewG')?.action === 'create' && find('VNewG')?.wiType === 'GV', 'S11 新增对外变量→GV');
+  ok(find('VNewL')?.action === 'create' && find('VNewL')?.chapter === '5.2.4.1' && find('VNewL')?.wiType === 'LV',
+    'S11 新增内部变量→5.2.4.1 LV');
+  ok(find('VDel')?.action === 'delete' && find('VDel')?.chapter === '5.2.3.1', 'S11 删除变量章节按旧归属');
+  ok(find('VRen2')?.action === 'rename' && find('VRen2')?.from === 'VRen', 'S11 变量疑似改名配对');
+  ok(find('VChg')?.jsonPath === '$.providedVariables[1]' && find('VChg')?.oldJsonPath === '$.providedVariables[1]',
+    'S11 变量路径落到 providedVariables');
+  ok(find('VNewL')?.jsonPath === '$.internalVariables[1]', 'S11 内部变量路径落到 internalVariables');
+  ok(find('VChg')?.content?.type === 'uint32' && find('VDel')?.content === undefined,
+    'S11 变量 content 内嵌/删除不带');
+  ok(sync.untouched.variables === 2, 'S11 变量未变计数');
+}
+
+// ================= 场景 12：changedFields / signatureChanged / manualRevisionLost（2026-10-16 定） =================
+{
+  const { stampContentHash, isManuallyRevised } = require('../packages/core/dist/index.js');
+
+  // —— 指纹机制本身：Png/llmModel/generatedAt 不进哈希，内容改动才检出 ——
+  {
+    const g = { detailedDescription: '原文', flowchart: 'flowchart TD', llmModel: 'mock', generatedAt: 't0' };
+    stampContentHash(g);
+    ok(typeof g.contentHash === 'string' && g.contentHash.length === 16, 'S12 生成时刻打 16 位指纹');
+    ok(!isManuallyRevised(g), 'S12 未修订不误报');
+    g.flowchartPng = 'PNG_BASE64';   // images 物化后补的 PNG 不算修订
+    g.generatedAt = 't9';            // 溯源元数据改动不算修订
+    ok(!isManuallyRevised(g), 'S12 PNG 物化/元数据变化不算人工修订');
+    g.detailedDescription = '人工改过的描述';
+    ok(isManuallyRevised(g), 'S12 内容改动检出人工修订');
+    ok(!isManuallyRevised({ detailedDescription: '无指纹旧产物' }) && !isManuallyRevised(undefined),
+      'S12 无指纹（旧版产物）不检出');
+  }
+
+  // —— 函数：签名面 / 实现面 / 人工修订 / 旧版无指纹 ——
+  const stampedFn = (name, s, b, revised) => {
+    const f = fn(name, s, b, true);
+    stampContentHash(f.generated);
+    if (revised) f.generated.detailedDescription = '人工修订过的描述';
+    return f;
+  };
+  const old = model({
+    providedFunctions: [
+      stampedFn('SigChg', 's1', 'b1'),
+      stampedFn('BodyChg', 's2', 'b2'),
+      stampedFn('RevChg', 's3', 'b3', true),
+      fn('LegChg', 's4', 'b4', true),   // 旧版产物：无指纹
+      stampedFn('RenOld', 's5', 'b5'),
+    ],
+  });
+  const nw = model({
+    providedFunctions: [
+      fn('SigChg', 's1x', 'b1'),
+      fn('BodyChg', 's2', 'b2x'),
+      fn('RevChg', 's3', 'b3x'),
+      fn('LegChg', 's4', 'b4x'),
+      fn('RenNew', 's5', 'b5'),
+    ],
+  });
+  const sync = buildPolarionSync(diffModules(old, nw), old, nw);
+  const find = (t) => sync.operations.find(o => o.title === t);
+
+  const sigOp = find('SigChg');
+  ok(sigOp?.action === 'update' && sigOp.signatureChanged === true
+    && sigOp.changedFields.join() === '签名,参数表', 'S12 函数签名变更→signatureChanged+changedFields=[签名,参数表]');
+  const bodyOp = find('BodyChg');
+  ok(bodyOp?.signatureChanged === undefined && bodyOp.changedFields.includes('描述正文')
+    && bodyOp.changedFields.includes('流程图') && bodyOp.changedFields.includes('圈复杂度')
+    && bodyOp.changedFields.length === 6, 'S12 函数实现变更→实现面 6 字段，无 signatureChanged');
+  ok(find('RevChg')?.manualRevisionLost === true && find('RevChg').detail.includes('人工修订'),
+    'S12 人工修订条目→manualRevisionLost+detail 提示');
+  ok(find('LegChg')?.manualRevisionLost === undefined, 'S12 旧版无指纹条目不带 manualRevisionLost');
+  const ren = find('RenNew');
+  ok(ren?.action === 'rename' && ren.changedFields[0] === 'title' && ren.changedFields.length === 1
+    && ren.signatureChanged === undefined, 'S12 函数改名→changedFields=[title]，语义未变不带签名标记');
+
+  // —— 类型 / 配置宏 / 变量 / 外部接口字段口径 ——
+  const vr = (name, type, over = {}) => ({
+    id: `V::${name}`, name, type, isStatic: false, isConst: false, isVolatile: false,
+    file: 'm.c', line: 1, comment: null, conditionalFlags: [], polarion: { workItemId: null }, ...over,
+  });
+  const grpE = (name, signature, group) => ({
+    name, signature, group, comment: null, calledFrom: ['A'], polarion: { workItemId: null },
+  });
+  const old2 = model({
+    types: [
+      typ('TKind', 'uint8'),
+      { ...typ('TElem', undefined), kind: 'struct', elements: [{ name: 'm', type: 'uint8', comment: null }] },
+    ],
+    configMacros: [cfg('CVal', '1'), cfg('CKind', '1')],
+    providedVariables: [vr('VType', 'uint8'), vr('VQual', 'uint8')],
+    calledExternalFunctions: [
+      { ...grpE('Gp_Co', 'void Gp_Co(void)', 'Callout'), polarion: { workItemId: null, chapter: '6.2' } },
+      grpE('Spi_Send', 's1', 'Spi'), grpE('Spi_Recv', 's2', 'Spi'),
+    ],
+  });
+  const nw2 = model({
+    types: [
+      typ('TKind', 'uint16'),
+      { ...typ('TElem', undefined), kind: 'struct', elements: [{ name: 'm', type: 'uint16', comment: null }] },
+    ],
+    configMacros: [cfg('CVal', '2'), { ...cfg('CKind', '1'), kind: 'functional' }],
+    providedVariables: [vr('VType', 'uint32'), vr('VQual', 'uint8', { isStatic: true })],
+    calledExternalFunctions: [
+      { ...grpE('Gp_Co', 'void Gp_Co(uint8)', 'Callout'), polarion: { workItemId: null, chapter: '6.2' } },
+      grpE('Spi_Send', 's1x', 'Spi'), grpE('Spi_Recv', 's2', 'Spi'),
+    ],
+  });
+  const sync2 = buildPolarionSync(diffModules(old2, nw2), old2, nw2);
+  const find2 = (t) => sync2.operations.find(o => o.title === t);
+
+  ok(find2('TKind')?.changedFields.join() === '类型类别', 'S12 类型类别变更→[类型类别]');
+  ok(find2('TElem')?.changedFields.join() === '成员/常量表', 'S12 struct 成员变更→[成员/常量表]');
+  ok(find2('CVal')?.changedFields.join() === '取值/形式', 'S12 配置宏取值变更→[取值/形式]');
+  ok(find2('CKind')?.changedFields.join() === '类别', 'S12 配置宏类别变更→[类别]');
+  ok(find2('VType')?.changedFields.join() === '类型', 'S12 变量类型变更→[类型]');
+  ok(find2('VQual')?.changedFields.join() === '限定符', 'S12 变量限定符变更→[限定符]');
+  ok(find2('Gp_Co')?.changedFields.join() === '签名', 'S12 Callout 签名变更→[签名]');
+  ok(find2('Spi 接口函数')?.changedFields.join() === '整表内容', 'S12 组表成员变化→[整表内容]');
+  ok(sync2.operations.filter(o => o.action === 'create').every(o => o.changedFields === undefined)
+    && sync2.operations.filter(o => o.action === 'delete').every(o => o.changedFields === undefined),
+    'S12 create/delete 不带 changedFields');
+}
+
 console.log(`\nmodelDiff 测试全部通过（${n} 项断言）`);

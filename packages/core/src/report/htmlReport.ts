@@ -343,6 +343,8 @@ ${doc.supportFiles.map(([no, name, code]) =>
   // ---- 附录 A 变更记录（版本更新场景；opts.diff 缺省时整节不渲染） ----
   const diffSection = opts?.diff ? (() => {
     const d = opts.diff;
+    // 存量旧版 lld_diff.json 无 variables 键（变量 2026-10-16 才纳入比对面），兜底空集合防崩
+    const dVars = d.variables ?? { unchanged: [], changed: [], added: [], removed: [] };
     const fnRows = [
       ...d.functions.changed.map(c => `<tr><td>变更（${c.kind === 'sig' ? '签名' : '实现'}）</td><td><code>${esc(c.name)}</code></td></tr>`),
       ...d.functions.added.map(n => `<tr><td>新增</td><td><code>${esc(n)}</code></td></tr>`),
@@ -353,7 +355,7 @@ ${doc.supportFiles.map(([no, name, code]) =>
       ...c.added.map(n => `<tr><td>${label}·新增</td><td><code>${esc(n)}</code></td></tr>`),
       ...c.removed.map(n => `<tr><td>${label}·删除</td><td><code>${esc(n)}</code></td></tr>`),
     ];
-    const allRows = [...fnRows, ...miscRows('类型', d.types), ...miscRows('外部接口', d.externals), ...miscRows('配置宏', d.configs)];
+    const allRows = [...fnRows, ...miscRows('类型', d.types), ...miscRows('外部接口', d.externals), ...miscRows('配置宏', d.configs), ...miscRows('变量', dVars)];
     // ---- 变更总览（确定性汇总段：统计+接口影响判定+疑似改名+文档联动） ----
     const f = d.functions;
     const sigChg = f.changed.filter(c => c.kind === 'sig');
@@ -361,7 +363,8 @@ ${doc.supportFiles.map(([no, name, code]) =>
     const totalChanged = f.changed.length + f.added.length + f.removed.length
       + d.types.changed.length + d.types.added.length + d.types.removed.length
       + d.externals.changed.length + d.externals.added.length + d.externals.removed.length
-      + d.configs.changed.length + d.configs.added.length + d.configs.removed.length;
+      + d.configs.changed.length + d.configs.added.length + d.configs.removed.length
+      + dVars.changed.length + dVars.added.length + dVars.removed.length;
     // 接口面影响：签名变更/新增/删除的函数（有 sync 时按章节区分内外部，5.2.4.2 内部函数不算接口面）
     const syncFnChapters = new Map((opts?.sync?.operations ?? []).filter(o => o.kind === 'function').map(o => [o.title, o.chapter]));
     const isIface = (n: string): boolean => syncFnChapters.size === 0 || syncFnChapters.get(n) !== '5.2.4.2';
@@ -373,7 +376,7 @@ ${doc.supportFiles.map(([no, name, code]) =>
     const chapterList = [...new Set((opts?.sync?.chapterUpdates ?? []).map(cu => cu.chapter))];
     const overviewBlock = `
 <h3>A.0 变更总览</h3>
-${d.hasChanges ? `<p>本次更新共 ${totalChanged} 处条目变化：函数 ${f.changed.length + f.added.length + f.removed.length} 项（签名变更 ${sigChg.length}、实现变更 ${bodyChg.length}、新增 ${f.added.length}、删除 ${f.removed.length}）、类型 ${d.types.changed.length + d.types.added.length + d.types.removed.length} 项、外部接口 ${d.externals.changed.length + d.externals.added.length + d.externals.removed.length} 项、配置宏 ${d.configs.changed.length + d.configs.added.length + d.configs.removed.length} 项；其余条目未变，内容沿用上版。</p>
+${d.hasChanges ? `<p>本次更新共 ${totalChanged} 处条目变化：函数 ${f.changed.length + f.added.length + f.removed.length} 项（签名变更 ${sigChg.length}、实现变更 ${bodyChg.length}、新增 ${f.added.length}、删除 ${f.removed.length}）、类型 ${d.types.changed.length + d.types.added.length + d.types.removed.length} 项、外部接口 ${d.externals.changed.length + d.externals.added.length + d.externals.removed.length} 项、配置宏 ${d.configs.changed.length + d.configs.added.length + d.configs.removed.length} 项、变量 ${dVars.changed.length + dVars.added.length + dVars.removed.length} 项；其余条目未变，内容沿用上版。</p>
 <p>${ifaceImpactNet.length > 0
   ? `<strong>接口面有变化</strong>（影响调用方，评审重点）：${ifaceImpactNet.map(n => `<code>${esc(n)}</code>`).join('、')}。`
   : renamePairs.length > 0
@@ -384,11 +387,12 @@ ${chapterList.length > 0 ? `<p>文档联动更新：${chapterList.map(c => esc(c
   : '<p>本次更新无差异（代码未变，仅重新分析），文档内容全部沿用上版。</p>'}`;
     // Polarion 同步操作单（opts.sync 缺省时零字节——操作表独立小节，不影响存量字节门禁）
     const syncLabel: Record<string, string> = { delete: '删除', update: '更新', create: '新建', rename: '改名' };
+    const vmLabel: Record<string, string> = { test: '测试', review: '评审', 'test&review': '测试和评审' };
     const syncTable = opts?.sync && opts.sync.operations.length > 0 ? `
 <h3>A.1 Polarion 同步操作单</h3>
-<p class="muted">按章节排序，照单操作即可；未变条目零操作（函数 ${opts.sync.untouched.functions} / 类型 ${opts.sync.untouched.types} / 外部接口 ${opts.sync.untouched.externals} / 配置宏 ${opts.sync.untouched.configs}）。</p>
-<table class="simple"><tr><th>章节</th><th>操作</th><th>工作项 title</th><th>说明</th></tr>
-${opts.sync.operations.map(op => `<tr><td>${esc(op.chapter)}</td><td>${syncLabel[op.action]}</td><td><code>${esc(op.title)}</code>${op.from ? `<br><span class="muted">原 ${esc(op.from)}</span>` : ''}</td><td>${esc(op.detail)}</td></tr>`).join('\n')}
+<p class="muted">按章节排序，照单操作即可；未变条目零操作（函数 ${opts.sync.untouched.functions} / 类型 ${opts.sync.untouched.types} / 外部接口 ${opts.sync.untouched.externals} / 配置宏 ${opts.sync.untouched.configs} / 变量 ${opts.sync.untouched.variables ?? 0}）。</p>
+<table class="simple"><tr><th>章节</th><th>操作</th><th>类型</th><th>验证方法</th><th>工作项 title</th><th>变更字段</th><th>说明</th></tr>
+${opts.sync.operations.map(op => `<tr><td>${esc(op.chapter)}</td><td>${syncLabel[op.action]}${op.signatureChanged ? '<br><span class="muted">签名变更</span>' : ''}${op.manualRevisionLost ? '<br><span class="muted">含人工修订</span>' : ''}</td><td>${esc(op.wiType ?? '')}</td><td>${esc(vmLabel[op.verifyMethod ?? ''] ?? op.verifyMethod ?? '')}</td><td><code>${esc(op.title)}</code>${op.from ? `<br><span class="muted">原 ${esc(op.from)}</span>` : ''}</td><td>${esc(op.changedFields?.join('、') ?? '')}</td><td>${esc(op.detail)}</td></tr>`).join('\n')}
 </table>` : '';
     const chapterTable = opts?.sync && opts.sync.chapterUpdates.length > 0 ? `
 <h3>A.2 章节级内容更新（工作项之外）</h3>

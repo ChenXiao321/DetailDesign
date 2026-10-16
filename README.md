@@ -61,16 +61,21 @@ node packages/cli/dist/index.js diff  <模块目录> --out <产物目录>   # �
 - 变更/新增条目清空重生；函数级变更同时重生状态机/序列图与 5.1 功能描述；document 节恒重物化
 - 图 PNG：图源码一致的直接回挂，不一致的随 gen 重渲
 - 报告附录 A 记录本次变更清单，评审可追溯
-- 同时产出 `lld_polarion_sync.json` **Polarion 同步操作单**（新建/更新/删除三类操作，
+- 同时产出 `lld_polarion_sync.json` **Polarion 同步操作单**（五类条目——函数/类型/外部接口/配置宏/变量——的新建/更新/删除三类操作，
+  每条带 `wiType`（工作项类型枚举 ID：IF/LF/TDST/TDE/TDB/GV/LV/Design）与 `verifyMethod`（验证方法：test/review）属性，工具照填即可；
   带章节号+工作项 title，按章节排序；「删除+新增」自动做疑似改名配对——
   名称 LCS 相似度 ≥0.8 或签名一致即提示改原工作项而非删了重建，保留历史与追溯链接；
   每条操作带 `jsonPath`/`oldJsonPath` 节点路径，定位条目在新/旧 `lld_design.json` 中的位置；
+  update/rename 另带 `changedFields`（变更字段清单，Polarion 逻辑字段口径——签名/参数表/描述正文/流程图/取值影响等，
+  颗粒度=比对键语义面）、函数签名变更带 `signatureChanged` 标记（接口面影响评审高亮）、
+  旧内容检出人工修订（生成时刻内容指纹 contentHash 不符）带 `manualRevisionLost` 提示标记；
   并内嵌 `content` 节点原文（深拷贝，拿着 sync.json 即可直接更新，无需回 design json 索引；
   单独跑 `diff` 时为分析态，`update` 流程在 gen+images 完成后自动刷新为含新生成描述/图（含 PNG base64）的版本）；
   外部接口按工作项粒度出操作：Callout 单条（6.2），其余按组整表（5.2.2.2「<组名> 接口函数」——
   组内成员增删=更新整表附 `members` 明细，新组=新建，整组移除=删除）），
   附录 A.0 变更总览（统计+接口影响判定+改名对+联动章节）、A.1 同步渲染操作表、A.2 列出章节级联动更新（5.1 描述/5.3 图/4.x 总图与文件清单/7 评估表/3.x 缩写表提示，
-  同样内嵌 `content` 新内容原文——分析期确定性内容（4.1/4.2 图）diff 即在场，5.1/5.3/7/3.x 为 gen 产物随刷新补入，图 PNG 随 images 物化补入）
+  同样内嵌 `content` 新内容原文——分析期确定性内容（4.1/4.2 图）diff 即在场，5.1/5.3/7/3.x 为 gen 产物随刷新补入，图 PNG 随 images 物化补入）；
+  消费方（对 Polarion 执行实际增删改的工具）实现需求见 `Polarion同步工具需求.md`
 - 要求产物目录已有首版 `lld_design.json`（首版用 `run`/`gen` 生成）
 
 ### 分步执行（调试/精细控制用）

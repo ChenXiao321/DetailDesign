@@ -114,7 +114,7 @@ async function cmdAnalyze(dir: string, outDir: string): Promise<ModuleModel> {
  *  未变条目回挂已生成内容，变更/新增条目待 gen --resume 重生）。
  *  落盘：lld_model.json（新）、lld_design.json（合并）、lld_diff.json（清单，报告附录 A 用）、
  *  lld_polarion_sync.json（同步操作单，content 内嵌节点原文——此时为分析态、无生成内容，
- *  update 流程在 gen 完成后由 refreshSyncAfterGen 刷新为含生成内容的版本）。 */
+ *  update 流程在 gen+images 完成后由 refreshSyncAfterGen 刷新为含生成内容与图 PNG 的版本）。 */
 async function cmdDiff(dir: string, outDir: string): Promise<{ diff: ModuleDiff; oldDesign: ModuleModel }> {
   const designPath = path.join(outDir, 'lld_design.json');
   if (!fs.existsSync(designPath)) {
@@ -174,8 +174,9 @@ async function cmdDiff(dir: string, outDir: string): Promise<{ diff: ModuleDiff;
   return { diff, oldDesign };
 }
 
-/** update 流程 gen 完成后刷新同步操作单：content 从分析态节点换成含新生成内容的节点原文
- *  （diff 阶段写盘时变更/新增条目的 generated 尚未生成）。数组序不变，jsonPath 不受影响。 */
+/** update 流程 gen+images 完成后刷新同步操作单：content 从分析态节点换成含新生成内容
+ *  （描述/图源/PNG base64）的节点原文（diff 阶段写盘时变更/新增条目的 generated 尚未生成）。
+ *  数组序不变，jsonPath 不受影响。 */
 function refreshSyncAfterGen(outDir: string, diff: ModuleDiff, oldDesign: ModuleModel): void {
   const designPath = path.join(outDir, 'lld_design.json');
   const syncPath = path.join(outDir, 'lld_polarion_sync.json');
@@ -282,7 +283,7 @@ async function cmdRun(dir: string, outDir: string, mock: boolean, withImages: bo
 
 /** 版本更新一键流程（run 自动探测到既有产物时走此路径，也可显式 update 调用）：
  *  diff（analyze+比对+失效合并）→ gen --resume（只重生失效条目）→ report → audit。
- *  退出码同 run。gen 完成后刷新同步操作单 content 为生成后节点原文。 */
+ *  退出码同 run。gen+images 完成后刷新同步操作单 content 为生成后节点原文（含图 PNG）。 */
 async function cmdUpdate(dir: string, outDir: string, mock: boolean, withImages: boolean, skipAudit: boolean): Promise<void> {
   console.log('===== [1/4] 版本差异比对 =====');
   const { diff, oldDesign } = await cmdDiff(dir, outDir);
@@ -290,7 +291,7 @@ async function cmdUpdate(dir: string, outDir: string, mock: boolean, withImages:
     () => { refreshSyncAfterGen(outDir, diff, oldDesign); });
 }
 
-/** run/update 共用后半段：gen --resume → （可选 images）→ report → audit */
+/** run/update 共用后半段：gen --resume → （可选 images）→ （update 时刷新同步操作单）→ report → audit */
 async function finishPipeline(dir: string, outDir: string, mock: boolean, withImages: boolean, skipAudit: boolean, afterGen?: () => void): Promise<void> {
   console.log('\n===== [2/4] LLM 生成设计内容 =====');
   const { schemaProblems, failures } = await cmdGen(dir, outDir, mock, undefined, true);
@@ -298,11 +299,13 @@ async function finishPipeline(dir: string, outDir: string, mock: boolean, withIm
     console.error('\n✗ 结构完整性自检未过，中止：残缺 json 不产出报告（修复后可原命令重跑，增量续跑）');
     process.exit(1);
   }
-  afterGen?.();
   if (withImages) {
     console.log('\n===== 图 PNG 物化 =====');
     await cmdImages(outDir, true);
   }
+  // 同步操作单刷新放在 images 之后：content 深拷贝带上 flowchartPng/diagramPng，
+  // 拿着 sync.json 即可连图一起更新（--skip-images 时自然无 PNG，退化为图源文本）
+  afterGen?.();
   console.log('\n===== [3/4] 生成 HTML 评审报告 =====');
   await cmdReport(outDir);
   if (!skipAudit) {

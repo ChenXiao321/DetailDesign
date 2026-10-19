@@ -62,12 +62,14 @@ node packages/cli/dist/index.js diff  <模块目录> --out <产物目录>   # �
 - 图 PNG：图源码一致的直接回挂，不一致的随 gen 重渲
 - 报告附录 A 记录本次变更清单，评审可追溯
 - 同时产出 `lld_polarion_sync.json` **Polarion 同步操作单**（五类条目——函数/类型/外部接口/配置宏/变量——的新建/更新/删除三类操作，
-  每条带 `wiType`（工作项类型枚举 ID：IF/LF/TDST/TDE/TDB/GV/LV/Design）与 `verifyMethod`（验证方法：test/review）属性，工具照填即可；
+  每条带 `wiType`（工作项类型枚举 ID：IF/LF/TDST/TDE/TDB/GV/LV/Design）与 `verifyMethod`（验证方法：test/review）属性，工具照填即可——
+  同一套推导同时物化在 design json 各节点 `polarion` 标记内，章节级工作项见顶层 `polarionChapterItems`，两处值一致；
   带章节号+工作项 title，按章节排序；「删除+新增」自动做疑似改名配对——
   名称 LCS 相似度 ≥0.8 或签名一致即提示改原工作项而非删了重建，保留历史与追溯链接；
   每条操作带 `jsonPath`/`oldJsonPath` 节点路径，定位条目在新/旧 `lld_design.json` 中的位置；
-  update/rename 另带 `changedFields`（变更字段清单，Polarion 逻辑字段口径——签名/参数表/描述正文/流程图/取值影响等，
-  颗粒度=比对键语义面）、函数签名变更带 `signatureChanged` 标记（接口面影响评审高亮）、
+  update/rename 另带 `changedFields`（变更属性清单，按实际写入 Polarion 的 `title`/描述/`wiType`/`verifyMethod`
+  四项比对；签名、流程图、表格等内容变化统一归「描述」，不再作为独立属性列出）、
+  函数签名变更带 `signatureChanged` 标记（接口面影响评审高亮）、
   旧内容检出人工修订（生成时刻内容指纹 contentHash 不符）带 `manualRevisionLost` 提示标记；
   并内嵌 `content` 节点原文（深拷贝，拿着 sync.json 即可直接更新，无需回 design json 索引；
   单独跑 `diff` 时为分析态，`update` 流程在 gen+images 完成后自动刷新为含新生成描述/图（含 PNG base64）的版本）；
@@ -132,6 +134,8 @@ node packages/cli/dist/index.js gen 测试模块/Gp_EcuStpStdn --out 测试产�
 产出 `测试产出/Gp_EcuStpStdn/lld_design.json`：在模型基础上增加
 - 每个函数的 `generated.detailedDescription`（增强描述）+ `generated.flowchart`（Mermaid 流程图）
 - `dynamicDesign`：状态机 + 序列图（Mermaid 源码）
+- 各节点 `polarion.wiType` / `polarion.verifyMethod`（Polarion「类型」/「验证方法」枚举 ID，
+  与同步单同口径；章节级工作项在顶层 `polarionChapterItems`，恒 Design/review）
 
 ### 第 3 步：HTML 评审报告
 

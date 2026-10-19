@@ -4,7 +4,7 @@ import * as path from 'node:path';
 import {
   analyzeModule, generateDesign, generateHtmlReport, resolveConfig, normalizeBaseUrl,
   OpenAICompatibleProvider, MockProvider, lintModelSchema,
-  diffModules, applyModuleDiff, buildPolarionSync,
+  diffModules, applyModuleDiff, buildPolarionSync, materializePolarionAttributes,
   type InputFile, type ModuleModel, type LLMProvider, type ModuleDiff, type PolarionSync,
 } from '@lld/core';
 import { cmdAudit } from './audit.js';
@@ -126,6 +126,8 @@ async function cmdDiff(dir: string, outDir: string): Promise<{ diff: ModuleDiff;
 
   const diff = diffModules(oldDesign, newModel);
   const merged = applyModuleDiff(newModel, oldDesign, diff);
+  // Polarion 属性物化：合并模型落盘前重刷（覆盖「无函数变更整节回挂旧 dynamicDesign」的存量缺字段节点）
+  materializePolarionAttributes(merged);
   fs.writeFileSync(designPath, JSON.stringify(merged, null, 2), 'utf-8');
   const diffPath = path.join(outDir, 'lld_diff.json');
   fs.writeFileSync(diffPath, JSON.stringify(diff, null, 2), 'utf-8');

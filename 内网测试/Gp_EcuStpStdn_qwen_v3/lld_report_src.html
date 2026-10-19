@@ -1504,7 +1504,8 @@ flowchart LR
 
 <h2 id="s53">5.3 动态设计</h2>
 
-<h3>5.3.1 状态机：Gp_EcuStpShdn 状态机 <span class="badge">工作项 · 5.3.1</span></h3>
+<h3>5.3.1 状态机 <span class="badge">工作项 · 5.3.1</span></h3>
+<h4>Gp_EcuStpShdn 状态机</h4>
 <div class="mermaid">stateDiagram-v2
     [*] --&gt; UNDEF
     UNDEF --&gt; ONE : Gp_EcuStpShdn_Startup
@@ -1532,7 +1533,9 @@ flowchart LR
 <table class="simple"><tr><th>从</th><th>到</th><th>触发条件</th><th>说明</th></tr>
 </table>
 
-<h3>5.3.2 序列图：Initialization（主核 Core0） <span class="badge">工作项 · 5.3.2</span></h3>
+<h3>5.3.2 序列图 <span class="badge">工作项 · 5.3.2</span></h3>
+
+<h4>Initialization（主核 Core0）</h4>
 <p class="muted">Gp_EcuStpShdn startup.<br>      this function will realize multi-core timing controlling. invoke microcontroller PreRun test function<br>      and check test result, and process test failed situation. get reset information from Gp_RstM,<br>      check safe state flag and try power shutdown flag, the program will enter the corresponding state if the flag is set,<br>      else, the program will invoke MCAL initialization function and check initialization result,<br>      and process initialization failed situation. invoke SBC self test function and check test result,<br>      and process test failed situation. this function will record several system time of startup key point for observing.</p>
 <div class="mermaid">sequenceDiagram
     participant OS as OS
@@ -1605,7 +1608,7 @@ flowchart LR
         end
     end</pre></details>
 
-<h3>5.3.2 序列图：Initialization（从核 satellite） <span class="badge">工作项 · 5.3.2</span></h3>
+<h4>Initialization（从核 satellite）</h4>
 <p class="muted">Gp_EcuStpShdn startup.<br>      this function will realize multi-core timing controlling. invoke microcontroller PreRun test function<br>      and check test result, and process test failed situation. get reset information from Gp_RstM,<br>      check safe state flag and try power shutdown flag, the program will enter the corresponding state if the flag is set,<br>      else, the program will invoke MCAL initialization function and check initialization result,<br>      and process initialization failed situation. invoke SBC self test function and check test result,<br>      and process test failed situation. this function will record several system time of startup key point for observing.</p>
 <div class="mermaid">sequenceDiagram
     participant OS as OS
@@ -1674,7 +1677,7 @@ flowchart LR
         end
     end</pre></details>
 
-<h3>5.3.2 序列图：Runtime（主核 Core0） <span class="badge">工作项 · 5.3.2</span></h3>
+<h4>Runtime（主核 Core0）</h4>
 <p class="muted">Gp_EcuStpShdn main function.<br>      this function will invoke MCU Runtime test, and check the test result, and process test failed situation<br>      if program is not in safe state or try power shutdown state.<br>      this function will calculate the last satellite time stamp by the master core.<br>      this function should be invoke by the cores which need perform MCU runtime test.</p>
 <div class="mermaid">sequenceDiagram
 participant MF as Gp_EcuStpShdn_Mainfunction
@@ -1709,7 +1712,7 @@ alt 测试失败且非安全状态或尝试断电状态
     MF-&gt;&gt;CO: Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd
 end</pre></details>
 
-<h3>5.3.2 序列图：Runtime（从核 satellite） <span class="badge">工作项 · 5.3.2</span></h3>
+<h4>Runtime（从核 satellite）</h4>
 <p class="muted">Gp_EcuStpShdn main function.<br>      this function will invoke MCU Runtime test, and check the test result, and process test failed situation<br>      if program is not in safe state or try power shutdown state.<br>      this function will calculate the last satellite time stamp by the master core.<br>      this function should be invoke by the cores which need perform MCU runtime test.</p>
 <div class="mermaid">sequenceDiagram
 participant MF as Gp_EcuStpShdn_Mainfunction

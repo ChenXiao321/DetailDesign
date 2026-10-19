@@ -38,6 +38,10 @@ export interface PolarionMarker {
               | 'state' | 'transition' | 'sequence' | 'config' | 'description' | 'diagram';
   title: string;
   workItemId: string | null;    // 导入后回写，如 "Gp_EcuStpShdn-42"
+  /** Polarion「类型」枚举 ID（IF/LF/TDST/TDE/TDB/GV/LV/Design），analyze/gen/update 期物化，口径同 sync.json §6.0 */
+  wiType?: string;
+  /** Polarion「验证方法」枚举 ID（test/review），与 wiType 同期物化 */
+  verifyMethod?: string;
 }
 
 export interface FunctionUnit {
@@ -256,4 +260,7 @@ export interface ModuleModel {
     /** 渲染 PNG（base64，gen --only images 物化） */ diagramPng?: string }[];
   /** 报告骨架内容（gen --only document 物化；缺省时 report/audit 渲染期现算，产物一致） */
   document?: DocumentContent;
+  /** 章节级工作项的 Polarion 属性（无 marker 节点可挂的章节：5.1 描述/4.1 文件清单/7 评估表/3.1 缩写表/3.2 定义表；
+   *  恒 wiType=Design、verifyMethod=review；analyze/gen/update 期物化，口径同 sync.json chapterUpdates） */
+  polarionChapterItems?: { chapter: string; title: string; wiType: string; verifyMethod: string }[];
 }

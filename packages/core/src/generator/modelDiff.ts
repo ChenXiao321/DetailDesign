@@ -26,6 +26,7 @@ import type {
   ModuleModel, FunctionUnit, TypeUnit, ExternalInterface, ConfigMacro, VariableUnit,
 } from '../model/types.js';
 import { isManuallyRevised } from './contentHash.js';
+import { fnWiType, typeWiType, varWiType, DESIGN_WITYPE, VM_TEST, VM_REVIEW } from './polarionAttributes.js';
 
 export interface NameChanges {
   unchanged: string[];
@@ -236,6 +237,8 @@ export function applyModuleDiff(newModel: ModuleModel, oldDesign: ModuleModel, d
  */
 
 export type SyncAction = 'create' | 'update' | 'delete' | 'rename';
+/** Polarion 实际可写属性（2026-10-19 用户定）：内容项统一归入「描述」。 */
+export type PolarionChangedField = 'title' | '描述' | 'wiType' | 'verifyMethod';
 
 export interface SyncOperation {
   action: SyncAction;
@@ -255,10 +258,10 @@ export interface SyncOperation {
   jsonPath?: string;          // 条目在（合并后的新）lld_design.json 中的节点路径，如 $.providedFunctions[2]；delete 不存在于新 json
   oldJsonPath?: string;       // 条目在旧 lld_design.json（diff 前）中的节点路径；create 不存在于旧 json
   content?: unknown;          // 条目在新 design json 中的节点原文（深拷贝）——拿着 sync.json 即可直接更新，无需回 design json 索引；delete 无新内容不携带
-  /** 变更字段清单（Polarion 逻辑字段口径，仅 update/rename 携带；create=全部字段、delete 无内容不携带）。
-   *  颗粒度=比对键覆盖的语义面：函数只能细到「签名面（签名/参数表）」与「实现面（描述/图/复杂度等派生自函数体）」；
-   *  注释/行号类字段不在比对键内，永远不会出现在清单里 */
-  changedFields?: string[];
+  /** 变更属性清单（Polarion 实际写入口径，仅 update/rename 携带；create/delete 不携带）。
+   *  取值仅 title/描述/wiType/verifyMethod：签名、流程图、表格等都归入「描述」，不作为独立 Polarion 属性。
+   *  title/wiType/verifyMethod 按新旧值比较；内容语义变化或人工修订将被覆盖时标记「描述」。 */
+  changedFields?: PolarionChangedField[];
   /** function 专有：签名哈希变化=接口面变更（调用方可能受影响，评审重点关注；内容照常全量更新，不阻断） */
   signatureChanged?: boolean;
   /** 旧 generated 内容指纹与生成时刻不符=曾有人工修订，本次重生将覆盖（提示不阻断；
@@ -327,74 +330,44 @@ function pairRenames(
 
 const RENAME_DETAIL = '疑似改名：建议直接改原工作项 title+内容，保留历史与追溯链接（勿删了重建）';
 
-/** Polarion 自定义「类型」枚举 ID 映射（2026-10-16 用户定） */
-const fnWiType = (chapter: string): string => chapter === '5.2.3.2' ? 'IF' : 'LF';
-const typeWiType = (t: TypeUnit | undefined): string =>
-  t?.kind === 'struct' ? 'TDST' : (t?.relatedDefines && t.relatedDefines.length > 0 ? 'TDE' : 'TDB');
-const DESIGN_WITYPE = 'Design';   // Callout/外部接口组表/配置宏/章节级更新统一归「设计」
-/** 验证方法枚举 ID（2026-10-16 用户定）：function/Callout/组表/配置宏=测试；type/章节级更新=评审 */
-const VM_TEST = 'test', VM_REVIEW = 'review';
+/* Polarion「类型」/「验证方法」枚举映射已提升为共享模块 ./polarionAttributes.js
+ * （design json 物化与本 sync.json 操作单同源，值一致；2026-10-16 用户定枚举） */
 
-/* ---- changedFields 取值（Polarion 逻辑字段口径，与《Polarion同步工具需求.md》§6 映射表左列一致） ---- */
+/* ---- changedFields：Polarion 实际写入属性（2026-10-19 用户定） ---- */
 const F_TITLE = 'title';
-const F_SIG = '签名';
-const F_PARAMS = '参数表';
-const F_DESC = '描述正文';
-const F_FLOW = '流程图';
-const F_CPLX = '圈复杂度';
-const F_INFLOOP = '死循环标记';
-const F_CALLS = '调用关系';
-const F_COND = '条件编译';
-const F_TYPEKIND = '类型类别';
-const F_MEMBERS = '成员/常量表';
-const F_VALUE = '取值/形式';
-const F_CFGKIND = '类别';
-const F_VARTYPE = '类型';
-const F_QUAL = '限定符';
-const F_TABLE = '整表内容';
+const F_DESCRIPTION = '描述';
+const F_WITYPE = 'wiType';
+const F_VERIFY_METHOD = 'verifyMethod';
 
-/** 函数字段级比对：签名哈希→签名/参数表；函数体哈希→实现面派生字段（描述/图/复杂度/死循环/调用关系/条件编译） */
-const fnChangedFields = (o?: FunctionUnit, n?: FunctionUnit): string[] => {
-  const f: string[] = [];
-  if (!o || !n) return f;
-  if (o.sigHash !== n.sigHash) f.push(F_SIG, F_PARAMS);
-  if (o.bodyHash !== n.bodyHash) f.push(F_DESC, F_FLOW, F_CPLX, F_INFLOOP, F_CALLS, F_COND);
-  return f;
+type PolarionWriteAttributes = { title: string; wiType: string; verifyMethod: string };
+
+/** 四个实际写入属性逐项比对；描述是否变化由各类条目的语义内容/人工修订覆盖判定。 */
+const polarionChangedFields = (
+  oldAttrs: PolarionWriteAttributes, newAttrs: PolarionWriteAttributes, descriptionChanged: boolean,
+): PolarionChangedField[] => {
+  const fields: PolarionChangedField[] = [];
+  if (oldAttrs.title !== newAttrs.title) fields.push(F_TITLE);
+  if (descriptionChanged) fields.push(F_DESCRIPTION);
+  if (oldAttrs.wiType !== newAttrs.wiType) fields.push(F_WITYPE);
+  if (oldAttrs.verifyMethod !== newAttrs.verifyMethod) fields.push(F_VERIFY_METHOD);
+  return fields;
 };
-/** 类型字段级比对：kind/underlyingType→类型类别；元素或关联宏→成员/常量表（与 typeKey 同语义子集） */
-const typeChangedFields = (o?: TypeUnit, n?: TypeUnit): string[] => {
-  const f: string[] = [];
-  if (!o || !n) return f;
-  if (o.kind !== n.kind || o.underlyingType !== n.underlyingType) f.push(F_TYPEKIND);
+
+/** 以下内容变化最终都写入 Polarion「描述」，这里只判定描述是否变化，不再列描述内部字段。 */
+const fnDescriptionChanged = (o?: FunctionUnit, n?: FunctionUnit): boolean =>
+  !!o && !!n && (o.sigHash !== n.sigHash || o.bodyHash !== n.bodyHash);
+const typeDescriptionChanged = (o?: TypeUnit, n?: TypeUnit): boolean => {
+  if (!o || !n) return false;
   const el = (t: TypeUnit) => stable((t.elements ?? []).map(e => ({ name: e.name, type: e.type })));
   const rd = (t: TypeUnit) => stable((t.relatedDefines ?? []).map(d => ({ name: d.name, value: d.value })));
-  if (el(o) !== el(n) || rd(o) !== rd(n)) f.push(F_MEMBERS);
-  return f;
+  return o.kind !== n.kind || o.underlyingType !== n.underlyingType || el(o) !== el(n) || rd(o) !== rd(n);
 };
-/** 配置宏字段级比对：取值/形式→取值/形式；类别→类别（与 cfgKey 同语义子集） */
-const cfgChangedFields = (o?: ConfigMacro, n?: ConfigMacro): string[] => {
-  const f: string[] = [];
-  if (!o || !n) return f;
-  if (o.value !== n.value || o.isFunctionLike !== n.isFunctionLike) f.push(F_VALUE);
-  if (o.kind !== n.kind) f.push(F_CFGKIND);
-  return f;
-};
-/** 变量字段级比对：类型→类型；限定符→限定符（与 varKey 同语义子集） */
-const varChangedFields = (o?: VariableUnit, n?: VariableUnit): string[] => {
-  const f: string[] = [];
-  if (!o || !n) return f;
-  if (o.type !== n.type) f.push(F_VARTYPE);
-  if (o.isStatic !== n.isStatic || o.isConst !== n.isConst || o.isVolatile !== n.isVolatile) f.push(F_QUAL);
-  return f;
-};
-/** 外部接口字段级比对：签名→签名；归组→所属组（与 extKey 同语义子集） */
-const extChangedFields = (o?: ExternalInterface, n?: ExternalInterface): string[] => {
-  const f: string[] = [];
-  if (!o || !n) return f;
-  if (o.signature !== n.signature) f.push(F_SIG);
-  if (o.group !== n.group) f.push('所属组');
-  return f;
-};
+const cfgDescriptionChanged = (o?: ConfigMacro, n?: ConfigMacro): boolean =>
+  !!o && !!n && (o.value !== n.value || o.isFunctionLike !== n.isFunctionLike || o.kind !== n.kind);
+const varDescriptionChanged = (o?: VariableUnit, n?: VariableUnit): boolean =>
+  !!o && !!n && (o.type !== n.type || o.isStatic !== n.isStatic || o.isConst !== n.isConst || o.isVolatile !== n.isVolatile);
+const extDescriptionChanged = (o?: ExternalInterface, n?: ExternalInterface): boolean =>
+  !!o && !!n && (o.signature !== n.signature || o.group !== n.group);
 
 /** 人工修订提示后缀（manualRevisionLost=true 时拼进 detail，同步单阅读者当场可见） */
 const MANUAL_REV_HINT = '；⚠ 该条目生成后曾被人工修订，本次重生将覆盖修订内容';
@@ -438,7 +411,11 @@ export function buildPolarionSync(diff: ModuleDiff, oldDesign: ModuleModel, newM
       action: 'rename', kind: 'function', chapter: ch, title: to, wiType: fnWiType(ch), verifyMethod: VM_TEST, from,
       detail: RENAME_DETAIL + (manualRev ? MANUAL_REV_HINT : ''),
       jsonPath: newFnPath(to), oldJsonPath: oldFnPath(from), content: newFnContent(to),
-      changedFields: [F_TITLE, ...fnChangedFields(oldF, newF)],
+      changedFields: polarionChangedFields(
+        { title: from, wiType: fnWiType(fnChapter(from, true)), verifyMethod: VM_TEST },
+        { title: to, wiType: fnWiType(ch), verifyMethod: VM_TEST },
+        fnDescriptionChanged(oldF, newF) || manualRev,
+      ),
       ...(sigChanged ? { signatureChanged: true } : {}),
       ...(manualRev ? { manualRevisionLost: true } : {}),
     });
@@ -459,7 +436,11 @@ export function buildPolarionSync(diff: ModuleDiff, oldDesign: ModuleModel, newM
       action: 'update', kind: 'function', chapter: ch, title: c.name, wiType: fnWiType(ch), verifyMethod: VM_TEST,
       detail: (c.kind === 'sig' ? '签名变更：更新工作项内容（接口变化，评审重点关注）' : '实现变更：更新工作项内容') + (manualRev ? MANUAL_REV_HINT : ''),
       jsonPath: newFnPath(c.name), oldJsonPath: oldFnPath(c.name), content: newFnContent(c.name),
-      changedFields: fnChangedFields(oldF, newF),
+      changedFields: polarionChangedFields(
+        { title: c.name, wiType: fnWiType(fnChapter(c.name, true)), verifyMethod: VM_TEST },
+        { title: c.name, wiType: fnWiType(ch), verifyMethod: VM_TEST },
+        fnDescriptionChanged(oldF, newF) || manualRev,
+      ),
       ...(c.kind === 'sig' ? { signatureChanged: true } : {}),
       ...(manualRev ? { manualRevisionLost: true } : {}),
     });
@@ -472,7 +453,7 @@ export function buildPolarionSync(diff: ModuleDiff, oldDesign: ModuleModel, newM
     pathOf: (list: { name: string }[], name: string) => string | undefined,
     oldList: N[], newList: N[],
     wiTypeOf: (name: string, isOld: boolean) => string,
-    fieldsOf: (oldN: N | undefined, newN: N | undefined) => string[],
+    descriptionChangedOf: (oldN: N | undefined, newN: N | undefined) => boolean,
   ): void => {
     const vm = kind === 'config' ? VM_TEST : VM_REVIEW;   // config=测试，type/variable=评审（用户 2026-10-16 定）
     const newContent = (name: string) => cloneNode(newList.find(x => x.name === name));
@@ -481,7 +462,17 @@ export function buildPolarionSync(diff: ModuleDiff, oldDesign: ModuleModel, newM
     const p = pairRenames(c.removed, c.added, () => undefined);
     for (const [from, to] of p.pairs) {
       const manualRev = isManuallyRevised(oldNode(from)?.generated);
-      operations.push({ action: 'rename', kind, chapter: chapterOf(to, false), title: to, wiType: wiTypeOf(to, false), verifyMethod: vm, from, detail: RENAME_DETAIL + (manualRev ? MANUAL_REV_HINT : ''), jsonPath: pathOf(newList, to), oldJsonPath: pathOf(oldList, from), content: newContent(to), changedFields: [F_TITLE, ...fieldsOf(oldNode(from), newNode(to))], ...(manualRev ? { manualRevisionLost: true } : {}) });
+      operations.push({
+        action: 'rename', kind, chapter: chapterOf(to, false), title: to, wiType: wiTypeOf(to, false), verifyMethod: vm,
+        from, detail: RENAME_DETAIL + (manualRev ? MANUAL_REV_HINT : ''), jsonPath: pathOf(newList, to),
+        oldJsonPath: pathOf(oldList, from), content: newContent(to),
+        changedFields: polarionChangedFields(
+          { title: from, wiType: wiTypeOf(from, true), verifyMethod: vm },
+          { title: to, wiType: wiTypeOf(to, false), verifyMethod: vm },
+          descriptionChangedOf(oldNode(from), newNode(to)) || manualRev,
+        ),
+        ...(manualRev ? { manualRevisionLost: true } : {}),
+      });
     }
     for (const name of p.loneAdded) {
       operations.push({ action: 'create', kind, chapter: chapterOf(name, false), title: name, wiType: wiTypeOf(name, false), verifyMethod: vm, detail: '新建工作项，插入对应章节', jsonPath: pathOf(newList, name), content: newContent(name) });
@@ -491,20 +482,30 @@ export function buildPolarionSync(diff: ModuleDiff, oldDesign: ModuleModel, newM
     }
     for (const name of c.changed) {
       const manualRev = isManuallyRevised(oldNode(name)?.generated);
-      operations.push({ action: 'update', kind, chapter: chapterOf(name, false), title: name, wiType: wiTypeOf(name, false), verifyMethod: vm, detail: '内容变更：更新工作项内容' + (manualRev ? MANUAL_REV_HINT : ''), jsonPath: pathOf(newList, name), oldJsonPath: pathOf(oldList, name), content: newContent(name), changedFields: fieldsOf(oldNode(name), newNode(name)), ...(manualRev ? { manualRevisionLost: true } : {}) });
+      operations.push({
+        action: 'update', kind, chapter: chapterOf(name, false), title: name, wiType: wiTypeOf(name, false), verifyMethod: vm,
+        detail: '内容变更：更新工作项内容' + (manualRev ? MANUAL_REV_HINT : ''), jsonPath: pathOf(newList, name),
+        oldJsonPath: pathOf(oldList, name), content: newContent(name),
+        changedFields: polarionChangedFields(
+          { title: name, wiType: wiTypeOf(name, true), verifyMethod: vm },
+          { title: name, wiType: wiTypeOf(name, false), verifyMethod: vm },
+          descriptionChangedOf(oldNode(name), newNode(name)) || manualRev,
+        ),
+        ...(manualRev ? { manualRevisionLost: true } : {}),
+      });
     }
   };
   misc<TypeUnit>('type', () => '5.2.1.2', diff.types,
     (list, name) => idxPath(list, '$.types', name), oldDesign.types, newModel.types,
     (name, isOld) => typeWiType((isOld ? oldDesign.types : newModel.types).find(x => x.name === name)),
-    typeChangedFields);
+    typeDescriptionChanged);
   misc<ConfigMacro>('config', (name, isOld) => {
     const m = (isOld ? oldDesign : newModel).configMacros.find(x => x.name === name);
     return m?.polarion?.chapter ?? '6';
   }, diff.configs,
     (list, name) => idxPath(list, '$.configMacros', name), oldDesign.configMacros, newModel.configMacros,
     () => DESIGN_WITYPE,
-    cfgChangedFields);
+    cfgDescriptionChanged);
 
   // 变量：5.2.3.1 对外变量（GV）/ 5.2.4.1 内部变量（LV），名称相似度配对；验证方法=评审（同 type 口径）
   {
@@ -520,8 +521,8 @@ export function buildPolarionSync(diff: ModuleDiff, oldDesign: ModuleModel, newM
     misc<VariableUnit>('variable', varChapter, diff.variables,
       (list, name) => varPath(list === oldVars ? oldDesign : newModel, name),
       oldVars, newVars,
-      (name, isOld) => varChapter(name, isOld) === '5.2.3.1' ? 'GV' : 'LV',
-      varChangedFields);
+      (name, isOld) => varWiType(varChapter(name, isOld)),
+      varDescriptionChanged);
   }
 
   // 外部接口：操作按 Polarion 工作项粒度出，与报告/marker 一致——
@@ -542,7 +543,11 @@ export function buildPolarionSync(diff: ModuleDiff, oldDesign: ModuleModel, newM
     const cp = pairRenames(cRemoved, cAdded, () => undefined);
     for (const [from, to] of cp.pairs) {
       const manualRev = isManuallyRevised(oldExt.get(from)?.generated);
-      operations.push({ action: 'rename', kind: 'external', chapter: '6.2', title: to, wiType: DESIGN_WITYPE, verifyMethod: VM_TEST, from, detail: RENAME_DETAIL + (manualRev ? MANUAL_REV_HINT : ''), jsonPath: extPath(newModel.calledExternalFunctions, to), oldJsonPath: extPath(oldDesign.calledExternalFunctions, from), content: cloneNode(newExt.get(to)), changedFields: [F_TITLE, ...extChangedFields(oldExt.get(from), newExt.get(to))], ...(manualRev ? { manualRevisionLost: true } : {}) });
+      operations.push({ action: 'rename', kind: 'external', chapter: '6.2', title: to, wiType: DESIGN_WITYPE, verifyMethod: VM_TEST, from, detail: RENAME_DETAIL + (manualRev ? MANUAL_REV_HINT : ''), jsonPath: extPath(newModel.calledExternalFunctions, to), oldJsonPath: extPath(oldDesign.calledExternalFunctions, from), content: cloneNode(newExt.get(to)), changedFields: polarionChangedFields(
+        { title: from, wiType: DESIGN_WITYPE, verifyMethod: VM_TEST },
+        { title: to, wiType: DESIGN_WITYPE, verifyMethod: VM_TEST },
+        extDescriptionChanged(oldExt.get(from), newExt.get(to)) || manualRev,
+      ), ...(manualRev ? { manualRevisionLost: true } : {}) });
     }
     for (const name of cp.loneAdded) {
       operations.push({ action: 'create', kind: 'external', chapter: '6.2', title: name, wiType: DESIGN_WITYPE, verifyMethod: VM_TEST, detail: '新建 Callout 工作项，插入 6.2 节', jsonPath: extPath(newModel.calledExternalFunctions, name), content: cloneNode(newExt.get(name)) });
@@ -552,7 +557,11 @@ export function buildPolarionSync(diff: ModuleDiff, oldDesign: ModuleModel, newM
     }
     for (const name of cChanged) {
       const manualRev = isManuallyRevised(oldExt.get(name)?.generated);
-      operations.push({ action: 'update', kind: 'external', chapter: '6.2', title: name, wiType: DESIGN_WITYPE, verifyMethod: VM_TEST, detail: '签名变更：更新 Callout 工作项内容' + (manualRev ? MANUAL_REV_HINT : ''), jsonPath: extPath(newModel.calledExternalFunctions, name), oldJsonPath: extPath(oldDesign.calledExternalFunctions, name), content: cloneNode(newExt.get(name)), changedFields: extChangedFields(oldExt.get(name), newExt.get(name)), ...(manualRev ? { manualRevisionLost: true } : {}) });
+      operations.push({ action: 'update', kind: 'external', chapter: '6.2', title: name, wiType: DESIGN_WITYPE, verifyMethod: VM_TEST, detail: '签名变更：更新 Callout 工作项内容' + (manualRev ? MANUAL_REV_HINT : ''), jsonPath: extPath(newModel.calledExternalFunctions, name), oldJsonPath: extPath(oldDesign.calledExternalFunctions, name), content: cloneNode(newExt.get(name)), changedFields: polarionChangedFields(
+        { title: name, wiType: DESIGN_WITYPE, verifyMethod: VM_TEST },
+        { title: name, wiType: DESIGN_WITYPE, verifyMethod: VM_TEST },
+        extDescriptionChanged(oldExt.get(name), newExt.get(name)) || manualRev,
+      ), ...(manualRev ? { manualRevisionLost: true } : {}) });
     }
 
     // —— 组表接口：按工作项 title 聚合 ——
@@ -590,10 +599,12 @@ export function buildPolarionSync(diff: ModuleDiff, oldDesign: ModuleModel, newM
         ...changed.map(n => memberEntry(n, 'changed')),
         ...added.map(n => memberEntry(n, 'added')),
       ];
+      // 组表为聚合工作项（无单节点）：操作级 jsonPath/oldJsonPath 指向其首个成员节点，
+      // 成员级明细仍见 members[]（2026-10-19 用户定补齐）
       if (oldMs.length === 0) {
-        operations.push({ action: 'create', kind: 'external', chapter: '5.2.2.2', title, wiType: DESIGN_WITYPE, verifyMethod: VM_TEST, detail: `新建组表工作项（${newMs.length} 个接口）`, content, members });
+        operations.push({ action: 'create', kind: 'external', chapter: '5.2.2.2', title, wiType: DESIGN_WITYPE, verifyMethod: VM_TEST, detail: `新建组表工作项（${newMs.length} 个接口）`, jsonPath: extPath(newModel.calledExternalFunctions, newMs[0]), content, members });
       } else if (newMs.length === 0) {
-        operations.push({ action: 'delete', kind: 'external', chapter: '5.2.2.2', title, wiType: DESIGN_WITYPE, verifyMethod: VM_TEST, detail: `整组移除（原 ${oldMs.length} 个接口）：删除该组表工作项`, members });
+        operations.push({ action: 'delete', kind: 'external', chapter: '5.2.2.2', title, wiType: DESIGN_WITYPE, verifyMethod: VM_TEST, detail: `整组移除（原 ${oldMs.length} 个接口）：删除该组表工作项`, oldJsonPath: extPath(oldDesign.calledExternalFunctions, oldMs[0]), members });
       } else if (added.length + removed.length + changed.length > 0) {
         const parts: string[] = [];
         if (added.length) parts.push(`新增 ${added.join('、')}`);
@@ -601,7 +612,11 @@ export function buildPolarionSync(diff: ModuleDiff, oldDesign: ModuleModel, newM
         if (changed.length) parts.push(`签名变更 ${changed.join('、')}`);
         // 变更成员的旧生成内容有修订痕迹 → 整表重生会覆盖，提示不阻断
         const manualRev = changed.some(n => isManuallyRevised(oldExt.get(n)?.generated));
-        operations.push({ action: 'update', kind: 'external', chapter: '5.2.2.2', title, wiType: DESIGN_WITYPE, verifyMethod: VM_TEST, detail: `组内成员变化（${parts.join('；')}）：更新整表工作项内容` + (manualRev ? MANUAL_REV_HINT : ''), content, members, changedFields: [F_TABLE], ...(manualRev ? { manualRevisionLost: true } : {}) });
+        operations.push({ action: 'update', kind: 'external', chapter: '5.2.2.2', title, wiType: DESIGN_WITYPE, verifyMethod: VM_TEST, detail: `组内成员变化（${parts.join('；')}）：更新整表工作项内容` + (manualRev ? MANUAL_REV_HINT : ''), jsonPath: extPath(newModel.calledExternalFunctions, newMs[0]), oldJsonPath: extPath(oldDesign.calledExternalFunctions, oldMs[0]), content, members, changedFields: polarionChangedFields(
+          { title, wiType: DESIGN_WITYPE, verifyMethod: VM_TEST },
+          { title, wiType: DESIGN_WITYPE, verifyMethod: VM_TEST },
+          true,
+        ), ...(manualRev ? { manualRevisionLost: true } : {}) });
       }
     }
   }

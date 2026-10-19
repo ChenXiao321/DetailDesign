@@ -7,6 +7,7 @@ import type {
   ExternalInterface, ConfigMacro, ConfigUsage, HeaderComment, Parameter, PolarionMarker,
 } from '../model/types.js';
 import { SCHEMA_VERSION } from '../model/types.js';
+import { materializePolarionAttributes } from '../generator/polarionAttributes.js';
 
 export interface InputFile {
   /** 相对路径，如 Gp_EcuStpStdn/Gp_EcuStpShdn.c */
@@ -723,7 +724,7 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
     });
   }
 
-  return {
+  const model: ModuleModel = {
     module,
     schemaVersion: SCHEMA_VERSION,
     analyzedAt: new Date().toISOString(),
@@ -742,4 +743,7 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
     },
     callGraphs,
   };
+  // Polarion 属性物化（wiType/verifyMethod）：analyze 产物即带，与 sync.json 同口径
+  materializePolarionAttributes(model);
+  return model;
 }

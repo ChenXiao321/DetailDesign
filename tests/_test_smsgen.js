@@ -185,7 +185,12 @@ const mkStruct = (name, field, typeName) => ({
     check('gen:迁移解析入库', dd?.stateMachines?.[0]?.transitions.length === 6, JSON.stringify(dd?.stateMachines?.[0]?.transitions));
 
     const html = generateHtmlReport(model);
-    check('report:两节', (html.match(/5\.3\.1 状态机：/g) || []).length === 2);
+    check('report:5.3.1章节唯一', (html.match(/<h3>5\.3\.1 状态机/g) || []).length === 1
+      && !html.includes('5.3.1 状态机：'));
+    check('report:5.3.1角色图两张', (html.match(/<h4>Ecu 状态机（/g) || []).length === 2);
+    check('report:5.3.2章节唯一', (html.match(/<h3>5\.3\.2 序列图/g) || []).length === 1
+      && !html.includes('5.3.2 序列图：'));
+    check('report:5.3.2角色图两张', (html.match(/<h4>Initialization（/g) || []).length === 2);
     check('report:状态表一次', (html.match(/5\.3\.1\.1 状态描述/g) || []).length === 1);
     const transTable = html.match(/5\.3\.1\.2 状态迁移[\s\S]*?<\/table>/)?.[0] ?? '';
     check('report:迁移表合并', (transTable.match(/<tr><td><code>/g) || []).length === 7, transTable.slice(0, 500));

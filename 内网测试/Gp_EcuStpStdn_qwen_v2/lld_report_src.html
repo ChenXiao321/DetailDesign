@@ -1614,7 +1614,8 @@ flowchart LR
 
 <h2 id="s53">5.3 动态设计</h2>
 
-<h3>5.3.1 状态机：Gp_EcuStpShdn 状态机 <span class="badge">工作项 · 5.3.1</span></h3>
+<h3>5.3.1 状态机 <span class="badge">工作项 · 5.3.1</span></h3>
+<h4>Gp_EcuStpShdn 状态机</h4>
 <div class="mermaid">stateDiagram-v2
     [*] --&gt; UNDEF
     UNDEF --&gt; ONE : Gp_EcuStpShdn_Startup
@@ -1642,7 +1643,9 @@ flowchart LR
 <table class="simple"><tr><th>从</th><th>到</th><th>触发条件</th><th>说明</th></tr>
 </table>
 
-<h3>5.3.2 序列图：Initialization（主核 Core0） <span class="badge">工作项 · 5.3.2</span></h3>
+<h3>5.3.2 序列图 <span class="badge">工作项 · 5.3.2</span></h3>
+
+<h4>Initialization（主核 Core0）</h4>
 <p class="muted">Gp_EcuStpShdn startup.</p>
 <div class="mermaid">sequenceDiagram
     participant OS as OS
@@ -1713,7 +1716,7 @@ flowchart LR
         end
     end</pre></details>
 
-<h3>5.3.2 序列图：Initialization（从核 satellite） <span class="badge">工作项 · 5.3.2</span></h3>
+<h4>Initialization（从核 satellite）</h4>
 <p class="muted">Gp_EcuStpShdn startup.</p>
 <div class="mermaid">sequenceDiagram
     participant OS as OS
@@ -1784,7 +1787,7 @@ flowchart LR
         end
     end</pre></details>
 
-<h3>5.3.2 序列图：Runtime（主核 Core0） <span class="badge">工作项 · 5.3.2</span></h3>
+<h4>Runtime（主核 Core0）</h4>
 <p class="muted">Gp_EcuStpShdn main function.</p>
 <div class="mermaid">sequenceDiagram
 participant OS as OS
@@ -1821,7 +1824,7 @@ alt CheckResult is Failed
     Gp-&gt;&gt;CO: Gp_EcuStpShdn_CalloutMcuRunTimeTestFailedHnd
 end</pre></details>
 
-<h3>5.3.2 序列图：Runtime（从核 satellite） <span class="badge">工作项 · 5.3.2</span></h3>
+<h4>Runtime（从核 satellite）</h4>
 <p class="muted">Gp_EcuStpShdn main function.</p>
 <div class="mermaid">sequenceDiagram
 participant OS as OS

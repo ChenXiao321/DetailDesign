@@ -216,9 +216,11 @@ ${diagramBlock(g.diagram)}
   const sms = listStateMachines(dd);
   // 迁移表合并口径：多角色分图时合并各角色迁移并按 从|到|触发 去重（单图产物与旧版逐字节一致）
   const mergedTransitions = [...new Map(sms.flatMap(sm => sm.transitions).map(t => [`${t.from}|${t.to}|${t.trigger}`, t])).values()];
-  // 多核按角色分图时逐角色各渲染一张（与序列图同章号多节的惯例一致）；单图产物输出与旧版逐字节一致
+  // 章节号唯一（2026-10-19 用户定）：多张状态机共用一个 5.3.1 章节标题，
+  // 各角色图名降为无章节号的 h4；工作项 polarion.chapter 仍均为 5.3.1，定位键不变。
   const smSection = sms.length > 0 ? `
-${sms.map(sm => `<h3>5.3.1 状态机：${esc(sm.name)} <span class="badge">工作项 · 5.3.1</span></h3>
+<h3>5.3.1 状态机 <span class="badge">工作项 · 5.3.1</span></h3>
+${sms.map(sm => `<h4>${esc(sm.name)}</h4>
 ${diagramBlock(sm.diagram)}
 <details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">${escRaw(sm.diagram)}</pre></details>`).join('\n')}
 <h3>5.3.1.1 状态描述（每个状态一个工作项）</h3>
@@ -228,7 +230,11 @@ ${sms[0].states.map(s => `<tr><td><code>${esc(s.name)}</code></td><td>${esc(s.de
 <table class="simple"><tr><th>从</th><th>到</th><th>触发条件</th><th>说明</th></tr>
 ${mergedTransitions.map(t => `<tr><td><code>${esc(t.from)}</code></td><td><code>${esc(t.to)}</code></td><td>${esc(t.trigger)}</td><td>${esc(t.description)}</td></tr>`).join('')}</table>` : '';
 
-  const seqSection = (dd?.sequences ?? []).map(s => {
+  // 章节号唯一：多张序列图共用一个 5.3.2 章节标题，场景/角色名降为 h4。
+  const seqs = dd?.sequences ?? [];
+  const seqSection = seqs.length > 0 ? `
+<h3>5.3.2 序列图 <span class="badge">工作项 · 5.3.2</span></h3>
+${seqs.map(s => {
     // 平铺警告（存量产物补网）：入口函数源码含分支/循环而图全图无组合片段——gen 期硬校验拦不住旧产物
     const scenarioFn = model.providedFunctions.find(f =>
       s.name.startsWith('Initialization') ? /_(Startup|Init)$/i.test(f.name) : /_MainFunction$/i.test(f.name));
@@ -237,11 +243,11 @@ ${mergedTransitions.map(t => `<tr><td><code>${esc(t.from)}</code></td><td><code>
       console.warn(`⚠ 序列图检查: ${s.name} 全图无组合片段，但函数 ${scenarioFn.name} 源码含分支/循环，疑似平铺（需重生成 dynamic）`);
     }
     return `
-<h3>5.3.2 序列图：${esc(s.name)} <span class="badge">工作项 · 5.3.2</span></h3>
+<h4>${esc(s.name)}</h4>
 <p class="muted">${esc(s.description)}</p>
 ${diagramBlock(s.diagram)}
 <details><summary class="muted small">查看图源码（Mermaid，可 diff）</summary><pre class="plantuml">${escRaw(s.diagram)}</pre></details>`;
-  }).join('\n');
+  }).join('\n')}` : '';
 
   // ---- 6 配置（6.1 通用 / 6.2 功能，每个配置项一个子章节） ----
   // 使用方式/配置示例物化自 doc.configDetails；别名宏注物化自 doc.aliasNote

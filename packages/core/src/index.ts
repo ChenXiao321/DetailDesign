@@ -21,6 +21,9 @@ export { buildDocumentContent, type AbbrTableInput } from './generator/staticDoc
 export { diffModules, applyModuleDiff, buildPolarionSync, type ModuleDiff, type NameChanges, type FunctionChange, type PolarionSync, type SyncOperation } from './generator/modelDiff.js';
 export { computeContentHash, stampContentHash, isManuallyRevised } from './generator/contentHash.js';
 export {
+  materializePolarionAttributes, fnWiType, typeWiType, varWiType, DESIGN_WITYPE, VM_TEST, VM_REVIEW,
+} from './generator/polarionAttributes.js';
+export {
   collectDiagrams, buildBatchPage, extractDiagramSvgs, svgNaturalSize, pickShotParams,
   wrapSvgShotPage, hasDiagramPng, applyDiagramPng, syncSmAliasPng, type DiagramEntry,
 } from './report/imageBatch.js';

@@ -15,6 +15,7 @@ import { buildStaticStateMachine, polishSmLabels } from './staticStateMachine.js
 import { buildStaticSequence } from './staticSequence.js';
 import { buildDocumentContent, type AbbrTableInput } from './staticDocument.js';
 import { stampContentHash } from './contentHash.js';
+import { materializePolarionAttributes } from './polarionAttributes.js';
 
 /** 流程图断言网（纯函数，导出供静态生成器自检与测试直喂恶意图）：
  *  词法 lint + 结构 lint + 条件编译虚线框存在性 + 编译期宏禁入菱形；返回中文问题清单（空 = 通过） */
@@ -309,6 +310,9 @@ export async function generateDesign(
 
   // 结构版本回填：存量 json（v1 前形态）经任何 gen 通道写回时补 schemaVersion
   model.schemaVersion ??= SCHEMA_VERSION;
+  // Polarion 属性物化（wiType/verifyMethod）：任何 gen 通道（含 --only document/flowcharts 早退路径）
+  // 都先幂等重刷五类节点与章节级条目；gen 期新创建的状态机/序列图由末尾的第二次调用补齐
+  materializePolarionAttributes(model);
 
   // 报告骨架内容物化（零 LLM 确定性，幂等重算）。--only document（可叠加 flowcharts）时
   // 免 provider 直接物化；全量 gen 在末尾统一物化——3.1 出现过滤扫描 generated 文本，
@@ -536,6 +540,9 @@ export async function generateDesign(
 
   // 末尾统一物化报告骨架内容（全量 gen 或 --only 含 document 且混杂 LLM 阶段时在此落地）
   if (!only || only.includes('document')) docStage();
+
+  // Polarion 属性第二次物化：gen 期才创建的状态机/序列图 marker 在此补齐（幂等覆盖写）
+  materializePolarionAttributes(model);
 
   return model;
 }

@@ -44,11 +44,11 @@ Modu.LLD 在模块代码改版后（`update` / `run` 自动更新流程）产出
 | `verifyMethod` | string | 「验证方法」属性枚举 ID，直接填入 Polarion（映射见 §6.0） |
 | `from` | string? | rename 时的旧名（仅 rename 携带） |
 | `detail` | string | 中文操作建议，**仅供人工阅读**，工具不得解析此文本做决策 |
-| `jsonPath` | string? | 条目在新 design json 的节点路径（对账用；delete 无此字段） |
-| `oldJsonPath` | string? | 条目在旧 design json 的节点路径（对账用；create 无此字段） |
+| `jsonPath` | string? | 条目在新 design json 的节点路径（对账用；delete 无此字段；组表工作项为聚合节点，指向其首个成员） |
+| `oldJsonPath` | string? | 条目在旧 design json 的节点路径（对账用；create 无此字段；组表工作项同上指首个成员） |
 | `content` | object/array? | 新内容原文深拷贝（delete 不携带），字段映射见 §6 |
 | `members` | array? | 组表工作项成员级变化明细（仅 external 组表，见 §6.3） |
-| `changedFields` | string[]? | 变更字段清单（Polarion 逻辑字段口径，仅 update/rename 携带），取值见 §6.6 |
+| `changedFields` | string[]? | 变更属性清单（实际写入 Polarion 的 `title`/描述/`wiType`/`verifyMethod` 口径，仅 update/rename 携带），见 §6.6 |
 | `signatureChanged` | bool? | 仅 function：签名哈希变化=接口面变更（评审重点关注，不阻断），见 §5.2 |
 | `manualRevisionLost` | bool? | 产出方指纹检出：旧内容生成后曾被人工修订，本次覆盖将丢失（提示不阻断），见 §5.2 |
 
@@ -67,6 +67,26 @@ Modu.LLD 在模块代码改版后（`update` / `run` 自动更新流程）产出
 
 工具开工前**必须**校验：任一 `content` 缺生成字段（如 function 无 `generated`）即判定为
 分析态同步单，拒绝正式执行并提示「请先跑完 update 流程」。
+
+### 2.5 全量读取去重（状态机兼容别名）
+
+若首版全量导入通道需要直接读取 `lld_design.json`：多核产物的 `dynamicDesign.stateMachine`
+是兼容旧版读取方的别名，恒等于 `dynamicDesign.stateMachines[0]`。读取状态机时**必须**：
+`stateMachines[]` 非空则只使用该数组并忽略 `stateMachine`；否则才回退读取 `stateMachine`。
+不得把两者合并扫描，否则主核 5.3.1 状态机会被重复识别。同步单的 `chapterUpdates.content`
+已由产出方按该去重口径生成。
+
+### 2.6 design json 侧的属性物化（2026-10-19 用户定）
+
+`wiType`/`verifyMethod` 同时物化在 `lld_design.json` 内，与同步单取值完全一致（同一套推导代码）：
+
+- **工作项节点**：各节点的 `polarion` 标记对象内带 `wiType`/`verifyMethod` 两字段——五类工作项
+  （函数/变量/类型/外部接口/配置宏）+ 图节点（状态机全角色图、序列图、功能接口总图、内部函数调用图）。
+- **章节级工作项**：无节点可挂的章节（5.1 模块功能描述、4.1 文件清单、7 评估与圈复杂度表、
+  3.1 缩写表、3.2 定义表）在顶层 `polarionChapterItems` 数组列出，恒 `wiType=Design`、`verifyMethod=review`。
+- **产出时机**：analyze、全量 gen、update/diff 合并落盘三处均物化（幂等覆盖写）；存量旧 json 无此字段，
+  下次 gen/update 自动补齐（零 LLM 可用 `gen --only document --resume` 就地补刷）。
+- 同步单（lld_polarion_sync.json）仍是**执行口径**；design json 侧字段供全量导入通道与人工核查直读。
 
 ## 3. 工作项定位规则
 
@@ -93,11 +113,12 @@ Modu.LLD 在模块代码改版后（`update` / `run` 自动更新流程）产出
 
 ### 5.1 create
 
-1. 在 `chapter` 对应的文档位置新建工作项，类型按 `kind`（映射表见 §13 待定项）。
+1. 在 `chapter` 对应的文档位置新建工作项；「类型」属性直接照填操作单携带的 `wiType`（§6.0），不再由工具按 `kind` 自行映射（Polarion 原生 work item type ID 的映射仍属 §13 待定项）。
 2. `title` = `SyncOperation.title`。
 3. 按 §6 字段映射表，用 `content` 填内容字段。
 4. 图字段：`content` 内 PNG base64 解码后以**内嵌图片或附件**挂入（§8）。
-5. 幂等：若 §3 定位已命中同名工作项，转为 `update` 而不是报错。
+5. **状态**：新建工作项初始即为「待评审」（具体状态枚举值见 §13 待定项）。
+6. 幂等：若 §3 定位已命中同名工作项，转为 `update` 而不是报错。
 
 ### 5.2 update（语义已定，2026-10-16）
 
@@ -106,7 +127,7 @@ Modu.LLD 在模块代码改版后（`update` / `run` 自动更新流程）产出
    **不得触碰**：工作项 ID、创建人/创建时间、追溯链接（linked work items）、
    审批状态以外的 Polarion 侧人工维护字段（如评审结论）。
 3. 内容字段覆盖是全量替换语义：旧内容中与 `content` 矛盾的部分以 `content` 为准。
-   `changedFields` 给出本次实际变化的逻辑字段清单（§6.6）——作为工具局部优化与
+   `changedFields` 给出本次实际变化的 Polarion 写入属性清单（§6.6）——作为工具局部优化与
    人审摘要的**提示**；工具实现初期可忽略它直接整段覆盖，语义等价。
 4. **`wiType`/`verifyMethod` 随 update 同步刷新**（已定）：操作单携带的是按新模型算好的
    最新值（如函数从内部改为对外，章节与 IF/LF 类型一起变），工具照填覆盖即可，
@@ -114,9 +135,8 @@ Modu.LLD 在模块代码改版后（`update` / `run` 自动更新流程）产出
 5. **状态退回待评审**（已定）：内容变更后原评审结论失效，执行 update 后将工作项状态
    打回「待评审」（具体状态枚举值见 §13 待定项），由评审人重新过；rename 因同样刷新
    内容，一并退回。create 新建的工作项初始即待评审态。
-6. **签名变更标记**（已定）：函数 `signatureChanged: true`（或 `changedFields` 含「签名」）
-   =接口面变更，调用方可能受影响——工具在对账报告中**高亮**此类操作供评审定夺，
-   不强制额外流程、不阻断。
+6. **签名变更标记**（已定）：函数 `signatureChanged: true` =接口面变更，调用方可能受影响——
+   工具在对账报告中**高亮**此类操作供评审定夺，不强制额外流程、不阻断。
 7. **人工修订检出**（已定，产出方指纹口径）：`manualRevisionLost: true` = 产出方比对
    生成时刻内容指纹（design json `generated.contentHash`）发现该条目旧内容被人工改过，
    本次 `content` 覆盖将丢失该修订。工具在对账报告标注即可，**默认提示不阻断**
@@ -140,16 +160,18 @@ Modu.LLD 在模块代码改版后（`update` / `run` 自动更新流程）产出
 
 1. 按 `chapter` + **`from`（旧名）** 定位工作项。
 2. 改 title 为 `title`（新名），然后按 §5.2 刷新内容字段（`content` 已是新名节点的原文）。
-3. **严禁**「删除旧工作项 + 新建新工作项」——那会丢失工作项 ID、历史与追溯链接。
+3. **状态**：rename 执行后工作项状态退回「待评审」（同 §5.2-5，具体状态枚举值见 §13 待定项）。
+4. **严禁**「删除旧工作项 + 新建新工作项」——那会丢失工作项 ID、历史与追溯链接。
    同步单 `detail` 字段对此已有同样提示。
-4. rename 是产出方按名称相似度（LCS ≥0.8 或语义键相同）配对的**疑似**结果：
+5. rename 是产出方按名称相似度（LCS ≥0.8 或语义键相同）配对的**疑似**结果：
    工具须支持 dry-run 模式先输出 rename 配对清单供人工确认；确认名单外的 rename 按
    delete+create 处理（在对账报告中显式标注「改名未确认，已按删+建执行」）。
 
 ## 6. 字段映射（content → Polarion）
 
-> Polarion 侧的自定义字段 ID 依项目模板而定，§13 列出待定项；下表给出**逻辑字段**映射。
-> 「描述正文」指工作项 description；表格类工作项指内容以表格呈现的工作项。
+> 实际写入 Polarion 的属性为 `title`、描述、`wiType`、`verifyMethod`（2026-10-19 用户确认）。
+> 下表中的签名、参数表、流程图、表格等内容项统一组成「描述」，不作为独立写入属性；
+> 「描述正文」指工作项 description。Polarion 侧自定义字段 ID 依项目模板而定，§13 列出待定项。
 
 ### 6.0 工作项「类型」属性（已定，2026-10-16 用户确认枚举）
 
@@ -248,25 +270,23 @@ title=`name`；签名=`signature`；描述=`generated.detailedDescription`；
 
 ### 6.6 changedFields 取值口径（仅 update/rename 携带）
 
-取值为本节 §6.1~6.5 各映射表左列的 **Polarion 逻辑字段名**（非 design json 节点字段名），
-聚合已由产出方做好，工具可直接与字段映射表对照消费：
+`changedFields` 只列**实际写入 Polarion 的属性**，可选值固定为 `title`、描述、`wiType`、`verifyMethod`；
+不再把描述内部的签名、流程图、复杂度、表格等拆成独立属性：
 
-| kind | 可能出现的取值 | 触发条件（比对键语义面） |
-|---|---|---|
-| function | `签名`、`参数表` | 签名哈希变化（此时另带 `signatureChanged: true`） |
-| function | `描述正文`、`流程图`、`圈复杂度`、`死循环标记`、`调用关系`、`条件编译` | 函数体哈希变化（六者同为实现面派生字段，打包列出） |
-| type | `类型类别` / `成员/常量表` | kind/underlyingType 变化 / struct 元素或枚举关联宏变化 |
-| external（Callout） | `签名` / `所属组` | signature / group 变化 |
-| external（组表） | `整表内容` | 成员增删或成员签名变化（明细看 `members`） |
-| config | `取值/形式` / `类别` | value/isFunctionLike / kind 变化 |
-| variable | `类型` / `限定符` | type / isStatic·isConst·isVolatile 变化 |
-| 一切 rename | 首元素恒为 `title`，后随上述内容字段（如有） | — |
+| 取值 | 触发条件 |
+|---|---|
+| `title` | 新旧工作项 title 不同（rename） |
+| 描述 | §6.1~6.5 的描述组成内容发生语义变化，或旧生成内容曾被人工修订、本次将被覆盖 |
+| `wiType` | 新旧工作项「类型」枚举值不同，如 IF→LF、TDB→TDST、LV→GV |
+| `verifyMethod` | 新旧「验证方法」枚举值不同 |
 
-边界（须理解，勿当缺陷）：
-- 清单颗粒度**最多细到比对键覆盖的语义面**——注释、行号、文件位置等不在比对键内的
-  字段变化永远不会出现在清单里（它们也从不触发 update）；
-- `create`（全部字段都是新的）与 `delete`（无内容）不携带 `changedFields`；
-- 函数「实现面」六字段是打包口径：函数体变了，这些派生内容全部重生，不再细分。
+边界：
+- 函数签名变化时，描述标记为变更，同时另带 `signatureChanged: true` 供接口影响评审高亮；
+  `changedFields` 中不再出现「签名」「参数表」。
+- `create`（全部属性都是新的）与 `delete`（无新内容）不携带 `changedFields`。
+- 纯改名且描述内容未变时为 `[title]`；改名同时内容变化时为 `[title, 描述]`；
+  `wiType`/`verifyMethod` 只在新旧值确实不同时追加。
+- 注释、行号、文件位置等不触发 update 的噪声不产生属性变更项；PNG 字节差异同样不算。
 
 ## 7. chapterUpdates（章节级更新）
 
@@ -283,6 +303,11 @@ title=`name`；签名=`signature`；描述=`generated.detailedDescription`；
 | `4.2` | 接口总图 | `{ diagram, diagramPng }` | 图替换 |
 | `4.2` | 调用图 | `{ changed: [{name,diagram,diagramPng}], removed: [名字] }` | changed 逐张替换，removed 逐张移除 |
 | `3.1/3.2` | 缩写表/定义表 | `{ abbreviations, definitions, abbreviationGaps }` | 整表替换；`abbreviationGaps` 非空=有未定义缩写，须在对账报告提示维护方补表 |
+
+**章节标题唯一性（已定，2026-10-19 用户确认）**：同一逻辑章节包含多张图/多个条目时，
+文档正文中的章节号标题只出现一次；各图或条目改用不含章节号的角色/场景子标题区分
+（如 5.3.1 下分「主核 Core0」「从核 satellite」，5.3.2 下分各序列图场景）。工作项的
+`chapter` 属性仍保留原章节号，§3 的 `(chapter, title)` 定位规则不变。
 
 章节级更新与工作项操作**无顺序依赖**，可在 operations 全部完成后统一执行。
 
@@ -336,7 +361,7 @@ title=`name`；签名=`signature`；描述=`generated.detailedDescription`；
 | 项 | 说明 |
 |---|---|
 | 工作项类型 ID | function/type/external/config 各自对应的 Polarion work item type（注意：与 §6.0 的「类型」自定义属性是两回事） |
-| 自定义字段 ID | 签名/圈复杂度/死循环/条件编译/源位置/调用关系等逻辑字段的实际字段名；「类型」属性的字段名也在此列（枚举值已定，见 §6.0） |
+| 自定义字段 ID | 「类型」（wiType）与「验证方法」（verifyMethod）两个属性的实际字段名；title/description 使用 Polarion 标准属性，描述内部组成见 §6 |
 | ~~「验证方法」属性~~ | **已定**（§6.0）：function/Callout/组表/config=test，type/章节级更新=review；「类型」「验证方法」两属性在 Polarion 侧的字段名待落实 |
 | 文档定位方式 | chapter → Polarion 文档/章节的映射（LiveDocument 结构或工作项层级） |
 | API 通道 | REST API 端点/认证方式；或走导入文件 round-trip |

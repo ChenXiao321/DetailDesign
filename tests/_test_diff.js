@@ -342,9 +342,15 @@ const model = (over = {}) => ({
   ok(spi.members.find(m => m.name === 'Spi_Send').jsonPath === '$.calledExternalFunctions[0]'
     && spi.members.find(m => m.name === 'Spi_Recv').oldJsonPath === '$.calledExternalFunctions[1]',
     'S9 members 带节点路径');
-  ok(find('Adc 接口函数')?.action === 'delete', 'S9 整组移除→delete 组表');
+  ok(spi.jsonPath === '$.calledExternalFunctions[0]' && spi.oldJsonPath === '$.calledExternalFunctions[0]',
+    'S9 组表 update 操作级路径=首个成员节点（2026-10-19 补齐）');
+  const adc = find('Adc 接口函数');
+  ok(adc?.action === 'delete' && adc.oldJsonPath === '$.calledExternalFunctions[2]' && adc.jsonPath === undefined,
+    'S9 整组移除→delete 组表（带 oldJsonPath=原首个成员）');
   const pwm = find('Pwm 接口函数');
-  ok(pwm?.action === 'create' && Array.isArray(pwm.content) && pwm.content[0].name === 'Pwm_Set', 'S9 新组→create 组表');
+  ok(pwm?.action === 'create' && pwm.jsonPath === '$.calledExternalFunctions[2]' && pwm.oldJsonPath === undefined
+    && Array.isArray(pwm.content) && pwm.content[0].name === 'Pwm_Set',
+    'S9 新组→create 组表（带 jsonPath=首个成员）');
   ok(!sync.operations.some(o => ['Spi_Send', 'Spi_Recv', 'Spi_Write', 'Adc_Read', 'Pwm_Set'].includes(o.title)),
     'S9 组表成员不再按单条出操作');
   ok(find('Gp_CoV2')?.action === 'rename' && find('Gp_CoV2')?.from === 'Gp_Co' && find('Gp_CoV2')?.chapter === '6.2',
@@ -468,6 +474,7 @@ const model = (over = {}) => ({
       fn('LegChg', 's4', 'b4', true),   // 旧版产物：无指纹
       stampedFn('RenOld', 's5', 'b5'),
     ],
+    internalFunctions: [stampedFn('MoveFn', 's6', 'b6')],
   });
   const nw = model({
     providedFunctions: [
@@ -476,6 +483,7 @@ const model = (over = {}) => ({
       fn('RevChg', 's3', 'b3x'),
       fn('LegChg', 's4', 'b4x'),
       fn('RenNew', 's5', 'b5'),
+      fn('MoveFn', 's6', 'b6x'),
     ],
   });
   const sync = buildPolarionSync(diffModules(old, nw), old, nw);
@@ -483,17 +491,19 @@ const model = (over = {}) => ({
 
   const sigOp = find('SigChg');
   ok(sigOp?.action === 'update' && sigOp.signatureChanged === true
-    && sigOp.changedFields.join() === '签名,参数表', 'S12 函数签名变更→signatureChanged+changedFields=[签名,参数表]');
+    && sigOp.changedFields.join() === '描述', 'S12 函数签名变更→signatureChanged+changedFields=[描述]');
   const bodyOp = find('BodyChg');
-  ok(bodyOp?.signatureChanged === undefined && bodyOp.changedFields.includes('描述正文')
-    && bodyOp.changedFields.includes('流程图') && bodyOp.changedFields.includes('圈复杂度')
-    && bodyOp.changedFields.length === 6, 'S12 函数实现变更→实现面 6 字段，无 signatureChanged');
+  ok(bodyOp?.signatureChanged === undefined && bodyOp.changedFields.join() === '描述',
+    'S12 函数实现变更→changedFields=[描述]，无 signatureChanged');
   ok(find('RevChg')?.manualRevisionLost === true && find('RevChg').detail.includes('人工修订'),
     'S12 人工修订条目→manualRevisionLost+detail 提示');
   ok(find('LegChg')?.manualRevisionLost === undefined, 'S12 旧版无指纹条目不带 manualRevisionLost');
   const ren = find('RenNew');
   ok(ren?.action === 'rename' && ren.changedFields[0] === 'title' && ren.changedFields.length === 1
     && ren.signatureChanged === undefined, 'S12 函数改名→changedFields=[title]，语义未变不带签名标记');
+  const move = find('MoveFn');
+  ok(move?.wiType === 'IF' && move.changedFields.join() === '描述,wiType',
+    'S12 函数内部转对外且实现变化→changedFields=[描述,wiType]');
 
   // —— 类型 / 配置宏 / 变量 / 外部接口字段口径 ——
   const vr = (name, type, over = {}) => ({
@@ -507,6 +517,7 @@ const model = (over = {}) => ({
     types: [
       typ('TKind', 'uint8'),
       { ...typ('TElem', undefined), kind: 'struct', elements: [{ name: 'm', type: 'uint8', comment: null }] },
+      typ('TToStruct', 'uint8'),
     ],
     configMacros: [cfg('CVal', '1'), cfg('CKind', '1')],
     providedVariables: [vr('VType', 'uint8'), vr('VQual', 'uint8')],
@@ -519,6 +530,7 @@ const model = (over = {}) => ({
     types: [
       typ('TKind', 'uint16'),
       { ...typ('TElem', undefined), kind: 'struct', elements: [{ name: 'm', type: 'uint16', comment: null }] },
+      { ...typ('TToStruct', undefined), kind: 'struct', elements: [{ name: 'm', type: 'uint8', comment: null }] },
     ],
     configMacros: [cfg('CVal', '2'), { ...cfg('CKind', '1'), kind: 'functional' }],
     providedVariables: [vr('VType', 'uint32'), vr('VQual', 'uint8', { isStatic: true })],
@@ -530,14 +542,20 @@ const model = (over = {}) => ({
   const sync2 = buildPolarionSync(diffModules(old2, nw2), old2, nw2);
   const find2 = (t) => sync2.operations.find(o => o.title === t);
 
-  ok(find2('TKind')?.changedFields.join() === '类型类别', 'S12 类型类别变更→[类型类别]');
-  ok(find2('TElem')?.changedFields.join() === '成员/常量表', 'S12 struct 成员变更→[成员/常量表]');
-  ok(find2('CVal')?.changedFields.join() === '取值/形式', 'S12 配置宏取值变更→[取值/形式]');
-  ok(find2('CKind')?.changedFields.join() === '类别', 'S12 配置宏类别变更→[类别]');
-  ok(find2('VType')?.changedFields.join() === '类型', 'S12 变量类型变更→[类型]');
-  ok(find2('VQual')?.changedFields.join() === '限定符', 'S12 变量限定符变更→[限定符]');
-  ok(find2('Gp_Co')?.changedFields.join() === '签名', 'S12 Callout 签名变更→[签名]');
-  ok(find2('Spi 接口函数')?.changedFields.join() === '整表内容', 'S12 组表成员变化→[整表内容]');
+  ok(find2('TKind')?.changedFields.join() === '描述', 'S12 类型内容变更→[描述]');
+  ok(find2('TElem')?.changedFields.join() === '描述', 'S12 struct 成员变更→[描述]');
+  ok(find2('TToStruct')?.changedFields.join() === '描述,wiType', 'S12 普通 typedef 转 struct→[描述,wiType]');
+  ok(find2('CVal')?.changedFields.join() === '描述', 'S12 配置宏取值变更→[描述]');
+  ok(find2('CKind')?.changedFields.join() === '描述', 'S12 配置宏类别变更→[描述]');
+  ok(find2('VType')?.changedFields.join() === '描述', 'S12 变量类型变更→[描述]');
+  ok(find2('VQual')?.changedFields.join() === '描述', 'S12 变量限定符变更→[描述]');
+  ok(find2('Gp_Co')?.changedFields.join() === '描述', 'S12 Callout 签名变更→[描述]');
+  ok(find2('Spi 接口函数')?.changedFields.join() === '描述', 'S12 组表成员变化→[描述]');
+  const allowedFields = new Set(['title', '描述', 'wiType', 'verifyMethod']);
+  ok([...sync.operations, ...sync2.operations]
+    .filter(o => o.action === 'update' || o.action === 'rename')
+    .every(o => o.changedFields?.length > 0 && o.changedFields.every(f => allowedFields.has(f))),
+    'S12 changedFields 仅含 title/描述/wiType/verifyMethod 四个实际写入属性');
   ok(sync2.operations.filter(o => o.action === 'create').every(o => o.changedFields === undefined)
     && sync2.operations.filter(o => o.action === 'delete').every(o => o.changedFields === undefined),
     'S12 create/delete 不带 changedFields');

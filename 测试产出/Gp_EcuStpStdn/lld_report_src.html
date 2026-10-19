@@ -1327,7 +1327,8 @@ flowchart LR
 
 <h2 id="s53">5.3 动态设计</h2>
 
-<h3>5.3.1 状态机：Gp_EcuStpShdn 启动阶段状态机 <span class="badge">工作项 · 5.3.1</span></h3>
+<h3>5.3.1 状态机 <span class="badge">工作项 · 5.3.1</span></h3>
+<h4>Gp_EcuStpShdn 启动阶段状态机</h4>
 <div class="mermaid">stateDiagram-v2
     [*] --&gt; UNDEF : 上电复位
     UNDEF --&gt; STAGE_ONE : 各核进入 Gp_EcuStpShdn_Startup
@@ -1353,7 +1354,9 @@ flowchart LR
 <table class="simple"><tr><th>从</th><th>到</th><th>触发条件</th><th>说明</th></tr>
 <tr><td><code>UNDEF</code></td><td><code>STAGE_ONE</code></td><td>各核进入 Gp_EcuStpShdn_Startup</td><td>master 在阶段一初始化运行时缓冲区后将 StpStage_t 置为 STAGE_TWO</td></tr><tr><td><code>STAGE_ONE</code></td><td><code>STAGE_TWO</code></td><td>master 完成阶段一初始化</td><td>satellite 核通过自旋等待 StpStage_t == STAGE_TWO 实现屏障同步</td></tr><tr><td><code>STAGE_TWO</code></td><td><code>STAGE_THREE</code></td><td>master 完成阶段二全部处理</td><td>master 完成初始化检查后 StpStage_t 置为 STAGE_THREE，satellite 解除等待开始自身初始化</td></tr><tr><td><code>STAGE_TWO</code></td><td><code>[*]</code></td><td>TryPwrShdn_b == TRUE</td><td>调用 Gp_EcuStpShdn_CalloutPwrShdnInStpPhase，程序不再返回</td></tr><tr><td><code>STAGE_TWO</code></td><td><code>[*]</code></td><td>SafeState_b == TRUE</td><td>安全状态初始化（SBC 安全状态初始化）后进入 Gp_EcuStpShdn_CalloutSafeState</td></tr></table>
 
-<h3>5.3.2 序列图：Initialization（主核 Core0） <span class="badge">工作项 · 5.3.2</span></h3>
+<h3>5.3.2 序列图 <span class="badge">工作项 · 5.3.2</span></h3>
+
+<h4>Initialization（主核 Core0）</h4>
 <p class="muted">Gp_EcuStpShdn_Startup 初始化序列（主核 Core0）：三阶段启动过程中主核侧的交互顺序</p>
 <div class="mermaid">sequenceDiagram
     actor EcuM
@@ -1428,7 +1431,7 @@ flowchart LR
     M-&gt;&gt;M: StpStage_t 置为 STAGE_THREE
     Note right of M: 解除 satellite 阶段二自旋等待</pre></details>
 
-<h3>5.3.2 序列图：Initialization（从核 satellite） <span class="badge">工作项 · 5.3.2</span></h3>
+<h4>Initialization（从核 satellite）</h4>
 <p class="muted">Gp_EcuStpShdn_Startup 初始化序列（从核 satellite）：三阶段启动过程中从核侧的交互顺序，自旋等待与 master 屏障同步</p>
 <div class="mermaid">sequenceDiagram
     actor EcuM
@@ -1483,7 +1486,7 @@ flowchart LR
         S-&gt;&gt;CO: CalloutInitFailedHnd(InitRsltAllBits)
     end</pre></details>
 
-<h3>5.3.2 序列图：Runtime（主核 Core0） <span class="badge">工作项 · 5.3.2</span></h3>
+<h4>Runtime（主核 Core0）</h4>
 <p class="muted">Gp_EcuStpShdn_Mainfunction 周期运行序列（主核 Core0）：含最后 satellite 初始化时间戳记录与 MCU 运行时测试结果检查</p>
 <div class="mermaid">sequenceDiagram
     actor OS
@@ -1526,7 +1529,7 @@ flowchart LR
         Note right of MF: 跳过 MCU 运行时测试
     end</pre></details>
 
-<h3>5.3.2 序列图：Runtime（从核 satellite） <span class="badge">工作项 · 5.3.2</span></h3>
+<h4>Runtime（从核 satellite）</h4>
 <p class="muted">Gp_EcuStpShdn_Mainfunction 周期运行序列（从核 satellite）：仅执行 MCU 运行时测试</p>
 <div class="mermaid">sequenceDiagram
     actor OS

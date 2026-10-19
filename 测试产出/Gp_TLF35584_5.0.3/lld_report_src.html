@@ -4221,7 +4221,8 @@ flowchart LR
 
 <h2 id="s53">5.3 动态设计</h2>
 
-<h3>5.3.1 状态机：Gp_TLF35584 运行状态机 <span class="badge">工作项 · 5.3.1</span></h3>
+<h3>5.3.1 状态机 <span class="badge">工作项 · 5.3.1</span></h3>
+<h4>Gp_TLF35584 运行状态机</h4>
 <div class="mermaid">stateDiagram-v2
     [*] --&gt; INITIAL_TASK : 上电（PreInit 置位）
     INITIAL_TASK --&gt; WAIT : Gp_TLF35584_Init 完成
@@ -4251,7 +4252,9 @@ flowchart LR
 <table class="simple"><tr><th>从</th><th>到</th><th>触发条件</th><th>说明</th></tr>
 </table>
 
-<h3>5.3.2 序列图：Initialization <span class="badge">工作项 · 5.3.2</span></h3>
+<h3>5.3.2 序列图 <span class="badge">工作项 · 5.3.2</span></h3>
+
+<h4>Initialization</h4>
 <p class="muted">TLF35584 init function,include watchdog initialization</p>
 <div class="mermaid">sequenceDiagram
     actor ASW as EcuM/ASW
@@ -4316,7 +4319,7 @@ flowchart LR
     end
     Note right of INIT: StateVar 置 WAIT，等待用户 SetDevSigModeOut 请求切 NORMAL</pre></details>
 
-<h3>5.3.2 序列图：Runtime <span class="badge">工作项 · 5.3.2</span></h3>
+<h4>Runtime</h4>
 <p class="muted">TLF35584 main state,service wdg,get wdg infomation,update err infomation</p>
 <div class="mermaid">sequenceDiagram
     actor OS

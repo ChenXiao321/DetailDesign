@@ -68,7 +68,7 @@ const model = (over = {}) => ({
   ok(m.dynamicDesign?.stateMachine?.name === 'SM' && m.dynamicDesign.sequences.length === 1, 'S1 动态设计整节保留');
   ok(m.document === undefined, 'S1 document 节恒失效（待重物化）');
   ok(m.interfaceOverview.diagramPng === 'PNG_IO' && m.callGraphs[0].diagramPng === 'PNG_CG', 'S1 图源一致的 PNG 回挂');
-  ok(m.schemaVersion === 1, 'S1 schemaVersion 保留');
+  ok(m.schemaVersion === 2, 'S1 schemaVersion 经 normalize 升级为 v2');
 }
 
 // ================= 场景 2：函数体变更 + 新增 + 删除 =================
@@ -284,6 +284,36 @@ const model = (over = {}) => ({
   ok(cu8('5.1', '模块功能描述')?.content === undefined && cu8('7', '评估与圈复杂度表')?.content === undefined,
     'S8a gen 产物（5.1 描述/7 评估表）diff 阶段无 content（update gen 后刷新补入）');
 
+  // 章节级更新 jsonPath/oldJsonPath（1020 补齐）：jsonPath 恒在（路径静态可知），
+  // oldJsonPath 仅旧 json 实有该节点才带。本夹具 old 有 files/interfaceOverview/callGraphs，无 dynamicDesign/document
+  ok(cu8('5.1', '模块功能描述')?.jsonPath === '$.functionalDescription'
+    && cu8('5.1', '模块功能描述')?.oldJsonPath === undefined, 'S8a 5.1 描述 jsonPath 在、旧侧无节点不带 oldJsonPath');
+  ok(cu8('5.3.1', '状态机')?.jsonPath === '$.dynamicDesign.stateMachines'
+    && cu8('5.3.1', '状态机')?.oldJsonPath === undefined, 'S8a 5.3.1 状态机 jsonPath 在、旧侧无 dynamicDesign 不带');
+  ok(cu8('5.3.2', '序列图')?.jsonPath === '$.dynamicDesign.sequences'
+    && cu8('5.3.2', '序列图')?.oldJsonPath === undefined, 'S8a 5.3.2 序列图 jsonPath 在、旧侧不带');
+  ok(cu8('7', '评估与圈复杂度表')?.jsonPath === '$.document' && cu8('7', '评估与圈复杂度表')?.oldJsonPath === undefined
+    && cu8('3.1/3.2', '缩写表/定义表')?.jsonPath === '$.document', 'S8a 7/3.x 锚到父节点 $.document');
+  ok(cu8('4.1', '文件清单')?.jsonPath === '$.files' && cu8('4.1', '文件清单')?.oldJsonPath === '$.files',
+    'S8a 4.1 文件清单双向路径齐');
+  ok(cu8('4.2', '接口总图')?.jsonPath === '$.interfaceOverview' && cu8('4.2', '接口总图')?.oldJsonPath === '$.interfaceOverview',
+    'S8a 4.2 总图双向路径齐');
+  ok(cu8('4.2', '调用图')?.jsonPath === '$.callGraphs' && cu8('4.2', '调用图')?.oldJsonPath === '$.callGraphs',
+    'S8a 4.2 调用图双向路径齐');
+
+  // 8d：旧侧状态机为单图兼容别名（无 stateMachines 数组）→ oldJsonPath 落 $.dynamicDesign.stateMachine
+  const old4 = model({
+    providedFunctions: [fn('A', 's1', 'b1', true)],
+    dynamicDesign: { stateMachine: { name: 'SM' }, sequences: [{ name: 'SQ' }] },
+  });
+  const nw4 = model({ providedFunctions: [fn('A', 's1', 'b1x')] });
+  const sync4 = buildPolarionSync(diffModules(old4, nw4), old4, nw4);
+  const cu4 = (t) => sync4.chapterUpdates.find(c => c.title === t);
+  ok(cu4('状态机')?.oldJsonPath === '$.dynamicDesign.stateMachine'
+    && cu4('状态机')?.jsonPath === '$.dynamicDesign.stateMachines', 'S8d 旧侧单图别名 oldJsonPath 落 stateMachine');
+  ok(cu4('序列图')?.oldJsonPath === '$.dynamicDesign.sequences'
+    && cu4('序列图')?.jsonPath === '$.dynamicDesign.sequences', 'S8d 旧侧有序列图双向路径齐');
+
   // 8b：无变更 → 章节级更新为空
   const old2 = model({
     providedFunctions: [fn('A', 's1', 'b1', true)],
@@ -355,6 +385,8 @@ const model = (over = {}) => ({
     'S9 组表成员不再按单条出操作');
   ok(find('Gp_CoV2')?.action === 'rename' && find('Gp_CoV2')?.from === 'Gp_Co' && find('Gp_CoV2')?.chapter === '6.2',
     'S9 Callout 单条工作项（章节 6.2）保留疑似改名配对');
+  ok(find('Gp_CoV2')?.jsonPath === '$.calloutFunctions[0]' && find('Gp_CoV2')?.oldJsonPath === '$.calloutFunctions[0]',
+    'S9 Callout jsonPath 落 v2 新基座 $.calloutFunctions（normalize 后两侧同形态）');
 }
 
 // ================= 场景 10：wiType 工作项类型枚举 ID 映射（2026-10-16 用户定） =================
@@ -369,8 +401,10 @@ const model = (over = {}) => ({
       typ('BasicNew', 'uint16'),
     ],
     calledExternalFunctions: [
-      { ...ext('Gp_CoNew', 'void Gp_CoNew(void)'), polarion: { workItemId: null, chapter: '6.2' } },
       ext('Spi_Send', 'void Spi_Send(void)'),
+    ],
+    calloutFunctions: [
+      { ...ext('Gp_CoNew', 'void Gp_CoNew(void)'), group: 'Callout', polarion: { workItemId: null, chapter: '6.2' } },
     ],
     configMacros: [cfg('C_NEW', '1')],
   });
@@ -559,6 +593,50 @@ const model = (over = {}) => ({
   ok(sync2.operations.filter(o => o.action === 'create').every(o => o.changedFields === undefined)
     && sync2.operations.filter(o => o.action === 'delete').every(o => o.changedFields === undefined),
     'S12 create/delete 不带 changedFields');
+}
+
+// ================= 场景 13：v1 混排旧基线 vs v2 新形态模型 → 零误报（normalize 迁移兼容） =================
+{
+  const grpE = (name, signature, group) => ({
+    name, signature, group, comment: null, calledFrom: ['A'], polarion: { workItemId: null },
+  });
+  // 旧基线：v1 混排形态（Callout 在 calledExternalFunctions 里，无 calloutFunctions 键）
+  const oldV1 = model({
+    providedFunctions: [fn('A', 's1', 'b1', true)],
+    calledExternalFunctions: [
+      grpE('Spi_Send', 'void Spi_Send(void)', 'Spi'),
+      { ...grpE('Gp_Co', 'void Gp_Co(void)', 'Callout'), polarion: { workItemId: null, chapter: '6.2' } },
+    ],
+  });
+  delete oldV1.calloutFunctions;
+  // 新模型：v2 拆分形态（analyze 新产物的样子），内容逐项等价
+  const newV2 = model({
+    providedFunctions: [fn('A', 's1', 'b1')],
+    calledExternalFunctions: [grpE('Spi_Send', 'void Spi_Send(void)', 'Spi')],
+    calloutFunctions: [{ ...grpE('Gp_Co', 'void Gp_Co(void)', 'Callout'), polarion: { workItemId: null, chapter: '6.2' } }],
+  });
+  const d = diffModules(oldV1, newV2);
+  ok(!d.hasChanges, 'S13 v1 旧基线 vs v2 新模型：零误报（Callout 归位不算增删）');
+  ok(d.externals.unchanged.join() === 'Spi_Send,Gp_Co' || d.externals.unchanged.join() === 'Gp_Co,Spi_Send',
+    'S13 外部接口全 unchanged');
+
+  // 新形态 Callout 变更 → 操作单 jsonPath 用新基座
+  const newV2b = model({
+    providedFunctions: [fn('A', 's1', 'b1')],
+    calledExternalFunctions: [grpE('Spi_Send', 'void Spi_Send(void)', 'Spi')],
+    calloutFunctions: [{ ...grpE('Gp_Co', 'void Gp_Co(uint8)', 'Callout'), polarion: { workItemId: null, chapter: '6.2' } }],
+  });
+  const sync = buildPolarionSync(diffModules(oldV1, newV2b), oldV1, newV2b);
+  const op = sync.operations.find(o => o.title === 'Gp_Co');
+  ok(op?.action === 'update' && op.chapter === '6.2'
+    && op.jsonPath === '$.calloutFunctions[0]' && op.oldJsonPath === '$.calloutFunctions[0]',
+    'S13 旧基线 Callout 变更：新旧 jsonPath 均落 $.calloutFunctions（旧侧经 normalize 定位）');
+
+  // 合并产物为新形态：Callout 在 calloutFunctions，cef 无混入
+  const m = applyModuleDiff(newV2, oldV1, diffModules(oldV1, newV2));
+  ok(m.calloutFunctions.length === 1 && m.calledExternalFunctions.every(e => e.group !== 'Callout'),
+    'S13 合并产物为 v2 拆分形态');
+  ok(m.schemaVersion === 2, 'S13 合并产物版本号升 v2');
 }
 
 console.log(`\nmodelDiff 测试全部通过（${n} 项断言）`);

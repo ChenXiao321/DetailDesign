@@ -22,6 +22,7 @@
  *    源码不同则 PNG 必过期）。
  */
 import { listStateMachines } from '../model/types.js';
+import { normalizeModel } from '../model/normalize.js';
 import type {
   ModuleModel, FunctionUnit, TypeUnit, ExternalInterface, ConfigMacro, VariableUnit,
 } from '../model/types.js';
@@ -123,6 +124,9 @@ const varKey = (v: VariableUnit): string =>
   stable({ type: v.type, isStatic: v.isStatic, isConst: v.isConst, isVolatile: v.isVolatile });
 
 export function diffModules(oldDesign: ModuleModel, newModel: ModuleModel): ModuleDiff {
+  // v1→v2 读取侧迁移：旧基线的 Callout 可能仍混在 calledExternalFunctions（幂等）
+  normalizeModel(oldDesign);
+  normalizeModel(newModel);
   const oldFns = [...oldDesign.providedFunctions, ...oldDesign.internalFunctions];
   const newFns = [...newModel.providedFunctions, ...newModel.internalFunctions];
   const fnNames = diffByName(oldFns, newFns, fnKey);
@@ -133,7 +137,11 @@ export function diffModules(oldDesign: ModuleModel, newModel: ModuleModel): Modu
   }));
 
   const types = diffByName(oldDesign.types, newModel.types, typeKey);
-  const externals = diffByName(oldDesign.calledExternalFunctions, newModel.calledExternalFunctions, extKey);
+  // 外部接口 diff 口径 = 两数组合并一次 diff：函数名全局唯一，extKey 含 group 不受搬家影响；
+  // 旧基线 normalize 后两侧同形态，Callout 归位不产生误报
+  const externals = diffByName(
+    [...oldDesign.calledExternalFunctions, ...oldDesign.calloutFunctions],
+    [...newModel.calledExternalFunctions, ...newModel.calloutFunctions], extKey);
   const configs = diffByName(oldDesign.configMacros, newModel.configMacros, cfgKey);
   const variables = diffByName(
     [...oldDesign.providedVariables, ...oldDesign.internalVariables],
@@ -160,7 +168,9 @@ export function diffModules(oldDesign: ModuleModel, newModel: ModuleModel): Modu
 
 /** 合并产出新 design json：新 model 打底 + 未变条目回挂 generated。返回新对象，不改入参。 */
 export function applyModuleDiff(newModel: ModuleModel, oldDesign: ModuleModel, diff: ModuleDiff): ModuleModel {
+  normalizeModel(oldDesign);
   const merged = JSON.parse(JSON.stringify(newModel)) as ModuleModel;
+  normalizeModel(merged);
 
   const carry = <T extends { name: string; generated?: unknown; comment?: unknown; commentSource?: unknown }>(
     newList: T[], oldList: T[], keep: Set<string>,
@@ -193,7 +203,9 @@ export function applyModuleDiff(newModel: ModuleModel, oldDesign: ModuleModel, d
       }
     }
   }
-  carry(merged.calledExternalFunctions, oldDesign.calledExternalFunctions, new Set(diff.externals.unchanged));
+  const extKeep = new Set(diff.externals.unchanged);
+  carry(merged.calledExternalFunctions, oldDesign.calledExternalFunctions, extKeep);
+  carry(merged.calloutFunctions, oldDesign.calloutFunctions, extKeep);
   carry(merged.configMacros, oldDesign.configMacros, new Set(diff.configs.unchanged));
   // 变量无 generated（非 LLM 条目），回挂旧注释即可（可能被富化过）
   carry(merged.providedVariables, oldDesign.providedVariables, new Set(diff.variables.unchanged));
@@ -278,8 +290,13 @@ export interface PolarionSync {
   operations: SyncOperation[];
   /** 章节级更新（非工作项粒度：5.1 描述/5.3 图/4.x 总图/7 评估表等，由失效标志与图源比对推导）。
    *  content=新内容原文（深拷贝）：分析期确定性内容（4.1 文件清单/4.2 图）diff 阶段即在场；
-   *  5.1 描述/5.3 状态机序列图/7 评估表/3.x 缩写表为 gen 产物，update 流程 gen 后刷新时补入 */
-  chapterUpdates: { chapter: string; title: string; reason: string; wiType?: string; verifyMethod?: string; content?: unknown }[];
+   *  5.1 描述/5.3 状态机序列图/7 评估表/3.x 缩写表为 gen 产物，update 流程 gen 后刷新时补入。
+   *  jsonPath/oldJsonPath=条目级内容在新/旧 design json 中的节点路径（口径同 SyncOperation）：
+   *  jsonPath 恒在（路径静态可知，content 未物化时指向 gen 后落点）；
+   *  oldJsonPath 仅当旧 json 实有该节点才携带（类比 create 无 oldJsonPath）；
+   *  评估表/缩写表 content 为 document 节多键子集 → 锚到父节点 $.document */
+  chapterUpdates: { chapter: string; title: string; reason: string; wiType?: string; verifyMethod?: string;
+    content?: unknown; jsonPath?: string; oldJsonPath?: string }[];
   /** 未变条目数（Polarion 侧零操作） */
   untouched: { functions: number; types: number; externals: number; configs: number; variables: number };
 }
@@ -373,6 +390,8 @@ const extDescriptionChanged = (o?: ExternalInterface, n?: ExternalInterface): bo
 const MANUAL_REV_HINT = '；⚠ 该条目生成后曾被人工修订，本次重生将覆盖修订内容';
 
 export function buildPolarionSync(diff: ModuleDiff, oldDesign: ModuleModel, newModel: ModuleModel): PolarionSync {
+  normalizeModel(oldDesign);
+  normalizeModel(newModel);
   const operations: SyncOperation[] = [];
 
   // 节点路径：差异条目在 lld_design.json 中的定位（$.list[index] 索引路径）——
@@ -530,47 +549,51 @@ export function buildPolarionSync(diff: ModuleDiff, oldDesign: ModuleModel, newM
   // 其余按组一张表（5.2.2.2，title=「<组名> 接口函数」）：组内条目增删=更新整表（content 给全新成员节点数组）、
   // 新组=新建、整组移除=删除；组间搬移对源组算删除、目标组算新增。
   {
+    // v2 拆分后按数组定基座：Callout → $.calloutFunctions，组表成员 → $.calledExternalFunctions；
+    // isCallout 口径统一为数组归属（废弃旧的 polarion.chapter==='6.2' 判定）
+    const CALLOUT_BASE = '$.calloutFunctions';
     const EXT_BASE = '$.calledExternalFunctions';
-    const oldExt = new Map(oldDesign.calledExternalFunctions.map(e => [e.name, e] as const));
-    const newExt = new Map(newModel.calledExternalFunctions.map(e => [e.name, e] as const));
-    const isCallout = (e: ExternalInterface | undefined): boolean => e?.polarion?.chapter === '6.2';
-    const extPath = (list: ExternalInterface[], name: string) => idxPath(list, EXT_BASE, name);
+    const oldExt = new Map([...oldDesign.calledExternalFunctions, ...oldDesign.calloutFunctions].map(e => [e.name, e] as const));
+    const newExt = new Map([...newModel.calledExternalFunctions, ...newModel.calloutFunctions].map(e => [e.name, e] as const));
+    const oldCalloutNames = new Set(oldDesign.calloutFunctions.map(e => e.name));
+    const newCalloutNames = new Set(newModel.calloutFunctions.map(e => e.name));
+    const coPath = (m: ModuleModel, name: string) => idxPath(m.calloutFunctions, CALLOUT_BASE, name);
+    const extPath = (m: ModuleModel, name: string) => idxPath(m.calledExternalFunctions, EXT_BASE, name);
 
     // —— Callout：单条工作项 ——
-    const cRemoved = diff.externals.removed.filter(n => isCallout(oldExt.get(n)));
-    const cAdded = diff.externals.added.filter(n => isCallout(newExt.get(n)));
-    const cChanged = diff.externals.changed.filter(n => isCallout(newExt.get(n)));
+    const cRemoved = diff.externals.removed.filter(n => oldCalloutNames.has(n));
+    const cAdded = diff.externals.added.filter(n => newCalloutNames.has(n));
+    const cChanged = diff.externals.changed.filter(n => newCalloutNames.has(n));
     const cp = pairRenames(cRemoved, cAdded, () => undefined);
     for (const [from, to] of cp.pairs) {
       const manualRev = isManuallyRevised(oldExt.get(from)?.generated);
-      operations.push({ action: 'rename', kind: 'external', chapter: '6.2', title: to, wiType: DESIGN_WITYPE, verifyMethod: VM_TEST, from, detail: RENAME_DETAIL + (manualRev ? MANUAL_REV_HINT : ''), jsonPath: extPath(newModel.calledExternalFunctions, to), oldJsonPath: extPath(oldDesign.calledExternalFunctions, from), content: cloneNode(newExt.get(to)), changedFields: polarionChangedFields(
+      operations.push({ action: 'rename', kind: 'external', chapter: '6.2', title: to, wiType: DESIGN_WITYPE, verifyMethod: VM_TEST, from, detail: RENAME_DETAIL + (manualRev ? MANUAL_REV_HINT : ''), jsonPath: coPath(newModel, to), oldJsonPath: coPath(oldDesign, from), content: cloneNode(newExt.get(to)), changedFields: polarionChangedFields(
         { title: from, wiType: DESIGN_WITYPE, verifyMethod: VM_TEST },
         { title: to, wiType: DESIGN_WITYPE, verifyMethod: VM_TEST },
         extDescriptionChanged(oldExt.get(from), newExt.get(to)) || manualRev,
       ), ...(manualRev ? { manualRevisionLost: true } : {}) });
     }
     for (const name of cp.loneAdded) {
-      operations.push({ action: 'create', kind: 'external', chapter: '6.2', title: name, wiType: DESIGN_WITYPE, verifyMethod: VM_TEST, detail: '新建 Callout 工作项，插入 6.2 节', jsonPath: extPath(newModel.calledExternalFunctions, name), content: cloneNode(newExt.get(name)) });
+      operations.push({ action: 'create', kind: 'external', chapter: '6.2', title: name, wiType: DESIGN_WITYPE, verifyMethod: VM_TEST, detail: '新建 Callout 工作项，插入 6.2 节', jsonPath: coPath(newModel, name), content: cloneNode(newExt.get(name)) });
     }
     for (const name of cp.loneRemoved) {
-      operations.push({ action: 'delete', kind: 'external', chapter: '6.2', title: name, wiType: DESIGN_WITYPE, verifyMethod: VM_TEST, detail: '从 6.2 节移除该 Callout 工作项', oldJsonPath: extPath(oldDesign.calledExternalFunctions, name) });
+      operations.push({ action: 'delete', kind: 'external', chapter: '6.2', title: name, wiType: DESIGN_WITYPE, verifyMethod: VM_TEST, detail: '从 6.2 节移除该 Callout 工作项', oldJsonPath: coPath(oldDesign, name) });
     }
     for (const name of cChanged) {
       const manualRev = isManuallyRevised(oldExt.get(name)?.generated);
-      operations.push({ action: 'update', kind: 'external', chapter: '6.2', title: name, wiType: DESIGN_WITYPE, verifyMethod: VM_TEST, detail: '签名变更：更新 Callout 工作项内容' + (manualRev ? MANUAL_REV_HINT : ''), jsonPath: extPath(newModel.calledExternalFunctions, name), oldJsonPath: extPath(oldDesign.calledExternalFunctions, name), content: cloneNode(newExt.get(name)), changedFields: polarionChangedFields(
+      operations.push({ action: 'update', kind: 'external', chapter: '6.2', title: name, wiType: DESIGN_WITYPE, verifyMethod: VM_TEST, detail: '签名变更：更新 Callout 工作项内容' + (manualRev ? MANUAL_REV_HINT : ''), jsonPath: coPath(newModel, name), oldJsonPath: coPath(oldDesign, name), content: cloneNode(newExt.get(name)), changedFields: polarionChangedFields(
         { title: name, wiType: DESIGN_WITYPE, verifyMethod: VM_TEST },
         { title: name, wiType: DESIGN_WITYPE, verifyMethod: VM_TEST },
         extDescriptionChanged(oldExt.get(name), newExt.get(name)) || manualRev,
       ), ...(manualRev ? { manualRevisionLost: true } : {}) });
     }
 
-    // —— 组表接口：按工作项 title 聚合 ——
+    // —— 组表接口：按工作项 title 聚合（calledExternalFunctions 已不含 Callout，无需再跳过） ——
     const groupTitleOf = (e: ExternalInterface | undefined): string =>
       e?.polarion?.title ?? `${e?.group ?? 'External'} 接口函数`;
     const groupMembersOf = (list: ExternalInterface[]): Map<string, string[]> => {
       const g = new Map<string, string[]>();
       for (const e of list) {
-        if (isCallout(e)) continue;
         const t = groupTitleOf(e);
         const arr = g.get(t) ?? [];
         arr.push(e.name);
@@ -582,8 +605,8 @@ export function buildPolarionSync(diff: ModuleDiff, oldDesign: ModuleModel, newM
     const newGroups = groupMembersOf(newModel.calledExternalFunctions);
     const memberEntry = (name: string, change: 'added' | 'removed' | 'changed') => ({
       name, change,
-      jsonPath: change === 'removed' ? undefined : extPath(newModel.calledExternalFunctions, name),
-      oldJsonPath: change === 'added' ? undefined : extPath(oldDesign.calledExternalFunctions, name),
+      jsonPath: change === 'removed' ? undefined : extPath(newModel, name),
+      oldJsonPath: change === 'added' ? undefined : extPath(oldDesign, name),
     });
     for (const title of [...new Set([...oldGroups.keys(), ...newGroups.keys()])].sort()) {
       const oldMs = oldGroups.get(title) ?? [];
@@ -602,9 +625,9 @@ export function buildPolarionSync(diff: ModuleDiff, oldDesign: ModuleModel, newM
       // 组表为聚合工作项（无单节点）：操作级 jsonPath/oldJsonPath 指向其首个成员节点，
       // 成员级明细仍见 members[]（2026-10-19 用户定补齐）
       if (oldMs.length === 0) {
-        operations.push({ action: 'create', kind: 'external', chapter: '5.2.2.2', title, wiType: DESIGN_WITYPE, verifyMethod: VM_TEST, detail: `新建组表工作项（${newMs.length} 个接口）`, jsonPath: extPath(newModel.calledExternalFunctions, newMs[0]), content, members });
+        operations.push({ action: 'create', kind: 'external', chapter: '5.2.2.2', title, wiType: DESIGN_WITYPE, verifyMethod: VM_TEST, detail: `新建组表工作项（${newMs.length} 个接口）`, jsonPath: extPath(newModel, newMs[0]), content, members });
       } else if (newMs.length === 0) {
-        operations.push({ action: 'delete', kind: 'external', chapter: '5.2.2.2', title, wiType: DESIGN_WITYPE, verifyMethod: VM_TEST, detail: `整组移除（原 ${oldMs.length} 个接口）：删除该组表工作项`, oldJsonPath: extPath(oldDesign.calledExternalFunctions, oldMs[0]), members });
+        operations.push({ action: 'delete', kind: 'external', chapter: '5.2.2.2', title, wiType: DESIGN_WITYPE, verifyMethod: VM_TEST, detail: `整组移除（原 ${oldMs.length} 个接口）：删除该组表工作项`, oldJsonPath: extPath(oldDesign, oldMs[0]), members });
       } else if (added.length + removed.length + changed.length > 0) {
         const parts: string[] = [];
         if (added.length) parts.push(`新增 ${added.join('、')}`);
@@ -612,7 +635,7 @@ export function buildPolarionSync(diff: ModuleDiff, oldDesign: ModuleModel, newM
         if (changed.length) parts.push(`签名变更 ${changed.join('、')}`);
         // 变更成员的旧生成内容有修订痕迹 → 整表重生会覆盖，提示不阻断
         const manualRev = changed.some(n => isManuallyRevised(oldExt.get(n)?.generated));
-        operations.push({ action: 'update', kind: 'external', chapter: '5.2.2.2', title, wiType: DESIGN_WITYPE, verifyMethod: VM_TEST, detail: `组内成员变化（${parts.join('；')}）：更新整表工作项内容` + (manualRev ? MANUAL_REV_HINT : ''), jsonPath: extPath(newModel.calledExternalFunctions, newMs[0]), oldJsonPath: extPath(oldDesign.calledExternalFunctions, oldMs[0]), content, members, changedFields: polarionChangedFields(
+        operations.push({ action: 'update', kind: 'external', chapter: '5.2.2.2', title, wiType: DESIGN_WITYPE, verifyMethod: VM_TEST, detail: `组内成员变化（${parts.join('；')}）：更新整表工作项内容` + (manualRev ? MANUAL_REV_HINT : ''), jsonPath: extPath(newModel, newMs[0]), oldJsonPath: extPath(oldDesign, oldMs[0]), content, members, changedFields: polarionChangedFields(
           { title, wiType: DESIGN_WITYPE, verifyMethod: VM_TEST },
           { title, wiType: DESIGN_WITYPE, verifyMethod: VM_TEST },
           true,
@@ -626,29 +649,41 @@ export function buildPolarionSync(diff: ModuleDiff, oldDesign: ModuleModel, newM
   operations.sort((x, y) => x.chapter.localeCompare(y.chapter, undefined, { numeric: true }) || order[x.action] - order[y.action]);
 
   // 章节级更新推导（工作项清单之外，文档其余可能波及的内容；content=新内容原文，gen 产物在刷新后补入）
+  // jsonPath 恒给（路径静态可知）；oldJsonPath 仅旧 json 实有该节点才给
   const chapterUpdates: PolarionSync['chapterUpdates'] = [];
   if (diff.descriptionInvalidated) {
-    chapterUpdates.push({ chapter: '5.1', title: '模块功能描述', reason: '任何变更都会重生 5.1 描述', wiType: DESIGN_WITYPE, verifyMethod: VM_REVIEW, content: cloneNode(newModel.functionalDescription) });
+    chapterUpdates.push({ chapter: '5.1', title: '模块功能描述', reason: '任何变更都会重生 5.1 描述', wiType: DESIGN_WITYPE, verifyMethod: VM_REVIEW, content: cloneNode(newModel.functionalDescription),
+      jsonPath: '$.functionalDescription',
+      ...(oldDesign.functionalDescription !== undefined ? { oldJsonPath: '$.functionalDescription' } : {}) });
   }
   if (diff.dynamicInvalidated) {
     const sms = listStateMachines(newModel.dynamicDesign);
     const seqs = newModel.dynamicDesign?.sequences ?? [];
-    chapterUpdates.push({ chapter: '5.3.1', title: '状态机', reason: '函数级变更 → 状态机整图重生', wiType: DESIGN_WITYPE, verifyMethod: VM_REVIEW, content: sms.length > 0 ? cloneNode(sms) : undefined });
-    chapterUpdates.push({ chapter: '5.3.2', title: '序列图', reason: '函数级变更 → 序列图整组重生', wiType: DESIGN_WITYPE, verifyMethod: VM_REVIEW, content: seqs.length > 0 ? cloneNode(seqs) : undefined });
+    // 旧侧状态机落点：多核数组形态 → stateMachines；仅有单图兼容别名 → stateMachine
+    const oldSmPath = oldDesign.dynamicDesign?.stateMachines !== undefined ? '$.dynamicDesign.stateMachines'
+      : oldDesign.dynamicDesign?.stateMachine !== undefined ? '$.dynamicDesign.stateMachine' : undefined;
+    chapterUpdates.push({ chapter: '5.3.1', title: '状态机', reason: '函数级变更 → 状态机整图重生', wiType: DESIGN_WITYPE, verifyMethod: VM_REVIEW, content: sms.length > 0 ? cloneNode(sms) : undefined,
+      jsonPath: '$.dynamicDesign.stateMachines', ...(oldSmPath ? { oldJsonPath: oldSmPath } : {}) });
+    chapterUpdates.push({ chapter: '5.3.2', title: '序列图', reason: '函数级变更 → 序列图整组重生', wiType: DESIGN_WITYPE, verifyMethod: VM_REVIEW, content: seqs.length > 0 ? cloneNode(seqs) : undefined,
+      jsonPath: '$.dynamicDesign.sequences',
+      ...(oldDesign.dynamicDesign?.sequences !== undefined ? { oldJsonPath: '$.dynamicDesign.sequences' } : {}) });
     chapterUpdates.push({
       chapter: '7', title: '评估与圈复杂度表', reason: '函数集合变化 → 统计表行变化', wiType: DESIGN_WITYPE, verifyMethod: VM_REVIEW,
       content: newModel.document ? cloneNode({ evaluationRows: newModel.document.evaluationRows, complexityTable: newModel.document.complexityTable }) : undefined,
+      jsonPath: '$.document', ...(oldDesign.document !== undefined ? { oldJsonPath: '$.document' } : {}),
     });
   }
   // 4.1 文件清单：源文件集合变化
   const oldFiles = (oldDesign.files ?? []).map(f => f.path).join('\n');
   const newFiles = (newModel.files ?? []).map(f => f.path).join('\n');
   if (oldFiles !== newFiles) {
-    chapterUpdates.push({ chapter: '4.1', title: '文件清单', reason: '源文件集合变化', wiType: DESIGN_WITYPE, verifyMethod: VM_REVIEW, content: cloneNode(newModel.files ?? []) });
+    chapterUpdates.push({ chapter: '4.1', title: '文件清单', reason: '源文件集合变化', wiType: DESIGN_WITYPE, verifyMethod: VM_REVIEW, content: cloneNode(newModel.files ?? []),
+      jsonPath: '$.files', ...(oldDesign.files !== undefined ? { oldJsonPath: '$.files' } : {}) });
   }
   // 4.2 接口总图/调用图：图源码比对
   if ((oldDesign.interfaceOverview?.diagram ?? '') !== (newModel.interfaceOverview?.diagram ?? '')) {
-    chapterUpdates.push({ chapter: '4.2', title: '接口总图', reason: '接口总图图源变化', wiType: DESIGN_WITYPE, verifyMethod: VM_REVIEW, content: cloneNode(newModel.interfaceOverview) });
+    chapterUpdates.push({ chapter: '4.2', title: '接口总图', reason: '接口总图图源变化', wiType: DESIGN_WITYPE, verifyMethod: VM_REVIEW, content: cloneNode(newModel.interfaceOverview),
+      jsonPath: '$.interfaceOverview', ...(oldDesign.interfaceOverview !== undefined ? { oldJsonPath: '$.interfaceOverview' } : {}) });
   }
   const oldCg = new Map((oldDesign.callGraphs ?? []).map(g => [g.name, g.diagram]));
   const newCgByName = new Map((newModel.callGraphs ?? []).map(g => [g.name, g] as const));
@@ -658,12 +693,14 @@ export function buildPolarionSync(diff: ModuleDiff, oldDesign: ModuleModel, newM
     chapterUpdates.push({
       chapter: '4.2', title: '调用图', reason: `调用图变化：${[...changedCg, ...removedCg].join('、')}`, wiType: DESIGN_WITYPE, verifyMethod: VM_REVIEW,
       content: cloneNode({ changed: changedCg.map(n => newCgByName.get(n)), removed: removedCg }),
+      jsonPath: '$.callGraphs', ...(oldDesign.callGraphs !== undefined ? { oldJsonPath: '$.callGraphs' } : {}),
     });
   }
   if (diff.hasChanges) {
     chapterUpdates.push({
       chapter: '3.1/3.2', title: '缩写表/定义表', reason: '新生成的描述可能引入新缩写——以 report 打印的缺口名单为准，有则反馈维护方补表', wiType: DESIGN_WITYPE, verifyMethod: VM_REVIEW,
       content: newModel.document ? cloneNode({ abbreviations: newModel.document.abbreviations, definitions: newModel.document.definitions, abbreviationGaps: newModel.document.abbreviationGaps }) : undefined,
+      jsonPath: '$.document', ...(oldDesign.document !== undefined ? { oldJsonPath: '$.document' } : {}),
     });
   }
 

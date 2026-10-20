@@ -6,6 +6,7 @@ import { listStateMachines } from '../model/types.js';
 import { wrapFlowchartLabels, pinEndNodeToBottom, lintMermaidSource, lintFlowchartStructure, lintSequenceStructure } from './mermaidPre.js';
 import { mermaidRenderScript } from './renderScript.js';
 import { buildDocumentContent } from '../generator/staticDocument.js';
+import { normalizeModel } from '../model/normalize.js';
 import { buildIncludeGraph } from './includeGraph.js';
 import type { ModuleDiff, PolarionSync } from '../generator/modelDiff.js';
 
@@ -81,6 +82,7 @@ export function generateHtmlReport(model: ModuleModel, opts?: {
   /** Polarion 同步操作单（lld_polarion_sync.json；缺省不渲染操作表） */
   sync?: PolarionSync;
 }): string {
+  normalizeModel(model); // v1→v2 读取侧迁移（存量 json 的 Callout 挪入 calloutFunctions，幂等）
   const fnCount = model.providedFunctions.length + model.internalFunctions.length;
   const generatedCount = [...model.providedFunctions, ...model.internalFunctions].filter(f => f.generated).length;
 
@@ -104,7 +106,7 @@ export function generateHtmlReport(model: ModuleModel, opts?: {
       : `<pre class="plantuml">${escRaw(src)}</pre>`;
   };
 
-  // ---- 外部接口按组归类（5.2.1.1 与 5.2.2 共用） ----
+  // ---- 外部接口按组归类（5.2.1.1 与 5.2.2 共用；v2 起 calledExternalFunctions 已不含 Callout） ----
   const groups = new Map<string, typeof model.calledExternalFunctions>();
   for (const e of model.calledExternalFunctions) {
     if (!groups.has(e.group)) groups.set(e.group, []);
@@ -142,10 +144,9 @@ export function generateHtmlReport(model: ModuleModel, opts?: {
   }).join('\n');
 
   // ---- 5.2.2 调用的外部接口（按组） ----
-  // Callout 属于本模块配置代码（ConfTemplate），不算外部接口，此处排除；
-  // 其声明/实现见 4.1 文件说明，调用关系见各函数卡片"调用"行
+  // Callout 属于本模块配置代码（ConfTemplate），不算外部接口（v2 起独立存放于 calloutFunctions，
+  // 本数组天然不含，无需再过滤）；其声明/实现见 4.1 文件说明，调用关系见各函数卡片"调用"行
   const calledSection = [...groups.entries()]
-    .filter(([group]) => group !== 'Callout')
     .map(([group, items]) => {
     const rows = items.map(e =>
       // 说明列：LLM 生成优先；无生成内容时回退头文件注释，推断来源的标注「推断，待确认」
@@ -279,7 +280,7 @@ ${c.affects.length > 0 ? `<p><b>影响范围（条件编译直接作用的函数
   const functionalCfgs = model.configMacros.filter(c => c.kind === 'functional');
   const functionalCfgSection = configSections(functionalCfgs, '6.2');
   // Callout 函数：由集成方在配置代码中实现，属于功能配置点
-  const callouts = model.calledExternalFunctions.filter(e => e.group === 'Callout');
+  const callouts = model.calloutFunctions;
   const calloutSecNo = `6.2.${functionalCfgs.length + 1}`;
   const calloutCfgSection = callouts.length === 0 ? '' : `<h4>${calloutSecNo} Callout function</h4>
 <p class="muted">${doc.notes.calloutCfg}</p>

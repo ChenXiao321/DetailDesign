@@ -44,7 +44,7 @@ Modu.LLD 在模块代码改版后（`update` / `run` 自动更新流程）产出
 | `verifyMethod` | string | 「验证方法」属性枚举 ID，直接填入 Polarion（映射见 §6.0） |
 | `from` | string? | rename 时的旧名（仅 rename 携带） |
 | `detail` | string | 中文操作建议，**仅供人工阅读**，工具不得解析此文本做决策 |
-| `jsonPath` | string? | 条目在新 design json 的节点路径（对账用；delete 无此字段；组表工作项为聚合节点，指向其首个成员） |
+| `jsonPath` | string? | 条目在新 design json 的节点路径（对账用；delete 无此字段；组表工作项为聚合节点，指向其首个成员）。基座按节点归属：普通外部接口=`$.calledExternalFunctions[N]`，Callout=`$.calloutFunctions[N]`（v2 起 Callout 独立成顶层节点，不再是 `$.calledExternalFunctions`） |
 | `oldJsonPath` | string? | 条目在旧 design json 的节点路径（对账用；create 无此字段；组表工作项同上指首个成员） |
 | `content` | object/array? | 新内容原文深拷贝（delete 不携带），字段映射见 §6 |
 | `members` | array? | 组表工作项成员级变化明细（仅 external 组表，见 §6.3） |
@@ -54,8 +54,11 @@ Modu.LLD 在模块代码改版后（`update` / `run` 自动更新流程）产出
 
 ### 2.3 ChapterUpdate
 
-`{ chapter, title, reason, wiType, verifyMethod, content? }`——章节级内容更新（5.1 描述、5.3 图、4.x 总图、
+`{ chapter, title, reason, wiType, verifyMethod, content?, jsonPath, oldJsonPath? }`——章节级内容更新（5.1 描述、5.3 图、4.x 总图、
 7 评估表、3.x 缩写表等），`wiType` 恒为 `Design`、`verifyMethod` 恒为 `review`，`content` 为新内容原文。见 §7。
+
+`jsonPath`/`oldJsonPath` 语义与 SyncOperation 相同：`jsonPath` 恒在（新 json 落点，路径静态可知，content 未物化时
+指向 gen 后的落点）；`oldJsonPath` 仅当旧 json 实有该节点才携带（类比 create 无 `oldJsonPath`）。具体路径映射见 §7 表格。
 
 ### 2.4 产出时机与内容完备性
 
@@ -234,6 +237,7 @@ Polarion 中工作项的「类型」自定义属性为枚举，**同步单每条
 **Callout 单条（章节 6.2，title=函数名）**：`content` = ExternalInterface 节点——
 title=`name`；签名=`signature`；描述=`generated.detailedDescription`；
 说明来源=`commentSource`（`inferred` 时须带「推断，待确认」标注）；调用点=`calledFrom[]`。
+jsonPath 基座为 `$.calloutFunctions[N]`（design json v2 起 Callout 独立顶层节点）。
 
 **组表整表（章节 5.2.2.2，title=「\<组名\> 接口函数」）**：
 - `content` = 该组**全部**成员的 ExternalInterface 节点数组（已是新全量，整表替换即可）；
@@ -293,16 +297,18 @@ title=`name`；签名=`signature`；描述=`generated.detailedDescription`；
 `chapterUpdates` 处理的是**工作项清单之外**的章节内容。`reason` 说明触发原因（人读），
 工具按 `chapter` 分发：
 
-| chapter | 内容 | content 形态 | 操作 |
-|---|---|---|---|
-| `5.1` | 模块功能描述 | 字符串 | 替换 5.1 节正文 |
-| `5.3.1` | 状态机 | StateMachineDesign 数组：`diagram`(mermaid 源码) + `diagramPng` + `states[]`(名称/描述) + `transitions[]`(迁移说明) | 整节替换：图用 PNG，状态表/迁移表用 states/transitions |
-| `5.3.2` | 序列图 | SequenceDesign 数组：`diagram` + `diagramPng` + `description` | 整节替换（多核场景多张图逐一对应） |
-| `7` | 评估与圈复杂度表 | `{ evaluationRows[], complexityTable[] }` | 整表替换 |
-| `4.1` | 文件清单 | files 数组（path/role/includes） | 整表替换 |
-| `4.2` | 接口总图 | `{ diagram, diagramPng }` | 图替换 |
-| `4.2` | 调用图 | `{ changed: [{name,diagram,diagramPng}], removed: [名字] }` | changed 逐张替换，removed 逐张移除 |
-| `3.1/3.2` | 缩写表/定义表 | `{ abbreviations, definitions, abbreviationGaps }` | 整表替换；`abbreviationGaps` 非空=有未定义缩写，须在对账报告提示维护方补表 |
+| chapter | 内容 | content 形态 | jsonPath（新 json 落点） | 操作 |
+|---|---|---|---|---|
+| `5.1` | 模块功能描述 | 字符串 | `$.functionalDescription` | 替换 5.1 节正文 |
+| `5.3.1` | 状态机 | StateMachineDesign 数组：`diagram`(mermaid 源码) + `diagramPng` + `states[]`(名称/描述) + `transitions[]`(迁移说明) | `$.dynamicDesign.stateMachines`（旧 json 为单图形态时 `oldJsonPath=$.dynamicDesign.stateMachine`） | 整节替换：图用 PNG，状态表/迁移表用 states/transitions |
+| `5.3.2` | 序列图 | SequenceDesign 数组：`diagram` + `diagramPng` + `description` | `$.dynamicDesign.sequences` | 整节替换（多核场景多张图逐一对应） |
+| `7` | 评估与圈复杂度表 | `{ evaluationRows[], complexityTable[] }` | `$.document`（content 为 document 节多键子集，锚到父节点） | 整表替换 |
+| `4.1` | 文件清单 | files 数组（path/role/includes） | `$.files` | 整表替换 |
+| `4.2` | 接口总图 | `{ diagram, diagramPng }` | `$.interfaceOverview` | 图替换 |
+| `4.2` | 调用图 | `{ changed: [{name,diagram,diagramPng}], removed: [名字] }` | `$.callGraphs` | changed 逐张替换，removed 逐张移除 |
+| `3.1/3.2` | 缩写表/定义表 | `{ abbreviations, definitions, abbreviationGaps }` | `$.document`（同 §7 评估表，锚到父节点） | 整表替换；`abbreviationGaps` 非空=有未定义缩写，须在对账报告提示维护方补表 |
+
+`oldJsonPath` 仅当旧 json 实有该节点才携带（如旧 json 尚无 `document` 节、`interfaceOverview` 未物化等，则省略）。
 
 **章节标题唯一性（已定，2026-10-19 用户确认）**：同一逻辑章节包含多张图/多个条目时，
 文档正文中的章节号标题只出现一次；各图或条目改用不含章节号的角色/场景子标题区分

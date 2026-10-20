@@ -56,7 +56,7 @@ export function materializePolarionAttributes(model: ModuleModel): void {
     t.polarion.wiType = typeWiType(t);
     t.polarion.verifyMethod = VM_REVIEW;
   }
-  for (const e of model.calledExternalFunctions) {
+  for (const e of [...model.calledExternalFunctions, ...(model.calloutFunctions ?? [])]) {
     e.polarion.wiType = DESIGN_WITYPE;
     e.polarion.verifyMethod = VM_TEST;
   }

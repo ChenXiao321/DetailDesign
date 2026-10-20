@@ -200,8 +200,11 @@ export interface ConfigMacro {
 
 /** design json 结构版本。结构已冻结（2026-09-30，用户确认内容齐备后锁定）：
  *  规则=只增不改——允许新增可选字段，禁止改名/删字段/改语义；改动须同步 bump 本版本。
- *  v1 = 0930 定型：顶层 14 键 + schemaVersion；document 节 19 键全量物化（见 DocumentContent）。 */
-export const SCHEMA_VERSION = 1;
+ *  v1 = 0930 定型：顶层 14 键 + schemaVersion；document 节 19 键全量物化（见 DocumentContent）。
+ *  v2 = 1020 拆分：calledExternalFunctions 收窄为只放普通外部接口（5.2.2.2），
+ *       Callout 函数移入新顶层节点 calloutFunctions（6.2）；
+ *       存量 json 由读取侧 normalizeModel 自动迁移（见 model/normalize.ts），无需重跑 analyze。 */
+export const SCHEMA_VERSION = 2;
 
 /** 报告骨架内容（1/2/3/7/8 章正文与各章引导句，gen 期物化进 design json）；
  *  物化后 report/audit 纯渲染只读 json，不再现读外部缩写表/配置。
@@ -248,7 +251,8 @@ export interface ModuleModel {
   internalFunctions: FunctionUnit[];    // 5.2.4.2
   internalVariables: VariableUnit[];    // 5.2.4.1
   providedVariables: VariableUnit[];    // 5.2.3.1
-  calledExternalFunctions: ExternalInterface[]; // 5.2.2.2
+  calledExternalFunctions: ExternalInterface[]; // 5.2.2.2（v2 起只放普通外部接口，不含 Callout）
+  calloutFunctions: ExternalInterface[];        // 6.2 Callout 函数（v2 新增；存量 json 经 normalizeModel 保证在场）
   types: TypeUnit[];                    // 5.2.1.2
   configMacros: ConfigMacro[];          // 6
   dynamicDesign?: DynamicDesign;        // 5.3（LLM 生成后填入）

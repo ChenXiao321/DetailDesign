@@ -162,13 +162,13 @@ export function buildModuleDescriptionPrompt(
     lines.push(`  ${fn.name}${firstLine ? `: ${firstLine}` : ''}`);
   }
   const extGroups = new Map<string, number>();
-  for (const e of model.calledExternalFunctions.filter(e => e.group !== 'Callout')) {
+  for (const e of model.calledExternalFunctions) {
     extGroups.set(e.group, (extGroups.get(e.group) ?? 0) + 1);
   }
   if (extGroups.size > 0) {
     lines.push(`- 依赖的外部模块: ${[...extGroups.entries()].map(([g, n]) => `${g}（${n} 个接口）`).join('、')}`);
   }
-  const callouts = model.calledExternalFunctions.filter(e => e.group === 'Callout');
+  const callouts = model.calloutFunctions ?? [];
   if (callouts.length > 0) lines.push(`- 提供 ${callouts.length} 个 Callout 配置点供集成方实现`);
   const funcMacros = model.configMacros.filter(c => c.kind === 'functional');
   if (funcMacros.length > 0) {

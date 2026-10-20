@@ -21,7 +21,7 @@ function mkModel() {
   return {
     module: 'M', schemaVersion: SCHEMA_VERSION, analyzedAt: '',
     files: [], providedFunctions: [], internalFunctions: [], internalVariables: [],
-    providedVariables: [], calledExternalFunctions: [], types: [],
+    providedVariables: [], calledExternalFunctions: [], calloutFunctions: [], types: [],
     configMacros: [{ name: 'M_CFG' }],
     dynamicDesign: { stateMachine: { name: 'SM', diagramPng: 'png' }, sequences: [{ name: 'S', diagramPng: 'png' }] },
     functionalDescription: 'd',
@@ -36,8 +36,10 @@ const FULL = { requirePngs: true, requireDocument: true, requireDynamic: true };
 check('成品 json 全绿', lintModelSchema(mkModel(), FULL).length === 0);
 
 // ② 逐项缺陷检出
+// 缺 schemaVersion：lint 入口 normalizeModel 自愈（补当前版本号），不再硬报——自愈系设计（同 syncSmAliasPng 先例）
 const m1 = mkModel(); delete m1.schemaVersion;
-check('缺 schemaVersion 报', lintModelSchema(m1, FULL).some(p => p.includes('schemaVersion')));
+check('缺 schemaVersion 经 normalize 自愈不报', lintModelSchema(m1, FULL).length === 0
+  && m1.schemaVersion === SCHEMA_VERSION, JSON.stringify(lintModelSchema(m1, FULL)));
 const m2 = mkModel(); delete m2.files;
 check('缺顶层键 files 报', lintModelSchema(m2, FULL).some(p => p === '顶层缺键 files'));
 const m3 = mkModel(); delete m3.document;
@@ -116,12 +118,32 @@ m17.calledExternalFunctions.push(
 check('组表工作项同 title 共享不报（设计本意）', lintModelSchema(m17).length === 0, JSON.stringify(lintModelSchema(m17)));
 const m18 = mkModel();
 m18.providedFunctions.push({ name: 'X', file: 'a.c', polarion: wi('5.2.3.2', 'X', 'function') });
-m18.calledExternalFunctions.push({ name: 'X', polarion: wi('6.2', 'X', 'function') });
+m18.calloutFunctions.push({ name: 'X', group: 'Callout', polarion: wi('6.2', 'X', 'function') });
 check('跨章节同 title 不报（映射键含章节号）', lintModelSchema(m18).length === 0, JSON.stringify(lintModelSchema(m18)));
 const m19 = mkModel();
 m19.callGraphs.push({ name: 'G2', diagramPng: 'png', polarion: wi('5.1', 'A 调用图', 'diagram') });
 m19.callGraphs.push({ name: 'G3', diagramPng: 'png', polarion: wi('5.1', 'A 调用图', 'diagram') });
 check('调用图工作项 title 重名报', lintModelSchema(m19, FULL).some(p => p.includes('工作项 title 重名') && p.includes('A 调用图')));
+
+// ⑨ v1 旧形态自愈：Callout 混在 calledExternalFunctions、无 calloutFunctions 键、schemaVersion=1
+// → lint 入口 normalize 后就地迁移通过（_check_schema.js 对存量产物零改动全绿靠此）
+const m20 = mkModel();
+m20.schemaVersion = 1;
+delete m20.calloutFunctions;
+m20.calledExternalFunctions.push({ name: 'CalloutX', group: 'Callout', polarion: wi('6.2', 'CalloutX', 'function') });
+check('v1 旧形态 lint 自愈通过', lintModelSchema(m20).length === 0, JSON.stringify(lintModelSchema(m20)));
+check('v1 旧形态 lint 后就地迁移', m20.calloutFunctions.length === 1
+  && m20.calledExternalFunctions.length === 0 && m20.schemaVersion === SCHEMA_VERSION);
+
+// ⑩ v1 旧形态 title 唯一性仍跨数组检出：Callout 迁移后与 6.2 既有项撞名要报
+const m21 = mkModel();
+m21.schemaVersion = 1;
+delete m21.calloutFunctions;
+m21.calledExternalFunctions.push({ name: 'C1', group: 'Callout', polarion: wi('6.2', 'Same', 'function') });
+// 迁移后 cef 空了，再补一个 6.2 同名项到 calloutFunctions 落点（模拟两侧撞名）
+m21.calledExternalFunctions.push({ name: 'C2', group: 'Callout', polarion: wi('6.2', 'Same', 'function') });
+check('迁移后 6.2 title 撞名报', lintModelSchema(m21).some(p => p.includes('工作项 title 重名') && p.includes('Same')),
+  JSON.stringify(lintModelSchema(m21)));
 
 console.log(`\n${pass} pass, ${fail} fail`);
 process.exit(fail ? 1 : 0);

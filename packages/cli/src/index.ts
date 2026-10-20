@@ -3,7 +3,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import {
   analyzeModule, generateDesign, generateHtmlReport, resolveConfig, normalizeBaseUrl,
-  OpenAICompatibleProvider, MockProvider, lintModelSchema,
+  OpenAICompatibleProvider, MockProvider, lintModelSchema, normalizeModel,
   diffModules, applyModuleDiff, buildPolarionSync, materializePolarionAttributes,
   type InputFile, type ModuleModel, type LLMProvider, type ModuleDiff, type PolarionSync,
 } from '@lld/core';
@@ -24,7 +24,8 @@ function collectCFiles(dir: string, base: string, out: InputFile[]): void {
 
 function loadOrAnalyzeModel(dir: string, modelPath: string): Promise<ModuleModel> {
   if (fs.existsSync(modelPath)) {
-    return Promise.resolve(JSON.parse(fs.readFileSync(modelPath, 'utf-8')) as ModuleModel);
+    // v1→v2 读取侧迁移：存量 json 的 Callout 挪入 calloutFunctions（幂等）
+    return Promise.resolve(normalizeModel(JSON.parse(fs.readFileSync(modelPath, 'utf-8')) as ModuleModel));
   }
   const files: InputFile[] = [];
   collectCFiles(dir, dir, files);
@@ -104,6 +105,7 @@ async function cmdAnalyze(dir: string, outDir: string): Promise<ModuleModel> {
   console.log(`内部变量 (5.2.4.1): ${model.internalVariables.length}`);
   console.log(`类型定义 (5.2.1.2): ${model.types.length}`);
   console.log(`外部调用 (5.2.2.2): ${model.calledExternalFunctions.length}`);
+  console.log(`Callout 函数 (6.2): ${model.calloutFunctions.length}`);
   console.log(`配置宏 (6): ${model.configMacros.length}`);
   console.log(`\n中间模型已写入: ${output}`);
   return model;
@@ -121,7 +123,7 @@ async function cmdDiff(dir: string, outDir: string): Promise<{ diff: ModuleDiff;
     console.error(`未找到既有产物 ${designPath}——首次生成请用 run/gen，diff/update 用于版本更新场景`);
     process.exit(1);
   }
-  const oldDesign = JSON.parse(fs.readFileSync(designPath, 'utf-8')) as ModuleModel;
+  const oldDesign = normalizeModel(JSON.parse(fs.readFileSync(designPath, 'utf-8')) as ModuleModel);
   const newModel = await cmdAnalyze(dir, outDir);
 
   const diff = diffModules(oldDesign, newModel);
@@ -185,7 +187,7 @@ function refreshSyncAfterGen(outDir: string, diff: ModuleDiff, oldDesign: Module
   const designPath = path.join(outDir, 'lld_design.json');
   const syncPath = path.join(outDir, 'lld_polarion_sync.json');
   if (!fs.existsSync(syncPath)) return;
-  const design = JSON.parse(fs.readFileSync(designPath, 'utf-8')) as ModuleModel;
+  const design = normalizeModel(JSON.parse(fs.readFileSync(designPath, 'utf-8')) as ModuleModel);
   const sync = buildPolarionSync(diff, oldDesign, design);
   fs.writeFileSync(syncPath, JSON.stringify(sync, null, 2), 'utf-8');
   console.log('Polarion 同步操作单已刷新：content 已换为生成后的节点原文');
@@ -196,7 +198,7 @@ async function cmdGen(dir: string, outDir: string, mock: boolean, only?: string[
   const designPath = path.join(outDir, 'lld_design.json');
   // --resume：优先加载已有的 design json（含已生成内容），跳过已完成条目
   const model = resume && fs.existsSync(designPath)
-    ? (JSON.parse(fs.readFileSync(designPath, 'utf-8')) as ModuleModel)
+    ? normalizeModel(JSON.parse(fs.readFileSync(designPath, 'utf-8')) as ModuleModel)
     : await loadOrAnalyzeModel(dir, modelPath);
   // 流程图/骨架内容均为静态生成（零 LLM）：--only 全为 flowcharts/document 时不构造 provider，无 LLM 环境也能刷
   const noLlmOnly = only !== undefined
@@ -331,7 +333,7 @@ async function cmdReport(outDir: string): Promise<void> {
     console.error(`未找到 ${designPath}，请先运行 analyze（和 gen）`);
     process.exit(1);
   }
-  const model = JSON.parse(fs.readFileSync(sourcePath, 'utf-8')) as ModuleModel;
+  const model = normalizeModel(JSON.parse(fs.readFileSync(sourcePath, 'utf-8')) as ModuleModel);
   // 内嵌 mermaid.js，报告离线渲染图
   const mermaidPath = new URL('../assets/mermaid.min.js', import.meta.url);
   let mermaidJs: string | undefined;

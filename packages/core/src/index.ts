@@ -31,4 +31,5 @@ export {
   lintModelSchema, TOP_KEYS, DOC_KEYS, NOTES_KEYS, CONFIG_DETAIL_FIELDS,
   type SchemaLintOptions,
 } from './model/schemaLint.js';
+export { normalizeModel } from './model/normalize.js';
 export type * from './model/types.js';

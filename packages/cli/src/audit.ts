@@ -7,7 +7,7 @@
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { generateHtmlReport, type ModuleModel } from '@lld/core';
+import { generateHtmlReport, normalizeModel, type ModuleModel } from '@lld/core';
 import { findEdge, describeEdge, edgeDump } from './edge.js';
 import { loadConfigFile, resolveAbbreviations, abbrGapLogger } from './config.js';
 
@@ -301,7 +301,7 @@ export async function cmdAudit(outDir: string): Promise<void> {
   }
   const edge = findEdge();
   console.error('  使用浏览器: ' + describeEdge(edge));
-  const model = JSON.parse(fs.readFileSync(sourcePath, 'utf-8')) as ModuleModel;
+  const model = normalizeModel(JSON.parse(fs.readFileSync(sourcePath, 'utf-8')) as ModuleModel);
   const mermaidPath = new URL('../assets/mermaid.min.js', import.meta.url);
   const mermaidJs = fs.readFileSync(mermaidPath, 'utf-8');
 

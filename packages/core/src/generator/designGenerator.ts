@@ -2,6 +2,7 @@ import type {
   ModuleModel, FunctionUnit, DynamicDesign, SequenceDesign, TypeUnit,
 } from '../model/types.js';
 import { SCHEMA_VERSION } from '../model/types.js';
+import { normalizeModel } from '../model/normalize.js';
 import type { LLMProvider } from '../llm/provider.js';
 import {
   buildFunctionDescriptionPrompt,
@@ -308,6 +309,9 @@ export async function generateDesign(
   const only = opts?.only;
   const skipExisting = opts?.skipExisting ?? false;
 
+  // v1→v2 读取侧迁移：存量 json 的 Callout 从 calledExternalFunctions 挪入 calloutFunctions（幂等）
+  normalizeModel(model);
+
   // 结构版本回填：存量 json（v1 前形态）经任何 gen 通道写回时补 schemaVersion
   model.schemaVersion ??= SCHEMA_VERSION;
   // Polarion 属性物化（wiType/verifyMethod）：任何 gen 通道（含 --only document/flowcharts 早退路径）
@@ -426,7 +430,7 @@ export async function generateDesign(
   }
 
   if (!only || only.includes('callouts')) {
-    for (const ext of model.calledExternalFunctions.filter(e => e.group === 'Callout')) {
+    for (const ext of model.calloutFunctions) {
       if (skipExisting && ext.generated?.detailedDescription) {
         log(`跳过（已有 Callout 描述）: ${ext.name}`);
         continue;
@@ -476,7 +480,7 @@ export async function generateDesign(
   }
 
   if (!only || only.includes('externals')) {
-    for (const ext of model.calledExternalFunctions.filter(e => e.group !== 'Callout')) {
+    for (const ext of model.calledExternalFunctions) {
       if (skipExisting && ext.generated?.detailedDescription) {
         log(`跳过（已有外部接口说明）: ${ext.name}`);
         continue;
@@ -530,6 +534,7 @@ export async function generateDesign(
       ...[...model.providedFunctions, ...model.internalFunctions].map(f => f.generated),
       ...model.types.map(t => t.generated),
       ...model.calledExternalFunctions.map(e => e.generated),
+      ...model.calloutFunctions.map(e => e.generated),
       ...model.configMacros.map(c => c.generated),
     ];
     for (const g of gens) {

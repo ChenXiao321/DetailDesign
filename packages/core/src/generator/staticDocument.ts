@@ -6,6 +6,7 @@
  */
 import type { ModuleModel, DocumentContent, ConfigMacro, ConfigUsage } from '../model/types.js';
 import { listStateMachines } from '../model/types.js';
+import { normalizeModel } from '../model/normalize.js';
 import { esc } from '../report/cards.js';
 
 /** 外部缩写表输入（CLI resolveAbbreviations 的结果原样透传；core 不碰 fs） */
@@ -57,6 +58,7 @@ function allDocumentText(model: ModuleModel): string {
     model.module,
     ...allFns.map(f => `${f.name} ${f.signature} ${f.generated?.detailedDescription ?? ''}`),
     ...model.calledExternalFunctions.map(e => `${e.name} ${e.generated?.detailedDescription ?? ''}`),
+    ...model.calloutFunctions.map(e => `${e.name} ${e.generated?.detailedDescription ?? ''}`),
     ...model.configMacros.map(c => `${c.name} ${c.generated?.valueEffect ?? ''}`),
     ...model.types.map(t => `${t.name} ${t.comment} ${t.generated?.comment ?? ''}`),
     model.functionalDescription ?? '',
@@ -101,7 +103,7 @@ function describeFile(path: string, role: string, model: ModuleModel): string {
       return `类型定义头文件：定义 ${td} 个枚举式 typedef 与 ${st} 个结构体`;
     }
     case 'callout': {
-      const n = model.calledExternalFunctions.filter(e => e.group === 'Callout').length;
+      const n = model.calloutFunctions.length;
       return isC
         ? `Callout 实现文件（配置代码）：由集成方实现 ${n} 个 Callout 函数的具体策略`
         : `Callout 声明头文件（配置代码）：声明 ${n} 个由集成方实现的 Callout 函数`;
@@ -186,7 +188,7 @@ function buildImportedTypes(model: ModuleModel): [string, string[]][] {
   // 无下划线前缀的（如 CounterType）归入「其他」
   const localTypeNames = new Set(model.types.map(t => t.name));
   const knownFnNames = new Set(
-    [...model.providedFunctions, ...model.internalFunctions, ...model.calledExternalFunctions]
+    [...model.providedFunctions, ...model.internalFunctions, ...model.calledExternalFunctions, ...model.calloutFunctions]
       .map(f => f.name),
   );
   const rootPrefix = model.module.split('_')[0];
@@ -211,8 +213,9 @@ function buildImportedTypes(model: ModuleModel): [string, string[]][] {
 
 /** 物化报告骨架内容。abbr 缺省 = 纯内置词典合并模式（无 config 时的现行行为） */
 export function buildDocumentContent(model: ModuleModel, abbr?: AbbrTableInput): DocumentContent {
+  normalizeModel(model); // v1→v2 读取侧迁移（存量 json 的 Callout 挪入 calloutFunctions，幂等）
   const allFns = [...model.providedFunctions, ...model.internalFunctions];
-  const callouts = model.calledExternalFunctions.filter(e => e.group === 'Callout');
+  const callouts = model.calloutFunctions;
   const calloutCount = callouts.length;
   const functionalCfgs = model.configMacros.filter(c => c.kind === 'functional');
   const calloutSecNo = `6.2.${functionalCfgs.length + 1}`;
@@ -273,8 +276,11 @@ export function buildDocumentContent(model: ModuleModel, abbr?: AbbrTableInput):
     : null;
 
   // ---- 7 详细设计规范评估（模板固定 14 项；事实依据自动填，结论人工确认） ----
-  const extGroupNames = [...new Set(model.calledExternalFunctions.map(e => e.group))];
+  // extGroupNames 扫两个数组再排序：与 v1 混排 sort(group,name) 的组名出现序一致（字节零回归）
+  const extGroupNames = [...new Set([...model.calledExternalFunctions, ...model.calloutFunctions].map(e => e.group))]
+    .sort((a, b) => a.localeCompare(b));
   const nonCalloutGroups = extGroupNames.filter(g => g !== 'Callout');
+  // 通讯协议探测只扫普通外部接口（Callout 是本模块配置点，不属外部接口）
   const commIfs = model.calledExternalFunctions.filter(e =>
     /\b(Spi|Can(Fd)?|Lin|Eth|Com_|PduR|Dcm|SoAd|Fr)(_|$|\b)/i.test(e.name));
   const maxComplexity = Math.max(0, ...allFns.map(f => f.complexity ?? 0));
@@ -291,7 +297,7 @@ export function buildDocumentContent(model: ModuleModel, abbr?: AbbrTableInput):
   const TODO_CONCLUSION = '<span class="todo">结论待人工确认</span>';
   const evaluationRows = [
     { dim: '互操作性/交互', no: 1, content: '对软件单元的接口一致性进行分析',
-      fact: `本模块提供 ${model.providedFunctions.length} 个接口函数（5.2.3.2），调用外部接口 ${model.calledExternalFunctions.length} 个（${extGroupNames.join('、')}），签名与调用点均已由静态分析提取；与软件架构接口的一致性需对照架构文档确认。${TODO_CONCLUSION}` },
+      fact: `本模块提供 ${model.providedFunctions.length} 个接口函数（5.2.3.2），调用外部接口 ${model.calledExternalFunctions.length + calloutCount} 个（${extGroupNames.join('、')}），签名与调用点均已由静态分析提取；与软件架构接口的一致性需对照架构文档确认。${TODO_CONCLUSION}` },
     { dim: '互操作性/交互', no: 2, content: '软件单元对全局变量引用的正确性',
       fact: `模块内静态全局变量 ${model.internalVariables.length} 个（5.2.4.1），外部链接全局变量 ${model.providedVariables.length} 个（5.2.3.1）；各函数的全局变量访问已在函数卡片逐条列出。${TODO_CONCLUSION}` },
     { dim: '互操作性/交互', no: 3, content: '对涉及通讯协议的软件单元分析协议的一致性',
@@ -343,7 +349,7 @@ export function buildDocumentContent(model: ModuleModel, abbr?: AbbrTableInput):
   // 4.2 说明段整段物化（0929 起含引导句；旧物化 json 的 notes.include 仅注部分，渲染期补引导句）
   const includeIntro = '模块内部文件间的包含关系如下图所示。';
   const notes: Record<string, string> = {
-    overview: `本模块对外提供 ${model.providedFunctions.length} 个接口函数（左侧为调用方），并调用 ${model.calledExternalFunctions.length - calloutCount} 个外部接口（右侧按来源模块归组）；箭头方向为调用方向。Callout 函数属本模块配置点，不在本图展示，其调用关系见下方内部函数调用图与 6.2；各接口的模块内调用者见内部函数调用图与 5.2.2 表。`,
+    overview: `本模块对外提供 ${model.providedFunctions.length} 个接口函数（左侧为调用方），并调用 ${model.calledExternalFunctions.length} 个外部接口（右侧按来源模块归组）；箭头方向为调用方向。Callout 函数属本模块配置点，不在本图展示，其调用关系见下方内部函数调用图与 6.2；各接口的模块内调用者见内部函数调用图与 5.2.2 表。`,
     callGraph: '按对外接口函数分别绘制其模块内调用树（深蓝=入口函数，灰=内部函数，蓝=被内部调用的对外接口，黄=Callout 函数（配置代码））；同一函数被多处调用时按调用路径重复出现，保证布局无交叉。经配置表函数指针间接引用的 Callout 单独成图。无模块内调用的平凡函数不出图，其余跨模块调用（Gp_RstM / Gp_TstApp 等）见功能接口总图与 5.2.2 表。',
     include: droppedExternals.length > 0
       ? `${includeIntro}注：箭头指向被包含的头文件（模板约定：箭头指向被调用的元素）。MemMap.h 为内存映射包装文件，默认被本模块各文件包含，图中不再画出；外部模块头文件（${droppedExternals.join('、')}）不在图中展示，标准类型头文件 Std_Types.h 除外。`

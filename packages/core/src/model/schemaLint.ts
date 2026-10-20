@@ -7,11 +7,13 @@
  * 双字节门禁只验 report 输出不验 json 字段，静默逃逸。
  */
 import { SCHEMA_VERSION, listStateMachines, type ModuleModel, type PolarionMarker } from './types.js';
+import { normalizeModel } from './normalize.js';
 
-/** 顶层必备键（analyze 即产出；document/dynamicDesign/functionalDescription 由 gen 阶段产出，单独按阶段要求） */
+/** 顶层必备键（analyze 即产出；document/dynamicDesign/functionalDescription 由 gen 阶段产出，单独按阶段要求；
+ *  calloutFunctions 为 v2 新增——存量 v1 json 由入口 normalizeModel 补齐后再校验，不判缺键） */
 export const TOP_KEYS = ['module', 'schemaVersion', 'analyzedAt', 'files', 'providedFunctions',
   'internalFunctions', 'internalVariables', 'providedVariables', 'calledExternalFunctions',
-  'types', 'configMacros', 'interfaceOverview', 'callGraphs'] as const;
+  'calloutFunctions', 'types', 'configMacros', 'interfaceOverview', 'callGraphs'] as const;
 /** document 节必备键（不含 includeGraphPng——PNG 由 images 阶段物化，走 PNG 检查） */
 export const DOC_KEYS = ['purpose', 'scope', 'fileTable', 'importedTypes', 'complexityTable',
   'configDetails', 'aliasNote', 'abbreviations', 'abbreviationNote', 'definitions',
@@ -31,8 +33,11 @@ export interface SchemaLintOptions {
   requireDynamic?: boolean;
 }
 
-/** 返回缺陷名单（空数组=通过）。只查存在性/结构，不验内容正确性 */
+/** 返回缺陷名单（空数组=通过）。只查存在性/结构，不验内容正确性。
+ *  入口先 normalizeModel：存量 v1 json 就地迁移（补 calloutFunctions、升 schemaVersion），
+ *  校验对象恒为当前版本形态（就地副作用与 images 通道 syncSmAliasPng 自愈先例同构） */
 export function lintModelSchema(model: ModuleModel, opts: SchemaLintOptions = {}): string[] {
+  normalizeModel(model);
   const problems: string[] = [];
   const m = model as unknown as Record<string, unknown>;
   if (model.schemaVersion !== SCHEMA_VERSION) {
@@ -95,6 +100,7 @@ export function lintModelSchema(model: ModuleModel, opts: SchemaLintOptions = {}
     for (const f of model.providedFunctions ?? []) pushWi(f.polarion, `提供函数 ${f.name}`);
     for (const f of model.internalFunctions ?? []) pushWi(f.polarion, `内部函数 ${f.name}（${f.file}）`);
     for (const e of model.calledExternalFunctions ?? []) pushWi(e.polarion, `外部接口 ${e.name}`);
+    for (const e of model.calloutFunctions ?? []) pushWi(e.polarion, `Callout ${e.name}`);
     for (const t of model.types ?? []) pushWi(t.polarion, `类型 ${t.name}`);
     for (const c of model.configMacros ?? []) pushWi(c.polarion, `配置宏 ${c.name}`);
     for (const v of [...(model.internalVariables ?? []), ...(model.providedVariables ?? [])]) {

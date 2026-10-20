@@ -13,6 +13,7 @@ import * as path from 'node:path';
 import {
   collectDiagrams, buildBatchPage, extractDiagramSvgs, svgNaturalSize, pickShotParams,
   wrapSvgShotPage, hasDiagramPng, applyDiagramPng, syncSmAliasPng, lintModelSchema,
+  normalizeModel,
   type ModuleModel,
 } from '@lld/core';
 import { findEdge, describeEdge, edgeDump, edgeScreenshot } from './edge.js';
@@ -33,7 +34,8 @@ export async function cmdImages(outDir: string, resume: boolean): Promise<void> 
     console.error(`未找到 ${designPath}，请先运行 analyze 和 gen`);
     process.exit(1);
   }
-  const model = JSON.parse(fs.readFileSync(designPath, 'utf-8')) as ModuleModel;
+  // v1→v2 读取侧迁移（Callout 挪入 calloutFunctions，幂等）；迁移形态随后续 save 自然落盘
+  const model = normalizeModel(JSON.parse(fs.readFileSync(designPath, 'utf-8')) as ModuleModel);
   // 存量多核 json 自愈：旧版 images 只写 stateMachines[]，兼容别名 stateMachine 缺 PNG
   if (syncSmAliasPng(model)) {
     fs.writeFileSync(designPath, JSON.stringify(model, null, 2), 'utf-8');

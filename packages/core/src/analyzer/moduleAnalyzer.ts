@@ -733,7 +733,12 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
     internalFunctions,
     internalVariables: variables.filter(v => v.isStatic),
     providedVariables: variables.filter(v => !v.isStatic),
-    calledExternalFunctions: [...externalMap.values()].sort((a, b) => a.group.localeCompare(b.group) || a.name.localeCompare(b.name)),
+    // v2 起拆分落盘：普通外部接口 → calledExternalFunctions（5.2.2.2，sort(group,name)）；
+    // Callout → calloutFunctions（6.2，sort(name)，与旧混排中 Callout 组内相对序一致，报告渲染零回归）
+    calledExternalFunctions: [...externalMap.values()].filter(e => e.group !== 'Callout')
+      .sort((a, b) => a.group.localeCompare(b.group) || a.name.localeCompare(b.name)),
+    calloutFunctions: [...externalMap.values()].filter(e => e.group === 'Callout')
+      .sort((a, b) => a.name.localeCompare(b.name)),
     types,
     configMacros,
     interfaceOverview: {

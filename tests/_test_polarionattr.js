@@ -23,8 +23,8 @@ const typ = (name, kind, relatedDefines) => ({
   id: `T::${name}`, name, kind, file: 't.h', polarion: marker('5.2.1.2'),
   ...(relatedDefines ? { relatedDefines } : {}),
 });
-const ext = (name, chapter) => ({
-  name, signature: `void ${name}(void)`, group: 'Ext', comment: null, calledFrom: ['A'],
+const ext = (name, chapter, group) => ({
+  name, signature: `void ${name}(void)`, group: group ?? (chapter === '6.2' ? 'Callout' : 'Ext'), comment: null, calledFrom: ['A'],
   polarion: { isWorkItem: true, chapter, workItemKind: chapter === '6.2' ? 'function' : 'table', title: name, workItemId: null },
 });
 const cfg = (name) => ({
@@ -40,9 +40,9 @@ const seq = (name) => ({
   polarion: { isWorkItem: true, chapter: '5.3.2', workItemKind: 'sequence', title: name, workItemId: null },
 });
 const model = (over = {}) => ({
-  module: 'M', schemaVersion: 1, analyzedAt: '2026-01-01', files: [],
+  module: 'M', schemaVersion: 2, analyzedAt: '2026-01-01', files: [],
   providedFunctions: [], internalFunctions: [], internalVariables: [], providedVariables: [],
-  calledExternalFunctions: [], types: [], configMacros: [],
+  calledExternalFunctions: [], calloutFunctions: [], types: [], configMacros: [],
   ...over,
 });
 
@@ -58,7 +58,8 @@ const model = (over = {}) => ({
       typ('EnType', 'typedef', [{ name: 'E_A', value: '0', comment: null }]),
       typ('BaseType', 'typedef'),
     ],
-    calledExternalFunctions: [ext('CalloutX', '6.2'), ext('GrpFn', '5.2.2.2')],
+    calledExternalFunctions: [ext('GrpFn', '5.2.2.2')],
+    calloutFunctions: [ext('CalloutX', '6.2')],
     configMacros: [cfg('CFG_A')],
   });
   materializePolarionAttributes(m);
@@ -75,7 +76,7 @@ const model = (over = {}) => ({
   ok(pw(m.types, 'EnType').wiType === 'TDE', 'S1 枚举式 typedef=TDE');
   ok(pw(m.types, 'BaseType').wiType === 'TDB', 'S1 普通 typedef=TDB');
   ok(m.types.every(t => t.polarion.verifyMethod === 'review'), 'S1 类型一律 review');
-  ok(pw(m.calledExternalFunctions, 'CalloutX').wiType === 'Design' && pw(m.calledExternalFunctions, 'CalloutX').verifyMethod === 'test',
+  ok(pw(m.calloutFunctions, 'CalloutX').wiType === 'Design' && pw(m.calloutFunctions, 'CalloutX').verifyMethod === 'test',
     'S1 Callout=Design/test');
   ok(pw(m.calledExternalFunctions, 'GrpFn').wiType === 'Design' && pw(m.calledExternalFunctions, 'GrpFn').verifyMethod === 'test',
     'S1 组表接口=Design/test');

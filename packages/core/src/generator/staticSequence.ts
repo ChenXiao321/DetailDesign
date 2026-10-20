@@ -19,6 +19,7 @@ import { locateFnCfg, COREID_ASSIGN_RE, roleEdgeForLabel } from '../analyzer/sta
 import { buildSequenceEvents, type SeqEvent } from '../analyzer/sequenceBuilder.js';
 import { lintMermaidSource, lintSequenceStructure } from '../report/mermaidPre.js';
 import type { FunctionUnit, ModuleModel } from '../model/types.js';
+import { normalizeModel } from '../model/normalize.js';
 
 export interface StaticSequenceResult {
   parts: { role: string | null; diagram: string; description: string }[];
@@ -39,10 +40,12 @@ export async function buildStaticSequence(
   scenario?: string,
 ): Promise<StaticSequenceResult> {
   const warnings: string[] = [];
+  normalizeModel(model); // v1→v2 读取侧迁移（幂等）
   const selfAlias = aliasOf(model.module);
 
   // ---- 参与者归属：外部接口查 group（Callout 组=本模块）；模块内函数/宏未知 → 自调用 ----
-  const extByName = new Map(model.calledExternalFunctions.map(e => [e.name, e]));
+  // v2 拆分后两数组合并建图（存量 json 由调用链入口 normalizeModel 保证 calloutFunctions 在场，?? [] 兜底直接调用）
+  const extByName = new Map([...model.calledExternalFunctions, ...(model.calloutFunctions ?? [])].map(e => [e.name, e]));
   const internalNames = new Set([...model.providedFunctions, ...model.internalFunctions].map(f => f.name));
   const aliasGroup = new Map<string, string>(); // 外部参与者别名 → 原组名（声明行 as 还原用）
   const resolveParticipant = (callee: string): string => {

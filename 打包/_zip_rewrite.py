@@ -41,6 +41,8 @@ SRC_MAP = {
     '启动命令行.bat': '打包/启动命令行.bat',
     'lld-run.bat': '打包/lld-run.bat',
     'lld-update.bat': '打包/lld-update.bat',
+    # 配置随工具分发（2026-10-22 起由 zip 根挪入工具目录，加载器只认该位置）
+    'packages/cli/lld.config.json': 'lld.config.json',
 }
 def src_of(zip_name):
     return SRC_MAP.get(zip_name, zip_name)
@@ -58,6 +60,8 @@ old.close()
 #  ③ 开发期依赖：typescript 编译器/@types 类型定义/.bin（产物已预编译进 dist）
 #  ④ tree-sitter-wasms 里除 C 以外的 35 种语言语法包（工具只解析 C）
 def droppable(n):
+    if n == 'lld.config.json':          # 2026-10-22 起挪入 packages/cli/（SRC_MAP 补入）
+        return True
     if '/polarion/' in n or n.endswith('/pandoc.ts') or '/pandoc.' in n:
         return True
     if n.startswith('测试模块/'):

@@ -26,6 +26,12 @@ HTML 评审报告。包内已包含全部 npm 依赖（node_modules）和已构�
   2. 编辑 lld.config.json：把 apiKey 的 REPLACE_WITH_REAL_KEY 改成真实 key
      （服务器开了 401 认证，key 向部署方索取；其余字段已配好：
       baseUrl http://10.0.75.130:4000，model qwen3.8-27b）
+     配置文件查找顺序：①当前工作目录 ②工具目录 packages\cli\。
+     包内自带的一份在解压根目录——在该目录下开命令行跑即可生效；
+     若集成到 Jenkins 等第三方工具（工作目录不在包内），把这份
+     lld.config.json 挪到（或复制到）packages\cli\ 下即可随工具走，
+     使用者无需再 copy 到自己的目录。外部缩写表 docx 的相对路径
+     按 lld.config.json 所在目录解析，可随工具一起分发。
   3. 自检 CLI：
        node packages/cli/dist/index.js --help
   4. LLM 连通性自检：

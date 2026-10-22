@@ -37,7 +37,7 @@ function makeProvider(mock: boolean): LLMProvider {
   const config = resolveConfig(loadConfigFile().llm);
   if (!config.baseUrl) {
     console.error('未配置 LLM 地址。设置环境变量 LLD_LLM_BASE_URL（如 http://server:8000/v1），'
-      + '或在当前目录建 lld.config.json（{"llm":{"baseUrl":"..."}}），或使用 --mock 离线预览');
+      + '或建 lld.config.json（{"llm":{"baseUrl":"..."}}，放当前目录或工具目录均可），或使用 --mock 离线预览');
     process.exit(1);
   }
   return new OpenAICompatibleProvider(config);
@@ -473,7 +473,8 @@ async function main(): Promise<void> {
                                         斜线计数/交叉穿盒/箭头朝向审计，打印中文量化报告（需 Edge）
   （不带 --out 时产物写在模块目录内；report/audit 只需 --out 指向产物目录，模块目录仅作占位）
 LLM 配置: 环境变量 LLD_LLM_BASE_URL / LLD_LLM_API_KEY / LLD_LLM_MODEL / LLD_LLM_TIMEOUT_MS，
-  或当前目录 lld.config.json（{"llm":{"baseUrl":"http://server:4000","model":"..."}}）；只给 host:port 时自动补 /v1`);
+  或 lld.config.json（{"llm":{"baseUrl":"http://server:4000","model":"..."}}；
+  放当前目录或工具目录均可，当前目录优先，集成分发时可随工具走）；只给 host:port 时自动补 /v1`);
   process.exit(1);
 }
 

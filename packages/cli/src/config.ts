@@ -1,6 +1,6 @@
 /** lld.config.json 加载（可选；已 gitignore，勿提交真实 token）。
- *  查找顺序：①当前工作目录（使用者临时覆盖）②工具目录（packages/cli，第三方集成时随工具分发，
- *  使用者无需 copy 到本地）。两处同时在场时当前目录优先。 */
+ *  查找位置唯一：工具目录（packages/cli，dist/ 上一级）——配置随工具分发，与工作目录无关，
+ *  Jenkins 等任意 workspace 均可读到，使用者无需 copy；临时覆盖走环境变量（LLD_LLM_*，优先于配置文件）。 */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -19,13 +19,11 @@ export interface LldConfigFile {
 
 export function loadConfigFile(): LldConfigFile {
   // dist/config.js → 上一级 = 工具根（packages/cli）；迁移包镜像同构
-  const toolDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-  const candidates = [path.resolve('lld.config.json'), path.join(toolDir, 'lld.config.json')];
-  const p = candidates.find((c, i) => (i === 0 || c !== candidates[0]) && fs.existsSync(c));
-  if (!p) return {};
+  const p = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'lld.config.json');
+  if (!fs.existsSync(p)) return {};
   try {
     const cfg = JSON.parse(fs.readFileSync(p, 'utf-8').replace(/^﻿/, '')) as LldConfigFile;
-    // abbreviationsDoc 相对路径按配置文件所在目录解析（工具目录分发时 docx 可随工具走）
+    // abbreviationsDoc 相对路径按配置文件所在目录解析（docx 可随工具一起分发）
     if (cfg.abbreviationsDoc && !path.isAbsolute(cfg.abbreviationsDoc)) {
       cfg.abbreviationsDoc = path.resolve(path.dirname(p), cfg.abbreviationsDoc);
     }

@@ -740,7 +740,10 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
     calloutFunctions: [...externalMap.values()].filter(e => e.group === 'Callout')
       .sort((a, b) => a.name.localeCompare(b.name)),
     types,
-    configMacros,
+    // v4 起拆分落盘：配置宏按 kind 分三桶（6.1 通用 / 6.2 功能 / 别名宏），桶内保持提取序
+    generalConfigMacros: configMacros.filter(c => c.kind === 'general'),
+    functionalConfigMacros: configMacros.filter(c => c.kind === 'functional'),
+    aliasConfigMacros: configMacros.filter(c => c.kind === 'alias'),
     interfaceOverview: {
       diagram: ov.join('\n'),
       diagramFormat: 'mermaid',

@@ -276,8 +276,8 @@ ${c.affects.length > 0 ? `<p><b>影响范围（条件编译直接作用的函数
     list.length === 0
       ? '<p class="muted">注：本模块无此类配置项。</p>'
       : list.map((c, i) => configSubsection(c, `${base}.${i + 1}`)).join('\n');
-  const generalCfgSection = configSections(model.configMacros.filter(c => c.kind === 'general'), '6.1');
-  const functionalCfgs = model.configMacros.filter(c => c.kind === 'functional');
+  const generalCfgSection = configSections(model.generalConfigMacros, '6.1');
+  const functionalCfgs = model.functionalConfigMacros;
   const functionalCfgSection = configSections(functionalCfgs, '6.2');
   // Callout 函数：由集成方在配置代码中实现，属于功能配置点
   const callouts = model.calloutFunctions;

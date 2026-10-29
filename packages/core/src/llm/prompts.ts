@@ -170,7 +170,7 @@ export function buildModuleDescriptionPrompt(
   }
   const callouts = model.calloutFunctions ?? [];
   if (callouts.length > 0) lines.push(`- 提供 ${callouts.length} 个 Callout 配置点供集成方实现`);
-  const funcMacros = model.configMacros.filter(c => c.kind === 'functional');
+  const funcMacros = model.functionalConfigMacros ?? [];
   if (funcMacros.length > 0) {
     lines.push(`- 功能配置项: ${funcMacros.map(c => `${c.name}=${c.value}`).join('、')}`);
   }

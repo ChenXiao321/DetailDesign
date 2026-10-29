@@ -5,9 +5,20 @@
  * 调用同一函数现算——单一实现保证两条路径产物逐字节一致。
  */
 import type { ModuleModel, DocumentContent, ConfigMacro, ConfigUsage } from '../model/types.js';
-import { listStateMachines } from '../model/types.js';
+import { listStateMachines, listConfigMacros } from '../model/types.js';
 import { normalizeModel } from '../model/normalize.js';
 import { esc } from '../report/cards.js';
+
+/** 跨桶配置宏名单，还原 v4 前 configMacros 全序：存量迁移产物带 _seq（旧数组索引）按 _seq 排；
+ *  新产物无 _seq 落桶序（general→functional→alias，桶内提取序）。名单类现算场景专用（7 章评估等） */
+const listConfigMacrosFullOrder = (model: ModuleModel): ConfigMacro[] => {
+  const all = listConfigMacros(model);
+  if (all.some(c => (c as ConfigMacro & { _seq?: number })._seq !== undefined)) {
+    return all.sort((a, b) =>
+      ((a as ConfigMacro & { _seq?: number })._seq ?? 0) - ((b as ConfigMacro & { _seq?: number })._seq ?? 0));
+  }
+  return all;
+};
 
 /** 外部缩写表输入（CLI resolveAbbreviations 的结果原样透传；core 不碰 fs） */
 export interface AbbrTableInput {
@@ -59,7 +70,7 @@ function allDocumentText(model: ModuleModel): string {
     ...allFns.map(f => `${f.name} ${f.signature} ${f.generated?.detailedDescription ?? ''}`),
     ...model.calledExternalFunctions.map(e => `${e.name} ${e.generated?.detailedDescription ?? ''}`),
     ...model.calloutFunctions.map(e => `${e.name} ${e.generated?.detailedDescription ?? ''}`),
-    ...model.configMacros.map(c => `${c.name} ${c.generated?.valueEffect ?? ''}`),
+    ...listConfigMacros(model).map(c => `${c.name} ${c.generated?.valueEffect ?? ''}`),
     ...model.types.map(t => `${t.name} ${t.comment} ${t.generated?.comment ?? ''}`),
     model.functionalDescription ?? '',
     // 序列图/状态机图源也属文档内容（含 actor OS 等角色名）
@@ -110,7 +121,7 @@ function describeFile(path: string, role: string, model: ModuleModel): string {
     }
     case 'config': {
       if (isC) return '配置数据文件（配置代码）：定义模块配置数据（核运行时容器、函数指针表等）';
-      const n = model.configMacros.filter(c => c.file === path && c.kind !== 'alias').length;
+      const n = listConfigMacros(model).filter(c => c.file === path && c.kind !== 'alias').length;
       return n > 0
         ? `配置参数头文件（配置代码）：定义 ${n} 个配置宏`
         : '配置数据头文件（配置代码）：配置数据的类型与声明';
@@ -165,7 +176,7 @@ function buildConfigDetail(c: ConfigMacro): { usageItems: string[]; example: str
 
 /** 6.2 别名宏注（自 htmlReport 搬入，物化进 document.aliasNote；无别名宏时为空串） */
 function buildAliasNote(model: ModuleModel): string {
-  const aliasCfgs = model.configMacros.filter(c => c.kind === 'alias');
+  const aliasCfgs = model.aliasConfigMacros;
   return aliasCfgs.length === 0 ? '' :
     `<p class="muted">注：以下宏为固定别名（实现重定义，无可选值，不属于配置项）：${aliasCfgs.map(c => `<code>${esc(c.name)}${c.isFunctionLike ? '()' : ''} → ${esc(c.value)}</code>`).join('，')}</p>`;
 }
@@ -217,7 +228,7 @@ export function buildDocumentContent(model: ModuleModel, abbr?: AbbrTableInput):
   const allFns = [...model.providedFunctions, ...model.internalFunctions];
   const callouts = model.calloutFunctions;
   const calloutCount = callouts.length;
-  const functionalCfgs = model.configMacros.filter(c => c.kind === 'functional');
+  const functionalCfgs = model.functionalConfigMacros;
   const calloutSecNo = `6.2.${functionalCfgs.length + 1}`;
   const allText = allDocumentText(model);
 
@@ -286,10 +297,10 @@ export function buildDocumentContent(model: ModuleModel, abbr?: AbbrTableInput):
   const maxComplexity = Math.max(0, ...allFns.map(f => f.complexity ?? 0));
   const highComplexity = allFns.filter(f => (f.complexity ?? 0) > 10);
   const loopFns = allFns.filter(f => f.infiniteLoop);
-  const condCfgs = model.configMacros.filter(c => c.usages.some(u => u.kind === 'condCompile'));
+  const condCfgs = listConfigMacrosFullOrder(model).filter(c => c.usages.some(u => u.kind === 'condCompile'));
   const safetyIds = [
     ...allFns.filter(f => /safe|safety/i.test(f.name)).map(f => f.name),
-    ...model.configMacros.filter(c => /safe|safety/i.test(c.name)).map(c => c.name),
+    ...listConfigMacrosFullOrder(model).filter(c => /safe|safety/i.test(c.name)).map(c => c.name),
   ];
   const sms = listStateMachines(model.dynamicDesign);
   // 迁移表合并口径：多角色分图时合并各角色迁移并按 从|到|触发 去重（与 5.3.1.2 表一致）
@@ -323,7 +334,7 @@ export function buildDocumentContent(model: ModuleModel, abbr?: AbbrTableInput):
     { dim: '可测试性', no: 10, content: '分析单元输入、输出的可观测性',
       fact: `全部 ${allFns.length} 个函数的输入/输出参数与返回值已在 5.2.3.2 / 5.2.4.2 函数卡片中逐项列出（含取值范围说明）。${TODO_CONCLUSION}` },
     { dim: '可复用性', no: 11, content: '分析详细设计单元是否能够被本系统或其他系统使用的可能性',
-      fact: `本模块含 ${calloutCount} 个 Callout 项目适配点与 ${model.configMacros.filter(c => c.kind !== 'alias').length} 个配置宏，平台化/复用策略需人工评估。${TODO_CONCLUSION}` },
+      fact: `本模块含 ${calloutCount} 个 Callout 项目适配点与 ${listConfigMacros(model).filter(c => c.kind !== 'alias').length} 个配置宏，平台化/复用策略需人工评估。${TODO_CONCLUSION}` },
     { dim: '安全性', no: 12, content: '分析软件设计单元是否是功能安全输出',
       fact: safetyIds.length > 0
         ? `探测到安全相关标识符：${safetyIds.map(s => `<code>${esc(s)}</code>`).join('、')}；是否构成功能安全输出需人工判定。${TODO_CONCLUSION}`
@@ -378,7 +389,7 @@ export function buildDocumentContent(model: ModuleModel, abbr?: AbbrTableInput):
       .sort((a, b) => (b.complexity ?? 0) - (a.complexity ?? 0))
       .map(f => [f.name, f.complexity ?? null, f.infiniteLoop === true]),
     // ---- 6 章配置宏明细 + 别名宏注（原 htmlReport 渲染期现算，物化后 report 只读） ----
-    configDetails: Object.fromEntries(model.configMacros.map(c => [c.name, buildConfigDetail(c)])),
+    configDetails: Object.fromEntries(listConfigMacros(model).map(c => [c.name, buildConfigDetail(c)])),
     aliasNote: buildAliasNote(model),
     abbreviations,
     abbreviationNote,

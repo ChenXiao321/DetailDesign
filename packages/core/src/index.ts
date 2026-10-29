@@ -25,7 +25,7 @@ export {
 } from './generator/polarionAttributes.js';
 export {
   collectDiagrams, buildBatchPage, extractDiagramSvgs, svgNaturalSize, pickShotParams,
-  wrapSvgShotPage, hasDiagramPng, applyDiagramPng, syncSmAliasPng, type DiagramEntry,
+  wrapSvgShotPage, hasDiagramPng, applyDiagramPng, type DiagramEntry,
 } from './report/imageBatch.js';
 export {
   lintModelSchema, TOP_KEYS, DOC_KEYS, NOTES_KEYS, CONFIG_DETAIL_FIELDS,

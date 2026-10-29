@@ -174,7 +174,7 @@ const mkStruct = (name, field, typeName) => ({
     };
     await generateDesign(model, provider, { only: ['dynamic'], failures: [], readSource });
     const dd = model.dynamicDesign;
-    check('gen:双图入库', dd?.stateMachines?.length === 2 && dd.stateMachine?.name.includes('主核'), JSON.stringify(dd?.stateMachines?.map(s => s.name)));
+    check('gen:双图入库', dd?.stateMachines?.length === 2 && dd.stateMachines[0].name.includes('主核') && dd.stateMachine === undefined, JSON.stringify(dd?.stateMachines?.map(s => s.name)));
     check('gen:SM结构不调LLM（仅润色调）', providerCalls.filter(u => u.includes('状态机')).every(u => u.includes('润色')), providerCalls.map(u => u.slice(0, 20)).join('|'));
     check('gen:序列图双图（角色分支）', dd?.sequences.length === 2
       && dd.sequences.some(s => s.name.includes('主核')) && dd.sequences.some(s => s.name.includes('从核')),

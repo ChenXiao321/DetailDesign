@@ -2,7 +2,8 @@
 // 口径：与 sync.json §6.0 一致——函数 IF/LF、类型 TDST/TDE/TDB、变量 GV/LV、
 // Callout/组表/配置宏/图/章节级 Design；verifyMethod：函数/外部接口/配置宏=test，其余=review
 const assert = require('assert');
-const { materializePolarionAttributes, applyModuleDiff, diffModules } = require('../packages/core/dist/index.js');
+const { materializePolarionAttributes, applyModuleDiff, diffModules, normalizeModel } = require('../packages/core/dist/index.js');
+const { SCHEMA_VERSION } = require('../packages/core/dist/model/types.js');
 
 let n = 0;
 const ok = (cond, name) => { n++; assert(cond, name); console.log(`  ✓ ${name}`); };
@@ -40,7 +41,7 @@ const seq = (name) => ({
   polarion: { isWorkItem: true, chapter: '5.3.2', workItemKind: 'sequence', title: name, workItemId: null },
 });
 const model = (over = {}) => ({
-  module: 'M', schemaVersion: 2, analyzedAt: '2026-01-01', files: [],
+  module: 'M', schemaVersion: SCHEMA_VERSION, analyzedAt: '2026-01-01', files: [],
   providedFunctions: [], internalFunctions: [], internalVariables: [], providedVariables: [],
   calledExternalFunctions: [], calloutFunctions: [], types: [], configMacros: [],
   ...over,
@@ -60,7 +61,7 @@ const model = (over = {}) => ({
     ],
     calledExternalFunctions: [ext('GrpFn', '5.2.2.2')],
     calloutFunctions: [ext('CalloutX', '6.2')],
-    configMacros: [cfg('CFG_A')],
+    generalConfigMacros: [cfg('CFG_A')],
   });
   materializePolarionAttributes(m);
   const pw = (list, name) => list.find(x => x.name === name).polarion;
@@ -80,17 +81,15 @@ const model = (over = {}) => ({
     'S1 Callout=Design/test');
   ok(pw(m.calledExternalFunctions, 'GrpFn').wiType === 'Design' && pw(m.calledExternalFunctions, 'GrpFn').verifyMethod === 'test',
     'S1 组表接口=Design/test');
-  ok(pw(m.configMacros, 'CFG_A').wiType === 'Design' && pw(m.configMacros, 'CFG_A').verifyMethod === 'test',
+  ok(pw(m.generalConfigMacros, 'CFG_A').wiType === 'Design' && pw(m.generalConfigMacros, 'CFG_A').verifyMethod === 'test',
     'S1 配置宏=Design/test');
 }
 
 // ================= 场景 2：图节点 + 章节级工作项 =================
 {
-  const smMain = sm('主核 SM');
   const m = model({
     dynamicDesign: {
-      stateMachine: smMain,                    // 兼容别名：与 stateMachines[0] 同引用（真实产物形态）
-      stateMachines: [smMain, sm('从核 SM')],
+      stateMachines: [sm('主核 SM'), sm('从核 SM')],
       sequences: [seq('Initialization'), seq('Shutdown')],
     },
     interfaceOverview: { diagram: 'flowchart LR', diagramFormat: 'mermaid', polarion: marker('5.1') },
@@ -99,8 +98,6 @@ const model = (over = {}) => ({
   materializePolarionAttributes(m);
   ok(m.dynamicDesign.stateMachines.every(s => s.polarion.wiType === 'Design' && s.polarion.verifyMethod === 'review'),
     'S2 多核状态机全角色图=Design/review');
-  ok(m.dynamicDesign.stateMachine.polarion.wiType === 'Design',
-    'S2 stateMachine 兼容别名同引用已填');
   ok(m.dynamicDesign.sequences.every(s => s.polarion.wiType === 'Design' && s.polarion.verifyMethod === 'review'),
     'S2 序列图=Design/review');
   ok(m.interfaceOverview.polarion.wiType === 'Design' && m.interfaceOverview.polarion.verifyMethod === 'review',
@@ -116,12 +113,16 @@ const model = (over = {}) => ({
     'S2 章节级一律 Design/review');
 }
 
-// ================= 场景 3：单状态机旧形态（无 stateMachines 数组） =================
+// ================= 场景 3：存量旧形态（仅有 stateMachine 单字段）normalizeModel 迁移后物化 =================
 {
   const m = model({ dynamicDesign: { stateMachine: sm('SM'), sequences: [] } });
+  normalizeModel(m);   // 读取侧迁移：stateMachine → stateMachines 数组（同 CLI 各入口先例）
   materializePolarionAttributes(m);
-  ok(m.dynamicDesign.stateMachine.polarion.wiType === 'Design' && m.dynamicDesign.stateMachine.polarion.verifyMethod === 'review',
-    'S3 旧单图产物 stateMachine 别名兜底填充');
+  ok(Array.isArray(m.dynamicDesign.stateMachines) && m.dynamicDesign.stateMachines[0].name === 'SM',
+    'S3 旧单图形态迁移为数组');
+  ok(m.dynamicDesign.stateMachines[0].polarion.wiType === 'Design'
+    && m.dynamicDesign.stateMachines[0].polarion.verifyMethod === 'review',
+    'S3 迁移后物化兜底填充');
 }
 
 // ================= 场景 4：幂等 + 章节挪动/形态变化重跑刷新 =================
@@ -148,17 +149,18 @@ const model = (over = {}) => ({
     dynamicDesign: { stateMachine: sm('SM'), sequences: [seq('SQ')] },
     functionalDescription: '旧描述',
   });
+  normalizeModel(oldDesign);   // 读取侧迁移（CLI diff/update 入口先例）：旧单字段形态升为数组
   const newModel = model({ providedFunctions: [fn('A')] });
   // newModel 经 analyze 已物化（模拟 analyze 调用点）
   materializePolarionAttributes(newModel);
   const d = diffModules(oldDesign, newModel);
   const merged = applyModuleDiff(newModel, oldDesign, d);
-  ok(merged.dynamicDesign.stateMachine.polarion.wiType === undefined,
+  ok(merged.dynamicDesign.stateMachines[0].polarion.wiType === undefined,
     'S5 合并回挂旧 dynamicDesign 时存量 marker 确实缺字段');
   // cmdDiff 落盘前的物化调用点
   materializePolarionAttributes(merged);
-  ok(merged.dynamicDesign.stateMachine.polarion.wiType === 'Design'
-    && merged.dynamicDesign.stateMachine.polarion.verifyMethod === 'review'
+  ok(merged.dynamicDesign.stateMachines[0].polarion.wiType === 'Design'
+    && merged.dynamicDesign.stateMachines[0].polarion.verifyMethod === 'review'
     && merged.dynamicDesign.sequences[0].polarion.wiType === 'Design',
     'S5 落盘前再物化：旧 SM/序列图 marker 字段补齐');
   ok(merged.providedFunctions[0].polarion.wiType === 'IF', 'S5 新模型自带字段不受合并影响');

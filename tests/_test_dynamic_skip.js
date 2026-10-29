@@ -19,7 +19,7 @@ const { generateDesign } = require('../packages/core/dist/generator/designGenera
     }],
     internalFunctions: [], internalVariables: [], providedVariables: [],
     calledExternalFunctions: [], types: [], configMacros: [], interfaceOverview: null, callGraphs: [],
-    dynamicDesign: { stateMachine: oldSM, sequences: [] },
+    dynamicDesign: { stateMachines: [oldSM], sequences: [] },
   };
   const calls = [];
   const provider = {
@@ -30,7 +30,7 @@ const { generateDesign } = require('../packages/core/dist/generator/designGenera
     },
   };
   await generateDesign(model, provider, { only: ['dynamic'], skipExisting: true, failures: [] });
-  const smKept = model.dynamicDesign.stateMachine === oldSM;
+  const smKept = model.dynamicDesign.stateMachines[0] === oldSM;
   const seqRegen = model.dynamicDesign.sequences.length === 1
     && model.dynamicDesign.sequences[0].diagram.includes('M_Init()')
     && model.dynamicDesign.sequences[0].diagram.includes('X_SetUp');

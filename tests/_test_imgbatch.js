@@ -28,7 +28,7 @@ function mkModel() {
     interfaceOverview: { diagram: 'flowchart LR\n    A --> B', diagramFormat: 'mermaid', polarion: {} },
     callGraphs: [{ name: 'M_Init', diagram: 'flowchart TD\n    M_Init --> M_Sub', diagramFormat: 'mermaid', polarion: {} }],
     dynamicDesign: {
-      stateMachine: { name: 'M_SM', diagram: 'stateDiagram-v2\n    [*] --> Idle', diagramFormat: 'mermaid', states: [], transitions: [], polarion: {} },
+      stateMachines: [{ name: 'M_SM', diagram: 'stateDiagram-v2\n    [*] --> Idle', diagramFormat: 'mermaid', states: [], transitions: [], polarion: {} }],
       sequences: [{ name: 'Initialization', diagram: 'sequenceDiagram\n    OS->>M: M_Init()', diagramFormat: 'mermaid', description: '', polarion: {} }],
     },
     document: { purpose: '', scope: '', abbreviations: [], abbreviationNote: '', definitions: [], definitionNote: null, abbreviationGaps: [], evaluationRows: [], complexityNote: '', evaluationSummary: [], supportFiles: [], supportNote: '', notes: {} },
@@ -116,7 +116,7 @@ function mkModel() {
   check('写 fn', applyDiagramPng(m, 'fn:M_Init', 'QkFTRTY0') === null && m.providedFunctions[0].generated.flowchartPng === 'QkFTRTY0');
   check('写 overview', applyDiagramPng(m, 'overview', 'WA==') === null && m.interfaceOverview.diagramPng === 'WA==');
   check('写 callgraph', applyDiagramPng(m, 'callgraph:M_Init', 'WQ==') === null && m.callGraphs[0].diagramPng === 'WQ==');
-  check('写 sm（legacy 单图路径）', applyDiagramPng(m, 'sm:M_SM', 'Wg==') === null && m.dynamicDesign.stateMachine.diagramPng === 'Wg==');
+  check('写 sm（数组形态）', applyDiagramPng(m, 'sm:M_SM', 'Wg==') === null && m.dynamicDesign.stateMachines[0].diagramPng === 'Wg==');
   check('写 seq', applyDiagramPng(m, 'seq:Initialization', 'Ww==') === null && m.dynamicDesign.sequences[0].diagramPng === 'Ww==');
   check('写 include（document 节）', applyDiagramPng(m, 'include', 'XA==') === null && m.document.includeGraphPng === 'XA==');
   check('hasDiagramPng 写后全真', ['fn:M_Init', 'overview', 'callgraph:M_Init', 'sm:M_SM', 'seq:Initialization', 'include'].every(k => hasDiagramPng(m, k)));

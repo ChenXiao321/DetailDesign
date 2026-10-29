@@ -71,13 +71,12 @@ Modu.LLD 在模块代码改版后（`update` / `run` 自动更新流程）产出
 工具开工前**必须**校验：任一 `content` 缺生成字段（如 function 无 `generated`）即判定为
 分析态同步单，拒绝正式执行并提示「请先跑完 update 流程」。
 
-### 2.5 全量读取去重（状态机兼容别名）
+### 2.5 状态机统一数组形态
 
-若首版全量导入通道需要直接读取 `lld_design.json`：多核产物的 `dynamicDesign.stateMachine`
-是兼容旧版读取方的别名，恒等于 `dynamicDesign.stateMachines[0]`。读取状态机时**必须**：
-`stateMachines[]` 非空则只使用该数组并忽略 `stateMachine`；否则才回退读取 `stateMachine`。
-不得把两者合并扫描，否则主核 5.3.1 状态机会被重复识别。同步单的 `chapterUpdates.content`
-已由产出方按该去重口径生成。
+`lld_design.json` 的 `dynamicDesign.stateMachines` 恒为数组：无状态机为空数组、
+单核 1 张、多核按角色分图多张。读取状态机时直接取该数组即可，
+无需判空字段或兼容旧单字段形态（v0.4.7 起 `stateMachine` 旧字段已下线，
+存量旧 json 由工具读取侧自动迁移，同步单产出方恒以数组形态给出）。
 
 ### 2.6 design json 侧的属性物化（2026-10-19 用户定）
 
@@ -300,7 +299,7 @@ jsonPath 基座为 `$.calloutFunctions[N]`（design json v2 起 Callout 独立�
 | chapter | 内容 | content 形态 | jsonPath（新 json 落点） | 操作 |
 |---|---|---|---|---|
 | `5.1` | 模块功能描述 | 字符串 | `$.functionalDescription` | 替换 5.1 节正文 |
-| `5.3.1` | 状态机 | StateMachineDesign 数组：`diagram`(mermaid 源码) + `diagramPng` + `states[]`(名称/描述) + `transitions[]`(迁移说明) | `$.dynamicDesign.stateMachines`（旧 json 为单图形态时 `oldJsonPath=$.dynamicDesign.stateMachine`） | 整节替换：图用 PNG，状态表/迁移表用 states/transitions |
+| `5.3.1` | 状态机 | StateMachineDesign 数组：`diagram`(mermaid 源码) + `diagramPng` + `states[]`(名称/描述) + `transitions[]`(迁移说明) | `$.dynamicDesign.stateMachines` | 整节替换：图用 PNG，状态表/迁移表用 states/transitions |
 | `5.3.2` | 序列图 | SequenceDesign 数组：`diagram` + `diagramPng` + `description` | `$.dynamicDesign.sequences` | 整节替换（多核场景多张图逐一对应） |
 | `7` | 评估与圈复杂度表 | `{ evaluationRows[], complexityTable[] }` | `$.document`（content 为 document 节多键子集，锚到父节点） | 整表替换 |
 | `4.1` | 文件清单 | files 数组（path/role/includes） | `$.files` | 整表替换 |

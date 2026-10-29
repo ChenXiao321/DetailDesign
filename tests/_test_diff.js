@@ -1,6 +1,7 @@
 // 版本更新差异比对 + 失效合并测试（modelDiff 纯逻辑）
 const assert = require('assert');
 const { diffModules, applyModuleDiff, buildPolarionSync } = require('../packages/core/dist/index.js');
+const { SCHEMA_VERSION } = require('../packages/core/dist/model/types.js');
 
 let n = 0;
 const ok = (cond, name) => { n++; assert(cond, name); console.log(`  ✓ ${name}`); };
@@ -45,7 +46,7 @@ const model = (over = {}) => ({
     calledExternalFunctions: [ext('E1', 'void E1(void)', true)],
     configMacros: [cfg('C1', '1', true)],
     functionalDescription: '旧5.1描述',
-    dynamicDesign: { stateMachine: { name: 'SM' }, sequences: [{ name: 'SQ' }] },
+    dynamicDesign: { stateMachines: [{ name: 'SM' }], sequences: [{ name: 'SQ' }] },
     document: { purpose: 'p' },
     interfaceOverview: { diagram: 'flowchart TD\nX', diagramFormat: 'mermaid', polarion: {}, diagramPng: 'PNG_IO' },
     callGraphs: [{ name: 'A', diagram: 'flowchart TD\nY', diagramFormat: 'mermaid', polarion: {}, diagramPng: 'PNG_CG' }],
@@ -65,10 +66,10 @@ const model = (over = {}) => ({
   const m = applyModuleDiff(nw, old, d);
   ok(m.providedFunctions.every(f => f.generated), 'S1 合并后 generated 全保留');
   ok(m.functionalDescription === '旧5.1描述', 'S1 5.1 描述保留');
-  ok(m.dynamicDesign?.stateMachine?.name === 'SM' && m.dynamicDesign.sequences.length === 1, 'S1 动态设计整节保留');
+  ok(m.dynamicDesign?.stateMachines?.[0]?.name === 'SM' && m.dynamicDesign.sequences.length === 1, 'S1 动态设计整节保留');
   ok(m.document === undefined, 'S1 document 节恒失效（待重物化）');
   ok(m.interfaceOverview.diagramPng === 'PNG_IO' && m.callGraphs[0].diagramPng === 'PNG_CG', 'S1 图源一致的 PNG 回挂');
-  ok(m.schemaVersion === 2, 'S1 schemaVersion 经 normalize 升级为 v2');
+  ok(m.schemaVersion === SCHEMA_VERSION, 'S1 schemaVersion 经 normalize 升级为当前版本');
 }
 
 // ================= 场景 2：函数体变更 + 新增 + 删除 =================
@@ -109,7 +110,7 @@ const model = (over = {}) => ({
     calledExternalFunctions: [ext('E1', 'void E1(void)', true)],
     configMacros: [cfg('C1', '1', true)],
     functionalDescription: '旧5.1',
-    dynamicDesign: { stateMachine: { name: 'SM' }, sequences: [] },
+    dynamicDesign: { stateMachines: [{ name: 'SM' }], sequences: [] },
   });
   const nw = model({
     providedFunctions: [fn('A', 's1', 'b1')],
@@ -126,8 +127,8 @@ const model = (over = {}) => ({
   const m = applyModuleDiff(nw, old, d);
   ok(!m.types.find(t => t.name === 'T1').generated, 'S3 变更类型 generated 清空');
   ok(m.types.find(t => t.name === 'T2').generated?.comment === 'tc-T2', 'S3 未变类型 generated 保留');
-  ok(!m.configMacros.find(c => c.name === 'C1').generated, 'S3 变更配置 generated 清空');
-  ok(m.dynamicDesign?.stateMachine?.name === 'SM', 'S3 动态设计保留');
+  ok(!m.generalConfigMacros.find(c => c.name === 'C1').generated, 'S3 变更配置 generated 清空');
+  ok(m.dynamicDesign?.stateMachines?.[0]?.name === 'SM', 'S3 动态设计保留');
   ok(m.providedFunctions[0].generated, 'S3 函数 generated 保留');
 }
 
@@ -185,7 +186,7 @@ const model = (over = {}) => ({
   ok(m.types[0].relatedDefines[0].comment === '阶段未定义（富化）', 'S6 关联宏子注释回挂');
   ok(m.calledExternalFunctions[0].comment.description.includes('复位管理器初始化'), 'S6 外部接口推断注释回挂');
   ok(m.calledExternalFunctions[0].commentSource === 'inferred', 'S6 commentSource 回挂');
-  ok(m.types[0].generated && m.calledExternalFunctions[0].generated && m.configMacros[0].generated,
+  ok(m.types[0].generated && m.calledExternalFunctions[0].generated && m.generalConfigMacros[0].generated,
     'S6 未变条目 generated 全保留');
 }
 
@@ -301,16 +302,16 @@ const model = (over = {}) => ({
   ok(cu8('4.2', '调用图')?.jsonPath === '$.callGraphs' && cu8('4.2', '调用图')?.oldJsonPath === '$.callGraphs',
     'S8a 4.2 调用图双向路径齐');
 
-  // 8d：旧侧状态机为单图兼容别名（无 stateMachines 数组）→ oldJsonPath 落 $.dynamicDesign.stateMachine
+  // 8d：新旧两侧状态机均数组形态 → jsonPath/oldJsonPath 同落 $.dynamicDesign.stateMachines
   const old4 = model({
     providedFunctions: [fn('A', 's1', 'b1', true)],
-    dynamicDesign: { stateMachine: { name: 'SM' }, sequences: [{ name: 'SQ' }] },
+    dynamicDesign: { stateMachines: [{ name: 'SM' }], sequences: [{ name: 'SQ' }] },
   });
   const nw4 = model({ providedFunctions: [fn('A', 's1', 'b1x')] });
   const sync4 = buildPolarionSync(diffModules(old4, nw4), old4, nw4);
   const cu4 = (t) => sync4.chapterUpdates.find(c => c.title === t);
-  ok(cu4('状态机')?.oldJsonPath === '$.dynamicDesign.stateMachine'
-    && cu4('状态机')?.jsonPath === '$.dynamicDesign.stateMachines', 'S8d 旧侧单图别名 oldJsonPath 落 stateMachine');
+  ok(cu4('状态机')?.oldJsonPath === '$.dynamicDesign.stateMachines'
+    && cu4('状态机')?.jsonPath === '$.dynamicDesign.stateMachines', 'S8d 状态机双向路径均落 stateMachines');
   ok(cu4('序列图')?.oldJsonPath === '$.dynamicDesign.sequences'
     && cu4('序列图')?.jsonPath === '$.dynamicDesign.sequences', 'S8d 旧侧有序列图双向路径齐');
 
@@ -636,7 +637,7 @@ const model = (over = {}) => ({
   const m = applyModuleDiff(newV2, oldV1, diffModules(oldV1, newV2));
   ok(m.calloutFunctions.length === 1 && m.calledExternalFunctions.every(e => e.group !== 'Callout'),
     'S13 合并产物为 v2 拆分形态');
-  ok(m.schemaVersion === 2, 'S13 合并产物版本号升 v2');
+  ok(m.schemaVersion === SCHEMA_VERSION, 'S13 合并产物版本号升当前版本');
 }
 
 console.log(`\nmodelDiff 测试全部通过（${n} 项断言）`);

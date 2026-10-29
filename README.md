@@ -152,7 +152,7 @@ node packages/cli/dist/index.js report 测试模块/Gp_EcuStpStdn --out 测试�
 打开 `lld_design.json` 检查：
 - `providedFunctions[].generated.detailedDescription` —— 接口函数描述
 - `providedFunctions[].generated.flowchart` —— 函数流程图（Mermaid 源码）
-- `dynamicDesign.stateMachine.diagram` / `dynamicDesign.sequences[].diagram` —— 状态机/序列图源码
+- `dynamicDesign.stateMachines[].diagram` / `dynamicDesign.sequences[].diagram` —— 状态机/序列图源码
 
 Mermaid 可粘贴到支持 Mermaid 的工具（VS Code Mermaid 插件 / mermaid.live）预览；
 HTML 报告已内嵌 mermaid.min.js，直接打开即可离线渲染。

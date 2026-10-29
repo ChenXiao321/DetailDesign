@@ -6,14 +6,15 @@
  * 堵 0929 盲区：gen --only document 整节替换曾冲掉 includeGraphPng，
  * 双字节门禁只验 report 输出不验 json 字段，静默逃逸。
  */
-import { SCHEMA_VERSION, listStateMachines, type ModuleModel, type PolarionMarker } from './types.js';
+import { SCHEMA_VERSION, listStateMachines, listConfigMacros, type ModuleModel, type PolarionMarker } from './types.js';
 import { normalizeModel } from './normalize.js';
 
 /** 顶层必备键（analyze 即产出；document/dynamicDesign/functionalDescription 由 gen 阶段产出，单独按阶段要求；
  *  calloutFunctions 为 v2 新增——存量 v1 json 由入口 normalizeModel 补齐后再校验，不判缺键） */
 export const TOP_KEYS = ['module', 'schemaVersion', 'analyzedAt', 'files', 'providedFunctions',
   'internalFunctions', 'internalVariables', 'providedVariables', 'calledExternalFunctions',
-  'calloutFunctions', 'types', 'configMacros', 'interfaceOverview', 'callGraphs'] as const;
+  'calloutFunctions', 'types', 'generalConfigMacros', 'functionalConfigMacros', 'aliasConfigMacros',
+  'interfaceOverview', 'callGraphs'] as const;
 /** document 节必备键（不含 includeGraphPng——PNG 由 images 阶段物化，走 PNG 检查） */
 export const DOC_KEYS = ['purpose', 'scope', 'fileTable', 'importedTypes', 'complexityTable',
   'configDetails', 'aliasNote', 'abbreviations', 'abbreviationNote', 'definitions',
@@ -35,7 +36,7 @@ export interface SchemaLintOptions {
 
 /** 返回缺陷名单（空数组=通过）。只查存在性/结构，不验内容正确性。
  *  入口先 normalizeModel：存量 v1 json 就地迁移（补 calloutFunctions、升 schemaVersion），
- *  校验对象恒为当前版本形态（就地副作用与 images 通道 syncSmAliasPng 自愈先例同构） */
+ *  校验对象恒为当前版本形态（就地副作用与 normalizeModel 迁移契约同构） */
 export function lintModelSchema(model: ModuleModel, opts: SchemaLintOptions = {}): string[] {
   normalizeModel(model);
   const problems: string[] = [];
@@ -59,7 +60,7 @@ export function lintModelSchema(model: ModuleModel, opts: SchemaLintOptions = {}
       const notes = (doc.notes ?? {}) as Record<string, unknown>;
       for (const k of NOTES_KEYS) if (!(k in notes)) problems.push(`document.notes 缺键 ${k}`);
       const cfg = (doc.configDetails ?? {}) as Record<string, Record<string, unknown> | undefined>;
-      for (const c of model.configMacros ?? []) {
+      for (const c of listConfigMacros(model)) {
         const d = cfg[c.name];
         if (!d) { problems.push(`configDetails 缺宏 ${c.name}`); continue; }
         for (const f of CONFIG_DETAIL_FIELDS) if (!(f in d)) problems.push(`configDetails.${c.name} 缺字段 ${f}`);
@@ -76,12 +77,9 @@ export function lintModelSchema(model: ModuleModel, opts: SchemaLintOptions = {}
       ...(model.dynamicDesign?.sequences ?? []).map(s => [`seq[${s.name}].diagramPng`, s.diagramPng] as [string, unknown]),
       ['document.includeGraphPng', model.document?.includeGraphPng],
     ];
-    // 状态机按读取口径全量覆盖：多核分图逐张查，兼容别名 stateMachine（恒为第一张）也须带 PNG
+    // 状态机按读取口径全量覆盖
     for (const sm of listStateMachines(model.dynamicDesign)) {
       pngs.push([`sm[${sm.name}].diagramPng`, sm.diagramPng]);
-    }
-    if (model.dynamicDesign?.stateMachine) {
-      pngs.push(['stateMachine.diagramPng', model.dynamicDesign.stateMachine.diagramPng]);
     }
     for (const [label, v] of pngs) {
       if (typeof v !== 'string' || v.length === 0) problems.push(`PNG 缺失: ${label}`);
@@ -90,7 +88,6 @@ export function lintModelSchema(model: ModuleModel, opts: SchemaLintOptions = {}
   // ---------- 工作项 title 唯一性（Polarion 映射键=(章节,title)，重名则同步歧义） ----------
   // 例外：表格类组表工作项（workItemKind='table'）——同组多条外部接口共享一个
   // (5.2.2.2,「<组名> 接口函数」) 属设计本意（一整张表=一个工作项），不算撞名。
-  // 状态机只扫 listStateMachines（多核分图），不扫别名 stateMachine（恒为第一张，同对象重报）。
   {
     const wi: { chapter: string; title: string; label: string }[] = [];
     const pushWi = (p: PolarionMarker | undefined, label: string): void => {
@@ -102,7 +99,7 @@ export function lintModelSchema(model: ModuleModel, opts: SchemaLintOptions = {}
     for (const e of model.calledExternalFunctions ?? []) pushWi(e.polarion, `外部接口 ${e.name}`);
     for (const e of model.calloutFunctions ?? []) pushWi(e.polarion, `Callout ${e.name}`);
     for (const t of model.types ?? []) pushWi(t.polarion, `类型 ${t.name}`);
-    for (const c of model.configMacros ?? []) pushWi(c.polarion, `配置宏 ${c.name}`);
+    for (const c of listConfigMacros(model)) pushWi(c.polarion, `配置宏 ${c.name}`);
     for (const v of [...(model.internalVariables ?? []), ...(model.providedVariables ?? [])]) {
       pushWi(v.polarion, `变量 ${v.name}`);
     }

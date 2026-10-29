@@ -106,7 +106,7 @@ async function cmdAnalyze(dir: string, outDir: string): Promise<ModuleModel> {
   console.log(`类型定义 (5.2.1.2): ${model.types.length}`);
   console.log(`外部调用 (5.2.2.2): ${model.calledExternalFunctions.length}`);
   console.log(`Callout 函数 (6.2): ${model.calloutFunctions.length}`);
-  console.log(`配置宏 (6): ${model.configMacros.length}`);
+  console.log(`配置宏 (6): 通用 ${model.generalConfigMacros.length} + 功能 ${model.functionalConfigMacros.length} + 别名 ${model.aliasConfigMacros.length}`);
   console.log(`\n中间模型已写入: ${output}`);
   return model;
 }
@@ -254,7 +254,7 @@ async function cmdGen(dir: string, outDir: string, mock: boolean, only?: string[
   const enriched = [...model.providedFunctions, ...model.internalFunctions].filter(f => f.generated);
   console.log(`\n生成完成: ${enriched.length} 个函数描述`);
   if (model.dynamicDesign) {
-    if (model.dynamicDesign.stateMachine) console.log(`  状态机: ${model.dynamicDesign.stateMachine.name}`);
+    for (const sm of model.dynamicDesign.stateMachines) console.log(`  状态机: ${sm.name}`);
     for (const seq of model.dynamicDesign.sequences) console.log(`  序列图: ${seq.name}`);
   }
   console.log(`已写入: ${designPath}`);

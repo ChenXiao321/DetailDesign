@@ -1,7 +1,7 @@
 import type {
   ModuleModel, FunctionUnit, DynamicDesign, SequenceDesign, TypeUnit,
 } from '../model/types.js';
-import { SCHEMA_VERSION } from '../model/types.js';
+import { SCHEMA_VERSION, listConfigMacros } from '../model/types.js';
 import { normalizeModel } from '../model/normalize.js';
 import type { LLMProvider } from '../llm/provider.js';
 import {
@@ -227,7 +227,7 @@ async function generateDynamicDesign(
   readSource?: (relPath: string) => string | null,
   log: (msg: string) => void = () => {},
 ): Promise<DynamicDesign> {
-  const result: DynamicDesign = { stateMachine: null, sequences: [] };
+  const result: DynamicDesign = { stateMachines: [], sequences: [] };
 
   // ---- 状态机：确定性静态生成（CFG 抽象解释提取迁移；降级阶梯 L0-L3 必出图） ----
   // 结构零 LLM；迁移标签随后交 LLM 润色为中文短句（09-20 定调），失败保持原文
@@ -240,8 +240,7 @@ async function generateDynamicDesign(
         const warn = await polishSmLabels(sm, model.module, provider, smOut.edgeCtx.get(sm), smOut.stateCtx.get(sm));
         if (warn) log(`  ⚠ 状态机标签润色(${sm.name}): ${warn}`);
       }
-      result.stateMachine = smOut.sms[0] ?? null;   // 兼容位：旧读取口径只看第一张
-      if (smOut.sms.length > 1) result.stateMachines = smOut.sms;
+      result.stateMachines = smOut.sms;
     }
   }
 
@@ -377,11 +376,11 @@ export async function generateDesign(
   }
 
   if ((!only || only.includes('dynamic'))) {
-    // 空壳 dynamicDesign（stateMachine=null 且 sequences=[]）不算已有——否则失败后 --resume 永远跳过；
+    // 空壳 dynamicDesign（stateMachines=[] 且 sequences=[]）不算已有——否则失败后 --resume 永远跳过；
     // 粒度细分：状态机与序列图各自判断，--resume 只补缺的一半
     //（如手工清掉 sequences 重出时保留已验收的状态机，避免 TLF 宏族状态机被重抽）
     const existing = model.dynamicDesign ?? undefined;
-    const keepSM = !!(skipExisting && existing?.stateMachine);
+    const keepSM = !!(skipExisting && existing && existing.stateMachines.length > 0);
     const keepSeq = !!(skipExisting && existing && existing.sequences.length > 0);
     if (keepSM && keepSeq) {
       log('跳过（已有动态设计）');
@@ -390,7 +389,6 @@ export async function generateDesign(
       try {
         const fresh = await generateDynamicDesign(model, provider, { stateMachine: keepSM, sequences: keepSeq }, opts?.readSource, log);
         model.dynamicDesign = {
-          stateMachine: keepSM ? existing!.stateMachine : fresh.stateMachine,
           stateMachines: keepSM ? existing!.stateMachines : fresh.stateMachines,
           sequences: keepSeq ? existing!.sequences : fresh.sequences,
         };
@@ -402,7 +400,7 @@ export async function generateDesign(
   }
 
   if (!only || only.includes('configs')) {
-    for (const macro of model.configMacros) {
+    for (const macro of listConfigMacros(model)) {
       if (macro.kind === 'alias') continue;   // 别名宏非配置项，不生成取值说明
       if (skipExisting && macro.generated?.valueEffect) {
         log(`跳过（已有配置说明）: ${macro.name}`);
@@ -535,7 +533,7 @@ export async function generateDesign(
       ...model.types.map(t => t.generated),
       ...model.calledExternalFunctions.map(e => e.generated),
       ...model.calloutFunctions.map(e => e.generated),
-      ...model.configMacros.map(c => c.generated),
+      ...listConfigMacros(model).map(c => c.generated),
     ];
     for (const g of gens) {
       if (g && !g.contentHash) { stampContentHash(g); stamped++; }

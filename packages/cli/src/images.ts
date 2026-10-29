@@ -12,7 +12,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import {
   collectDiagrams, buildBatchPage, extractDiagramSvgs, svgNaturalSize, pickShotParams,
-  wrapSvgShotPage, hasDiagramPng, applyDiagramPng, syncSmAliasPng, lintModelSchema,
+  wrapSvgShotPage, hasDiagramPng, applyDiagramPng, lintModelSchema,
   normalizeModel,
   type ModuleModel,
 } from '@lld/core';
@@ -36,11 +36,6 @@ export async function cmdImages(outDir: string, resume: boolean): Promise<void> 
   }
   // v1→v2 读取侧迁移（Callout 挪入 calloutFunctions，幂等）；迁移形态随后续 save 自然落盘
   const model = normalizeModel(JSON.parse(fs.readFileSync(designPath, 'utf-8')) as ModuleModel);
-  // 存量多核 json 自愈：旧版 images 只写 stateMachines[]，兼容别名 stateMachine 缺 PNG
-  if (syncSmAliasPng(model)) {
-    fs.writeFileSync(designPath, JSON.stringify(model, null, 2), 'utf-8');
-    console.error('  兼容别名 stateMachine.diagramPng 已从 stateMachines[0] 同步');
-  }
 
   const mermaidPath = new URL('../assets/mermaid.min.js', import.meta.url);
   if (!fs.existsSync(mermaidPath)) {

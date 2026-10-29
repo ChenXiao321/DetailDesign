@@ -21,7 +21,7 @@
  *  - interfaceOverview/callGraphs 的 diagramPng：图 mermaid 源码一致才回挂（分析期确定性产物，
  *    源码不同则 PNG 必过期）。
  */
-import { listStateMachines } from '../model/types.js';
+import { listStateMachines, listConfigMacros } from '../model/types.js';
 import { normalizeModel } from '../model/normalize.js';
 import type {
   ModuleModel, FunctionUnit, TypeUnit, ExternalInterface, ConfigMacro, VariableUnit,
@@ -142,7 +142,7 @@ export function diffModules(oldDesign: ModuleModel, newModel: ModuleModel): Modu
   const externals = diffByName(
     [...oldDesign.calledExternalFunctions, ...oldDesign.calloutFunctions],
     [...newModel.calledExternalFunctions, ...newModel.calloutFunctions], extKey);
-  const configs = diffByName(oldDesign.configMacros, newModel.configMacros, cfgKey);
+  const configs = diffByName(listConfigMacros(oldDesign), listConfigMacros(newModel), cfgKey);
   const variables = diffByName(
     [...oldDesign.providedVariables, ...oldDesign.internalVariables],
     [...newModel.providedVariables, ...newModel.internalVariables], varKey);
@@ -206,7 +206,9 @@ export function applyModuleDiff(newModel: ModuleModel, oldDesign: ModuleModel, d
   const extKeep = new Set(diff.externals.unchanged);
   carry(merged.calledExternalFunctions, oldDesign.calledExternalFunctions, extKeep);
   carry(merged.calloutFunctions, oldDesign.calloutFunctions, extKeep);
-  carry(merged.configMacros, oldDesign.configMacros, new Set(diff.configs.unchanged));
+  carry(merged.generalConfigMacros, oldDesign.generalConfigMacros, new Set(diff.configs.unchanged));
+  carry(merged.functionalConfigMacros, oldDesign.functionalConfigMacros, new Set(diff.configs.unchanged));
+  carry(merged.aliasConfigMacros, oldDesign.aliasConfigMacros, new Set(diff.configs.unchanged));
   // 变量无 generated（非 LLM 条目），回挂旧注释即可（可能被富化过）
   carry(merged.providedVariables, oldDesign.providedVariables, new Set(diff.variables.unchanged));
   carry(merged.internalVariables, oldDesign.internalVariables, new Set(diff.variables.unchanged));
@@ -519,10 +521,10 @@ export function buildPolarionSync(diff: ModuleDiff, oldDesign: ModuleModel, newM
     (name, isOld) => typeWiType((isOld ? oldDesign.types : newModel.types).find(x => x.name === name)),
     typeDescriptionChanged);
   misc<ConfigMacro>('config', (name, isOld) => {
-    const m = (isOld ? oldDesign : newModel).configMacros.find(x => x.name === name);
+    const m = listConfigMacros(isOld ? oldDesign : newModel).find(x => x.name === name);
     return m?.polarion?.chapter ?? '6';
   }, diff.configs,
-    (list, name) => idxPath(list, '$.configMacros', name), oldDesign.configMacros, newModel.configMacros,
+    (list, name) => idxPath(list, '$.configMacros', name), listConfigMacros(oldDesign), listConfigMacros(newModel),
     () => DESIGN_WITYPE,
     cfgDescriptionChanged);
 
@@ -659,11 +661,9 @@ export function buildPolarionSync(diff: ModuleDiff, oldDesign: ModuleModel, newM
   if (diff.dynamicInvalidated) {
     const sms = listStateMachines(newModel.dynamicDesign);
     const seqs = newModel.dynamicDesign?.sequences ?? [];
-    // 旧侧状态机落点：多核数组形态 → stateMachines；仅有单图兼容别名 → stateMachine
-    const oldSmPath = oldDesign.dynamicDesign?.stateMachines !== undefined ? '$.dynamicDesign.stateMachines'
-      : oldDesign.dynamicDesign?.stateMachine !== undefined ? '$.dynamicDesign.stateMachine' : undefined;
     chapterUpdates.push({ chapter: '5.3.1', title: '状态机', reason: '函数级变更 → 状态机整图重生', wiType: DESIGN_WITYPE, verifyMethod: VM_REVIEW, content: sms.length > 0 ? cloneNode(sms) : undefined,
-      jsonPath: '$.dynamicDesign.stateMachines', ...(oldSmPath ? { oldJsonPath: oldSmPath } : {}) });
+      jsonPath: '$.dynamicDesign.stateMachines',
+      ...(oldDesign.dynamicDesign?.stateMachines !== undefined ? { oldJsonPath: '$.dynamicDesign.stateMachines' } : {}) });
     chapterUpdates.push({ chapter: '5.3.2', title: '序列图', reason: '函数级变更 → 序列图整组重生', wiType: DESIGN_WITYPE, verifyMethod: VM_REVIEW, content: seqs.length > 0 ? cloneNode(seqs) : undefined,
       jsonPath: '$.dynamicDesign.sequences',
       ...(oldDesign.dynamicDesign?.sequences !== undefined ? { oldJsonPath: '$.dynamicDesign.sequences' } : {}) });

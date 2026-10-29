@@ -10,7 +10,7 @@
  * modelDiff 的 sync.json 操作单也从本模块取映射，保证两处值一致。
  */
 import type { ModuleModel, TypeUnit } from '../model/types.js';
-import { listStateMachines } from '../model/types.js';
+import { listStateMachines, listConfigMacros } from '../model/types.js';
 
 /** 函数「类型」：章节 5.2.3.2 对外接口函数=IF，其余（5.2.4.2 内部函数）=LF */
 export const fnWiType = (chapter: string): string => chapter === '5.2.3.2' ? 'IF' : 'LF';
@@ -60,20 +60,13 @@ export function materializePolarionAttributes(model: ModuleModel): void {
     e.polarion.wiType = DESIGN_WITYPE;
     e.polarion.verifyMethod = VM_TEST;
   }
-  for (const c of model.configMacros) {
+  for (const c of listConfigMacros(model)) {
     c.polarion.wiType = DESIGN_WITYPE;
     c.polarion.verifyMethod = VM_TEST;
   }
-  // 状态机（多核全角色图）/序列图/总图/调用图
+  // 状态机/序列图/总图/调用图
   // 存量旧产物的动态设计节点可能连 polarion 标记都没有（早期格式）——这两类必为工作项，缺则补建
   for (const sm of listStateMachines(model.dynamicDesign)) {
-    sm.polarion ??= { isWorkItem: true, chapter: '5.3.1', workItemKind: 'statemachine', title: sm.name, workItemId: null };
-    sm.polarion.wiType = DESIGN_WITYPE;
-    sm.polarion.verifyMethod = VM_REVIEW;
-  }
-  // stateMachine 兼容别名正常与 stateMachines[0] 同引用（上面已填）；防御异常形态下的独立对象
-  if (model.dynamicDesign?.stateMachine) {
-    const sm = model.dynamicDesign.stateMachine;
     sm.polarion ??= { isWorkItem: true, chapter: '5.3.1', workItemKind: 'statemachine', title: sm.name, workItemId: null };
     sm.polarion.wiType = DESIGN_WITYPE;
     sm.polarion.verifyMethod = VM_REVIEW;

@@ -109,17 +109,14 @@ export interface SequenceDesign {
 }
 
 export interface DynamicDesign {
-  stateMachine: StateMachineDesign | null;
-  /** 多核按角色分图时的完整状态机列表（主核/从核各一张）；仅当 >1 张时写入，stateMachine 恒为第一张（兼容旧读取口径） */
-  stateMachines?: StateMachineDesign[];
+  /** 状态机列表（单核1张/多核多张/无状态机为空数组） */
+  stateMachines: StateMachineDesign[];
   sequences: SequenceDesign[];
 }
 
-/** 状态机读取统一入口：多核分图产物返回全部角色图，旧单图产物返回单元素列表 */
+/** 状态机读取统一入口：直接返回数组，无兼容逻辑 */
 export function listStateMachines(dd?: DynamicDesign | null): StateMachineDesign[] {
-  if (!dd) return [];
-  if (dd.stateMachines && dd.stateMachines.length > 0) return dd.stateMachines;
-  return dd.stateMachine ? [dd.stateMachine] : [];
+  return dd?.stateMachines ?? [];
 }
 
 export interface VariableUnit {
@@ -198,13 +195,26 @@ export interface ConfigMacro {
   polarion: PolarionMarker;
 }
 
+/** 配置宏读取统一入口：三桶合并返回（顺序=general→functional→alias，桶内=提取序）。
+ *  注意：跨桶名单若需与 v4 前 configMacros 名序一致（7 章评估/文件说明等现算场景），
+ *  消费方自行 sort((a,b)=>a.name.localeCompare(b.name))。 */
+export function listConfigMacros(model: ModuleModel): ConfigMacro[] {
+  return [...(model.generalConfigMacros ?? []), ...(model.functionalConfigMacros ?? []), ...(model.aliasConfigMacros ?? [])];
+}
+
 /** design json 结构版本。结构已冻结（2026-09-30，用户确认内容齐备后锁定）：
  *  规则=只增不改——允许新增可选字段，禁止改名/删字段/改语义；改动须同步 bump 本版本。
  *  v1 = 0930 定型：顶层 14 键 + schemaVersion；document 节 19 键全量物化（见 DocumentContent）。
  *  v2 = 1020 拆分：calledExternalFunctions 收窄为只放普通外部接口（5.2.2.2），
  *       Callout 函数移入新顶层节点 calloutFunctions（6.2）；
- *       存量 json 由读取侧 normalizeModel 自动迁移（见 model/normalize.ts），无需重跑 analyze。 */
-export const SCHEMA_VERSION = 2;
+ *       存量 json 由读取侧 normalizeModel 自动迁移（见 model/normalize.ts），无需重跑 analyze。
+ *  v3 = 1029 状态机字段统一：dynamicDesign 只留 stateMachines 数组（恒在场，
+ *       无状态机为空数组），旧单字段 stateMachine（兼容别名/单图形态）下线；
+ *       存量 json 由 normalizeModel 就地升为数组。
+ *  v4 = 1029 配置宏拆桶：configMacros 按 kind 拆为 generalConfigMacros（6.1）/
+ *       functionalConfigMacros（6.2）/aliasConfigMacros（别名），原 configMacros 字段下线；
+ *       存量 json 由 normalizeModel 就地拆分。 */
+export const SCHEMA_VERSION = 4;
 
 /** 报告骨架内容（1/2/3/7/8 章正文与各章引导句，gen 期物化进 design json）；
  *  物化后 report/audit 纯渲染只读 json，不再现读外部缩写表/配置。
@@ -254,7 +264,9 @@ export interface ModuleModel {
   calledExternalFunctions: ExternalInterface[]; // 5.2.2.2（v2 起只放普通外部接口，不含 Callout）
   calloutFunctions: ExternalInterface[];        // 6.2 Callout 函数（v2 新增；存量 json 经 normalizeModel 保证在场）
   types: TypeUnit[];                    // 5.2.1.2
-  configMacros: ConfigMacro[];          // 6
+  generalConfigMacros: ConfigMacro[];   // 6.1 通用配置（v4 起按 kind 拆桶；存量 json 经 normalizeModel 保证在场）
+  functionalConfigMacros: ConfigMacro[];// 6.2 功能配置（同上）
+  aliasConfigMacros: ConfigMacro[];     // 实现别名宏（不上报告章节，仅 6.2 末尾 aliasNote 用）
   dynamicDesign?: DynamicDesign;        // 5.3（LLM 生成后填入）
   /** 5.1 功能接口总图（分析时静态生成，工作项，随模型进 diff/同步） */
   interfaceOverview?: { diagram: string; diagramFormat: 'mermaid'; polarion: PolarionMarker;

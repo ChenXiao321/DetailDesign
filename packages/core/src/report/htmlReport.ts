@@ -251,14 +251,15 @@ ${diagramBlock(s.diagram)}
   }).join('\n')}` : '';
 
   // ---- 6 配置（6.1 通用 / 6.2 功能，每个配置项一个子章节） ----
-  // 使用方式/配置示例物化自 doc.configDetails；别名宏注物化自 doc.aliasNote
+  // 使用方式/配置示例物化自 doc.configDetailsGeneral/configDetailsFunctional；别名宏注物化自 doc.aliasNote
   //（0929 前的物化 json 缺字段时现算补齐，同实现字节一致；map 内缺单个宏时按宏现算兜底）
-  const configDetails = doc.configDetails ?? buildDocumentContent(model).configDetails!;
-  // 字段级兜底：0930 前物化的条目只有 usageItems/example，缺 tableRow/valueEffect 时按宏现算补齐
   const configDetailOf = (c: ConfigMacro) => {
-    const d = configDetails[c.name];
+    const docObj = c.kind === 'functional' ? doc.configDetailsFunctional : doc.configDetailsGeneral;
+    const d = docObj?.[c.name];
     if (d && d.tableRow && d.valueEffect !== undefined) return d;
-    return buildDocumentContent(model).configDetails![c.name]!;
+    // 字段级兜底：0930 前物化的条目只有 usageItems/example，缺 tableRow/valueEffect 时按宏现算补齐
+    const fresh = buildDocumentContent(model);
+    return (c.kind === 'functional' ? fresh.configDetailsFunctional : fresh.configDetailsGeneral)![c.name]!;
   };
   const configSubsection = (c: ConfigMacro, secNo: string): string => {
     const detail = configDetailOf(c);

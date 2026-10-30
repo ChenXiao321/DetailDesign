@@ -1,5 +1,6 @@
 // normalizeModel（读取侧迁移）单测：v1→v2 Callout 从 calledExternalFunctions 拆入 calloutFunctions；
-// v2→v3 dynamicDesign.stateMachine 单字段就地升为 stateMachines 数组
+// v2→v3 dynamicDesign.stateMachine 单字段就地升为 stateMachines 数组；
+// v4→v5 document.configDetails 单一对象按宏 kind 就地拆为 configDetailsGeneral/configDetailsFunctional
 // 口径：就地迁移/形态驱动/幂等；拆分后 cef 保序、callouts 按原相对序（=name 序，与 analyze 落盘口径一致）
 const assert = require('assert');
 const { normalizeModel, lintModelSchema } = require('../packages/core/dist/index.js');
@@ -61,6 +62,40 @@ const model = (over = {}) => ({
   normalizeModel(m2);
   ok(m2.dynamicDesign.stateMachines === undefined && m2.dynamicDesign.stateMachine === null,
     'S1b stateMachine=null（无状态机旧形态）不建数组');
+}
+
+// ================= 场景 1c：v4→v5 configDetails 按宏 kind 拆桶 =================
+{
+  const det = { usageItems: ['<li>x</li>'], example: '#define X 1', tableRow: ['1', '值宏', ''], valueEffect: 'v' };
+  const doc = {
+    purpose: 'p', scope: 's',
+    // 旧形态：单一 configDetails 对象，general/functional 宏混放
+    configDetails: { G_CFG: { ...det }, F_CFG: { ...det }, UNKNOWN: { ...det } },
+  };
+  const m = model({
+    schemaVersion: 4,
+    generalConfigMacros: [{ name: 'G_CFG', kind: 'general' }],
+    functionalConfigMacros: [{ name: 'F_CFG', kind: 'functional' }],
+    aliasConfigMacros: [],
+    document: doc,
+  });
+  normalizeModel(m);
+  ok(doc.configDetails === undefined, 'S1c 旧 configDetails 键已删');
+  ok(Object.keys(doc.configDetailsGeneral).join(',') === 'G_CFG', 'S1c general 宏归 configDetailsGeneral');
+  ok(Object.keys(doc.configDetailsFunctional).join(',') === 'F_CFG,UNKNOWN',
+    'S1c functional 宏归 configDetailsFunctional；顶层名单查不到的条目兜底归 functional');
+  ok(doc.configDetailsFunctional.G_CFG === undefined && doc.configDetailsGeneral.G_CFG.example === '#define X 1'
+    && doc.configDetailsFunctional.F_CFG.usageItems[0] === '<li>x</li>', 'S1c 条目内容原样搬迁');
+  // 幂等
+  const first = JSON.stringify(m.document);
+  normalizeModel(m);
+  ok(JSON.stringify(m.document) === first, 'S1c 二次 normalize 不动（幂等）');
+  // 无 configDetails（已有两新键）不动
+  const doc2 = { configDetailsGeneral: {}, configDetailsFunctional: {}, purpose: 'p', scope: 's' };
+  const m2 = model({ schemaVersion: SCHEMA_VERSION, document: doc2 });
+  const before2 = JSON.stringify(m2.document);
+  normalizeModel(m2);
+  ok(JSON.stringify(m2.document) === before2, 'S1c 新形态零变化');
 }
 
 // ================= 场景 2：幂等 =================

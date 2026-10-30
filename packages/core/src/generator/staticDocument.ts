@@ -149,7 +149,7 @@ const USAGE_KIND_LABEL: Record<ConfigUsage['kind'], string> = {
   reference: '直接引用',
 };
 
-/** 6 章配置宏明细（自 htmlReport 搬入，物化进 document.configDetails）：
+/** 6 章配置宏明细（自 htmlReport 搬入，物化进 document.configDetailsGeneral/configDetailsFunctional）：
  *  usageItems=使用方式列表项（最终 HTML <li> 片段）；example=配置示例行（原始文本，渲染期 escRaw）；
  *  tableRow=表行（取值/形式/说明，原始值，渲染期 esc）；valueEffect=取值影响（最终 HTML，含推断角标） */
 function buildConfigDetail(c: ConfigMacro): { usageItems: string[]; example: string; tableRow: [string, string, string]; valueEffect: string } {
@@ -389,7 +389,9 @@ export function buildDocumentContent(model: ModuleModel, abbr?: AbbrTableInput):
       .sort((a, b) => (b.complexity ?? 0) - (a.complexity ?? 0))
       .map(f => [f.name, f.complexity ?? null, f.infiniteLoop === true]),
     // ---- 6 章配置宏明细 + 别名宏注（原 htmlReport 渲染期现算，物化后 report 只读） ----
-    configDetails: Object.fromEntries(listConfigMacros(model).map(c => [c.name, buildConfigDetail(c)])),
+    // v5 起按宏 kind 拆两个对象，与顶层三桶口径一致（别名宏不上章节，不进明细）
+    configDetailsGeneral: Object.fromEntries(model.generalConfigMacros.map(c => [c.name, buildConfigDetail(c)])),
+    configDetailsFunctional: Object.fromEntries(model.functionalConfigMacros.map(c => [c.name, buildConfigDetail(c)])),
     aliasNote: buildAliasNote(model),
     abbreviations,
     abbreviationNote,

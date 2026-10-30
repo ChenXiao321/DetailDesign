@@ -1,4 +1,4 @@
-// 结构完整性 lint 测试：①成品 json 全绿 ②缺 schemaVersion/顶层键/document/notes/configDetails 字段逐项报
+// 结构完整性 lint 测试：①成品 json 全绿 ②缺 schemaVersion/顶层键/document/notes/configDetails* 字段逐项报
 // ③requireDocument=false 时存量 json（无 document 节）不硬拦 ④requirePngs 开关 ⑤无状态机模块不强求 SM PNG
 // ⑥存量旧形态（仅有 stateMachine 单字段）经 lint 入口 normalizeModel 自动迁移为 stateMachines 数组
 const { lintModelSchema } = require('../packages/core/dist/model/schemaLint.js');
@@ -9,7 +9,8 @@ const check = (name, ok, extra) => { if (ok) { pass++; console.log('PASS', name)
 
 const DOC = {
   purpose: 'p', scope: 's', fileTable: [], importedTypes: [], complexityTable: [],
-  configDetails: { M_CFG: { usageItems: [], example: 'e', tableRow: ['1', '值宏', ''], valueEffect: 'v' } },
+  configDetailsGeneral: { M_CFG: { usageItems: [], example: 'e', tableRow: ['1', '值宏', ''], valueEffect: 'v' } },
+  configDetailsFunctional: {},
   aliasNote: '', abbreviations: [], abbreviationNote: '', definitions: [], definitionNote: null,
   abbreviationGaps: [], evaluationRows: [], complexityNote: '', evaluationSummary: [],
   supportFiles: [], supportNote: '',
@@ -23,7 +24,8 @@ function mkModel() {
     module: 'M', schemaVersion: SCHEMA_VERSION, analyzedAt: '',
     files: [], providedFunctions: [], internalFunctions: [], internalVariables: [],
     providedVariables: [], calledExternalFunctions: [], calloutFunctions: [], types: [],
-    configMacros: [{ name: 'M_CFG', kind: 'general' }],
+    generalConfigMacros: [{ name: 'M_CFG', kind: 'general', usages: [], affects: [] }],
+    functionalConfigMacros: [], aliasConfigMacros: [],
     dynamicDesign: { stateMachines: [{ name: 'SM', diagramPng: 'png' }], sequences: [{ name: 'S', diagramPng: 'png' }] },
     functionalDescription: 'd',
     interfaceOverview: { diagramPng: 'png' },
@@ -49,10 +51,18 @@ const m4 = mkModel(); delete m4.document.fileTable;
 check('document 缺 fileTable 报', lintModelSchema(m4, FULL).some(p => p === 'document 缺键 fileTable'));
 const m5 = mkModel(); delete m5.document.notes.include;
 check('notes 缺 include 报', lintModelSchema(m5, FULL).some(p => p === 'document.notes 缺键 include'));
-const m6 = mkModel(); delete m6.document.configDetails.M_CFG.valueEffect;
-check('configDetails 缺 valueEffect 报', lintModelSchema(m6, FULL).some(p => p === 'configDetails.M_CFG 缺字段 valueEffect'));
-const m7 = mkModel(); delete m7.document.configDetails.M_CFG;
-check('configDetails 缺宏报', lintModelSchema(m7, FULL).some(p => p === 'configDetails 缺宏 M_CFG'));
+const m6 = mkModel(); delete m6.document.configDetailsGeneral.M_CFG.valueEffect;
+check('configDetailsGeneral 缺 valueEffect 报', lintModelSchema(m6, FULL).some(p => p === 'configDetailsGeneral.M_CFG 缺字段 valueEffect'));
+const m7 = mkModel(); delete m7.document.configDetailsGeneral.M_CFG;
+check('configDetailsGeneral 缺宏报', lintModelSchema(m7, FULL).some(p => p === 'configDetailsGeneral 缺宏 M_CFG'));
+const m7b = mkModel();
+m7b.functionalConfigMacros.push({ name: 'F_CFG', kind: 'functional', usages: [], affects: [] });
+check('functional 宏进 configDetailsFunctional 查（缺则报）',
+  lintModelSchema(m7b, FULL).some(p => p === 'configDetailsFunctional 缺宏 F_CFG')
+    && !lintModelSchema(m7b, FULL).some(p => p.includes('configDetailsGeneral 缺宏 F_CFG')));
+const m7c = mkModel();
+m7c.aliasConfigMacros.push({ name: 'A_CFG', kind: 'alias', usages: [], affects: [] });
+check('别名宏不要求进明细（不上报告章节）', lintModelSchema(m7c, FULL).length === 0, JSON.stringify(lintModelSchema(m7c, FULL)));
 const m8 = mkModel(); delete m8.dynamicDesign;
 check('requireDynamic 缺 dynamicDesign 报', lintModelSchema(m8, FULL).some(p => p.includes('dynamicDesign')));
 

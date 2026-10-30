@@ -17,7 +17,7 @@ export const TOP_KEYS = ['module', 'schemaVersion', 'analyzedAt', 'files', 'prov
   'interfaceOverview', 'callGraphs'] as const;
 /** document 节必备键（不含 includeGraphPng——PNG 由 images 阶段物化，走 PNG 检查） */
 export const DOC_KEYS = ['purpose', 'scope', 'fileTable', 'importedTypes', 'complexityTable',
-  'configDetails', 'aliasNote', 'abbreviations', 'abbreviationNote', 'definitions',
+  'configDetailsGeneral', 'configDetailsFunctional', 'aliasNote', 'abbreviations', 'abbreviationNote', 'definitions',
   'definitionNote', 'abbreviationGaps', 'evaluationRows', 'complexityNote',
   'evaluationSummary', 'supportFiles', 'supportNote', 'notes'] as const;
 export const NOTES_KEYS = ['overview', 'callGraph', 'include', 'providedVarsEmpty', 'externalVars',
@@ -59,11 +59,16 @@ export function lintModelSchema(model: ModuleModel, opts: SchemaLintOptions = {}
       for (const k of DOC_KEYS) if (!(k in doc)) problems.push(`document 缺键 ${k}`);
       const notes = (doc.notes ?? {}) as Record<string, unknown>;
       for (const k of NOTES_KEYS) if (!(k in notes)) problems.push(`document.notes 缺键 ${k}`);
-      const cfg = (doc.configDetails ?? {}) as Record<string, Record<string, unknown> | undefined>;
+      const cfgGeneral = (doc.configDetailsGeneral ?? {}) as Record<string, Record<string, unknown> | undefined>;
+      const cfgFunctional = (doc.configDetailsFunctional ?? {}) as Record<string, Record<string, unknown> | undefined>;
       for (const c of listConfigMacros(model)) {
-        const d = cfg[c.name];
-        if (!d) { problems.push(`configDetails 缺宏 ${c.name}`); continue; }
-        for (const f of CONFIG_DETAIL_FIELDS) if (!(f in d)) problems.push(`configDetails.${c.name} 缺字段 ${f}`);
+        if (c.kind === 'alias') continue;  // 别名宏不上报告章节，明细本就不在 configDetails 内
+        const [objLabel, obj] = c.kind === 'functional'
+          ? ['configDetailsFunctional', cfgFunctional] as const
+          : ['configDetailsGeneral', cfgGeneral] as const;
+        const d = obj[c.name];
+        if (!d) { problems.push(`${objLabel} 缺宏 ${c.name}`); continue; }
+        for (const f of CONFIG_DETAIL_FIELDS) if (!(f in d)) problems.push(`${objLabel}.${c.name} 缺字段 ${f}`);
       }
     }
   }

@@ -1,16 +1,19 @@
 /**
- * design json 读取侧自动迁移（v1 → v2）。
+ * design json 读取侧自动迁移（v1 → v2 → … → v5）。
  *
  * v2 变更：calledExternalFunctions 收窄为只放普通外部接口（5.2.2.2），
  * Callout 函数（group === 'Callout'）移入新顶层节点 calloutFunctions（6.2）。
  * 存量 v1 json 两类混放在 calledExternalFunctions 里，本函数在读取侧就地拆分，
  * 使旧 json 无需重跑 analyze 即可被 report/diff/lint 等新代码消费。
  *
+ * v5 变更：document.configDetails 单一对象拆为 configDetailsGeneral/configDetailsFunctional
+ * 两个对象（按对应宏的 kind 归属；别名宏本就不在 configDetails 内）。
+ *
  * 契约：**就地迁移**，原地修改入参并返回同一引用（同 materializePolarionAttributes 先例）；
  * **形态驱动、幂等**——不看 schemaVersion 决定动不动，只看数据形态，重复调用结果不变。
  * 磁盘写回不在这里做：迁移后的形态随 gen/images 的 save 自然落盘。
  */
-import { SCHEMA_VERSION, type ConfigMacro, type ModuleModel, type StateMachineDesign } from './types.js';
+import { SCHEMA_VERSION, type ConfigDetailEntry, type ConfigMacro, type ModuleModel, type StateMachineDesign } from './types.js';
 
 export function normalizeModel(model: ModuleModel): ModuleModel {
   model.calloutFunctions ??= [];
@@ -43,6 +46,18 @@ export function normalizeModel(model: ModuleModel): ModuleModel {
   model.generalConfigMacros ??= [];
   model.functionalConfigMacros ??= [];
   model.aliasConfigMacros ??= [];
+  // configDetails 旧字段迁移：v5 起拆 configDetailsGeneral/configDetailsFunctional 两个对象，
+  // 按对应宏的 kind 归属（与顶层三桶口径一致；别名宏本就不在 configDetails 内），就地拆分。
+  const doc = model.document as (ModuleModel['document'] & { configDetails?: Record<string, ConfigDetailEntry> }) | undefined;
+  if (doc?.configDetails && doc.configDetailsGeneral === undefined) {
+    const generalNames = new Set(model.generalConfigMacros.map(c => c.name));
+    doc.configDetailsGeneral = {};
+    doc.configDetailsFunctional = {};
+    for (const [name, detail] of Object.entries(doc.configDetails)) {
+      (generalNames.has(name) ? doc.configDetailsGeneral : doc.configDetailsFunctional)[name] = detail;
+    }
+    delete doc.configDetails;
+  }
   if ((model.schemaVersion ?? 0) < SCHEMA_VERSION) model.schemaVersion = SCHEMA_VERSION;
   return model;
 }

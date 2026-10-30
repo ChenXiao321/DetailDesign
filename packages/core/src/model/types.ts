@@ -195,6 +195,15 @@ export interface ConfigMacro {
   polarion: PolarionMarker;
 }
 
+/** 6 章配置宏明细条目：usageItems=使用方式列表项（最终 HTML <li>）example=配置示例行（原始文本）
+ *  tableRow=表行（取值/形式/说明）valueEffect=取值影响（最终 HTML，含推断角标） */
+export interface ConfigDetailEntry {
+  usageItems: string[];
+  example: string;
+  tableRow?: [string, string, string];
+  valueEffect?: string;
+}
+
 /** 配置宏读取统一入口：三桶合并返回（顺序=general→functional→alias，桶内=提取序）。
  *  注意：跨桶名单若需与 v4 前 configMacros 名序一致（7 章评估/文件说明等现算场景），
  *  消费方自行 sort((a,b)=>a.name.localeCompare(b.name))。 */
@@ -213,8 +222,12 @@ export function listConfigMacros(model: ModuleModel): ConfigMacro[] {
  *       存量 json 由 normalizeModel 就地升为数组。
  *  v4 = 1029 配置宏拆桶：configMacros 按 kind 拆为 generalConfigMacros（6.1）/
  *       functionalConfigMacros（6.2）/aliasConfigMacros（别名），原 configMacros 字段下线；
+ *       存量 json 由 normalizeModel 就地拆分。
+ *  v5 = 1030 document 节 configDetails 拆桶：document.configDetails 单一对象
+ *       拆为 configDetailsGeneral（6.1 通用配置明细）/configDetailsFunctional（6.2 功能配置明细）
+ *       两个对象（键=宏名），与顶层三桶口径一致；别名宏不上报告章节、本就不在 configDetails 内。
  *       存量 json 由 normalizeModel 就地拆分。 */
-export const SCHEMA_VERSION = 4;
+export const SCHEMA_VERSION = 5;
 
 /** 报告骨架内容（1/2/3/7/8 章正文与各章引导句，gen 期物化进 design json）；
  *  物化后 report/audit 纯渲染只读 json，不再现读外部缩写表/配置。
@@ -225,7 +238,8 @@ export interface DocumentContent {
   fileTable?: [string, string][];           // 4.1 文件说明表（文件基名, 说明），已按报告顺序排序（0929 起物化；存量物化 json 缺省时渲染期现算补齐）
   importedTypes?: [string, string[]][];     // 5.2.1.1 引用的数据类型表（模块名, 类型名单），已按报告顺序排序（0929 起物化；缺省时渲染期现算补齐）
   complexityTable?: [string, number | null, boolean][]; // 7 章圈复杂度明细表（函数名, 圈复杂度[null=未计算], 含死循环），已按复杂度降序（0929 起物化；缺省时渲染期现算补齐）
-  configDetails?: Record<string, { usageItems: string[]; example: string; tableRow?: [string, string, string]; valueEffect?: string }>; // 6 章各配置宏：usageItems=使用方式列表项（最终 HTML <li>）example=配置示例行（原始文本）tableRow=表行（取值/形式/说明）valueEffect=取值影响（最终 HTML，含推断角标）；键=宏名（0929 起物化；缺字段时渲染期现算补齐）
+  configDetailsGeneral?: Record<string, ConfigDetailEntry>;   // 6.1 通用配置宏明细（键=宏名，v5 起物化；缺省时渲染期现算补齐）
+  configDetailsFunctional?: Record<string, ConfigDetailEntry>; // 6.2 功能配置宏明细（同上）
   aliasNote?: string;                       // 6.2 别名宏注（最终 HTML 片段；无别名宏时为空串）（0929 起物化；缺省时渲染期现算补齐）
   abbreviations: [string, string][];        // 3.1 最终表行（合并模式按出现过滤 / replace 模式全量）
   abbreviationNote: string;                 // 3.1 表下注释

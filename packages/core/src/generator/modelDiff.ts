@@ -115,8 +115,16 @@ const typeKey = (t: TypeUnit): string =>
   });
 const extKey = (e: ExternalInterface): string =>
   stable({ signature: e.signature, group: e.group });
+// 配置宏语义键：取值/形式/类别 + 使用方式 + 影响范围。
+// usages/affects 入键（2026-11-09 用户反馈）：删改条件编译块（如某 #if (...)...#endif）不改 value/kind，
+// 但 usages（使用点 file/line/context）与 affects（被裁剪的函数/变量）随之变化——不进键则 sync.json 静默漏报
+// 第 6 章配置明细（usageItems/影响范围）变化。usages 逐点比对（kind/file/line/context），affects 为名单。
 const cfgKey = (c: ConfigMacro): string =>
-  stable({ value: c.value, isFunctionLike: c.isFunctionLike, kind: c.kind });
+  stable({
+    value: c.value, isFunctionLike: c.isFunctionLike, kind: c.kind,
+    usages: (c.usages ?? []).map(u => ({ kind: u.kind, file: u.file, line: u.line, context: u.context })),
+    affects: c.affects ?? [],
+  });
 // 变量语义键：类型+限定符。注释/file/conditionalFlags 不算变更（与 typeKey 同口径；
 // 注释剥离原则——旧产物注释可能被富化过）。
 // 已知盲区（与函数一致）：变量在 5.2.3.1/5.2.4.1 之间移动但语义未变时不报（键不含章节归属）
@@ -381,8 +389,14 @@ const typeDescriptionChanged = (o?: TypeUnit, n?: TypeUnit): boolean => {
   const rd = (t: TypeUnit) => stable((t.relatedDefines ?? []).map(d => ({ name: d.name, value: d.value })));
   return o.kind !== n.kind || o.underlyingType !== n.underlyingType || el(o) !== el(n) || rd(o) !== rd(n);
 };
-const cfgDescriptionChanged = (o?: ConfigMacro, n?: ConfigMacro): boolean =>
-  !!o && !!n && (o.value !== n.value || o.isFunctionLike !== n.isFunctionLike || o.kind !== n.kind);
+const cfgDescriptionChanged = (o?: ConfigMacro, n?: ConfigMacro): boolean => {
+  if (!o || !n) return false;
+  if (o.value !== n.value || o.isFunctionLike !== n.isFunctionLike || o.kind !== n.kind) return true;
+  // usages/affects 同 cfgKey 入描述口径（2026-11-09）：条件编译块删改虽不动 value，
+  // 但 6.x 明细节的「使用方式」「影响范围」随之变化——描述（工作项正文）必须标变。
+  const usg = (c: ConfigMacro) => stable((c.usages ?? []).map(u => ({ kind: u.kind, file: u.file, line: u.line, context: u.context })));
+  return usg(o) !== usg(n) || stable(o.affects ?? []) !== stable(n.affects ?? []);
+};
 const varDescriptionChanged = (o?: VariableUnit, n?: VariableUnit): boolean =>
   !!o && !!n && (o.type !== n.type || o.isStatic !== n.isStatic || o.isConst !== n.isConst || o.isVolatile !== n.isVolatile);
 const extDescriptionChanged = (o?: ExternalInterface, n?: ExternalInterface): boolean =>
@@ -520,11 +534,21 @@ export function buildPolarionSync(diff: ModuleDiff, oldDesign: ModuleModel, newM
     (list, name) => idxPath(list, '$.types', name), oldDesign.types, newModel.types,
     (name, isOld) => typeWiType((isOld ? oldDesign.types : newModel.types).find(x => x.name === name)),
     typeDescriptionChanged);
+  // v4 拆桶后顶层无 configMacros 数组：路径须按 kind 落到实际桶，且新旧侧索引各自独立
+  // （misc 的 pathOf 回调第一个参数即对应侧列表，按引用判别新旧侧）
+  const oldCfgList = listConfigMacros(oldDesign);
+  const newCfgList = listConfigMacros(newModel);
+  const cfgPath = (list: { name: string }[], name: string): string | undefined => {
+    const m = list === newCfgList ? newModel : oldDesign;
+    return idxPath(m.generalConfigMacros ?? [], '$.generalConfigMacros', name)
+      ?? idxPath(m.functionalConfigMacros ?? [], '$.functionalConfigMacros', name)
+      ?? idxPath(m.aliasConfigMacros ?? [], '$.aliasConfigMacros', name);
+  };
   misc<ConfigMacro>('config', (name, isOld) => {
-    const m = listConfigMacros(isOld ? oldDesign : newModel).find(x => x.name === name);
+    const m = (isOld ? oldCfgList : newCfgList).find(x => x.name === name);
     return m?.polarion?.chapter ?? '6';
   }, diff.configs,
-    (list, name) => idxPath(list, '$.configMacros', name), listConfigMacros(oldDesign), listConfigMacros(newModel),
+    cfgPath, oldCfgList, newCfgList,
     () => DESIGN_WITYPE,
     cfgDescriptionChanged);
 
@@ -707,6 +731,20 @@ export function buildPolarionSync(diff: ModuleDiff, oldDesign: ModuleModel, newM
       content: newModel.document ? cloneNode({ definitions: newModel.document.definitions }) : undefined,
       jsonPath: '$.document.definitions', ...(oldDesign.document?.definitions !== undefined ? { oldJsonPath: '$.document.definitions' } : {}),
     });
+  }
+  // 6.1/6.2 配置明细章节级更新（2026-11-09 用户反馈：删改条件编译块不改宏 value，但 usageItems/影响范围变化，
+  // 旧版 sync.json 无章节级更新会漏刷新明细节内容）。cfgKey 已纳 usages/affects（ usages 逐点比对 file/line/context），
+  // 配置宏有任何增删改 → 明细节整节替换（明细=物化的 ConfigDetailEntry，键=宏名）。
+  if (diff.configs.changed.length + diff.configs.added.length + diff.configs.removed.length > 0) {
+    const mk = (obj: 'configDetailsGeneral' | 'configDetailsFunctional', chapter: string, title: string): void => {
+      chapterUpdates.push({
+        chapter, title, reason: '配置宏增删改（含使用方式/影响范围变化）→ 明细节整节替换', wiType: DESIGN_WITYPE, verifyMethod: VM_REVIEW,
+        content: newModel.document ? cloneNode(newModel.document[obj]) : undefined,
+        jsonPath: `$.document.${obj}`, ...(oldDesign.document?.[obj] !== undefined ? { oldJsonPath: `$.document.${obj}` } : {}),
+      });
+    };
+    mk('configDetailsGeneral', '6.1', '通用配置明细');
+    mk('configDetailsFunctional', '6.2', '功能配置明细');
   }
 
   return {

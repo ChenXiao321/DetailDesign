@@ -38,13 +38,22 @@ export function normalizeModel(model: ModuleModel): ModuleModel {
   }
   // configMacros 旧字段迁移：v4 起按 kind 拆三桶（general/functional/alias），就地拆分；
   // 桶内保持旧数组相对序，并给每条打 _seq（旧数组原始索引）——渲染期跨桶名单（7 章评估等）
-  // 按 _seq 还原 v4 前 configMacros 全序，保证存量 json 现算产物字节零回归；新产物无 _seq 落桶序
+  // 按 _seq 还原 v4 前 configMacros 全序，保证存量 json 现算产物字节零回归；新产物无 _seq 落桶序。
+  // 合并而非覆盖：存量桶内已有条目按名保留（防御手工编辑/部分迁移的 json 两侧并存致数据丢失）
   const legacy = model as unknown as { configMacros?: ConfigMacro[] };
-  if (legacy.configMacros && !model.generalConfigMacros) {
-    legacy.configMacros.forEach((c, i) => { (c as ConfigMacro & { _seq?: number })._seq = i; });
-    model.generalConfigMacros = legacy.configMacros.filter(c => c.kind === 'general');
-    model.functionalConfigMacros = legacy.configMacros.filter(c => c.kind === 'functional');
-    model.aliasConfigMacros = legacy.configMacros.filter(c => c.kind === 'alias');
+  if (legacy.configMacros) {
+    if (!model.generalConfigMacros && !model.functionalConfigMacros && !model.aliasConfigMacros) {
+      legacy.configMacros.forEach((c, i) => { (c as ConfigMacro & { _seq?: number })._seq = i; });
+    }
+    const mergeBucket = (bucket: ConfigMacro[] | undefined, kind: ConfigMacro['kind']): ConfigMacro[] => {
+      const fromLegacy = legacy.configMacros!.filter(c => c.kind === kind);
+      const kept = bucket ?? [];
+      const names = new Set(kept.map(c => c.name));
+      return [...kept, ...fromLegacy.filter(c => !names.has(c.name))];
+    };
+    model.generalConfigMacros = mergeBucket(model.generalConfigMacros, 'general');
+    model.functionalConfigMacros = mergeBucket(model.functionalConfigMacros, 'functional');
+    model.aliasConfigMacros = mergeBucket(model.aliasConfigMacros, 'alias');
     delete legacy.configMacros;
   }
   model.generalConfigMacros ??= [];

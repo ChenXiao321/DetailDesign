@@ -253,7 +253,7 @@ const model = (over = {}) => ({
 
 // ================= 场景 8：章节级更新推导（工作项之外的联动内容） =================
 {
-  // 8a：函数级变更 + 文件清单变 + 总图变 + 调用图变 → 5.1/5.3.1/5.3.2/7/4.1/4.2×2/3.1 全列
+  // 8a：函数级变更 + 文件清单变 + 总图变 + 调用图变 → 5.1/5.3.1/5.3.2/7/4.1/5.1.1/5.1.2/3.1/3.2 全列
   const old = model({
     providedFunctions: [fn('A', 's1', 'b1', true)],
     files: [{ path: 'a.c', role: 'source' }],
@@ -268,20 +268,21 @@ const model = (over = {}) => ({
   });
   const sync = buildPolarionSync(diffModules(old, nw), old, nw);
   const chapters = sync.chapterUpdates.map(c => c.chapter);
-  for (const ch of ['5.1', '5.3.1', '5.3.2', '7', '4.1', '3.1/3.2']) {
+  for (const ch of ['5.1', '5.3.1', '5.3.2', '7', '4.1', '3.1', '3.2']) {
     ok(chapters.includes(ch), `S8a 章节级更新含 ${ch}`);
   }
-  ok(sync.chapterUpdates.filter(c => c.chapter === '4.2').length === 2, 'S8a 4.2 总图+调用图各一条');
+  ok(sync.chapterUpdates.filter(c => c.chapter === '5.1.1').length === 1
+    && sync.chapterUpdates.filter(c => c.chapter === '5.1.2').length === 1, 'S8a 5.1.1 总图+5.1.2 调用图各一条');
   ok(sync.chapterUpdates.find(c => c.title === '调用图').reason.includes('A'), 'S8a 调用图变化点名');
 
   // 章节级更新带新内容原文：分析期确定性内容 diff 阶段即在场，gen 产物待 update 刷新补入
   const cu8 = (ch, t) => sync.chapterUpdates.find(c => c.chapter === ch && c.title === t);
   ok(cu8('4.1', '文件清单')?.content?.length === 2 && cu8('4.1', '文件清单').content[1].path === 'b.c',
     'S8a 4.1 文件清单 content=新文件表');
-  ok(cu8('4.2', '接口总图')?.content?.diagram === 'flowchart TD\nNEW', 'S8a 4.2 总图 content=新图源');
-  const cg8 = cu8('4.2', '调用图')?.content;
+  ok(cu8('5.1.1', '接口总图')?.content?.diagram === 'flowchart TD\nNEW', 'S8a 5.1.1 总图 content=新图源');
+  const cg8 = cu8('5.1.2', '调用图')?.content;
   ok(cg8?.changed?.[0]?.name === 'A' && cg8?.changed?.[0]?.diagram === 'gA2' && cg8?.removed?.join() === 'B',
-    'S8a 4.2 调用图 content 点名变化图（新图+移除名单）');
+    'S8a 5.1.2 调用图 content 点名变化图（新图+移除名单）');
   ok(cu8('5.1', '模块功能描述')?.content === undefined && cu8('7', '评估与圈复杂度表')?.content === undefined,
     'S8a gen 产物（5.1 描述/7 评估表）diff 阶段无 content（update gen 后刷新补入）');
 
@@ -294,13 +295,14 @@ const model = (over = {}) => ({
   ok(cu8('5.3.2', '序列图')?.jsonPath === '$.dynamicDesign.sequences'
     && cu8('5.3.2', '序列图')?.oldJsonPath === undefined, 'S8a 5.3.2 序列图 jsonPath 在、旧侧不带');
   ok(cu8('7', '评估与圈复杂度表')?.jsonPath === '$.document' && cu8('7', '评估与圈复杂度表')?.oldJsonPath === undefined
-    && cu8('3.1/3.2', '缩写表/定义表')?.jsonPath === '$.document', 'S8a 7/3.x 锚到父节点 $.document');
+    && cu8('3.1', '缩写表')?.jsonPath === '$.document.abbreviations'
+    && cu8('3.2', '定义表')?.jsonPath === '$.document.definitions', 'S8a 7 锚到父节点 $.document、3.1/3.2 拆两条各锚子节点');
   ok(cu8('4.1', '文件清单')?.jsonPath === '$.files' && cu8('4.1', '文件清单')?.oldJsonPath === '$.files',
     'S8a 4.1 文件清单双向路径齐');
-  ok(cu8('4.2', '接口总图')?.jsonPath === '$.interfaceOverview' && cu8('4.2', '接口总图')?.oldJsonPath === '$.interfaceOverview',
-    'S8a 4.2 总图双向路径齐');
-  ok(cu8('4.2', '调用图')?.jsonPath === '$.callGraphs' && cu8('4.2', '调用图')?.oldJsonPath === '$.callGraphs',
-    'S8a 4.2 调用图双向路径齐');
+  ok(cu8('5.1.1', '接口总图')?.jsonPath === '$.interfaceOverview' && cu8('5.1.1', '接口总图')?.oldJsonPath === '$.interfaceOverview',
+    'S8a 5.1.1 总图双向路径齐');
+  ok(cu8('5.1.2', '调用图')?.jsonPath === '$.callGraphs' && cu8('5.1.2', '调用图')?.oldJsonPath === '$.callGraphs',
+    'S8a 5.1.2 调用图双向路径齐');
 
   // 8d：新旧两侧状态机均数组形态 → jsonPath/oldJsonPath 同落 $.dynamicDesign.stateMachines
   const old4 = model({
@@ -314,6 +316,25 @@ const model = (over = {}) => ({
     && cu4('状态机')?.jsonPath === '$.dynamicDesign.stateMachines', 'S8d 状态机双向路径均落 stateMachines');
   ok(cu4('序列图')?.oldJsonPath === '$.dynamicDesign.sequences'
     && cu4('序列图')?.jsonPath === '$.dynamicDesign.sequences', 'S8d 旧侧有序列图双向路径齐');
+
+  // 8e：旧侧有 document 节 → 3.1/3.2 拆两条，jsonPath/oldJsonPath 各锚子节点
+  const old5 = model({
+    providedFunctions: [fn('A', 's1', 'b1', true)],
+    document: { abbreviations: [{ term: 'SPI' }], definitions: [{ term: 'core0' }], abbreviationGaps: [] },
+  });
+  const nw5 = model({
+    providedFunctions: [fn('A', 's1', 'b1x')],
+    document: { abbreviations: [{ term: 'SPI' }], definitions: [{ term: 'core0' }], abbreviationGaps: [] },
+  });
+  const sync5 = buildPolarionSync(diffModules(old5, nw5), old5, nw5);
+  const cu5 = (t) => sync5.chapterUpdates.find(c => c.title === t);
+  ok(cu5('缩写表')?.chapter === '3.1' && cu5('缩写表')?.jsonPath === '$.document.abbreviations'
+    && cu5('缩写表')?.oldJsonPath === '$.document.abbreviations'
+    && cu5('缩写表')?.content?.abbreviations?.[0]?.term === 'SPI'
+    && Array.isArray(cu5('缩写表')?.content?.abbreviationGaps), 'S8e 3.1 缩写表拆出、双向路径齐、content 带缩写+缺口');
+  ok(cu5('定义表')?.chapter === '3.2' && cu5('定义表')?.jsonPath === '$.document.definitions'
+    && cu5('定义表')?.oldJsonPath === '$.document.definitions'
+    && cu5('定义表')?.content?.definitions?.[0]?.term === 'core0', 'S8e 3.2 定义表拆出、双向路径齐、content 带定义');
 
   // 8b：无变更 → 章节级更新为空
   const old2 = model({
@@ -336,7 +357,7 @@ const model = (over = {}) => ({
   const nw3 = model({ providedFunctions: [fn('A', 's1', 'b1')], types: [typ('T1', 'uint32')] });
   const sync3 = buildPolarionSync(diffModules(old3, nw3), old3, nw3);
   const ch3 = sync3.chapterUpdates.map(c => c.chapter);
-  ok(ch3.includes('5.1') && ch3.includes('3.1/3.2'), 'S8c 类型变更：5.1+缩写提示列出');
+  ok(ch3.includes('5.1') && ch3.includes('3.1') && ch3.includes('3.2'), 'S8c 类型变更：5.1+缩写/定义表提示列出');
   ok(!ch3.includes('5.3.1') && !ch3.includes('7'), 'S8c 无函数变更：状态机/评估表不列');
 }
 

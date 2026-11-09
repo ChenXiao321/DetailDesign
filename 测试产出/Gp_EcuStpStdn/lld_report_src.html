@@ -144,7 +144,7 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
 <ul><li>多核启动时序控制：按 STAGE_ONE / STAGE_TWO / STAGE_THREE 三个阶段协调主核（Core0）与从核的初始化</li><li>自检管理：触发并检查 MCU 预运行测试、运行时测试与 SBC 自检结果，失败时按配置执行安全动作</li><li>安全状态管理：提供进入与查询安全状态的接口（SetSafeState / GetSafeState）</li><li>故障恢复：提供 Trap 恢复与 OS 错误恢复接口，具体恢复策略转发至 Callout 函数实现</li><li>断电管理：处理启动阶段（TryPwrShdn 标志）与关闭阶段（PwrShdnInShdnPhase）的断电请求</li><li>时间戳记录：记录启动关键节点时间戳，主核统计最后完成初始化的从核时间</li></ul>
 <p>模块在 EcuM 的 DriverInitOne 阶段经 Gp_EcuStpShdn_Startup 被调用，是 ECU 启动的关键路径；运行时由 Gp_EcuStpShdn_Mainfunction 周期执行运行时测试。</p>
 
-<h3>功能接口总图 <span class="badge">工作项 · 5.1</span></h3>
+<h3>功能接口总图 <span class="badge">工作项 · 5.1.1</span></h3>
 <p class="muted">本模块对外提供 8 个接口函数（左侧为调用方），并调用 8 个外部接口（右侧按来源模块归组）；箭头方向为调用方向。Callout 函数属本模块配置点，不在本图展示，其调用关系见下方内部函数调用图与 6.2；各接口的模块内调用者见内部函数调用图与 5.2.2 表。</p>
 <div class="mermaid">%%{init: {"flowchart": {"rankSpacing": 10, "nodeSpacing": 16}}}%%
 flowchart LR
@@ -195,7 +195,7 @@ flowchart LR
 
 <h3>内部函数调用图（每张图一个工作项）</h3>
 <p class="muted">按对外接口函数分别绘制其模块内调用树（深蓝=入口函数，灰=内部函数，蓝=被内部调用的对外接口，黄=Callout 函数（配置代码））；同一函数被多处调用时按调用路径重复出现，保证布局无交叉。经配置表函数指针间接引用的 Callout 单独成图。无模块内调用的平凡函数不出图，其余跨模块调用（Gp_RstM / Gp_TstApp 等）见功能接口总图与 5.2.2 表。</p>
-<h4>内部函数调用图：Gp_EcuStpShdn_TrapRecov <span class="badge">工作项 · 5.1</span></h4>
+<h4>内部函数调用图：Gp_EcuStpShdn_TrapRecov <span class="badge">工作项 · 5.1.2</span></h4>
 <div class="mermaid">flowchart LR
     N0["Gp_EcuStpShdn_TrapRecov"]
     N1["CalloutTrapRecov"]
@@ -216,7 +216,7 @@ flowchart LR
     classDef callout fill:#ffe9a8,stroke:#bf8700,color:#1f2328
     class N0 entry
     class N1 callout</pre></details>
-<h4>内部函数调用图：Gp_EcuStpShdn_OsErrRecov <span class="badge">工作项 · 5.1</span></h4>
+<h4>内部函数调用图：Gp_EcuStpShdn_OsErrRecov <span class="badge">工作项 · 5.1.2</span></h4>
 <div class="mermaid">flowchart LR
     N0["Gp_EcuStpShdn_OsErrRecov"]
     N1["CalloutOsErrRecov"]
@@ -237,7 +237,7 @@ flowchart LR
     classDef callout fill:#ffe9a8,stroke:#bf8700,color:#1f2328
     class N0 entry
     class N1 callout</pre></details>
-<h4>内部函数调用图：Gp_EcuStpShdn_PwrShdnInShdnPhase <span class="badge">工作项 · 5.1</span></h4>
+<h4>内部函数调用图：Gp_EcuStpShdn_PwrShdnInShdnPhase <span class="badge">工作项 · 5.1.2</span></h4>
 <div class="mermaid">flowchart LR
     N0["Gp_EcuStpShdn_PwrShdnInShd&lt;br&gt;nPhase"]
     N1["CalloutPwrShdnInShdnPhase"]
@@ -258,7 +258,7 @@ flowchart LR
     classDef callout fill:#ffe9a8,stroke:#bf8700,color:#1f2328
     class N0 entry
     class N1 callout</pre></details>
-<h4>内部函数调用图：Gp_EcuStpShdn_Startup <span class="badge">工作项 · 5.1</span></h4>
+<h4>内部函数调用图：Gp_EcuStpShdn_Startup <span class="badge">工作项 · 5.1.2</span></h4>
 <div class="mermaid">flowchart LR
     N0["Gp_EcuStpShdn_Startup"]
     N1["CalloutGetCoreId"]
@@ -353,7 +353,7 @@ flowchart LR
     class N0 entry
     class N8,N10,N13,N14 internal
     class N1,N2,N3,N4,N5,N6,N7,N9,N11,N12,N15,N16,N17,N18,N19 callout</pre></details>
-<h4>内部函数调用图：Gp_EcuStpShdn_Mainfunction <span class="badge">工作项 · 5.1</span></h4>
+<h4>内部函数调用图：Gp_EcuStpShdn_Mainfunction <span class="badge">工作项 · 5.1.2</span></h4>
 <div class="mermaid">flowchart LR
     N0["Gp_EcuStpShdn_Mainfunction"]
     N1["CalloutGetCoreId"]
@@ -388,7 +388,7 @@ flowchart LR
     class N0 entry
     class N2 internal
     class N1,N3,N4 callout</pre></details>
-<h4>内部函数调用图：配置表函数指针引用 <span class="badge">工作项 · 5.1</span></h4>
+<h4>内部函数调用图：配置表函数指针引用 <span class="badge">工作项 · 5.1.2</span></h4>
 <div class="mermaid">flowchart LR
     N_CfgTbl["配置表函数指针引用"]
     N_Gp_EcuStpShdn_CalloutInitStageTwoCore0["CalloutInitStageTwoCore0"]

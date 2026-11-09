@@ -142,7 +142,7 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
 <h2 id="s51">5.1 功能描述</h2>
 <p>Gp_IoMcuAdc 是多核 ADC 信号驱动功能组件，运行在已使能的核上，为上层提供 ADC 原始值（AdcSigAdcRaw）与诊断数据（AdcSigDiag）两类信号接口。Gp_IoMcuAdc_Init 完成本核通道缓冲区初始化并经 MCAL 接口启动 ADC 硬件触发转换；Gp_IoMcuAdc_MainFunction 由周期任务调用，按每通道配置的分频计数（PollingCntMax_u16）周期读取各非直接读通道的 ADC 原始值与诊断数据存入运行时缓冲区。通道可配置为直接读（DirectlyRead_b），此类通道 MainFunction 不周期读取，由对外接口在被调用时即时读取，适用于等待并确认读回 ADC 等需要立即读取的应用。每通道的 ADC 原始值与诊断数据获取均可配置为 Callout 方式，由集成方实现特殊处理；ADC 原始值还可配置新数据位有效性检查，检查未通过时输出 ADCRAW_INVALID。模块按核隔离配置与运行时数据（最多 6 核），DEV_ERROR_DETECT 开启时提供初始化状态、入参范围与核一致性的开发错误检测。</p>
 
-<h3>功能接口总图 <span class="badge">工作项 · 5.1</span></h3>
+<h3>功能接口总图 <span class="badge">工作项 · 5.1.1</span></h3>
 <p class="muted">本模块对外提供 4 个接口函数（左侧为调用方），并调用 2 个外部接口（右侧按来源模块归组）；箭头方向为调用方向。Callout 函数属本模块配置点，不在本图展示，其调用关系见下方内部函数调用图与 6.2；各接口的模块内调用者见内部函数调用图与 5.2.2 表。</p>
 <div class="mermaid">%%{init: {"flowchart": {"rankSpacing": 10, "nodeSpacing": 16}}}%%
 flowchart LR
@@ -185,7 +185,7 @@ flowchart LR
 
 <h3>内部函数调用图（每张图一个工作项）</h3>
 <p class="muted">按对外接口函数分别绘制其模块内调用树（深蓝=入口函数，灰=内部函数，蓝=被内部调用的对外接口，黄=Callout 函数（配置代码））；同一函数被多处调用时按调用路径重复出现，保证布局无交叉。经配置表函数指针间接引用的 Callout 单独成图。无模块内调用的平凡函数不出图，其余跨模块调用（Gp_RstM / Gp_TstApp 等）见功能接口总图与 5.2.2 表。</p>
-<h4>内部函数调用图：Gp_IoMcuAdc_Init <span class="badge">工作项 · 5.1</span></h4>
+<h4>内部函数调用图：Gp_IoMcuAdc_Init <span class="badge">工作项 · 5.1.2</span></h4>
 <div class="mermaid">flowchart LR
     N0["Gp_IoMcuAdc_Init"]
     N1["CalloutGetCoreId"]
@@ -210,7 +210,7 @@ flowchart LR
     classDef callout fill:#ffe9a8,stroke:#bf8700,color:#1f2328
     class N0 entry
     class N1,N2 callout</pre></details>
-<h4>内部函数调用图：Gp_IoMcuAdc_MainFunction <span class="badge">工作项 · 5.1</span></h4>
+<h4>内部函数调用图：Gp_IoMcuAdc_MainFunction <span class="badge">工作项 · 5.1.2</span></h4>
 <div class="mermaid">flowchart LR
     N0["Gp_IoMcuAdc_MainFunction"]
     N1["CalloutGetCoreId"]
@@ -257,7 +257,7 @@ flowchart LR
     class N0 entry
     class N2,N3,N5,N6 internal
     class N1,N4,N7 callout</pre></details>
-<h4>内部函数调用图：Gp_IoMcuAdc_GetAdcSigDiag <span class="badge">工作项 · 5.1</span></h4>
+<h4>内部函数调用图：Gp_IoMcuAdc_GetAdcSigDiag <span class="badge">工作项 · 5.1.2</span></h4>
 <div class="mermaid">flowchart LR
     N0["Gp_IoMcuAdc_GetAdcSigDiag"]
     N1["CalloutGetCoreId"]
@@ -296,7 +296,7 @@ flowchart LR
     class N0 entry
     class N2,N3,N4 internal
     class N1,N5 callout</pre></details>
-<h4>内部函数调用图：Gp_IoMcuAdc_GetAdcSigAdcRaw <span class="badge">工作项 · 5.1</span></h4>
+<h4>内部函数调用图：Gp_IoMcuAdc_GetAdcSigAdcRaw <span class="badge">工作项 · 5.1.2</span></h4>
 <div class="mermaid">flowchart LR
     N0["Gp_IoMcuAdc_GetAdcSigAdcRa&lt;br&gt;w"]
     N1["CalloutGetCoreId"]

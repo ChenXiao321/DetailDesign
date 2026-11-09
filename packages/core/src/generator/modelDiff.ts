@@ -682,7 +682,7 @@ export function buildPolarionSync(diff: ModuleDiff, oldDesign: ModuleModel, newM
   }
   // 4.2 接口总图/调用图：图源码比对
   if ((oldDesign.interfaceOverview?.diagram ?? '') !== (newModel.interfaceOverview?.diagram ?? '')) {
-    chapterUpdates.push({ chapter: '4.2', title: '接口总图', reason: '接口总图图源变化', wiType: DESIGN_WITYPE, verifyMethod: VM_REVIEW, content: cloneNode(newModel.interfaceOverview),
+    chapterUpdates.push({ chapter: '5.1.1', title: '接口总图', reason: '接口总图图源变化', wiType: DESIGN_WITYPE, verifyMethod: VM_REVIEW, content: cloneNode(newModel.interfaceOverview),
       jsonPath: '$.interfaceOverview', ...(oldDesign.interfaceOverview !== undefined ? { oldJsonPath: '$.interfaceOverview' } : {}) });
   }
   const oldCg = new Map((oldDesign.callGraphs ?? []).map(g => [g.name, g.diagram]));
@@ -691,16 +691,21 @@ export function buildPolarionSync(diff: ModuleDiff, oldDesign: ModuleModel, newM
   const removedCg = [...oldCg.keys()].filter(n => !(newModel.callGraphs ?? []).some(g => g.name === n));
   if (changedCg.length + removedCg.length > 0) {
     chapterUpdates.push({
-      chapter: '4.2', title: '调用图', reason: `调用图变化：${[...changedCg, ...removedCg].join('、')}`, wiType: DESIGN_WITYPE, verifyMethod: VM_REVIEW,
+      chapter: '5.1.2', title: '调用图', reason: `调用图变化：${[...changedCg, ...removedCg].join('、')}`, wiType: DESIGN_WITYPE, verifyMethod: VM_REVIEW,
       content: cloneNode({ changed: changedCg.map(n => newCgByName.get(n)), removed: removedCg }),
       jsonPath: '$.callGraphs', ...(oldDesign.callGraphs !== undefined ? { oldJsonPath: '$.callGraphs' } : {}),
     });
   }
   if (diff.hasChanges) {
     chapterUpdates.push({
-      chapter: '3.1/3.2', title: '缩写表/定义表', reason: '新生成的描述可能引入新缩写——以 report 打印的缺口名单为准，有则反馈维护方补表', wiType: DESIGN_WITYPE, verifyMethod: VM_REVIEW,
-      content: newModel.document ? cloneNode({ abbreviations: newModel.document.abbreviations, definitions: newModel.document.definitions, abbreviationGaps: newModel.document.abbreviationGaps }) : undefined,
-      jsonPath: '$.document', ...(oldDesign.document !== undefined ? { oldJsonPath: '$.document' } : {}),
+      chapter: '3.1', title: '缩写表', reason: '新生成的描述可能引入新缩写——以 report 打印的缺口名单为准，有则反馈维护方补表', wiType: DESIGN_WITYPE, verifyMethod: VM_REVIEW,
+      content: newModel.document ? cloneNode({ abbreviations: newModel.document.abbreviations, abbreviationGaps: newModel.document.abbreviationGaps }) : undefined,
+      jsonPath: '$.document.abbreviations', ...(oldDesign.document?.abbreviations !== undefined ? { oldJsonPath: '$.document.abbreviations' } : {}),
+    });
+    chapterUpdates.push({
+      chapter: '3.2', title: '定义表', reason: '模块描述重生成 → 定义表整表刷新', wiType: DESIGN_WITYPE, verifyMethod: VM_REVIEW,
+      content: newModel.document ? cloneNode({ definitions: newModel.document.definitions }) : undefined,
+      jsonPath: '$.document.definitions', ...(oldDesign.document?.definitions !== undefined ? { oldJsonPath: '$.document.definitions' } : {}),
     });
   }
 

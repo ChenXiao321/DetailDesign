@@ -142,7 +142,7 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
 <h2 id="s51">5.1 功能描述</h2>
 <p class="todo">（待生成：模块级功能描述，由 LLM 基于接口与动态设计事实生成）</p>
 
-<h3>功能接口总图 <span class="badge">工作项 · 5.1</span></h3>
+<h3>功能接口总图 <span class="badge">工作项 · 5.1.1</span></h3>
 <p class="muted">本模块对外提供 8 个接口函数（左侧为调用方），并调用 8 个外部接口（右侧按来源模块归组）；箭头方向为调用方向。Callout 函数属本模块配置点，不在本图展示，其调用关系见下方内部函数调用图与 6.2；各接口的模块内调用者见内部函数调用图与 5.2.2 表。</p>
 <div class="mermaid">flowchart LR
     Caller(["外部调用方&lt;br&gt;（其他 FC / RTE /&lt;br&gt;集成代码）"])
@@ -187,7 +187,7 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
 
 <h3>内部函数调用图（每张图一个工作项）</h3>
 <p class="muted">按对外接口函数分别绘制其模块内调用树（深蓝=入口函数，灰=内部函数，蓝=被内部调用的对外接口，黄=Callout 函数（配置代码））；同一函数被多处调用时按调用路径重复出现，保证布局无交叉。经配置表函数指针间接引用的 Callout 单独成图。无模块内调用的平凡函数不出图，其余跨模块调用（Gp_RstM / Gp_TstApp 等）见功能接口总图与 5.2.2 表。</p>
-<h4>内部函数调用图：Gp_EcuStpShdn_TrapRecov <span class="badge">工作项 · 5.1</span></h4>
+<h4>内部函数调用图：Gp_EcuStpShdn_TrapRecov <span class="badge">工作项 · 5.1.2</span></h4>
 <div class="mermaid">flowchart LR
     N0["Gp_EcuStpShdn_TrapRecov"]
     N1["CalloutTrapRecov"]
@@ -208,7 +208,7 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
     classDef callout fill:#ffe9a8,stroke:#bf8700,color:#1f2328
     class N0 entry
     class N1 callout</pre></details>
-<h4>内部函数调用图：Gp_EcuStpShdn_OsErrRecov <span class="badge">工作项 · 5.1</span></h4>
+<h4>内部函数调用图：Gp_EcuStpShdn_OsErrRecov <span class="badge">工作项 · 5.1.2</span></h4>
 <div class="mermaid">flowchart LR
     N0["Gp_EcuStpShdn_OsErrRecov"]
     N1["CalloutOsErrRecov"]
@@ -229,7 +229,7 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
     classDef callout fill:#ffe9a8,stroke:#bf8700,color:#1f2328
     class N0 entry
     class N1 callout</pre></details>
-<h4>内部函数调用图：Gp_EcuStpShdn_PwrShdnInShdnPhase <span class="badge">工作项 · 5.1</span></h4>
+<h4>内部函数调用图：Gp_EcuStpShdn_PwrShdnInShdnPhase <span class="badge">工作项 · 5.1.2</span></h4>
 <div class="mermaid">flowchart LR
     N0["Gp_EcuStpShdn_PwrShdnInShd&lt;br&gt;nPhase"]
     N1["CalloutPwrShdnInShdnPhase"]
@@ -250,7 +250,7 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
     classDef callout fill:#ffe9a8,stroke:#bf8700,color:#1f2328
     class N0 entry
     class N1 callout</pre></details>
-<h4>内部函数调用图：Gp_EcuStpShdn_Startup <span class="badge">工作项 · 5.1</span></h4>
+<h4>内部函数调用图：Gp_EcuStpShdn_Startup <span class="badge">工作项 · 5.1.2</span></h4>
 <div class="mermaid">flowchart LR
     N0["Gp_EcuStpShdn_Startup"]
     N1["CalloutGetCoreId"]
@@ -345,7 +345,7 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
     class N0 entry
     class N8,N10,N13,N14 internal
     class N1,N2,N3,N4,N5,N6,N7,N9,N11,N12,N15,N16,N17,N18,N19 callout</pre></details>
-<h4>内部函数调用图：Gp_EcuStpShdn_Mainfunction <span class="badge">工作项 · 5.1</span></h4>
+<h4>内部函数调用图：Gp_EcuStpShdn_Mainfunction <span class="badge">工作项 · 5.1.2</span></h4>
 <div class="mermaid">flowchart LR
     N0["Gp_EcuStpShdn_Mainfunction"]
     N1["CalloutGetCoreId"]
@@ -380,7 +380,7 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
     class N0 entry
     class N2 internal
     class N1,N3,N4 callout</pre></details>
-<h4>内部函数调用图：配置表函数指针引用 <span class="badge">工作项 · 5.1</span></h4>
+<h4>内部函数调用图：配置表函数指针引用 <span class="badge">工作项 · 5.1.2</span></h4>
 <div class="mermaid">flowchart LR
     N_CfgTbl["配置表函数指针引用"]
     N_Gp_EcuStpShdn_CalloutInitStageTwoCore0["CalloutInitStageTwoCore0"]

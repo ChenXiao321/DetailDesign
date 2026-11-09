@@ -158,4 +158,25 @@ const model = (over = {}) => ({
   ok(m.calloutFunctions.length === 1 && m.schemaVersion === SCHEMA_VERSION, 'S7 lint 入口已就地迁移');
 }
 
+// ================= 场景 8：chapter 值精确化（5.1 → 5.1.1 总图 / 5.1.2 调用图）就地迁移 =================
+{
+  const io = { diagram: 'flowchart LR', diagramFormat: 'mermaid', polarion: { isWorkItem: true, chapter: '5.1', workItemKind: 'diagram', title: '功能接口总图', workItemId: null } };
+  const cg = (name) => ({ name, diagram: 'flowchart LR', diagramFormat: 'mermaid', polarion: { isWorkItem: true, chapter: '5.1', workItemKind: 'diagram', title: `${name} 调用图`, workItemId: null } });
+  const m = model({
+    interfaceOverview: io,
+    callGraphs: [cg('A'), cg('配置表函数指针引用')],
+  });
+  normalizeModel(m);
+  ok(m.interfaceOverview.polarion.chapter === '5.1.1', 'S8 interfaceOverview 5.1→5.1.1');
+  ok(m.callGraphs.every(g => g.polarion.chapter === '5.1.2'), 'S8 callGraphs 全部 5.1→5.1.2');
+  // 幂等：二次 normalize 不再改（已 5.1.1/5.1.2 不触发）
+  normalizeModel(m);
+  ok(m.interfaceOverview.polarion.chapter === '5.1.1' && m.callGraphs.every(g => g.polarion.chapter === '5.1.2'),
+    'S8 二次 normalize 不动（幂等）');
+  // 非 5.1 值不误改（如已是新值或其他章节）
+  const m2 = model({ interfaceOverview: { ...io, polarion: { ...io.polarion, chapter: '5.1.1' } }, callGraphs: [] });
+  normalizeModel(m2);
+  ok(m2.interfaceOverview.polarion.chapter === '5.1.1', 'S8 新值 5.1.1 保持不动');
+}
+
 console.log(`\n_test_normalize: ${n} 项断言全部通过 ✓`);

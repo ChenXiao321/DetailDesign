@@ -144,7 +144,7 @@ pre.plantuml { background:#0d1117; color:#c9d1d9; padding:16px; border-radius:8p
 <h2 id="s51">5.1 功能描述</h2>
 <p>Gp_TLF35584 是 Infineon TLF35584 电源管理/看门狗 SBC（System Basis Chip）的驱动模块，通过集成方实现的 SPI 接口 Gp_TLF35584_CalloutSpiTransSync 完成芯片寄存器读写。Gp_TLF35584_Init 完成看门狗、ERR pin 及各电源 LDO 的初始化配置，Gp_TLF35584_MainFunction 周期性执行喂狗、故障寄存器采集与诊断信息更新，并支持通过 Gp_TLF35584_SetWdgTriggerCondition 设置看门狗触发条件。模块提供 FWD/WWD 看门狗管理、ABIST/FWD/WWD/ERR pin 四类 BIST 自检（Gp_TLF35584_Bist），以及 NORMAL/STANDBY 模式切换、MPS 测试模式设置与唤醒定时器配置能力。故障经消抖后记录于内部错误位图，并在使能时通过 Gp_TLF35584_CalloutDemReport 上报 Dem，同时提供唤醒源/复位源读取接口 Gp_TLF35584_GetSystemUnusualReason。受保护寄存器的写入通过 Gp_TLF35584_UnlockSeq/Gp_TLF35584_LockSeq 解锁/加锁序列完成，写入值在 Lock 后由器件统一应用。</p>
 
-<h3>功能接口总图 <span class="badge">工作项 · 5.1</span></h3>
+<h3>功能接口总图 <span class="badge">工作项 · 5.1.1</span></h3>
 <p class="muted">本模块对外提供 12 个接口函数（左侧为调用方），并调用 5 个外部接口（右侧按来源模块归组）；箭头方向为调用方向。Callout 函数属本模块配置点，不在本图展示，其调用关系见下方内部函数调用图与 6.2；各接口的模块内调用者见内部函数调用图与 5.2.2 表。</p>
 <div class="mermaid">%%{init: {"flowchart": {"rankSpacing": 10, "nodeSpacing": 16}}}%%
 flowchart LR
@@ -197,7 +197,7 @@ flowchart LR
 
 <h3>内部函数调用图（每张图一个工作项）</h3>
 <p class="muted">按对外接口函数分别绘制其模块内调用树（深蓝=入口函数，灰=内部函数，蓝=被内部调用的对外接口，黄=Callout 函数（配置代码））；同一函数被多处调用时按调用路径重复出现，保证布局无交叉。经配置表函数指针间接引用的 Callout 单独成图。无模块内调用的平凡函数不出图，其余跨模块调用（Gp_RstM / Gp_TstApp 等）见功能接口总图与 5.2.2 表。</p>
-<h4>内部函数调用图：Gp_TLF35584_Init <span class="badge">工作项 · 5.1</span></h4>
+<h4>内部函数调用图：Gp_TLF35584_Init <span class="badge">工作项 · 5.1.2</span></h4>
 <div class="mermaid">flowchart LR
     N0["Gp_TLF35584_Init"]
     N1["CalloutDemReport"]
@@ -454,7 +454,7 @@ flowchart LR
     class N2,N4,N5,N6,N7,N8,N11,N12,N13,N14,N17,N18,N19,N20,N23,N24,N25,N28,N29,N30,N35,N36,N39,N40,N41,N45,N46,N49,N53,N54,N57,N58 internal
     class N33,N44,N52 provided
     class N1,N3,N9,N10,N15,N16,N21,N22,N26,N27,N31,N32,N34,N37,N38,N42,N43,N47,N48,N50,N51,N55,N56,N59 callout</pre></details>
-<h4>内部函数调用图：Gp_TLF35584_MainFunction <span class="badge">工作项 · 5.1</span></h4>
+<h4>内部函数调用图：Gp_TLF35584_MainFunction <span class="badge">工作项 · 5.1.2</span></h4>
 <div class="mermaid">flowchart LR
     N0["Gp_TLF35584_MainFunction"]
     N1["CalloutStmSwDalayNus"]
@@ -711,7 +711,7 @@ flowchart LR
     class N2,N3,N5,N8,N9,N10,N13,N16,N17,N19,N20,N23,N27,N28,N31,N32,N33,N36,N37,N38,N39,N42,N43,N46,N47,N48,N52,N53,N56 internal
     class N18,N26,N51,N59 provided
     class N1,N4,N6,N7,N11,N12,N14,N15,N21,N22,N24,N25,N29,N30,N34,N35,N40,N41,N44,N45,N49,N50,N54,N55,N57,N58 callout</pre></details>
-<h4>内部函数调用图：Gp_TLF35584_Bist <span class="badge">工作项 · 5.1</span></h4>
+<h4>内部函数调用图：Gp_TLF35584_Bist <span class="badge">工作项 · 5.1.2</span></h4>
 <div class="mermaid">flowchart LR
     N0["Gp_TLF35584_Bist"]
     N1["Gp_TLF35584_PreInit"]
@@ -966,7 +966,7 @@ flowchart LR
     class N0 entry
     class N1,N3,N4,N5,N6,N7,N10,N11,N12,N13,N16,N17,N18,N19,N22,N23,N24,N27,N28,N29,N30,N31,N34,N35,N36,N39,N40,N41,N44,N45,N46,N47,N49,N52,N53,N54,N57,N58,N59 internal
     class N2,N8,N9,N14,N15,N20,N21,N25,N26,N32,N33,N37,N38,N42,N43,N48,N50,N51,N55,N56 callout</pre></details>
-<h4>内部函数调用图：Gp_TLF35584_SetDevMpsMode <span class="badge">工作项 · 5.1</span></h4>
+<h4>内部函数调用图：Gp_TLF35584_SetDevMpsMode <span class="badge">工作项 · 5.1.2</span></h4>
 <div class="mermaid">flowchart LR
     N0["Gp_TLF35584_SetDevMpsMode"]
     N1["CalloutMpsTestSupport"]
@@ -987,7 +987,7 @@ flowchart LR
     classDef callout fill:#ffe9a8,stroke:#bf8700,color:#1f2328
     class N0 entry
     class N1 callout</pre></details>
-<h4>内部函数调用图：Gp_TLF35584_UnlockSeq <span class="badge">工作项 · 5.1</span></h4>
+<h4>内部函数调用图：Gp_TLF35584_UnlockSeq <span class="badge">工作项 · 5.1.2</span></h4>
 <div class="mermaid">flowchart LR
     N0["Gp_TLF35584_UnlockSeq"]
     N1["Gp_TLF35584_WriteCmd"]
@@ -1022,7 +1022,7 @@ flowchart LR
     class N0 entry
     class N1,N2 internal
     class N3,N4 callout</pre></details>
-<h4>内部函数调用图：Gp_TLF35584_LockSeq <span class="badge">工作项 · 5.1</span></h4>
+<h4>内部函数调用图：Gp_TLF35584_LockSeq <span class="badge">工作项 · 5.1.2</span></h4>
 <div class="mermaid">flowchart LR
     N0["Gp_TLF35584_LockSeq"]
     N1["Gp_TLF35584_WriteCmd"]
@@ -1057,7 +1057,7 @@ flowchart LR
     class N0 entry
     class N1,N2 internal
     class N3,N4 callout</pre></details>
-<h4>内部函数调用图：Gp_TLF35584_SetWkUpTimer <span class="badge">工作项 · 5.1</span></h4>
+<h4>内部函数调用图：Gp_TLF35584_SetWkUpTimer <span class="badge">工作项 · 5.1.2</span></h4>
 <div class="mermaid">flowchart LR
     N0["Gp_TLF35584_SetWkUpTimer"]
     N1["Gp_TLF35584_WriteCmd"]
@@ -1134,7 +1134,7 @@ flowchart LR
     class N1,N3,N4,N7,N11,N12 internal
     class N2,N10 provided
     class N5,N6,N8,N9,N13,N14 callout</pre></details>
-<h4>内部函数调用图：配置表函数指针引用 <span class="badge">工作项 · 5.1</span></h4>
+<h4>内部函数调用图：配置表函数指针引用 <span class="badge">工作项 · 5.1.2</span></h4>
 <div class="mermaid">flowchart LR
     N_CfgTbl["配置表函数指针引用"]
     N_Gp_TLF35584_CalloutWdgmValid["CalloutWdgmValid"]

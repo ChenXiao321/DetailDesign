@@ -703,7 +703,7 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
       name: root.name,
       diagram: lines.join('\n'),
       diagramFormat: 'mermaid',
-      polarion: makeMarker('5.1', 'diagram', `${root.name} 调用图`, true),
+      polarion: makeMarker('5.1.2', 'diagram', `${root.name} 调用图`, true),
     });
   }
 
@@ -720,7 +720,7 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
       name: '配置表函数指针引用',
       diagram: lines.join('\n'),
       diagramFormat: 'mermaid',
-      polarion: makeMarker('5.1', 'diagram', '配置表函数指针引用 调用图', true),
+      polarion: makeMarker('5.1.2', 'diagram', '配置表函数指针引用 调用图', true),
     });
   }
 
@@ -747,7 +747,7 @@ export async function analyzeModule(files: InputFile[], moduleName?: string): Pr
     interfaceOverview: {
       diagram: ov.join('\n'),
       diagramFormat: 'mermaid',
-      polarion: makeMarker('5.1', 'diagram', '功能接口总图', true),
+      polarion: makeMarker('5.1.1', 'diagram', '功能接口总图', true),
     },
     callGraphs,
   };

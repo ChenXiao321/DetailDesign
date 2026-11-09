@@ -9,6 +9,10 @@
  * v5 变更：document.configDetails 单一对象拆为 configDetailsGeneral/configDetailsFunctional
  * 两个对象（按对应宏的 kind 归属；别名宏本就不在 configDetails 内）。
  *
+ * 另：chapter 值精确化（同 schema 内值演进，不升版本）——5.1 功能描述下拆
+ * 5.1.1 功能接口总图 / 5.1.2 内部函数调用图（与 Polarion 样板对齐），
+ * 存量 json 的 interfaceOverview/callGraphs polarion.chapter=5.1 就地改写。
+ *
  * 契约：**就地迁移**，原地修改入参并返回同一引用（同 materializePolarionAttributes 先例）；
  * **形态驱动、幂等**——不看 schemaVersion 决定动不动，只看数据形态，重复调用结果不变。
  * 磁盘写回不在这里做：迁移后的形态随 gen/images 的 save 自然落盘。
@@ -57,6 +61,16 @@ export function normalizeModel(model: ModuleModel): ModuleModel {
       (generalNames.has(name) ? doc.configDetailsGeneral : doc.configDetailsFunctional)[name] = detail;
     }
     delete doc.configDetails;
+  }
+  // chapter 值精确化（5.1 功能描述下拆 5.1.1 功能接口总图 / 5.1.2 内部函数调用图，与 Polarion 样板对齐）：
+  // 存量 json 的 interfaceOverview/callGraphs polarion.chapter 仍标 5.1，就地按 workItemKind/title 改写。
+  // 形态驱动（只认 5.1 + diagram 标记）、幂等（已 5.1.1/5.1.2 或 NULL 安全跳过），不改字节门禁（report 渲染读的是 badge 文字，
+  // badge 用 chapter 值直出——见 htmlReport，故属 sync/工作项定位键演进而非报告内容变化）。
+  if (model.interfaceOverview?.polarion?.chapter === '5.1') {
+    model.interfaceOverview.polarion.chapter = '5.1.1';
+  }
+  for (const g of model.callGraphs ?? []) {
+    if (g.polarion?.chapter === '5.1') g.polarion.chapter = '5.1.2';
   }
   if ((model.schemaVersion ?? 0) < SCHEMA_VERSION) model.schemaVersion = SCHEMA_VERSION;
   return model;

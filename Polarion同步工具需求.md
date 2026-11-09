@@ -247,14 +247,70 @@ jsonPath 基座为 `$.calloutFunctions[N]`（design json v2 起 Callout 独立�
 
 `content` = ConfigMacro 节点：
 
-| Polarion 字段 | 来源 |
-|---|---|
-| title | `name` |
-| 取值/形式 | `value` + `isFunctionLike` |
-| 类别 | `kind`（general=6.1 一般配置 / functional=6.2 功能开关 / alias=别名宏不入工作项） |
-| 取值影响 | `generated.valueEffect` |
-| 使用点 | `usages[]`（file/line/context/kind） |
-| 影响面 | `affects[]`（被条件编译影响的函数/变量/类型） |
+| Polarion 字段 | 来源 | 说明 |
+|---|---|---|
+| title | `name` | 宏名 |
+| 取值/形式 | `value` + `isFunctionLike` | `value` 原始取值（如 `(2U)`/`(STD_ON)`）；`isFunctionLike`=带参宏 |
+| 类别 | `kind` | general=6.1 一般配置 / functional=6.2 功能开关 / alias=别名宏不入工作项 |
+| 说明 | `comment` | 宏行尾注释（无则空） |
+| 取值影响 | `generated.valueEffect` | LLM 生成的取值影响说明（含「推断，待确认」标注） |
+| 使用方式 | `usages[]` | 静态扫描引用点（file/line/context/kind：condCompile/arrayDim/loopBound/call/reference） |
+| 影响范围 | `affects[]` | 被条件编译直接作用的函数/变量/类型名（与顶层 `generalConfigMacros[].affects` 同源） |
+
+**数据源两处、口径一致**：
+1. **`content`（sync.json 操作内嵌）** = 完整 ConfigMacro 节点，含上表全部字段，拿着即可更新；
+2. **物化进 design json 的 `document.configDetailsGeneral[宏名]` / `document.configDetailsFunctional[宏名]`**
+   （v5 起按宏 kind 拆两对象，键=宏名）——除 `usageItems/example/tableRow/valueEffect` 外，**`affects` 已物化**，
+   供「影响范围」直接读取（0929 前物化 json 缺该字段时，报告渲染期回退顶层宏 `affects`，内容一致）。
+
+**更新样例（config 工作项，真实数据节选，以 `GP_ECUSTPSHDN_ACTIVE_CORE_NUM` 为例）**：
+
+```jsonc
+{
+  "action": "update",
+  "kind": "config",
+  "chapter": "6.1",                       // = content.polarion.chapter
+  "title": "GP_ECUSTPSHDN_ACTIVE_CORE_NUM",
+  "wiType": "Design", "verifyMethod": "test",
+  "detail": "配置宏变更：更新配置项工作项内容",
+  "jsonPath": "$.generalConfigMacros[0]",
+  "oldJsonPath": "$.generalConfigMacros[0]",
+  "changedFields": ["描述"],
+  "content": {
+    "name": "GP_ECUSTPSHDN_ACTIVE_CORE_NUM",
+    "value": "(2U)",
+    "isFunctionLike": false,
+    "comment": "define active core number",
+    "kind": "general",
+    "usages": [                          // 使用方式（静态事实），本例 27 处，节选 2 处
+      { "kind": "condCompile", "file": "ConfTemplate\\Gp_EcuStpShdn_Callout.c", "line": 152, "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 1U)" },
+      { "kind": "condCompile", "file": "ConfTemplate\\Gp_EcuStpShdn_Callout.c", "line": 171, "context": "#if (GP_ECUSTPSHDN_ACTIVE_CORE_NUM > 2U)" }
+    ],
+    "affects": [                          // 影响范围（被条件编译直接作用的函数/变量）
+      "Gp_EcuStpShdn_bufSatLocalImplCore1_ltst",
+      "Gp_EcuStpShdn_bufSatLocalImplCore2_ltst",
+      "Gp_EcuStpShdn_bufSatLocalImplCore3_ltst",
+      "Gp_EcuStpShdn_bufSatLocalImplCore4_ltst",
+      "Gp_EcuStpShdn_bufSatLocalImplCore5_ltst"
+    ],
+    "generated": { "valueEffect": "...取值影响说明...", "contentHash": "..." },
+    "polarion": { "chapter": "6.1", "wiType": "Design", "verifyMethod": "test" }
+  }
+}
+```
+
+对应物化落点（report 章节 6.1.1 内容来源）：
+
+```jsonc
+// design json: document.configDetailsGeneral["GP_ECUSTPSHDN_ACTIVE_CORE_NUM"]
+{
+  "usageItems": ["<li>条件编译裁剪 25 处：…</li>", "<li>数组维度 1 处（…），如 …</li>", "…"],
+  "example": "#define GP_ECUSTPSHDN_ACTIVE_CORE_NUM   (2U)  /* define active core number */",
+  "tableRow": ["(2U)", "值宏", "define active core number"],
+  "valueEffect": "…取值影响说明…<span class=\"inferred\">推断，待确认</span>",
+  "affects": ["Gp_EcuStpShdn_bufSatLocalImplCore1_ltst", "…Core2…", "…Core3…", "…Core4…", "…Core5…"]
+}
+```
 
 ### 6.5 kind=variable（章节 5.2.3.1 对外变量 GV / 5.2.4.1 内部变量 LV）
 
@@ -303,9 +359,10 @@ jsonPath 基座为 `$.calloutFunctions[N]`（design json v2 起 Callout 独立�
 | `5.3.2` | 序列图 | SequenceDesign 数组：`diagram` + `diagramPng` + `description` | `$.dynamicDesign.sequences` | 整节替换（多核场景多张图逐一对应） |
 | `7` | 评估与圈复杂度表 | `{ evaluationRows[], complexityTable[] }` | `$.document`（content 为 document 节多键子集，锚到父节点） | 整表替换 |
 | `4.1` | 文件清单 | files 数组（path/role/includes） | `$.files` | 整表替换 |
-| `4.2` | 接口总图 | `{ diagram, diagramPng }` | `$.interfaceOverview` | 图替换 |
-| `4.2` | 调用图 | `{ changed: [{name,diagram,diagramPng}], removed: [名字] }` | `$.callGraphs` | changed 逐张替换，removed 逐张移除 |
-| `3.1/3.2` | 缩写表/定义表 | `{ abbreviations, definitions, abbreviationGaps }` | `$.document`（同 §7 评估表，锚到父节点） | 整表替换；`abbreviationGaps` 非空=有未定义缩写，须在对账报告提示维护方补表 |
+| `5.1.1` | 接口总图 | `{ diagram, diagramPng }` | `$.interfaceOverview` | 图替换 |
+| `5.1.2` | 调用图 | `{ changed: [{name,diagram,diagramPng}], removed: [名字] }` | `$.callGraphs` | changed 逐张替换，removed 逐张移除 |
+| `3.1` | 缩写表 | `{ abbreviations, abbreviationGaps }` | `$.document.abbreviations`（`abbreviationGaps` 随行于 content，不落 jsonPath 节点） | 整表替换；`abbreviationGaps` 非空=有未定义缩写，须在对账报告提示维护方补表 |
+| `3.2` | 定义表 | `{ definitions }` | `$.document.definitions` | 整表替换 |
 
 `oldJsonPath` 仅当旧 json 实有该节点才携带（如旧 json 尚无 `document` 节、`interfaceOverview` 未物化等，则省略）。
 

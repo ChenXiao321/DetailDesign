@@ -196,12 +196,15 @@ export interface ConfigMacro {
 }
 
 /** 6 章配置宏明细条目：usageItems=使用方式列表项（最终 HTML <li>）example=配置示例行（原始文本）
- *  tableRow=表行（取值/形式/说明）valueEffect=取值影响（最终 HTML，含推断角标） */
+ *  tableRow=表行（取值/形式/说明）valueEffect=取值影响（最终 HTML，含推断角标）
+ *  affects=影响范围（被条件编译直接作用的函数/变量/类型名，自顶层 ConfigMacro.affects 物化，
+ *  供第三方同步工具从 document.configDetails* 直接取影响面；0929 前物化 json 缺省时渲染期回退顶层宏） */
 export interface ConfigDetailEntry {
   usageItems: string[];
   example: string;
   tableRow?: [string, string, string];
   valueEffect?: string;
+  affects?: string[];
 }
 
 /** 配置宏读取统一入口：三桶合并返回（顺序=general→functional→alias，桶内=提取序）。

@@ -23,7 +23,7 @@ export const DOC_KEYS = ['purpose', 'scope', 'fileTable', 'importedTypes', 'comp
 export const NOTES_KEYS = ['overview', 'callGraph', 'include', 'providedVarsEmpty', 'externalVars',
   'externalFnsCallout', 'internalVars', 'configGeneral', 'configFunctional', 'calloutCfg',
   'evalSummaryIntro'] as const;
-export const CONFIG_DETAIL_FIELDS = ['usageItems', 'example', 'tableRow', 'valueEffect'] as const;
+export const CONFIG_DETAIL_FIELDS = ['usageItems', 'example', 'tableRow', 'valueEffect', 'affects'] as const;
 
 export interface SchemaLintOptions {
   /** 要求全部六类图 PNG 在场（仅 gen --only images 后的成品 json 可满足） */

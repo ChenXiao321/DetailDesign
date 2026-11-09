@@ -270,7 +270,7 @@ ${diagramBlock(s.diagram)}
 <pre class="plantuml">${escRaw(detail.example)}</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
 <ul>${detail.usageItems.join('')}</ul>
-${c.affects.length > 0 ? `<p><b>影响范围（条件编译直接作用的函数/变量）：</b>${c.affects.map(a => `<code>${esc(a)}</code>`).join('，')}</p>` : ''}
+${(() => { const aff = detail.affects ?? c.affects; return aff.length > 0 ? `<p><b>影响范围（条件编译直接作用的函数/变量）：</b>${aff.map(a => `<code>${esc(a)}</code>`).join('，')}</p>` : ''; })()}
 <p><b>取值影响：</b>${detail.valueEffect}</p>`;
   };
   const configSections = (list: ConfigMacro[], base: string) =>

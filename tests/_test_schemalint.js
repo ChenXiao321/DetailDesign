@@ -9,7 +9,7 @@ const check = (name, ok, extra) => { if (ok) { pass++; console.log('PASS', name)
 
 const DOC = {
   purpose: 'p', scope: 's', fileTable: [], importedTypes: [], complexityTable: [],
-  configDetailsGeneral: { M_CFG: { usageItems: [], example: 'e', tableRow: ['1', '值宏', ''], valueEffect: 'v' } },
+  configDetailsGeneral: { M_CFG: { usageItems: [], example: 'e', tableRow: ['1', '值宏', ''], valueEffect: 'v', affects: [] } },
   configDetailsFunctional: {},
   aliasNote: '', abbreviations: [], abbreviationNote: '', definitions: [], definitionNote: null,
   abbreviationGaps: [], evaluationRows: [], complexityNote: '', evaluationSummary: [],
@@ -53,6 +53,8 @@ const m5 = mkModel(); delete m5.document.notes.include;
 check('notes 缺 include 报', lintModelSchema(m5, FULL).some(p => p === 'document.notes 缺键 include'));
 const m6 = mkModel(); delete m6.document.configDetailsGeneral.M_CFG.valueEffect;
 check('configDetailsGeneral 缺 valueEffect 报', lintModelSchema(m6, FULL).some(p => p === 'configDetailsGeneral.M_CFG 缺字段 valueEffect'));
+const m6b = mkModel(); delete m6b.document.configDetailsGeneral.M_CFG.affects;
+check('configDetailsGeneral 缺 affects 报', lintModelSchema(m6b, FULL).some(p => p === 'configDetailsGeneral.M_CFG 缺字段 affects'));
 const m7 = mkModel(); delete m7.document.configDetailsGeneral.M_CFG;
 check('configDetailsGeneral 缺宏报', lintModelSchema(m7, FULL).some(p => p === 'configDetailsGeneral 缺宏 M_CFG'));
 const m7b = mkModel();

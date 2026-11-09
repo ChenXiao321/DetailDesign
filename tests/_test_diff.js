@@ -387,8 +387,7 @@ const model = (over = {}) => ({
   ok(cu6('通用配置明细')?.chapter === '6.1' && cu6('通用配置明细')?.jsonPath === '$.document.configDetailsGeneral'
     && cu6('通用配置明细')?.oldJsonPath === '$.document.configDetailsGeneral'
     && cu6('通用配置明细')?.content?.C1?.usageItems?.[0] === 'y', 'S8f 6.1 明细节更新：双向路径齐+content=新明细');
-  ok(cu6('功能配置明细')?.chapter === '6.2' && cu6('功能配置明细')?.jsonPath === '$.document.configDetailsFunctional',
-    'S8f 6.2 明细节同步更新');
+  ok(cu6('功能配置明细') === undefined, 'S8f 仅 general 桶变化 → 6.2 不出（没变就不动）');
   // 8g：usages/affects 未变 → 不误报（回归护栏：行尾注释/文件位置不动键）
   const cOld2 = { ...cfg('C1', '1', true), usages: [u1], affects: ['F1'] };
   const cNew2 = { ...cfg('C1', '1'), usages: [{ ...u1 }], affects: ['F1'] };
@@ -405,6 +404,13 @@ const model = (over = {}) => ({
   const op8 = sync8.operations.find(o => o.kind === 'config' && o.title === 'F1');
   ok(op8?.action === 'delete' && op8.oldJsonPath === '$.functionalConfigMacros[0]' && op8.jsonPath === undefined,
     `S8h functional 宏删除 oldJsonPath 落 $.functionalConfigMacros（实得 ${op8?.oldJsonPath}）`);
+  ok(sync8.chapterUpdates.some(c => c.chapter === '6.2') && !sync8.chapterUpdates.some(c => c.chapter === '6.1'),
+    'S8h 仅 functional 桶变化 → 只出 6.2 不出 6.1');
+  // 8i：仅 alias 桶宏变化 → 6.1/6.2 都不出（别名宏不上报告章节，明细不含）
+  const a1 = { ...cfg('A1', 'MCAL_NOP()', true), kind: 'alias', isFunctionLike: true };
+  const d9 = diffModules(model({ aliasConfigMacros: [a1] }), model({}));
+  const sync9 = buildPolarionSync(d9, model({ aliasConfigMacros: [a1] }), model({}));
+  ok(!sync9.chapterUpdates.some(c => c.chapter === '6.1' || c.chapter === '6.2'), 'S8i 仅 alias 桶变化 → 6.1/6.2 都不出');
 }
 
 // ================= 场景 9：外部接口按 Polarion 工作项粒度出操作 =================

@@ -266,7 +266,8 @@ jsonPath 基座为 `$.calloutFunctions[N]`（design json v2 起 Callout 独立�
 **config 比对键**（是否产生 update 操作的判定口径，2026-11-09 扩充）：
 `value` + `isFunctionLike` + `kind` + **`usages`（逐点比对 kind/file/line/context）** + **`affects`（名单）**。
 扩充原因：删改某个条件编译块（如 `#if (XXX > 5U) ... #endif`）不改宏取值，但使用方式与影响范围随之变化，
-旧口径下 sync.json 静默漏报。比对键变化时同时触发 §7 的 `6.1`/`6.2` 明细节章节级更新（整节替换），
+旧口径下 sync.json 静默漏报。比对键变化时按桶触发 §7 的 `6.1`/`6.2` 明细节章节级更新（整节替换，
+**桶内无变化则对应章节不出**——2026-11-09 用户定「没变就不动」），
 保证报告第 6 章正文与工作项内容同步刷新。行尾注释（`comment`）、宏定义文件位置（`file`）不进键（噪声口径同变量条目）。
 
 **更新样例（config 工作项，真实数据节选，以 `GP_ECUSTPSHDN_ACTIVE_CORE_NUM` 为例）**：
@@ -369,8 +370,8 @@ jsonPath 基座为 `$.calloutFunctions[N]`（design json v2 起 Callout 独立�
 | `5.1.2` | 调用图 | `{ changed: [{name,diagram,diagramPng}], removed: [名字] }` | `$.callGraphs` | changed 逐张替换，removed 逐张移除 |
 | `3.1` | 缩写表 | `{ abbreviations, abbreviationGaps }` | `$.document.abbreviations`（`abbreviationGaps` 随行于 content，不落 jsonPath 节点） | 整表替换；`abbreviationGaps` 非空=有未定义缩写，须在对账报告提示维护方补表 |
 | `3.2` | 定义表 | `{ definitions }` | `$.document.definitions` | 整表替换 |
-| `6.1` | 通用配置明细 | `{ configDetailsGeneral }` 物化对象（键=宏名，条目=ConfigDetailEntry：usageItems/example/tableRow/valueEffect/affects） | `$.document.configDetailsGeneral` | 整节替换（配置宏有任何增删改即触发，含 usages/affects 变化——见 §6.4 比对键） |
-| `6.2` | 功能配置明细 | `{ configDetailsFunctional }` 物化对象（同上） | `$.document.configDetailsFunctional` | 整节替换（同上） |
+| `6.1` | 通用配置明细 | `{ configDetailsGeneral }` 物化对象（键=宏名，条目=ConfigDetailEntry：usageItems/example/tableRow/valueEffect/affects） | `$.document.configDetailsGeneral` | 整节替换；**仅当 general 桶宏有增删改才触发**（含 usages/affects 变化——见 §6.4 比对键；alias 桶宏不上章节，其变化不触发） |
+| `6.2` | 功能配置明细 | `{ configDetailsFunctional }` 物化对象（同上） | `$.document.configDetailsFunctional` | 整节替换；**仅当 functional 桶宏有增删改才触发**（同上；宏跨桶移动时两节都出） |
 
 `oldJsonPath` 仅当旧 json 实有该节点才携带（如旧 json 尚无 `document` 节、`interfaceOverview` 未物化等，则省略）。
 

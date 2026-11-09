@@ -733,18 +733,27 @@ export function buildPolarionSync(diff: ModuleDiff, oldDesign: ModuleModel, newM
     });
   }
   // 6.1/6.2 配置明细章节级更新（2026-11-09 用户反馈：删改条件编译块不改宏 value，但 usageItems/影响范围变化，
-  // 旧版 sync.json 无章节级更新会漏刷新明细节内容）。cfgKey 已纳 usages/affects（ usages 逐点比对 file/line/context），
-  // 配置宏有任何增删改 → 明细节整节替换（明细=物化的 ConfigDetailEntry，键=宏名）。
-  if (diff.configs.changed.length + diff.configs.added.length + diff.configs.removed.length > 0) {
-    const mk = (obj: 'configDetailsGeneral' | 'configDetailsFunctional', chapter: string, title: string): void => {
-      chapterUpdates.push({
-        chapter, title, reason: '配置宏增删改（含使用方式/影响范围变化）→ 明细节整节替换', wiType: DESIGN_WITYPE, verifyMethod: VM_REVIEW,
-        content: newModel.document ? cloneNode(newModel.document[obj]) : undefined,
-        jsonPath: `$.document.${obj}`, ...(oldDesign.document?.[obj] !== undefined ? { oldJsonPath: `$.document.${obj}` } : {}),
-      });
-    };
-    mk('configDetailsGeneral', '6.1', '通用配置明细');
-    mk('configDetailsFunctional', '6.2', '功能配置明细');
+  // 旧版 sync.json 无章节级更新会漏刷新明细节内容）。cfgKey 已纳 usages/affects（usages 逐点比对 file/line/context）。
+  // 按桶分别判断（2026-11-09 用户定「没变就不动」）：只有该桶内的宏有增删改才出对应章节更新。
+  // 桶归属按新旧两侧名单判定（改名/跨桶移动场景两桶都算变化，两节都出——内容与宏归属同步刷新，正确）；
+  // alias 桶宏不上报告章节（明细本就不含别名宏），其变化不触发 6.1/6.2。
+  {
+    const cfgTouched = [...diff.configs.changed, ...diff.configs.added, ...diff.configs.removed];
+    if (cfgTouched.length > 0) {
+      const functionalNames = new Set([...(newModel.functionalConfigMacros ?? []), ...(oldDesign.functionalConfigMacros ?? [])].map(c => c.name));
+      const generalNames = new Set([...(newModel.generalConfigMacros ?? []), ...(oldDesign.generalConfigMacros ?? [])].map(c => c.name));
+      const touchedFunctional = cfgTouched.some(n => functionalNames.has(n));
+      const touchedGeneral = cfgTouched.some(n => generalNames.has(n));
+      const mk = (obj: 'configDetailsGeneral' | 'configDetailsFunctional', chapter: string, title: string): void => {
+        chapterUpdates.push({
+          chapter, title, reason: '本桶配置宏增删改（含使用方式/影响范围变化）→ 明细节整节替换', wiType: DESIGN_WITYPE, verifyMethod: VM_REVIEW,
+          content: newModel.document ? cloneNode(newModel.document[obj]) : undefined,
+          jsonPath: `$.document.${obj}`, ...(oldDesign.document?.[obj] !== undefined ? { oldJsonPath: `$.document.${obj}` } : {}),
+        });
+      };
+      if (touchedGeneral) mk('configDetailsGeneral', '6.1', '通用配置明细');
+      if (touchedFunctional) mk('configDetailsFunctional', '6.2', '功能配置明细');
+    }
   }
 
   return {

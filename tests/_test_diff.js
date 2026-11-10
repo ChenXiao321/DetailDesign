@@ -420,6 +420,25 @@ const model = (over = {}) => ({
   const d9 = diffModules(model({ aliasConfigMacros: [a1] }), model({}));
   const sync9 = buildPolarionSync(d9, model({ aliasConfigMacros: [a1] }), model({}));
   ok(!sync9.chapterUpdates.some(c => c.chapter === '6.1' || c.chapter === '6.2'), 'S8i 仅 alias 桶变化 → 6.1/6.2 都不出');
+
+  // 8j：描述保留特例（2026-11-10 用户定）——仅 usages/affects 变（value/kind 未动）→ 出 update + 章节更新，
+  // 但 generated（valueEffect 描述）回挂旧值不重跑 LLM；value 变才清 generated 重生。
+  const jOld = { ...cfg('J1', '(STD_ON)', true), kind: 'functional', usages: [u1, u2], affects: ['F1'] };
+  const jNew = { ...cfg('J1', '(STD_ON)'), kind: 'functional', usages: [u1], affects: ['F1', 'F3'] };
+  const oldJ = model({ functionalConfigMacros: [jOld] });
+  const nwJ = model({ functionalConfigMacros: [jNew] });
+  const dJ = diffModules(oldJ, nwJ);
+  ok(dJ.configs.changed.join() === 'J1', 'S8j usages/affects 变判 changed');
+  const mJ = applyModuleDiff(nwJ, oldJ, dJ);
+  ok(mJ.functionalConfigMacros[0].generated?.valueEffect === 've-J1',
+    'S8j 语义字段未变 → generated 保留（描述不重跑 LLM）');
+  // 对照：value 变 → generated 清空（语义变了描述必须重生）
+  const kOld = { ...cfg('K1', '(STD_ON)', true), kind: 'functional' };
+  const kNew = { ...cfg('K1', '(STD_OFF)'), kind: 'functional' };
+  const oldK = model({ functionalConfigMacros: [kOld] });
+  const nwK = model({ functionalConfigMacros: [kNew] });
+  const mK = applyModuleDiff(nwK, oldK, diffModules(oldK, nwK));
+  ok(!mK.functionalConfigMacros[0].generated, 'S8j value 变 → generated 清空（描述重生）');
 }
 
 // ================= 场景 9：外部接口按 Polarion 工作项粒度出操作 =================

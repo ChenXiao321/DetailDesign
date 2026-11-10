@@ -220,6 +220,22 @@ export function applyModuleDiff(newModel: ModuleModel, oldDesign: ModuleModel, d
   carry(merged.generalConfigMacros, oldDesign.generalConfigMacros, new Set(diff.configs.unchanged));
   carry(merged.functionalConfigMacros, oldDesign.functionalConfigMacros, new Set(diff.configs.unchanged));
   carry(merged.aliasConfigMacros, oldDesign.aliasConfigMacros, new Set(diff.configs.unchanged));
+  // 配置宏「描述保留」特例（2026-11-10 用户定）：usages/affects 是静态扫描事实（处数/表达式/影响名单），
+  // 其变化不该触发 LLM 重写语义描述（valueEffect）——描述只随取值/形式/类别（value/isFunctionLike/kind）
+  // 变化而重生。changed 宏若语义字段未变（仅 usages/affects 动），回挂旧 generated 免重跑 LLM、防文字抖动。
+  {
+    const semKey = (c: ConfigMacro) => `${c.value}|${c.isFunctionLike}|${c.kind}`;
+    const oldCfg = new Map(listConfigMacros(oldDesign).map(c => [c.name, c]));
+    for (const bucket of [merged.generalConfigMacros, merged.functionalConfigMacros]) {
+      for (const macro of bucket) {
+        if (!diff.configs.changed.includes(macro.name)) continue;   // 只处理判 changed 的
+        const old = oldCfg.get(macro.name);
+        if (old?.generated?.valueEffect && semKey(old) === semKey(macro)) {
+          macro.generated = old.generated;   // 语义未变 → 描述沿用（contentHash 与生成时刻内容仍一致）
+        }
+      }
+    }
+  }
   // 变量无 generated（非 LLM 条目），回挂旧注释即可（可能被富化过）
   carry(merged.providedVariables, oldDesign.providedVariables, new Set(diff.variables.unchanged));
   carry(merged.internalVariables, oldDesign.internalVariables, new Set(diff.variables.unchanged));

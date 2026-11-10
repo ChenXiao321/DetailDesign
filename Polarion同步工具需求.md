@@ -274,6 +274,11 @@ jsonPath 基座为 `$.calloutFunctions[N]`（design json v2 起 Callout 独立�
 **桶内无变化则对应章节不出**——2026-11-09 用户定「没变就不动」），
 保证报告第 6 章正文与工作项内容同步刷新。行尾注释（`comment`）、宏定义文件位置（`file`）不进键（噪声口径同变量条目）。
 
+**描述保留特例**（2026-11-10 用户定）：`usages`/`affects` 是静态扫描事实（处数/表达式/影响名单），
+其变化只更新事实字段，**不触发 LLM 重写语义描述（`valueEffect`）**——描述仅随取值/形式/类别
+（`value`/`isFunctionLike`/`kind`）变化而重生。因此「仅 usages/affects 变」的 update 操作，
+`content.generated.valueEffect` 与旧版逐字一致（沿用上版描述），只有 usages/affects/物化明细是新的。
+
 **更新样例（config 工作项，真实数据节选，以 `GP_ECUSTPSHDN_ACTIVE_CORE_NUM` 为例）**：
 
 ```jsonc

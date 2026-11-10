@@ -279,6 +279,11 @@ jsonPath 基座为 `$.calloutFunctions[N]`（design json v2 起 Callout 独立�
 （`value`/`isFunctionLike`/`kind`）变化而重生。因此「仅 usages/affects 变」的 update 操作，
 `content.generated.valueEffect` 与旧版逐字一致（沿用上版描述），只有 usages/affects/物化明细是新的。
 
+配套约束（同日定）：valueEffect 的生成 prompt 已要求**只写取值对模块行为的影响（语义），
+禁止内嵌使用处数/引用位置/被影响的函数变量名等静态事实**——这些事实由 usages/affects 结构化字段承载
+并随改版刷新，写进描述文本会在「保留旧描述」时过期失真。存量旧描述中已内嵌事实的，
+随该宏下次语义变化重生描述时自然洗成新风格，不主动全量重写。
+
 **更新样例（config 工作项，真实数据节选，以 `GP_ECUSTPSHDN_ACTIVE_CORE_NUM` 为例）**：
 
 ```jsonc

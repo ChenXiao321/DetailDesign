@@ -228,6 +228,7 @@ export function buildConfigValueEffectPrompt(
   lines.push(`1. 该配置项控制什么行为`);
   lines.push(`2. 各候选取值（如 STD_ON/STD_OFF 或数值范围）分别产生什么效果`);
   lines.push(`3. 与其他配置项的依赖关系（仅当使用事实中有体现才写）`);
+  lines.push(`4. 只写取值对模块行为的影响（语义），禁止在文本中写出使用处数、引用位置、被影响的具体函数/变量名等静态事实——处数与影响名单由文档的结构化字段（使用方式/影响范围）承载，随代码改版自动刷新，写进描述文本会过期失真。`);
   lines.push(`直接输出说明正文，不要输出标题、列表编号或任何格式标记。`);
   return { system: SYSTEM_DESIGNER, user: lines.join('\n') };
 }

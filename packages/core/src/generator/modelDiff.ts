@@ -23,6 +23,7 @@
  */
 import { listStateMachines, listConfigMacros } from '../model/types.js';
 import { normalizeModel } from '../model/normalize.js';
+import { usageFingerprint, affectsFingerprint } from '../analyzer/moduleAnalyzer.js';
 import type {
   ModuleModel, FunctionUnit, TypeUnit, ExternalInterface, ConfigMacro, VariableUnit,
 } from '../model/types.js';
@@ -115,15 +116,17 @@ const typeKey = (t: TypeUnit): string =>
   });
 const extKey = (e: ExternalInterface): string =>
   stable({ signature: e.signature, group: e.group });
-// 配置宏语义键：取值/形式/类别 + 使用方式 + 影响范围。
+// 配置宏语义键：取值/形式/类别 + 使用方式（语义指纹）+ 影响范围（名单）。
 // usages/affects 入键（2026-11-09 用户反馈）：删改条件编译块（如某 #if (...)...#endif）不改 value/kind，
-// 但 usages（使用点 file/line/context）与 affects（被裁剪的函数/变量）随之变化——不进键则 sync.json 静默漏报
-// 第 6 章配置明细（usageItems/影响范围）变化。usages 逐点比对（kind/file/line/context），affects 为名单。
+// 但使用方式与 affects（被裁剪的函数/变量）随之变化——不进键则 sync.json 静默漏报第 6 章配置明细变化。
+// 2026-11-10 收紧为位置无关语义指纹（usageFingerprint/affectsFingerprint，moduleAnalyzer 导出）：
+// 逐点 file/line/context 比对会把删除 #if 块导致的下方行号平移误判为所有宏变更（6.2 宏跟着 6.1 宏误报）；
+// 改按 kind 处数 + 条件编译表达式名单比对——本模块宏的语义变化必伴随处数或表达式变化，位置平移不再误报。
 const cfgKey = (c: ConfigMacro): string =>
   stable({
     value: c.value, isFunctionLike: c.isFunctionLike, kind: c.kind,
-    usages: (c.usages ?? []).map(u => ({ kind: u.kind, file: u.file, line: u.line, context: u.context })),
-    affects: c.affects ?? [],
+    usage: usageFingerprint(c),
+    affects: affectsFingerprint(c),
   });
 // 变量语义键：类型+限定符。注释/file/conditionalFlags 不算变更（与 typeKey 同口径；
 // 注释剥离原则——旧产物注释可能被富化过）。
@@ -392,10 +395,11 @@ const typeDescriptionChanged = (o?: TypeUnit, n?: TypeUnit): boolean => {
 const cfgDescriptionChanged = (o?: ConfigMacro, n?: ConfigMacro): boolean => {
   if (!o || !n) return false;
   if (o.value !== n.value || o.isFunctionLike !== n.isFunctionLike || o.kind !== n.kind) return true;
-  // usages/affects 同 cfgKey 入描述口径（2026-11-09）：条件编译块删改虽不动 value，
-  // 但 6.x 明细节的「使用方式」「影响范围」随之变化——描述（工作项正文）必须标变。
-  const usg = (c: ConfigMacro) => stable((c.usages ?? []).map(u => ({ kind: u.kind, file: u.file, line: u.line, context: u.context })));
-  return usg(o) !== usg(n) || stable(o.affects ?? []) !== stable(n.affects ?? []);
+  // usages/affects 同 cfgKey 语义指纹口径（2026-11-10）：条件编译块删改虽不动 value，
+  // 但 6.x 明细节的「使用方式」（处数/表达式名单）「影响范围」随之变化——描述（工作项正文）必须标变；
+  // 行号平移/文件改名等位置噪声不算描述变更。
+  const usg = (c: ConfigMacro) => stable(usageFingerprint(c));
+  return usg(o) !== usg(n) || stable(affectsFingerprint(o)) !== stable(affectsFingerprint(n));
 };
 const varDescriptionChanged = (o?: VariableUnit, n?: VariableUnit): boolean =>
   !!o && !!n && (o.type !== n.type || o.isStatic !== n.isStatic || o.isConst !== n.isConst || o.isVolatile !== n.isVolatile);

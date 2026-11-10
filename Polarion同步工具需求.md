@@ -254,7 +254,7 @@ jsonPath 基座为 `$.calloutFunctions[N]`（design json v2 起 Callout 独立�
 | 类别 | `kind` | general=6.1 一般配置 / functional=6.2 功能开关 / alias=别名宏不入工作项 |
 | 说明 | `comment` | 宏行尾注释（无则空） |
 | 取值影响 | `generated.valueEffect` | LLM 生成的取值影响说明（含「推断，待确认」标注） |
-| 使用方式 | `usages[]` | 静态扫描引用点（file/line/context/kind：condCompile/arrayDim/loopBound/call/reference） |
+| 使用方式 | `usages[]` | 静态扫描引用点（file/line/context/kind：condCompile/arrayDim/loopBound/call/reference）。文档行（usageItems）按**位置无关指纹**渲染：条件编译=处数+表达式名单、其余=处数+首条示例（不含行号，行号平移不算变化） |
 | 影响范围 | `affects[]` | 被条件编译直接作用的函数/变量/类型名（与顶层 `generalConfigMacros[].affects` 同源） |
 
 **数据源两处、口径一致**：
@@ -263,10 +263,14 @@ jsonPath 基座为 `$.calloutFunctions[N]`（design json v2 起 Callout 独立�
    （v5 起按宏 kind 拆两对象，键=宏名）——除 `usageItems/example/tableRow/valueEffect` 外，**`affects` 已物化**，
    供「影响范围」直接读取（0929 前物化 json 缺该字段时，报告渲染期回退顶层宏 `affects`，内容一致）。
 
-**config 比对键**（是否产生 update 操作的判定口径，2026-11-09 扩充）：
-`value` + `isFunctionLike` + `kind` + **`usages`（逐点比对 kind/file/line/context）** + **`affects`（名单）**。
+**config 比对键**（是否产生 update 操作的判定口径，2026-11-09 扩充、2026-11-10 收紧为语义指纹）：
+`value` + `isFunctionLike` + `kind` + **usage 语义指纹**（按 kind 处数 + 条件编译表达式名单 + 每种首条示例原文）
++ **`affects`（排序名单）**。
 扩充原因：删改某个条件编译块（如 `#if (XXX > 5U) ... #endif`）不改宏取值，但使用方式与影响范围随之变化，
-旧口径下 sync.json 静默漏报。比对键变化时按桶触发 §7 的 `6.1`/`6.2` 明细节章节级更新（整节替换，
+旧口径（只比 value/kind）下 sync.json 静默漏报。
+收紧原因：逐点 file/line/context 原始比对会把「删 A 宏的 #if 块导致 B 宏行号平移」误判为 B 宏变更——
+本模块宏的语义变化必伴随处数或表达式变化，位置平移不再误报（行号/文件名不进键）。
+比对键变化时按桶触发 §7 的 `6.1`/`6.2` 明细节章节级更新（整节替换，
 **桶内无变化则对应章节不出**——2026-11-09 用户定「没变就不动」），
 保证报告第 6 章正文与工作项内容同步刷新。行尾注释（`comment`）、宏定义文件位置（`file`）不进键（噪声口径同变量条目）。
 

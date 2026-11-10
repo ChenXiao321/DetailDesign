@@ -1565,7 +1565,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_ECUSTPSHDN_ACTIVE_CORE_NUM   (2U)  /* define active core number */</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>条件编译裁剪 25 处：<code>(GP_ECUSTPSHDN_ACTIVE_CORE_NUM &gt; 1U)</code>，<code>(GP_ECUSTPSHDN_ACTIVE_CORE_NUM &gt; 2U)</code>，<code>(GP_ECUSTPSHDN_ACTIVE_CORE_NUM &gt; 3U)</code>，<code>(GP_ECUSTPSHDN_ACTIVE_CORE_NUM &gt; 4U)</code>，<code>(GP_ECUSTPSHDN_ACTIVE_CORE_NUM &gt; 5U)</code></li><li>数组维度 1 处（Gp_EcuStpShdn.c:324），如 <code>uint32  TimeStamp_u32[GP_ECUSTPSHDN_ACTIVE_CORE_NUM];</code></li><li>循环上界 1 处（Gp_EcuStpShdn.c:351），如 <code>for (Cnt_u32 = 0U; Cnt_u32 &lt; (uint32)GP_ECUSTPSHDN_ACTIVE_CORE_NUM; Cnt_u32++)</code></li></ul>
+<ul><li>条件编译裁剪 25 处：<code>(GP_ECUSTPSHDN_ACTIVE_CORE_NUM &gt; 1U)</code>，<code>(GP_ECUSTPSHDN_ACTIVE_CORE_NUM &gt; 2U)</code>，<code>(GP_ECUSTPSHDN_ACTIVE_CORE_NUM &gt; 3U)</code>，<code>(GP_ECUSTPSHDN_ACTIVE_CORE_NUM &gt; 4U)</code>，<code>(GP_ECUSTPSHDN_ACTIVE_CORE_NUM &gt; 5U)</code></li><li>数组维度 1 处，如 <code>uint32  TimeStamp_u32[GP_ECUSTPSHDN_ACTIVE_CORE_NUM];</code></li><li>循环上界 1 处，如 <code>for (Cnt_u32 = 0U; Cnt_u32 &lt; (uint32)GP_ECUSTPSHDN_ACTIVE_CORE_NUM; Cnt_u32++)</code></li></ul>
 <p><b>影响范围（条件编译直接作用的函数/变量）：</b><code>Gp_EcuStpShdn_bufSatLocalImplCore1_ltst</code>，<code>Gp_EcuStpShdn_bufSatLocalImplCore2_ltst</code>，<code>Gp_EcuStpShdn_bufSatLocalImplCore3_ltst</code>，<code>Gp_EcuStpShdn_bufSatLocalImplCore4_ltst</code>，<code>Gp_EcuStpShdn_bufSatLocalImplCore5_ltst</code></p>
 <p><b>取值影响：</b>定义项目中实际激活的核数量，取值范围 1~6。该值通过 25 处条件编译（&gt; 1U 至 &gt; 5U 五档）裁剪 Core1~Core5 的缓冲区定义与 Callout 代码，同时决定主核 TimeStamp_u32 数组维度和 GetLastSatTimeStamp 的遍历上界。当前配置为 2，即激活 Core0 与 Core1，Core2~Core5 相关代码不参与编译。<span class="inferred">推断，待确认</span></p>
 <h3>6.2 功能配置说明</h3>

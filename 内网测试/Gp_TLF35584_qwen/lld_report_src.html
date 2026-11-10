@@ -6084,7 +6084,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_WD_MODE   (GP_TLF35584_FWD_WWD_SPI)</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>直接引用 1 处（Gp_TLF35584.c:2118），如 <code>Data_pst-&gt;StatusData_tst.WdMode_u8 = GP_TLF35584_WD_MODE;</code></li></ul>
+<ul><li>直接引用 1 处，如 <code>Data_pst-&gt;StatusData_tst.WdMode_u8 = GP_TLF35584_WD_MODE;</code></li></ul>
 
 <p><b>取值影响：</b>该配置项用于定义 Gp_TLF35584 模块中看门狗（Watchdog）的工作模式。当前取值为 GP_TLF35584_FWD_WWD_SPI，表示看门狗被配置为通过 SPI 接口进行通信的窗口看门狗（Window Watchdog）模式。由于静态分析仅显示该宏被引用一次且未提供其他候选取值或依赖关系，具体行为差异及与其他配置项的交互需参考完整的配置选项定义。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.4 <code>GP_TLF35584_WDGM_ENABLE</code></h4>
@@ -6093,7 +6093,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_WDGM_ENABLE   (GP_TLF35584_DISABLE)</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>条件编译裁剪 2 处：<code>(GP_TLF35584_WDGM_ENABLE == GP_TLF35584_ENABLE)</code>，<code>(GP_TLF35584_WDGM_ENABLE == GP_TLF35584_DISABLE)</code></li></ul>
+<ul><li>条件编译裁剪 2 处：<code>(GP_TLF35584_WDGM_ENABLE == GP_TLF35584_DISABLE)</code>，<code>(GP_TLF35584_WDGM_ENABLE == GP_TLF35584_ENABLE)</code></li></ul>
 
 <p><b>取值影响：</b>该配置项用于控制 Gp_TLF35584 模块中看门狗管理功能（WDGM）的启用或禁用。当取值为 GP_TLF35584_ENABLE 时，系统包含并执行看门狗管理相关的代码逻辑；当取值为 GP_TLF35584_DISABLE 时，相关功能代码被条件编译裁剪，不生成对应的执行逻辑。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.5 <code>GP_TLF35584_SMU_CONFIG_ENABLE</code></h4>
@@ -6111,7 +6111,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_ANA_BIST_ENABLE   (GP_TLF35584_ENABLE)</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>条件编译裁剪 3 处：<code>(GP_TLF35584_ANA_BIST_ENABLE == STD_ON)</code>，<code>(GP_TLF35584_ANA_BIST_ENABLE == GP_TLF35584_ENABLE)</code></li></ul>
+<ul><li>条件编译裁剪 3 处：<code>(GP_TLF35584_ANA_BIST_ENABLE == GP_TLF35584_ENABLE)</code>，<code>(GP_TLF35584_ANA_BIST_ENABLE == STD_ON)</code></li></ul>
 
 <p><b>取值影响：</b>该配置项用于控制 Gp_TLF35584 模块中模拟 BIST（ANA_BIST）功能的启用状态。当取值为 GP_TLF35584_ENABLE 或 STD_ON 时，系统通过条件编译保留相关代码路径以执行模拟 BIST 操作；当取值为其他值（如 STD_OFF）时，相关代码将被裁剪移除，从而禁用该功能。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.7 <code>GP_TLF35584_FWD_BIST_ENABLE</code></h4>
@@ -6120,7 +6120,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_FWD_BIST_ENABLE   (GP_TLF35584_ENABLE)</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>条件编译裁剪 3 处：<code>(GP_TLF35584_FWD_BIST_ENABLE == STD_ON)</code>，<code>(GP_TLF35584_FWD_BIST_ENABLE == GP_TLF35584_ENABLE)</code></li></ul>
+<ul><li>条件编译裁剪 3 处：<code>(GP_TLF35584_FWD_BIST_ENABLE == GP_TLF35584_ENABLE)</code>，<code>(GP_TLF35584_FWD_BIST_ENABLE == STD_ON)</code></li></ul>
 
 <p><b>取值影响：</b>该配置项用于控制 Gp_TLF35584 模块中前向 BIST（内置自测试）功能的启用状态。当取值为 GP_TLF35584_ENABLE 或 STD_ON 时，系统会编译并执行相关的前向 BIST 逻辑；当取值为其他值（如 STD_OFF）时，相关代码将被条件编译裁剪，从而禁用该功能。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.8 <code>GP_TLF35584_WWD_BIST_ENABLE</code></h4>
@@ -6129,7 +6129,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_WWD_BIST_ENABLE   (GP_TLF35584_ENABLE)</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>条件编译裁剪 3 处：<code>(GP_TLF35584_WWD_BIST_ENABLE == STD_ON)</code>，<code>(GP_TLF35584_WWD_BIST_ENABLE == GP_TLF35584_ENABLE)</code></li></ul>
+<ul><li>条件编译裁剪 3 处：<code>(GP_TLF35584_WWD_BIST_ENABLE == GP_TLF35584_ENABLE)</code>，<code>(GP_TLF35584_WWD_BIST_ENABLE == STD_ON)</code></li></ul>
 
 <p><b>取值影响：</b>该配置项用于控制 Gp_TLF35584 模块中 WWD BIST 功能的启用状态。当取值为 GP_TLF35584_ENABLE 或 STD_ON 时，系统通过条件编译保留相关代码以执行 WWD BIST 功能；当取值为其他值（如 STD_OFF）时，相关代码将被裁剪，从而禁用该功能。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.9 <code>GP_TLF35584_ERR_BIST_ENABLE</code></h4>
@@ -6138,7 +6138,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_ERR_BIST_ENABLE   (GP_TLF35584_ENABLE)</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>条件编译裁剪 3 处：<code>(GP_TLF35584_ERR_BIST_ENABLE == STD_ON)</code>，<code>(GP_TLF35584_ERR_BIST_ENABLE == GP_TLF35584_ENABLE)</code></li></ul>
+<ul><li>条件编译裁剪 3 处：<code>(GP_TLF35584_ERR_BIST_ENABLE == GP_TLF35584_ENABLE)</code>，<code>(GP_TLF35584_ERR_BIST_ENABLE == STD_ON)</code></li></ul>
 
 <p><b>取值影响：</b>该配置项用于控制 Gp_TLF35584 模块中错误 BIST（内建自测试）功能的启用状态。当取值为 GP_TLF35584_ENABLE 或 STD_ON 时，系统会编译并执行相关的错误 BIST 逻辑；若取值为其他值（如 STD_OFF），则通过条件编译裁剪移除该功能代码。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.10 <code>GP_TLF35584_MONSF1_MASK</code></h4>
@@ -6147,7 +6147,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_MONSF1_MASK   ((uint8)0x23U)  /* bist mask bit,should adjust according to LDO Enabled */</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>直接引用 1 处（Gp_TLF35584.c:2572），如 <code>if((Monsf1_u8 &amp; GP_TLF35584_MONSF1_MASK) == (GP_TLF35584_MONSF1_MASK))</code></li></ul>
+<ul><li>直接引用 1 处，如 <code>if((Monsf1_u8 &amp; GP_TLF35584_MONSF1_MASK) == (GP_TLF35584_MONSF1_MASK))</code></li></ul>
 
 <p><b>取值影响：</b>GP_TLF35584_MONSF1_MASK 用于定义 BIST 掩码位，其值需根据 LDO 的启用状态进行调整。当前取值为 0x23U，该数值直接决定了 BIST 测试中特定位的屏蔽或激活行为。由于该配置项与 LDO 启用状态存在依赖关系，修改此值时必须确保与硬件 LDO 配置保持一致，以避免 BIST 结果异常。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.11 <code>GP_TLF35584_MONSF2_MASK</code></h4>
@@ -6156,7 +6156,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_MONSF2_MASK   ((uint8)0x02U)</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>直接引用 1 处（Gp_TLF35584.c:2576），如 <code>if((Monsf2_u8 &amp; GP_TLF35584_MONSF2_MASK) == (GP_TLF35584_MONSF2_MASK))</code></li></ul>
+<ul><li>直接引用 1 处，如 <code>if((Monsf2_u8 &amp; GP_TLF35584_MONSF2_MASK) == (GP_TLF35584_MONSF2_MASK))</code></li></ul>
 
 <p><b>取值影响：</b>GP_TLF35584_MONSF2_MASK 用于定义 TLF35584 芯片 MONSF2 状态位的掩码值，当前配置为 0x02U，表示该配置项仅关注 MONSF2 寄存器中的第 1 位（bit 1）。该宏作为通用配置项，其取值直接决定了软件在读取或处理 MONSF2 状态时所使用的位屏蔽逻辑，若修改该值将改变对特定故障或状态位的检测范围。由于静态分析显示该宏仅在代码中被引用 1 处，且未体现与其他配置项的显式依赖关系，其行为独立于其他配置项。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.12 <code>GP_TLF35584_MONSF3_MASK</code></h4>
@@ -6165,7 +6165,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_MONSF3_MASK   ((uint8)0xC1U)</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>直接引用 1 处（Gp_TLF35584.c:2580），如 <code>if((Monsf3_u8 &amp; GP_TLF35584_MONSF3_MASK) == (GP_TLF35584_MONSF3_MASK))</code></li></ul>
+<ul><li>直接引用 1 处，如 <code>if((Monsf3_u8 &amp; GP_TLF35584_MONSF3_MASK) == (GP_TLF35584_MONSF3_MASK))</code></li></ul>
 
 <p><b>取值影响：</b>GP_TLF35584_MONSF3_MASK 用于定义 TLF35584 芯片 MONSF3 寄存器中有效监控位的位掩码。当前取值 0xC1U 表示仅监控该寄存器中第 0 位、第 6 位和第 7 位的状态，其余位被屏蔽忽略。由于该宏为通用配置且仅有一处引用，其具体行为完全由该数值决定，修改该值将直接改变对 MONSF3 寄存器哪些位进行故障监控的范围。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.13 <code>GP_TLF35584_COMPARETOR_OV</code></h4>
@@ -6174,7 +6174,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_COMPARETOR_OV   ((uint8)0x23U)  /* select which LDO to do bist,should adjust according to LDO Enabled */</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>直接引用 1 处（Gp_TLF35584.c:2516），如 <code>Data_pst-&gt;SpiData_tst.TxBuf_au16[0U] = Gp_TLF35584_WriteCmd(GP_TLF35584_REG_ABIS</code></li></ul>
+<ul><li>直接引用 1 处，如 <code>Data_pst-&gt;SpiData_tst.TxBuf_au16[0U] = Gp_TLF35584_WriteCmd(GP_TLF35584_REG_ABIS</code></li></ul>
 
 <p><b>取值影响：</b>GP_TLF35584_COMPARETOR_OV 用于指定执行 BIST 的 LDO 选择，其取值需根据实际使能的 LDO 进行调整。当前配置值为 0x23U，表示特定的 LDO 选择状态。由于该宏属于通用配置且仅有一处引用，其具体行为差异取决于硬件 LDO 的使能状态，需确保配置值与系统实际启用的 LDO 保持一致。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.14 <code>GP_TLF35584_COMPARETOR_UV</code></h4>
@@ -6183,7 +6183,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_COMPARETOR_UV   ((uint8)0x02U)</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>直接引用 1 处（Gp_TLF35584.c:2517），如 <code>Data_pst-&gt;SpiData_tst.TxBuf_au16[1U] = Gp_TLF35584_WriteCmd(GP_TLF35584_REG_ABIS</code></li></ul>
+<ul><li>直接引用 1 处，如 <code>Data_pst-&gt;SpiData_tst.TxBuf_au16[1U] = Gp_TLF35584_WriteCmd(GP_TLF35584_REG_ABIS</code></li></ul>
 
 <p><b>取值影响：</b>GP_TLF35584_COMPARETOR_UV 用于配置 TLF35584 芯片中欠压比较器（UV Comparator）的阈值或状态参数。当前取值 0x02U 设定了特定的比较器工作点，该数值直接决定了芯片在检测到电源电压低于设定阈值时的响应行为。由于该宏属于通用配置且仅有一处引用，其取值需严格遵循硬件规格书定义，以确保系统在不同电压工况下的稳定性与安全性。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.15 <code>GP_TLF35584_COMPARETOR_IN</code></h4>
@@ -6192,7 +6192,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_COMPARETOR_IN   ((uint8)0xC1U)</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>直接引用 1 处（Gp_TLF35584.c:2518），如 <code>Data_pst-&gt;SpiData_tst.TxBuf_au16[2U] = Gp_TLF35584_WriteCmd(GP_TLF35584_REG_ABIS</code></li></ul>
+<ul><li>直接引用 1 处，如 <code>Data_pst-&gt;SpiData_tst.TxBuf_au16[2U] = Gp_TLF35584_WriteCmd(GP_TLF35584_REG_ABIS</code></li></ul>
 
 <p><b>取值影响：</b>GP_TLF35584_COMPARETOR_IN 用于配置 TLF35584 芯片中比较器输入通道的选择或状态。当前取值 0xC1U 指定了特定的硬件引脚映射或寄存器位模式，以定义比较器的工作输入源。由于该宏属于通用配置且仅有一处引用，其具体行为由底层硬件寄存器定义决定，不同数值将改变比较器连接的物理输入信号。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.16 <code>GP_TLF35584_WWD_EN</code></h4>
@@ -6201,7 +6201,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_WWD_EN   (GP_TLF35584_DISABLE)</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>直接引用 1 处（Gp_TLF35584_Cfg.h:180），如 <code>(GP_TLF35584_WWD_EN &lt;&lt; 3U) |\</code></li></ul>
+<ul><li>直接引用 1 处，如 <code>(GP_TLF35584_WWD_EN &lt;&lt; 3U) |\</code></li></ul>
 
 <p><b>取值影响：</b>该配置项用于控制 Gp_TLF35584 模块中窗口看门狗（WWD）功能的启用状态。当取值为 GP_TLF35584_ENABLE 时，窗口看门狗功能被激活；当取值为 GP_TLF35584_DISABLE 时，窗口看门狗功能被禁用。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.17 <code>GP_TLF35584_WWD_OPEN_WINDOW</code></h4>
@@ -6228,7 +6228,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_WWD_SEVICE_SELECT   (GP_TLF35584_WWD_SEVICE_SPI)</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>直接引用 1 处（Gp_TLF35584_Cfg.h:182），如 <code>(GP_TLF35584_WWD_SEVICE_SELECT &lt;&lt; 1U)|\</code></li></ul>
+<ul><li>直接引用 1 处，如 <code>(GP_TLF35584_WWD_SEVICE_SELECT &lt;&lt; 1U)|\</code></li></ul>
 
 <p><b>取值影响：</b>该配置项用于选择 Gp_TLF35584 模块中窗口看门狗（WWD）服务的通信接口类型。当前取值为 GP_TLF35584_WWD_SEVICE_SPI，表示系统通过 SPI 总线与 TLF35584 芯片进行看门狗服务交互。由于静态分析仅显示该宏被引用一次且未提供其他候选值或依赖关系，无法确定其他取值的具体行为或与其他配置项的关联。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.20 <code>GP_TLF35584_WWD_ERR_THRE</code></h4>
@@ -6246,7 +6246,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_FWD_EN   (GP_TLF35584_ENABLE)</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>直接引用 1 处（Gp_TLF35584_Cfg.h:181），如 <code>(GP_TLF35584_FWD_EN &lt;&lt; 2U)|\</code></li></ul>
+<ul><li>直接引用 1 处，如 <code>(GP_TLF35584_FWD_EN &lt;&lt; 2U)|\</code></li></ul>
 
 <p><b>取值影响：</b>GP_TLF35584_FWD_EN 用于控制 Gp_TLF35584 模块中 FWD 功能的启用状态。当该宏取值为 GP_TLF35584_ENABLE 时，FWD 功能被激活，模块将执行相应的 FWD 相关逻辑；若取值为禁用状态（如 GP_TLF35584_DISABLE），则 FWD 功能被屏蔽，相关代码路径不执行。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.22 <code>GP_TLF35584_FWD_WINDOW</code></h4>
@@ -6273,7 +6273,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_FSP_EN   (GP_TLF35584_ENABLE)</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>直接引用 1 处（Gp_TLF35584_Cfg.h:166），如 <code>(GP_TLF35584_FSP_EN &lt;&lt; 3U)|\</code></li></ul>
+<ul><li>直接引用 1 处，如 <code>(GP_TLF35584_FSP_EN &lt;&lt; 3U)|\</code></li></ul>
 
 <p><b>取值影响：</b>该配置项用于控制 Gp_TLF35584 模块中 FSP 功能的启用状态。当取值为 GP_TLF35584_ENABLE 时，FSP 功能处于激活状态，模块将执行相应的 FSP 处理逻辑；若取值为禁用状态，则 FSP 功能被屏蔽，相关处理逻辑不执行。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.25 <code>GP_TLF35584_POWER_LDO_STDBY</code></h4>
@@ -6300,7 +6300,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_POWER_LDO_COM   (GP_TLF35584_ENABLE)</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>直接引用 2 处（Gp_TLF35584_Cfg.h:230，Gp_TLF35584_Cfg.h:231），如 <code>(GP_TLF35584_POWER_LDO_COM &lt;&lt; 5U) |\</code> 等</li></ul>
+<ul><li>直接引用 2 处，如 <code>(GP_TLF35584_POWER_LDO_COM &lt;&lt; 5U) |\</code> 等</li></ul>
 
 <p><b>取值影响：</b>该配置项用于控制 Gp_TLF35584 模块中 LDO 电源管理功能的启用状态。当取值为 GP_TLF35584_ENABLE 时，模块将激活 LDO 相关的电源控制逻辑；若取值为禁用状态，则相关功能将被屏蔽。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.28 <code>GP_TLF35584_POWER_LDO_QT1</code></h4>
@@ -6309,7 +6309,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_POWER_LDO_QT1   (GP_TLF35584_ENABLE)</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>直接引用 1 处（Gp_TLF35584_Cfg.h:229），如 <code>(GP_TLF35584_POWER_LDO_QT1 &lt;&lt; 6U) |\</code></li></ul>
+<ul><li>直接引用 1 处，如 <code>(GP_TLF35584_POWER_LDO_QT1 &lt;&lt; 6U) |\</code></li></ul>
 
 <p><b>取值影响：</b>该配置项用于控制 Gp_TLF35584 模块中 LDO 电源管理功能中 QT1 相关特性的启用状态。当取值为 GP_TLF35584_ENABLE 时，系统激活该 LDO 的特定量化或测试功能；若取值为禁用状态，则关闭该功能。当前配置为启用状态，且该宏在代码中仅被引用一次，表明其作为基础行为配置独立生效，未体现与其他配置项的显式依赖关系。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.29 <code>GP_TLF35584_POWER_LDO_QT2</code></h4>
@@ -6336,7 +6336,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_TRY_REINIT_MAX   ((uint8)3U)  /* number of initialization attempts */</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>直接引用 1 处（Gp_TLF35584.c:458），如 <code>if(Data_pst-&gt;ReInitRetry_u8 &lt; GP_TLF35584_TRY_REINIT_MAX)</code></li></ul>
+<ul><li>直接引用 1 处，如 <code>if(Data_pst-&gt;ReInitRetry_u8 &lt; GP_TLF35584_TRY_REINIT_MAX)</code></li></ul>
 
 <p><b>取值影响：</b>GP_TLF35584_TRY_REINIT_MAX 用于定义 Gp_TLF35584 模块在初始化失败后允许的最大重试次数。当前配置值为 3，表示系统最多尝试 3 次重新初始化操作。若将该值调整为 0，则禁止任何重试，初始化失败后立即终止；若设置为更大的数值，则允许更多的重试机会以应对瞬态故障。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.32 <code>GP_TLF35584_TRY_REPAIR_MAX</code></h4>
@@ -6345,7 +6345,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_TRY_REPAIR_MAX   ((uint8)3U)  /* number of mode and fault repair attempts */</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>循环上界 2 处（Gp_TLF35584.c:846，Gp_TLF35584.c:1496），如 <code>for(Cnt_u32 = 0U; Cnt_u32 &lt; GP_TLF35584_TRY_REPAIR_MAX; Cnt_u32++)</code> 等</li><li>直接引用 3 处（Gp_TLF35584.c:1265，Gp_TLF35584.c:1268，Gp_TLF35584.c:1535），如 <code>if(Data_pst-&gt;FaultDebonce_tst.ReadFaultCnt_u8 &gt;= GP_TLF35584_TRY_REPAIR_MAX)</code> 等</li></ul>
+<ul><li>循环上界 2 处，如 <code>for(Cnt_u32 = 0U; Cnt_u32 &lt; GP_TLF35584_TRY_REPAIR_MAX; Cnt_u32++)</code> 等</li><li>直接引用 3 处，如 <code>if(Data_pst-&gt;FaultDebonce_tst.ReadFaultCnt_u8 &gt;= GP_TLF35584_TRY_REPAIR_MAX)</code> 等</li></ul>
 
 <p><b>取值影响：</b>GP_TLF35584_TRY_REPAIR_MAX 用于定义模式与故障修复尝试的最大次数，其当前取值 ((uint8)3U) 表示系统最多执行 3 次修复操作。该配置项作为循环上界在代码中被引用 3 次，其中 2 处直接用于控制修复逻辑的迭代终止条件。当该值设为 0 时，系统将跳过所有修复尝试直接判定失败；当值大于 0 时，系统将在达到指定次数后停止重试并进入后续故障处理流程。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.33 <code>GP_TLF35584_MODE_SWITCH_DELAY</code></h4>
@@ -6354,7 +6354,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_MODE_SWITCH_DELAY   ((uint32)300U)  /* mode switch delay time */</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>直接引用 11 处（Gp_TLF35584.c:448，Gp_TLF35584.c:1514，Gp_TLF35584.c:1616，Gp_TLF35584.c:1618，Gp_TLF35584.c:1939，Gp_TLF35584.c:2156，Gp_TLF35584.c:2168，Gp_TLF35584.c:2221，Gp_TLF35584.c:2232，Gp_TLF35584.c:2290，Gp_TLF35584.c:2306），如 <code>Gp_TLF35584_CalloutStmSwDalayNus(GP_TLF35584_MODE_SWITCH_DELAY);</code> 等</li></ul>
+<ul><li>直接引用 11 处，如 <code>Gp_TLF35584_CalloutStmSwDalayNus(GP_TLF35584_MODE_SWITCH_DELAY);</code> 等</li></ul>
 
 <p><b>取值影响：</b>GP_TLF35584_MODE_SWITCH_DELAY 用于配置 TLF35584 芯片模式切换时的延迟时间，当前默认值为 300 毫秒。该数值直接决定模式切换操作后系统等待稳定状态的时间长度，取值越大，模式切换后的等待时间越长，反之则越短。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.34 <code>GP_TLF35584_SERVICE_WDG_TIME</code></h4>
@@ -6363,7 +6363,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_SERVICE_WDG_TIME   ((uint8)3U)  /* service wdg time and mainfuction should &gt; 1 */</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>直接引用 1 处（Gp_TLF35584.c:472），如 <code>if(Data_pst-&gt;WdgTimeCnt_u16 == GP_TLF35584_SERVICE_WDG_TIME)</code></li></ul>
+<ul><li>直接引用 1 处，如 <code>if(Data_pst-&gt;WdgTimeCnt_u16 == GP_TLF35584_SERVICE_WDG_TIME)</code></li></ul>
 
 <p><b>取值影响：</b>GP_TLF35584_SERVICE_WDG_TIME 用于配置看门狗服务的时间参数，当前取值为 3。根据代码注释要求，该值必须大于 1，以确保看门狗服务时间与主函数执行时间满足特定的时序约束。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.35 <code>GP_TLF35584_WAKE_UP_SOURCE_CONFIRM</code></h4>
@@ -6399,7 +6399,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_WWD_BIST_DELAY_TIME   ((uint32)5000U)</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>直接引用 1 处（Gp_TLF35584.c:1147），如 <code>Gp_TLF35584_CalloutStmSwDalayNus(GP_TLF35584_WWD_BIST_DELAY_TIME);</code></li></ul>
+<ul><li>直接引用 1 处，如 <code>Gp_TLF35584_CalloutStmSwDalayNus(GP_TLF35584_WWD_BIST_DELAY_TIME);</code></li></ul>
 
 <p><b>取值影响：</b>该配置项用于定义 Gp_TLF35584 模块中窗口看门狗（WWD）执行 BIST（内置自测试）时的延时时间。当前取值为 5000，表示 BIST 过程将维持 5000 个时间单位的延时。由于该宏在代码中仅被引用一次，其具体行为差异取决于该引用处的逻辑实现，通常数值越大，BIST 延时越长，反之则越短。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.39 <code>GP_TLF35584_DEBUG_SUPPORT_ENABLE</code></h4>
@@ -6417,7 +6417,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_REG_DEVCFG0_VALUE   ((GP_TLF35584_DEVCFG0_WKTIMEN &lt;&lt; 7U) |\</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>直接引用 1 处（Gp_TLF35584_Cfg.c:49），如 <code>GP_TLF35584_REG_DEVCFG0_VALUE,</code></li></ul>
+<ul><li>直接引用 1 处，如 <code>GP_TLF35584_REG_DEVCFG0_VALUE,</code></li></ul>
 
 <p><b>取值影响：</b>该配置项用于初始化 TLF35584 芯片的 DEVCFG0 寄存器，通过位域组合定义设备配置参数。当前取值将 WKTIMEN 位（第 7 位）置位，启用看门狗定时器功能。由于静态分析仅显示该宏被引用一次且无其他配置项依赖关系，其具体行为完全由该位域组合决定，修改该值将直接改变 DEVCFG0 寄存器的初始状态。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.41 <code>GP_TLF35584_DEVCFG0_WKTIMEN</code></h4>
@@ -6435,7 +6435,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_DEVCFG0_WKTIMCYC   ((uint8)0x01U)</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>直接引用 1 处（Gp_TLF35584_Cfg.h:126），如 <code>(GP_TLF35584_DEVCFG0_WKTIMCYC &lt;&lt; 6U) |\</code></li></ul>
+<ul><li>直接引用 1 处，如 <code>(GP_TLF35584_DEVCFG0_WKTIMCYC &lt;&lt; 6U) |\</code></li></ul>
 
 <p><b>取值影响：</b>该配置项用于设置 Gp_TLF35584 模块中 DEVCFG0 寄存器的 WKTIMCYC 字段值，以定义唤醒定时器的周期参数。当前配置取值为 0x01U，表示将唤醒定时器周期设置为对应的最小或基础档位。由于该宏在代码中仅被引用一次，其具体行为完全由该数值直接决定，未体现与其他配置项的依赖关系。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.43 <code>GP_TLF35584_DEVCFG0_TRDEL</code></h4>
@@ -6444,7 +6444,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_DEVCFG0_TRDEL   ((uint8)0x08U)</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>直接引用 1 处（Gp_TLF35584_Cfg.h:127），如 <code>(GP_TLF35584_DEVCFG0_TRDEL))</code></li></ul>
+<ul><li>直接引用 1 处，如 <code>(GP_TLF35584_DEVCFG0_TRDEL))</code></li></ul>
 
 <p><b>取值影响：</b>该配置项用于设置 TLF35584 芯片 DEVCFG0 寄存器中的 TRDEL 字段，以定义触发延迟时间。当前取值为 0x08U，表示将触发延迟设置为对应的 8 个时钟周期或特定时间单位。由于静态分析仅显示该宏在代码中被引用一次且未体现与其他配置项的依赖关系，其具体行为完全由该数值直接决定硬件寄存器的写入内容。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.44 <code>GP_TLF35584_REG_DEVCFG1_VALUE</code></h4>
@@ -6453,7 +6453,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_REG_DEVCFG1_VALUE   ((GP_TLF35584_DEVCFG1_RESDEL))  /* TLF35584 reset delay cfg */</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>直接引用 1 处（Gp_TLF35584.c:1646），如 <code>Data_pst-&gt;SpiData_tst.TxBuf_au16[1U] = Gp_TLF35584_WriteCmd(GP_TLF35584_REG_DEVC</code></li></ul>
+<ul><li>直接引用 1 处，如 <code>Data_pst-&gt;SpiData_tst.TxBuf_au16[1U] = Gp_TLF35584_WriteCmd(GP_TLF35584_REG_DEVC</code></li></ul>
 
 <p><b>取值影响：</b>该配置项用于设置 TLF35584 芯片 DEVCFG1 寄存器中复位延迟（reset delay）的初始值。当前取值直接映射为 `GP_TLF35584_DEVCFG1_RESDEL`，表示启用特定的复位延迟配置以控制芯片复位后的等待时间。由于该宏仅被引用一次且无其他依赖关系，其取值直接影响芯片初始化阶段的时序行为，不同取值将改变复位完成后的系统就绪时间。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.45 <code>GP_TLF35584_DEVCFG1_RESDEL</code></h4>
@@ -6471,7 +6471,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_REG_DEVCFG2_VALUE   ((GP_TLF35584_DEVCFG2_CMONEN &lt;&lt; 4U) |\  /* TLF35584 sleep current cfg */</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>直接引用 1 处（Gp_TLF35584_Cfg.c:50），如 <code>GP_TLF35584_REG_DEVCFG2_VALUE,</code></li></ul>
+<ul><li>直接引用 1 处，如 <code>GP_TLF35584_REG_DEVCFG2_VALUE,</code></li></ul>
 
 <p><b>取值影响：</b>该配置项用于定义 TLF35584 芯片 DEVCFG2 寄存器的初始值，以配置睡眠电流相关参数。当前取值通过左移 4 位设置 CMONEN 位，从而启用电流监测功能。由于该宏仅被引用一次且属于通用基础配置，其具体行为取决于 CMONEN 位的置位状态，未提供其他候选取值或与其他配置项的依赖关系。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.47 <code>GP_TLF35584_DEVCFG2_CMONEN</code></h4>
@@ -6489,7 +6489,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_DEVCFG2_CTHR   ((uint8)0x00U)</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>直接引用 1 处（Gp_TLF35584_Cfg.h:145），如 <code>(GP_TLF35584_DEVCFG2_CTHR &lt;&lt; 2U) |\</code></li></ul>
+<ul><li>直接引用 1 处，如 <code>(GP_TLF35584_DEVCFG2_CTHR &lt;&lt; 2U) |\</code></li></ul>
 
 <p><b>取值影响：</b>GP_TLF35584_DEVCFG2_CTHR 用于配置 TLF35584 芯片 DEVCFG2 寄存器中的 CTHR 字段，当前取值为 0x00U。该配置项直接决定芯片内部特定阈值参数的初始状态，取值为 0x00U 时对应寄存器字段的默认或最低阈值设置。由于静态分析仅显示该宏在代码中被引用一次且无其他配置项依赖关系，其具体行为完全由该数值对硬件寄存器的直接映射决定。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.49 <code>GP_TLF35584_DEVCFG2_ESYNPHA</code></h4>
@@ -6498,7 +6498,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_DEVCFG2_ESYNPHA   ((uint8)0x00U)</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>直接引用 1 处（Gp_TLF35584_Cfg.h:146），如 <code>(GP_TLF35584_DEVCFG2_ESYNPHA &lt;&lt; 1U)|\</code></li></ul>
+<ul><li>直接引用 1 处，如 <code>(GP_TLF35584_DEVCFG2_ESYNPHA &lt;&lt; 1U)|\</code></li></ul>
 
 <p><b>取值影响：</b>该配置项用于设置 TLF35584 芯片 DEVCFG2 寄存器中 ESYNPHA 位的状态。当前取值为 0x00U，表示该功能位被禁用或处于默认关闭状态。由于静态分析仅显示该宏在代码中被引用一次且无其他依赖关系体现，其具体行为差异需依据芯片数据手册中该位的具体定义确定，通常 0x00U 对应功能关闭，非零值可能对应功能开启。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.50 <code>GP_TLF35584_DEVCFG2_ESYNEN</code></h4>
@@ -6507,7 +6507,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_DEVCFG2_ESYNEN   ((uint8)0x00U)</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>直接引用 1 处（Gp_TLF35584_Cfg.h:147），如 <code>(GP_TLF35584_DEVCFG2_ESYNEN &lt;&lt; 0U))</code></li></ul>
+<ul><li>直接引用 1 处，如 <code>(GP_TLF35584_DEVCFG2_ESYNEN &lt;&lt; 0U))</code></li></ul>
 
 <p><b>取值影响：</b>该配置项用于设置 TLF35584 芯片 DEVCFG2 寄存器中 ESYNEN 位的状态。当前取值为 0x00U，表示禁用该功能位。由于静态分析仅显示该宏被引用一次且无其他依赖关系，其具体行为差异需参考芯片数据手册中关于 ESYNEN 位的定义，通常涉及同步或使能控制。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.51 <code>GP_TLF35584_REG_SYSPCFG0_VALUE</code></h4>
@@ -6516,7 +6516,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_REG_SYSPCFG0_VALUE   ((GP_TLF35584_POWER_LDO_STDBY))  /* TLF35584 standby regulator cfg */</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>直接引用 1 处（Gp_TLF35584_Cfg.c:51），如 <code>GP_TLF35584_REG_SYSPCFG0_VALUE,</code></li></ul>
+<ul><li>直接引用 1 处，如 <code>GP_TLF35584_REG_SYSPCFG0_VALUE,</code></li></ul>
 
 <p><b>取值影响：</b>该配置项用于设置 TLF35584 芯片系统配置寄存器 SYSPCFG0 的初始值，具体控制待机调节器（standby regulator）的工作模式。当前取值映射为 GP_TLF35584_POWER_LDO_STDBY，表示将待机调节器配置为 LDO 模式。由于静态分析仅显示该宏被引用一次且无其他候选取值或依赖关系信息，故仅描述当前固定配置下的行为。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.52 <code>GP_TLF35584_REG_SYSPCFG1_VALUE</code></h4>
@@ -6525,7 +6525,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_REG_SYSPCFG1_VALUE   ((GP_TLF35584_REG_SYSPCFG1_SS2DEL &lt;&lt; 5U) |\  /* TLF35584 err pin cfg */</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>直接引用 1 处（Gp_TLF35584_Cfg.c:52），如 <code>GP_TLF35584_REG_SYSPCFG1_VALUE,</code></li></ul>
+<ul><li>直接引用 1 处，如 <code>GP_TLF35584_REG_SYSPCFG1_VALUE,</code></li></ul>
 
 <p><b>取值影响：</b>该配置项用于定义 TLF35584 芯片 SYSPCFG1 寄存器的初始值，具体用于配置错误引脚（err pin）的行为。当前取值通过移位操作将 GP_TLF35584_REG_SYSPCFG1_SS2DEL 的值映射到寄存器第 5 位，从而决定该特定功能位的开启或关闭状态。由于该宏为通用配置且仅有一处引用，其取值直接决定了系统启动时该硬件引脚的默认电气特性或逻辑状态，不同取值将导致错误引脚在故障检测或信号输出上的行为差异。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.53 <code>GP_TLF35584_REG_SYSPCFG1_SS2DEL</code></h4>
@@ -6543,7 +6543,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_REG_SYSPCFG1_ERRSLPEN   ((uint8)0x00U)</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>直接引用 1 处（Gp_TLF35584_Cfg.h:165），如 <code>(GP_TLF35584_REG_SYSPCFG1_ERRSLPEN &lt;&lt; 4U) |\</code></li></ul>
+<ul><li>直接引用 1 处，如 <code>(GP_TLF35584_REG_SYSPCFG1_ERRSLPEN &lt;&lt; 4U) |\</code></li></ul>
 
 <p><b>取值影响：</b>该配置项用于设置 TLF35584 芯片 SYSPCFG1 寄存器中的 ERRSLPEN 位，以控制错误睡眠模式的使能状态。当前取值为 0x00U，表示该功能处于禁用状态；若配置为 0x01U，则允许芯片在检测到特定错误时进入睡眠模式。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.55 <code>GP_TLF35584_REG_SYSPCFG1_ERRRECEN</code></h4>
@@ -6552,7 +6552,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_REG_SYSPCFG1_ERRRECEN   ((uint8)0x01U)</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>直接引用 1 处（Gp_TLF35584_Cfg.h:167），如 <code>(GP_TLF35584_REG_SYSPCFG1_ERRRECEN &lt;&lt; 2U)|\</code></li></ul>
+<ul><li>直接引用 1 处，如 <code>(GP_TLF35584_REG_SYSPCFG1_ERRRECEN &lt;&lt; 2U)|\</code></li></ul>
 
 <p><b>取值影响：</b>该配置项用于设置 SYSPCFG1 寄存器中 ERRRECEN 位的初始值，以控制错误记录功能的使能状态。当前取值为 0x01U，表示在系统初始化时启用错误记录功能；若取值为 0x00U，则禁用该功能。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.56 <code>GP_TLF35584_REG_SYSPCFG1_ERRREC</code></h4>
@@ -6561,7 +6561,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_REG_SYSPCFG1_ERRREC   ((uint8)0x00U)</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>直接引用 1 处（Gp_TLF35584_Cfg.h:168），如 <code>(GP_TLF35584_REG_SYSPCFG1_ERRREC &lt;&lt; 0U))</code></li></ul>
+<ul><li>直接引用 1 处，如 <code>(GP_TLF35584_REG_SYSPCFG1_ERRREC &lt;&lt; 0U))</code></li></ul>
 
 <p><b>取值影响：</b>该配置项用于设置 TLF35584 芯片 SYSPCFG1 寄存器中错误记录（ERRREC）位的初始值。当前取值为 0x00U，表示在系统初始化阶段清除或禁用该错误记录标志位。由于该宏仅被引用一次且属于通用基础配置，其取值直接决定了芯片上电后对特定错误状态的默认处理逻辑，不同数值将改变寄存器对应位的初始状态。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.57 <code>GP_TLF35584_REG_WDCFG0_VALUE</code></h4>
@@ -6570,7 +6570,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_REG_WDCFG0_VALUE   ((GP_TLF35584_WWD_ERR_THRE &lt;&lt; 4U) |\  /* TLF35584 wdg cfg */</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>直接引用 1 处（Gp_TLF35584_Cfg.c:53），如 <code>GP_TLF35584_REG_WDCFG0_VALUE,</code></li></ul>
+<ul><li>直接引用 1 处，如 <code>GP_TLF35584_REG_WDCFG0_VALUE,</code></li></ul>
 
 <p><b>取值影响：</b>该配置项用于初始化 TLF35584 芯片的看门狗配置寄存器 WDCFG0。其取值由移位后的 GP_TLF35584_WWD_ERR_THRE 宏值决定，该值被左移 4 位后写入寄存器，从而设定窗口看门狗的误差阈值。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.58 <code>GP_TLF35584_REG_WDCFG1_VALUE</code></h4>
@@ -6579,7 +6579,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_REG_WDCFG1_VALUE   ((0x0U &lt;&lt; 4U) |(GP_TLF35584_FWD_ERR_THRE &lt;&lt; 0U))  /* TLF35584 fwd cfg err threshold */</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>直接引用 1 处（Gp_TLF35584_Cfg.c:54），如 <code>GP_TLF35584_REG_WDCFG1_VALUE,</code></li></ul>
+<ul><li>直接引用 1 处，如 <code>GP_TLF35584_REG_WDCFG1_VALUE,</code></li></ul>
 
 <p><b>取值影响：</b>该配置项用于定义 TLF35584 芯片 WDCFG1 寄存器中前向错误阈值（FWD_ERR_THRE）的初始值。其取值由移位运算构成，其中第 4 位固定为 0，低 4 位由宏 GP_TLF35584_FWD_ERR_THRE 决定，从而设定具体的错误检测阈值。该配置项依赖于 GP_TLF35584_FWD_ERR_THRE 的具体数值，以最终确定寄存器中错误阈值字段的实际设置。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.59 <code>GP_TLF35584_REG_FWDCFG_VALUE</code></h4>
@@ -6588,7 +6588,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_REG_FWDCFG_VALUE   (GP_TLF35584_FWD_WINDOW &lt;&lt; 0U)  /* TLF35584 wwd cfg err threshold */</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>直接引用 1 处（Gp_TLF35584_Cfg.c:55），如 <code>GP_TLF35584_REG_FWDCFG_VALUE,</code></li></ul>
+<ul><li>直接引用 1 处，如 <code>GP_TLF35584_REG_FWDCFG_VALUE,</code></li></ul>
 
 <p><b>取值影响：</b>该配置项用于设置 TLF35584 芯片窗口看门狗（Window Watchdog）的错误阈值寄存器值。当前取值 `(GP_TLF35584_FWD_WINDOW &lt;&lt; 0U)` 将预定义的窗口参数左移 0 位后写入寄存器，从而确定看门狗监控的时间窗口边界。由于该宏仅被引用一次且属于通用基础配置，其具体行为完全由 `GP_TLF35584_FWD_WINDOW` 的数值决定，未体现与其他配置项的显式依赖关系。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.60 <code>GP_TLF35584_REG_WWDCFG0_VALUE</code></h4>
@@ -6597,7 +6597,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_REG_WWDCFG0_VALUE   (GP_TLF35584_WWD_CLOSED_WINDOW &lt;&lt; 0U)  /* TLF35584 wwd closed window cfg */</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>直接引用 1 处（Gp_TLF35584_Cfg.c:56），如 <code>GP_TLF35584_REG_WWDCFG0_VALUE,</code></li></ul>
+<ul><li>直接引用 1 处，如 <code>GP_TLF35584_REG_WWDCFG0_VALUE,</code></li></ul>
 
 <p><b>取值影响：</b>该配置项用于设置 TLF35584 芯片 WWDCFG0 寄存器中看门狗关闭窗口（closed window）的初始值。当前取值 `(GP_TLF35584_WWD_CLOSED_WINDOW &lt;&lt; 0U)` 表示将 `GP_TLF35584_WWD_CLOSED_WINDOW` 定义的值左移 0 位后写入寄存器对应位域，从而配置看门狗在指定时间窗口内禁止喂狗的行为。由于该宏仅被引用一次且属于通用基础配置，其具体行为完全取决于 `GP_TLF35584_WWD_CLOSED_WINDOW` 的数值大小，数值越大表示禁止喂狗的时间窗口越长。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.61 <code>GP_TLF35584_REG_WWDCFG1_VALUE</code></h4>
@@ -6606,7 +6606,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_REG_WWDCFG1_VALUE   (GP_TLF35584_WWD_OPEN_WINDOW &lt;&lt; 0U)  /* TLF35584 wwd opend window cfg */</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>直接引用 1 处（Gp_TLF35584_Cfg.c:57），如 <code>GP_TLF35584_REG_WWDCFG1_VALUE,</code></li></ul>
+<ul><li>直接引用 1 处，如 <code>GP_TLF35584_REG_WWDCFG1_VALUE,</code></li></ul>
 
 <p><b>取值影响：</b>该配置项用于定义 TLF35584 芯片窗口看门狗（WWD）的开放窗口大小，其值直接写入 WWDCFG1 寄存器。当前取值 `(GP_TLF35584_WWD_OPEN_WINDOW &lt;&lt; 0U)` 表示将预定义的开放窗口参数左移 0 位后作为最终配置值，具体数值取决于 `GP_TLF35584_WWD_OPEN_WINDOW` 的定义。由于该宏仅在代码中被引用一次，且未体现与其他配置项的依赖关系，其取值仅影响看门狗开放窗口的时长设置。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.62 <code>GP_TLF35584_REG_WKTIM0_VALUE</code></h4>
@@ -6615,7 +6615,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_REG_WKTIM0_VALUE   ((uint8)0x00U)</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>直接引用 1 处（Gp_TLF35584_Cfg.c:63），如 <code>GP_TLF35584_REG_WKTIM0_VALUE,</code></li></ul>
+<ul><li>直接引用 1 处，如 <code>GP_TLF35584_REG_WKTIM0_VALUE,</code></li></ul>
 
 <p><b>取值影响：</b>该配置项用于初始化 Gp_TLF35584 模块中 WKTIM0 寄存器的数值。当前取值为 0x00U，表示将 WKTIM0 寄存器设置为初始状态或禁用状态。由于该宏仅被引用一次且属于通用基础配置，其具体行为差异需依据 TLF35584 硬件手册中 WKTIM0 寄存器的定义确定，通常不同数值对应不同的看门狗超时时间或使能状态。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.63 <code>GP_TLF35584_REG_WKTIM1_VALUE</code></h4>
@@ -6624,7 +6624,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_REG_WKTIM1_VALUE   ((uint8)0x00U)</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>直接引用 1 处（Gp_TLF35584_Cfg.c:64），如 <code>GP_TLF35584_REG_WKTIM1_VALUE,</code></li></ul>
+<ul><li>直接引用 1 处，如 <code>GP_TLF35584_REG_WKTIM1_VALUE,</code></li></ul>
 
 <p><b>取值影响：</b>该配置项用于初始化 Gp_TLF35584 模块中 WKTIM1 寄存器的数值。当前取值为 0x00U，表示将 WKTIM1 寄存器设置为零值状态。由于该宏在代码中仅被引用一次，且未提供其他候选取值或与其他配置项的依赖关系，故仅描述其当前固定取值下的行为。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.64 <code>GP_TLF35584_REG_WKTIM2_VALUE</code></h4>
@@ -6633,7 +6633,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_REG_WKTIM2_VALUE   ((uint8)0x00U)</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>直接引用 1 处（Gp_TLF35584_Cfg.c:65），如 <code>GP_TLF35584_REG_WKTIM2_VALUE,</code></li></ul>
+<ul><li>直接引用 1 处，如 <code>GP_TLF35584_REG_WKTIM2_VALUE,</code></li></ul>
 
 <p><b>取值影响：</b>该配置项用于定义 Gp_TLF35584 模块中 WKTIM2 寄存器的初始值。当前取值为 0x00U，表示在初始化阶段将该寄存器清零。由于该宏仅被引用一次且属于通用配置，其具体行为差异需结合硬件手册确定，但静态分析表明其直接决定了该特定寄存器的默认状态。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.65 <code>GP_TLF35584_REG_DEVCTRL_VALUE</code></h4>
@@ -6642,7 +6642,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_REG_DEVCTRL_VALUE   ((GP_TLF35584_POWER_LDO_QT2 &lt;&lt; 7U) |\</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>直接引用 1 处（Gp_TLF35584_Cfg.c:58），如 <code>GP_TLF35584_REG_DEVCTRL_VALUE,</code></li></ul>
+<ul><li>直接引用 1 处，如 <code>GP_TLF35584_REG_DEVCTRL_VALUE,</code></li></ul>
 
 <p><b>取值影响：</b>该配置项用于定义 TLF35584 芯片 DEVCTRL 寄存器的初始写入值，以配置芯片的电源管理状态。当前取值通过左移操作将 GP_TLF35584_POWER_LDO_QT2 配置项的值映射至寄存器第 7 位，从而控制 LDO 电源模式。修改该宏的具体数值将直接改变 DEVCTRL 寄存器中对应位域的状态，进而影响芯片的功耗特性或电源输出行为。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.66 <code>GP_TLF35584_REG_DEVCTRLN_VALUE</code></h4>
@@ -6651,7 +6651,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_REG_DEVCTRLN_VALUE   ((uint8)(GP_TLF35584_REG_DEVCTRL_VALUE ^ (uint8)0xFFU))</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>直接引用 1 处（Gp_TLF35584_Cfg.c:59），如 <code>GP_TLF35584_REG_DEVCTRLN_VALUE,</code></li></ul>
+<ul><li>直接引用 1 处，如 <code>GP_TLF35584_REG_DEVCTRLN_VALUE,</code></li></ul>
 
 <p><b>取值影响：</b>该配置项用于定义 Gp_TLF35584 模块中 DEVCTRLN 寄存器的初始值，其取值逻辑为对 GP_TLF35584_REG_DEVCTRL_VALUE 进行按位取反操作。由于该宏在代码中仅被引用一次，其具体行为完全取决于 GP_TLF35584_REG_DEVCTRL_VALUE 的当前定义，即最终写入寄存器的值始终为 DEVCTRL 配置值的逻辑非。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.67 <code>GP_TLF35584_REG_BCK_FREQ_CHANGE_VAULE</code></h4>
@@ -6660,7 +6660,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_REG_BCK_FREQ_CHANGE_VAULE   (GP_TLF35584_REG_BCK_FREQ_CHANGE_SEL &lt;&lt; 0U)  /* TLF35584 EMC buck fre cfg */</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>直接引用 1 处（Gp_TLF35584_Cfg.c:60），如 <code>GP_TLF35584_REG_BCK_FREQ_CHANGE_VAULE,</code></li></ul>
+<ul><li>直接引用 1 处，如 <code>GP_TLF35584_REG_BCK_FREQ_CHANGE_VAULE,</code></li></ul>
 
 <p><b>取值影响：</b>该配置项用于设置 TLF35584 芯片中 EMC 模块的 Buck 频率配置寄存器值。当前取值通过左移操作将 `GP_TLF35584_REG_BCK_FREQ_CHANGE_SEL` 的值映射到寄存器位 0，从而决定 Buck 变换器的频率切换行为。由于静态分析仅显示该宏被引用一次且未提供具体的候选取值列表或与其他配置项的依赖关系，其具体行为差异需依据 `GP_TLF35584_REG_BCK_FREQ_CHANGE_SEL` 的定义及硬件手册确定。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.68 <code>GP_TLF35584_REG_BCK_FREQ_CHANGE_SEL</code></h4>
@@ -6678,7 +6678,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_REG_BCK_FRE_SPREAD_VAULE   (GP_TLF35584_EMC_FRE_CHANGE &lt;&lt; 0U)</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>直接引用 1 处（Gp_TLF35584_Cfg.c:61），如 <code>GP_TLF35584_REG_BCK_FRE_SPREAD_VAULE,</code></li></ul>
+<ul><li>直接引用 1 处，如 <code>GP_TLF35584_REG_BCK_FRE_SPREAD_VAULE,</code></li></ul>
 
 <p><b>取值影响：</b>该配置项用于设置 TLF35584 芯片寄存器中 BCK 频率扩展（Spread）的具体数值。当前取值通过左移操作将 `GP_TLF35584_EMC_FRE_CHANGE` 的值映射到最低位，从而定义 EMC 相关的频率变化量。由于该宏仅被引用一次且属于通用基础配置，其取值直接决定了底层硬件寄存器中频率扩展功能的初始状态，不同数值将对应不同的频率抖动幅度以优化电磁兼容性。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.70 <code>GP_TLF35584_REG_BCK_MAIN_CTRL_VAULE</code></h4>
@@ -6687,7 +6687,7 @@ flowchart LR
 <p><b>配置示例：</b></p>
 <pre class="plantuml">#define GP_TLF35584_REG_BCK_MAIN_CTRL_VAULE   (GP_TLF35584_REG_BCK_MAIN_CTRL_VALID &lt;&lt; 6U)</pre>
 <p><b>使用方式（静态分析事实）：</b></p>
-<ul><li>直接引用 1 处（Gp_TLF35584_Cfg.c:62），如 <code>GP_TLF35584_REG_BCK_MAIN_CTRL_VAULE,</code></li></ul>
+<ul><li>直接引用 1 处，如 <code>GP_TLF35584_REG_BCK_MAIN_CTRL_VAULE,</code></li></ul>
 
 <p><b>取值影响：</b>该配置项用于定义 Gp_TLF35584 模块中 BCK_MAIN_CTRL 寄存器的初始写入值。当前取值通过左移操作将 GP_TLF35584_REG_BCK_MAIN_CTRL_VALID 标志位定位至第 6 位，从而在寄存器初始化时启用该特定控制功能。由于该宏仅被引用一次且属于通用基础配置，其取值直接决定了硬件寄存器在启动阶段的默认状态，未体现与其他配置项的依赖关系。<span class="inferred">推断，待确认</span></p>
 <h4>6.1.71 <code>GP_TLF35584_REG_BCK_MAIN_CTRL_VALID</code></h4>

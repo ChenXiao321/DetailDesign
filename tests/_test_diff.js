@@ -395,6 +395,15 @@ const model = (over = {}) => ({
   ok(d7.configs.unchanged.join() === 'C1' && d7.configs.changed.length === 0, 'S8g usages/affects 一致不误报');
   const sync7 = buildPolarionSync(d7, model({ generalConfigMacros: [cOld2] }), model({ generalConfigMacros: [cNew2] }));
   ok(!sync7.chapterUpdates.some(c => c.chapter === '6.1' || c.chapter === '6.2'), 'S8g 宏未变不出 6.1/6.2 章节更新');
+  // 8g2：行号平移不误报（2026-11-10 用户场景：删别的宏的 #if 块 → 下方所有宏行号平移，
+  // 处数与条件表达式名单没变 = 语义没变，不报）。示例行文本（firstContext）在键内——文档「如 …」行直出，
+  // 防文档行与判定口径脱节（同安全实践）。
+  const cOld3 = { ...cfg('S1', '(STD_ON)', true), kind: 'functional', usages: [u1, u2], affects: ['F1', 'F2'] };
+  const cNew3 = { ...cfg('S1', '(STD_ON)'), kind: 'functional',
+    usages: [{ ...u1, line: 8 }, { ...u2, line: 16, file: 'b.c' }], affects: ['F2', 'F1'] };
+  const d7b = diffModules(model({ functionalConfigMacros: [cOld3] }), model({ functionalConfigMacros: [cNew3] }));
+  ok(d7b.configs.unchanged.join() === 'S1' && d7b.configs.changed.length === 0,
+    'S8g2 行号平移+文件改名+affects 顺序变化不误报（语义指纹=处数+表达式名单）');
   // 8h：delete 路径落旧侧桶（functional 宏删除 → oldJsonPath 在 $.functionalConfigMacros）
   const fOld = { ...cfg('F1', '(STD_ON)', true), kind: 'functional' };
   const old8 = model({ functionalConfigMacros: [fOld] });

@@ -1937,8 +1937,8 @@
       "GP_ECUSTPSHDN_ACTIVE_CORE_NUM": {
         "usageItems": [
           "<li>条件编译裁剪 25 处：<code>(GP_ECUSTPSHDN_ACTIVE_CORE_NUM &gt; 1U)</code>，<code>(GP_ECUSTPSHDN_ACTIVE_CORE_NUM &gt; 2U)</code>，<code>(GP_ECUSTPSHDN_ACTIVE_CORE_NUM &gt; 3U)</code>，<code>(GP_ECUSTPSHDN_ACTIVE_CORE_NUM &gt; 4U)</code>，<code>(GP_ECUSTPSHDN_ACTIVE_CORE_NUM &gt; 5U)</code></li>",
-          "<li>数组维度 1 处（Gp_EcuStpShdn.c:324），如 <code>uint32  TimeStamp_u32[GP_ECUSTPSHDN_ACTIVE_CORE_NUM];</code></li>",
-          "<li>循环上界 1 处（Gp_EcuStpShdn.c:351），如 <code>for (Cnt_u32 = 0U; Cnt_u32 &lt; (uint32)GP_ECUSTPSHDN_ACTIVE_CORE_NUM; Cnt_u32++)</code></li>"
+          "<li>数组维度 1 处，如 <code>uint32  TimeStamp_u32[GP_ECUSTPSHDN_ACTIVE_CORE_NUM];</code></li>",
+          "<li>循环上界 1 处，如 <code>for (Cnt_u32 = 0U; Cnt_u32 &lt; (uint32)GP_ECUSTPSHDN_ACTIVE_CORE_NUM; Cnt_u32++)</code></li>"
         ],
         "example": "#define GP_ECUSTPSHDN_ACTIVE_CORE_NUM   (2U)  /* define active core number */",
         "tableRow": [

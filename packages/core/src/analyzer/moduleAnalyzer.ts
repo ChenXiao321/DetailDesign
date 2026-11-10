@@ -322,6 +322,32 @@ function scanConfigUsages(
   }
 }
 
+/** 宏使用点语义指纹（diff 键/文档行共享口径，2026-11-10 用户反馈「改了 6.1 宏的行、6.2 宏不该报」）：
+ *  逐点原始比对（file/line/context）会把删除 #if 块导致的**下方行号平移**误判为所有宏变更（噪音）。
+ *  改为「位置无关语义」：按 kind 聚合 —— 条件编译取**表达式名单**（剥 #if/#elif 前缀），
+ *  其余种类只取**处数**。行号/文件名不进键（位置噪声）；usageItems 文档行由该指纹与首条 context 导出。 */
+export interface ConfigUsageFingerprint {
+  /** kind → 处数 */
+  counts: Partial<Record<ConfigUsage['kind'], number>>;
+  /** 条件编译表达式名单（排序去重），仅 condCompile */
+  condExprs: string[];
+  /** 每种类首个使用点原文（文档「如 …」示例用） */
+  firstContext: Partial<Record<ConfigUsage['kind'], string>>;
+}
+export function usageFingerprint(c: ConfigMacro): ConfigUsageFingerprint {
+  const counts: ConfigUsageFingerprint['counts'] = {};
+  const firstContext: ConfigUsageFingerprint['firstContext'] = {};
+  for (const u of c.usages ?? []) {
+    counts[u.kind] = (counts[u.kind] ?? 0) + 1;
+    if (!(u.kind in firstContext)) firstContext[u.kind] = u.context;
+  }
+  const condExprs = [...new Set((c.usages ?? []).filter(u => u.kind === 'condCompile')
+    .map(u => u.context.replace(/^#\s*(?:if|elif)\s*/, '')))].sort();
+  return { counts, condExprs, firstContext };
+}
+/** 影响范围语义指纹：名单排序比对（回填侧本就 sort，防御旧产物未排序） */
+export const affectsFingerprint = (c: ConfigMacro): string[] => [...(c.affects ?? [])].sort();
+
 /** 分析整个模块，产出中间模型 */
 export async function analyzeModule(files: InputFile[], moduleName?: string): Promise<ModuleModel> {
   const parsed: { input: InputFile; role: FileRole; pre: PreprocessedSource; file: ParsedCFile }[] = [];

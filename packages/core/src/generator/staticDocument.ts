@@ -7,6 +7,7 @@
 import type { ModuleModel, DocumentContent, ConfigMacro, ConfigUsage } from '../model/types.js';
 import { listStateMachines, listConfigMacros } from '../model/types.js';
 import { normalizeModel } from '../model/normalize.js';
+import { usageFingerprint } from '../analyzer/moduleAnalyzer.js';
 import { esc } from '../report/cards.js';
 
 /** 跨桶配置宏名单，还原 v4 前 configMacros 全序：存量迁移产物带 _seq（旧数组索引）按 _seq 排；
@@ -151,21 +152,22 @@ const USAGE_KIND_LABEL: Record<ConfigUsage['kind'], string> = {
 
 /** 6 章配置宏明细（自 htmlReport 搬入，物化进 document.configDetailsGeneral/configDetailsFunctional）：
  *  usageItems=使用方式列表项（最终 HTML <li> 片段）；example=配置示例行（原始文本，渲染期 escRaw）；
- *  tableRow=表行（取值/形式/说明，原始值，渲染期 esc）；valueEffect=取值影响（最终 HTML，含推断角标） */
+ *  tableRow=表行（取值/形式/说明，原始值，渲染期 esc）；valueEffect=取值影响（最终 HTML，含推断角标）。
+ *  usageItems 2026-11-10 起由 usageFingerprint 导出（与 diff 语义键同一口径）：
+ *  位置无关（处数+表达式名单+首条示例），行号平移不再改变文档行 → diff 键与文档行同生同灭。 */
 function buildConfigDetail(c: ConfigMacro): { usageItems: string[]; example: string; tableRow: [string, string, string]; valueEffect: string; affects: string[] } {
+  const fp = usageFingerprint(c);
   const usageItems: string[] = [];
-  const condUsages = c.usages.filter(u => u.kind === 'condCompile');
-  if (condUsages.length > 0) {
-    const exprs = [...new Set(condUsages.map(u => u.context.replace(/^#\s*(?:if|elif)\s*/, '')))];
-    usageItems.push(`<li>条件编译裁剪 ${condUsages.length} 处：${exprs.map(e => `<code>${esc(e)}</code>`).join('，')}</li>`);
+  const condN = fp.counts.condCompile ?? 0;
+  if (condN > 0) {
+    usageItems.push(`<li>条件编译裁剪 ${condN} 处：${fp.condExprs.map(e => `<code>${esc(e)}</code>`).join('，')}</li>`);
   }
   for (const kind of ['arrayDim', 'loopBound', 'call', 'reference'] as const) {
-    const us = c.usages.filter(u => u.kind === kind);
-    if (us.length === 0) continue;
-    const locs = us.map(u => `${esc(u.file.split(/[\\/]/).pop()!)}:${u.line}`).join('，');
-    usageItems.push(`<li>${USAGE_KIND_LABEL[kind]} ${us.length} 处（${locs}），如 <code>${esc(us[0].context)}</code>${us.length > 1 ? ' 等' : ''}</li>`);
+    const n = fp.counts[kind] ?? 0;
+    if (n === 0) continue;
+    usageItems.push(`<li>${USAGE_KIND_LABEL[kind]} ${n} 处，如 <code>${esc(fp.firstContext[kind] ?? '')}</code>${n > 1 ? ' 等' : ''}</li>`);
   }
-  if (c.usages.length === 0) usageItems.push('<li class="muted">模块内未发现引用点</li>');
+  if ((c.usages ?? []).length === 0) usageItems.push('<li class="muted">模块内未发现引用点</li>');
   const example = `#define ${c.name}${c.isFunctionLike ? '()' : ''}   ${c.value || ''}${c.comment ? `  /* ${c.comment} */` : ''}`;
   const tableRow: [string, string, string] = [c.value, c.isFunctionLike ? '函数式宏' : '值宏', c.comment ?? ''];
   const valueEffect = c.generated
